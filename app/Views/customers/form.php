@@ -11,12 +11,13 @@
  */
 ?>
 
-<div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
-<ul id="error_message_box" class="error_message_box"></ul>
+<div class="pos-form-shell tw-p-2">
+    <div id="required_fields_message" class="pos-form-required tw-mb-3 tw-rounded-lg tw-border tw-border-blue-200 tw-bg-blue-50 tw-p-2 tw-text-sm tw-text-blue-900"><?= lang('Common.fields_required_message') ?></div>
+    <ul id="error_message_box" class="error_message_box"></ul>
 
-<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'customer_form', 'class' => 'form-horizontal']) ?>
+<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'customer_form', 'class' => 'form-horizontal pos-modern-form tw-overflow-hidden tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm']) ?>
 
-    <ul class="nav nav-tabs nav-justified" data-tabs="tabs">
+    <ul class="nav nav-tabs nav-justified pos-form-tabs tw-border-b tw-border-slate-200 tw-bg-slate-50" data-tabs="tabs">
         <li class="active" role="presentation">
             <a data-toggle="tab" href="#customer_basic_info"><?= lang('Customers.basic_information') ?></a>
         </li>
@@ -32,7 +33,7 @@
         <?php } ?>
     </ul>
 
-    <div class="tab-content">
+    <div class="tab-content tw-p-4">
         <div class="tab-pane fade in active" id="customer_basic_info">
             <fieldset>
                 <div class="form-group form-group-sm">
@@ -442,11 +443,32 @@
         <?php } ?>
     </div>
 
+    <div class="form-group form-group-sm" style="margin-top: 16px;">
+        <div class="col-xs-offset-3 col-xs-8">
+            <a class="btn btn-default" href="<?= esc($controller_name) ?>"><?= lang('Common.close') ?></a>
+            <button type="submit" class="btn btn-primary">
+                <span class="glyphicon glyphicon-floppy-disk">&nbsp;</span><?= lang('Common.submit') ?>
+            </button>
+        </div>
+    </div>
+
 <?= form_close() ?>
+</div>
 
 <script type="text/javascript">
     // Validation and submit handling
     $(document).ready(function() {
+        const standaloneMode = <?= !empty($standalone) ? 'true' : 'false' ?>;
+
+        // Tailwind-based modern form skin without changing backend logic.
+        $('#customer_form .form-group').addClass('tw-mb-3');
+        $('#customer_form .control-label').addClass('tw-text-slate-700 tw-font-medium');
+        $('#customer_form .form-control').addClass('tw-rounded-lg tw-border-slate-300 focus:tw-border-blue-400 focus:tw-ring-2 focus:tw-ring-blue-100');
+        $('#customer_form .input-group-addon').addClass('tw-bg-slate-50 tw-border-slate-300 tw-text-slate-500');
+        $('#customer_form .radio-inline').addClass('tw-mr-3 tw-text-slate-700');
+        $('#customer_form textarea.form-control').addClass('tw-min-h-24');
+        $('#customer_form .nav-tabs > li > a').addClass('tw-font-semibold tw-text-slate-600');
+
         $("input[name='sales_tax_code_name']").change(function() {
             if (!$("input[name='sales_tax_code_name']").val()) {
                 $("input[name='sales_tax_code_id']").val('');
@@ -473,6 +495,14 @@
             submitHandler: function(form) {
                 $(form).ajaxSubmit({
                     success: function(response) {
+                        if (standaloneMode) {
+                            $.notify(response.message, { type: response.success ? 'success' : 'danger' });
+                            if (response.success) {
+                                window.location.href = "<?= esc($controller_name) ?>";
+                            }
+                            return;
+                        }
+
                         dialog_support.hide();
                         table_support.handle_submit("<?= $controller_name ?>", response);
                     },

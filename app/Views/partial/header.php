@@ -29,6 +29,9 @@ $request = Services::request();
     <?php else : ?>
         <!--inject:prod:css -->
         <!-- endinject -->
+        <link rel="stylesheet" href="css/tailwind.css">
+        <link rel="stylesheet" href="css/dashboard.css">
+        <link rel="stylesheet" href="css/forms.css">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
@@ -50,51 +53,44 @@ $request = Services::request();
 
 <body>
     <div class="wrapper">
-        <div class="topbar">
-            <div class="container">
-                <div class="navbar-left">
+        <div class="topbar pos-topbar">
+            <div class="container pos-topbar-inner">
+                <div class="navbar-left pos-topbar-clock">
                     <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
                 </div>
 
-                <div class="navbar-right" style="margin: 0;">
-                    <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                    <span>&nbsp;|&nbsp;</span>
-                    <?= anchor('home/logout', lang('Login.logout')) ?>
-                </div>
-
-                <div class="navbar-center" style="text-align: center;">
+                <div class="navbar-center pos-topbar-company">
                     <strong><?= esc($config['company']) ?></strong>
                 </div>
+
+                <div class="navbar-right pos-topbar-user">
+                    <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
+                    <?= anchor('home/logout', lang('Login.logout'), ['class' => 'pos-logout-link']) ?>
+                </div>
             </div>
         </div>
 
-        <div class="navbar navbar-default" role="navigation">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-
-                    <a class="navbar-brand hidden-sm" href="<?= site_url() ?>">OSPOS</a>
-                </div>
-
-                <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav navbar-right">
+        <div class="neo-layout">
+            <aside class="neo-global-sidebar">
+                <a class="neo-global-brand" href="<?= site_url() ?>">OSPOS</a>
+                <div class="neo-global-sidebar-body">
+                    <nav class="neo-global-menu">
                         <?php foreach ($allowed_modules as $module): ?>
-                            <li class="<?= $module->module_id == $request->getUri()->getSegment(1) ? 'active' : '' ?>">
-                                <a href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>" class="menu-icon">
-                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" style="border: none;" alt="Module Icon"><br>
-                                    <?= lang('Module.' . $module->module_id) ?>
-                                </a>
-                            </li>
+                            <a class="neo-global-menu-item <?= $module->module_id == $request->getUri()->getSegment(1) ? 'is-active' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>">
+                                <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
+                                <span><?= lang('Module.' . $module->module_id) ?></span>
+                            </a>
                         <?php endforeach; ?>
-                    </ul>
-                </div>
-            </div>
-        </div>
+                    </nav>
 
-        <div class="container">
-            <div class="row">
+                    <div class="neo-subscription-card">
+                        <h4>Subscription</h4>
+                        <p>Explore 20+ features with lifetime membership</p>
+                        <button type="button">Upgrade Now</button>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="neo-global-content">
+                <div class="container">
+                    <div class="row">

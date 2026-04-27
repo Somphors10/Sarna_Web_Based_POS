@@ -1,0 +1,96 @@
+@media (max-width: 992px) {
+    .neo-layout {
+        grid-template-columns: 1fr;
+        padding: var(--neo-gap-sm);
+    }
+
+    .neo-global-sidebar {
+        position: static;
+        min-height: auto;
+    }
+
+    .neo-global-sidebar-body {
+        gap: 8px;
+    }
+
+    .neo-global-menu {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .neo-global-menu-item {
+        justify-content: center;
+        text-align: center;
+        min-height: 72px;
+        flex-direction: column;
+        gap: 6px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+
+    .neo-global-menu-item.is-active::before {
+        display: none;
+    }
+
+    .neo-global-menu-item span {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pos-topbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+    }
+
+    .pos-topbar-company,
+    .pos-topbar-clock,
+    .pos-topbar-user {
+        text-align: center;
+    }
+
+    .pos-topbar-user {
+        justify-content: center;
+    }
+
+    .neo-main-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .neo-search-wrap {
+        width: 100%;
+    }
+
+    .neo-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .neo-module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .neo-main,
+    .neo-module-page {
+        padding: var(--neo-gap-sm);
+    }
+
+    .neo-module-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .neo-module-actions {
+        width: 100%;
+    }
+
+    .neo-global-menu {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .neo-subscription-card {
+        margin-top: 4px;
+    }
+}

@@ -227,7 +227,11 @@ class Customers extends Persons
             }
         }
 
-        echo view("customers/form", $data);
+        if ($this->request->isAJAX()) {
+            echo view('customers/form', $data);
+        } else {
+            echo view('customers/view', $data);
+        }
     }
 
     /**

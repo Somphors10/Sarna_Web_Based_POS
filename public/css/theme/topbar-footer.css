@@ -1,0 +1,78 @@
+.pos-topbar {
+    background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%) !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 6px 0 !important;
+}
+
+.pos-topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pos-topbar-clock,
+.pos-topbar-company,
+.pos-topbar-user {
+    flex: 1;
+}
+
+.pos-topbar-company {
+    text-align: center;
+    color: #e2e8f0;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.pos-topbar-clock {
+    color: #cbd5e1;
+    font-size: 12px;
+}
+
+.pos-topbar-user {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.pos-user-link,
+.pos-logout-link {
+    color: #7dd3fc !important;
+    text-decoration: none !important;
+}
+
+.pos-user-link:hover,
+.pos-logout-link:hover {
+    color: #bae6fd !important;
+}
+
+.pos-footer-wrap {
+    margin-top: 40px !important;
+}
+
+.pos-footer {
+    border: 1px solid #dbe4ee !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    padding: 12px 14px !important;
+}
+
+.pos-footer-text {
+    color: #475569;
+    font-weight: 500;
+}
+
+.pos-footer a {
+    color: #0f766e;
+    text-decoration: none;
+}
+
+.pos-footer a:hover {
+    text-decoration: underline;
+}
+
+.pos-footer-separator {
+    color: #94a3b8;
+    margin: 0 6px;
+}
