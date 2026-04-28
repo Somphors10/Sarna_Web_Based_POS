@@ -255,10 +255,14 @@ function customer_headers(): array
 {
     return [
         ['people.person_id' => lang('Common.id')],
+        ['company_name'      => lang('Customers.company_name')],
+        ['account_number'    => lang('Customers.account_number')],
         ['last_name'        => lang('Common.last_name')],
         ['first_name'       => lang('Common.first_name')],
         ['email'            => lang('Common.email')],
         ['phone_number'     => lang('Common.phone_number')],
+        ['tax_id'           => lang('Customers.tax_id')],
+        ['date'             => lang('Customers.date')],
         ['total'            => lang('Common.total_spent'), 'sortable' => false]
     ];
 }
@@ -289,10 +293,14 @@ function get_customer_data_row(object $person, object $stats): array
 
     return [
         'people.person_id' => $person->person_id,
+        'company_name'     => $person->company_name,
+        'account_number'   => $person->account_number,
         'last_name'        => $person->last_name,
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
         'phone_number'     => $person->phone_number,
+        'tax_id'           => $person->tax_id,
+        'date'             => empty($person->date) ? '' : date('Y-m-d H:i', strtotime($person->date)),
         'total'            => to_currency($stats->total),
         'messages'         => empty($person->phone_number)
             ? ''

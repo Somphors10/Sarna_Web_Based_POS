@@ -443,14 +443,16 @@
         <?php } ?>
     </div>
 
-    <div class="form-group form-group-sm" style="margin-top: 16px;">
-        <div class="col-xs-offset-3 col-xs-8">
-            <a class="btn btn-default" href="<?= esc($controller_name) ?>"><?= lang('Common.close') ?></a>
-            <button type="submit" class="btn btn-primary">
-                <span class="glyphicon glyphicon-floppy-disk">&nbsp;</span><?= lang('Common.submit') ?>
-            </button>
+    <?php if (!empty($standalone)) { ?>
+        <div class="form-group form-group-sm" style="margin-top: 16px;">
+            <div class="col-xs-offset-3 col-xs-8">
+                <a class="btn btn-default" href="<?= esc($controller_name) ?>"><?= lang('Common.close') ?></a>
+                <button type="submit" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-floppy-disk">&nbsp;</span><?= lang('Common.submit') ?>
+                </button>
+            </div>
         </div>
-    </div>
+    <?php } ?>
 
 <?= form_close() ?>
 </div>

@@ -183,7 +183,8 @@ class Item extends Model
         }
 
         $builder->join('suppliers AS suppliers', 'suppliers.person_id = items.supplier_id', 'left');
-        $builder->join('inventory AS inventory', 'inventory.trans_items = items.item_id');
+        // Use LEFT JOIN so items without inventory transactions still appear in the manage table.
+        $builder->join('inventory AS inventory', 'inventory.trans_items = items.item_id', 'left');
 
         if ($filters['stock_location_id'] > -1) {
             $builder->join('item_quantities AS item_quantities', 'item_quantities.item_id = items.item_id');
@@ -193,7 +194,10 @@ class Item extends Model
         $where = empty($config['date_or_time_format'])
             ? 'DATE_FORMAT(trans_date, "%Y-%m-%d") BETWEEN ' . $this->db->escape($filters['start_date']) . ' AND ' . $this->db->escape($filters['end_date'])
             : 'trans_date BETWEEN ' . $this->db->escape(rawurldecode($filters['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($filters['end_date']));
+        $builder->groupStart();
         $builder->where($where);
+        $builder->orWhere('inventory.trans_date', null);
+        $builder->groupEnd();
 
         $attributes_enabled = count($filters['definition_ids']) > 0;
 

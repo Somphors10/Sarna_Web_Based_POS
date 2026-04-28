@@ -20,8 +20,9 @@
             dialog_ref = dlog_ref;
 
             if (button_id == 'submit' && (!submitted && btn_id != "btnNew")) {
-                form.submit();
-                validator.valid() && $('#submit').prop('disabled', true).css('opacity', 0.5);
+                // Native form.submit() bypasses jQuery Validate + ajaxSubmit (full page POST shows raw JSON).
+                $(form).trigger('submit');
+                validator && validator.valid() && $('#submit').prop('disabled', true).css('opacity', 0.5);
             }
             return false;
         }
@@ -187,6 +188,8 @@
         return function(response) {
             typeof options.load_callback == 'function' && options.load_callback();
             options.load_callback = undefined;
+            // In some setups the loading overlay can remain visible even after data is rendered.
+            $('#table').closest('.bootstrap-table').find('.fixed-table-loading').hide();
             dialog_support.init("a.modal-dlg");
             typeof callback == 'function' && callback.call(this, response);
         }
@@ -194,12 +197,25 @@
 
     var options;
 
+    var has_employee_storage = function() {
+        return options.employee_id !== undefined && options.employee_id !== null && options.employee_id !== '';
+    };
+
     var toggle_column_visibility = function() {
-        if (localStorage[options.employee_id]) {
-            var user_settings = JSON.parse(localStorage[options.employee_id]);
+        if (!has_employee_storage()) {
+            return;
+        }
+        var raw = localStorage[options.employee_id];
+        if (!raw) {
+            return;
+        }
+        try {
+            var user_settings = JSON.parse(raw);
             user_settings[options.resource] && $.each(user_settings[options.resource], function(index, element) {
                 element ? table().showColumn(index) : table().hideColumn(index);
             });
+        } catch (e) {
+            console.warn('Ignoring invalid table column visibility settings', e);
         }
     };
 
@@ -244,11 +260,13 @@
                 enable_actions();
             },
             onColumnSwitch : function(field, checked) {
-                var user_settings = localStorage[options.employee_id];
-                user_settings = (user_settings && JSON.parse(user_settings)) || {};
-                user_settings[options.resource] = user_settings[options.resource] || {};
-                user_settings[options.resource][field] = checked;
-                localStorage[options.employee_id] = JSON.stringify(user_settings);
+                if (has_employee_storage()) {
+                    var user_settings = localStorage[options.employee_id];
+                    user_settings = (user_settings && JSON.parse(user_settings)) || {};
+                    user_settings[options.resource] = user_settings[options.resource] || {};
+                    user_settings[options.resource][field] = checked;
+                    localStorage[options.employee_id] = JSON.stringify(user_settings);
+                }
                 dialog_support.init("a.modal-dlg");
             },
             queryParamsType: 'limit',

@@ -249,51 +249,25 @@ class Customer extends Person
      */
     public function delete($customer_id = null, bool $purge = false): bool
     {
-        $result = true;
-        $config = config(OSPOS::class)->settings;
-
-        // If privacy enforcement is selected scramble customer data
-        if ($config['enforce_privacy']) {
-            $builder = $this->db->table('people');
-            $builder->where('person_id', $customer_id);
-            $result &= $builder->update([
-                'first_name'   => $customer_id,
-                'last_name'    => $customer_id,
-                'phone_number' => '',
-                'email'        => '',
-                'gender'       => null,
-                'address_1'    => '',
-                'address_2'    => '',
-                'city'         => '',
-                'state'        => '',
-                'zip'          => '',
-                'country'      => '',
-                'comments'     => ''
-            ]);
-
-            $builder = $this->db->table('customers');
-            $builder->where('person_id', $customer_id);
-            $result &= $builder->update([
-                'consent'           => 0,
-                'company_name'      => null,
-                'account_number'    => null,
-                'tax_id'            => '',
-                'taxable'           => 0,
-                'discount'          => 0.00,
-                'discount_type'     => 0,
-                'package_id'        => null,
-                'points'            => null,
-                'sales_tax_code_id' => null,
-                'deleted'           => 1
-            ]);
-        } else {
-            $builder = $this->db->table('customers');
-            $builder->where('person_id', $customer_id);
-
-            $result &= $builder->update(['deleted' => 1]);
+        if ($customer_id === null) {
+            return false;
         }
 
-        return $result;
+        $this->db->transStart();
+
+        // Remove customer row first, then base person row.
+        // This enforces true DB deletion (not soft-delete).
+        $builder = $this->db->table('customers');
+        $builder->where('person_id', $customer_id);
+        $result = $builder->delete();
+
+        $builder = $this->db->table('people');
+        $builder->where('person_id', $customer_id);
+        $result = $result && $builder->delete();
+
+        $this->db->transComplete();
+
+        return $result && $this->db->transStatus();
     }
 
     /**
@@ -301,10 +275,13 @@ class Customer extends Person
      */
     public function delete_list(array $person_ids): bool
     {
-        $builder = $this->db->table('customers');
-        $builder->whereIn('person_id', $person_ids);
+        $result = true;
 
-        return $builder->update(['deleted' => 1]);
+        foreach ($person_ids as $person_id) {
+            $result = $this->delete((int)$person_id) && $result;
+        }
+
+        return $result;
     }
 
     /**

@@ -15,6 +15,17 @@ use App\Models\Employee;
 
 <script type="text/javascript">
     $(document).ready(function() {
+        var init_select_controls = function() {
+            if ($.fn.selectpicker) {
+                $('.selectpicker').selectpicker();
+                $('#toolbar').addClass('items-selectpicker-ready');
+            } else {
+                $('#toolbar').removeClass('items-selectpicker-ready');
+            }
+        };
+
+        init_select_controls();
+
         $('#generate_barcodes').click(function() {
             window.open(
                 'index.php/items/generateBarcodes/' + table_support.selected_ids().join(':'),
@@ -75,56 +86,63 @@ use App\Models\Employee;
     });
 </script>
 
-<div id="title_bar" class="btn-toolbar print_hide">
-    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang('Items.import_items_csv') ?>">
-        <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>
-    </button>
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
+            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+        </div>
+        <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
+            <button class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang('Items.import_items_csv') ?>">
+                <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>
+            </button>
+            <button class="btn btn-primary btn-sm modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+                <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
+            </button>
+        </div>
+    </header>
 
-    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
-        <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
-    </button>
-</div>
-
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <button id="delete" class="btn btn-default btn-sm print_hide">
-            <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
-        </button>
-        <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
-            <span class="glyphicon glyphicon-edit">&nbsp;</span><?= lang('Items.bulk_edit') ?>
-        </button>
-        <button id="generate_barcodes" class="btn btn-default btn-sm print_hide" data-href="<?= "$controller_name/generateBarcodes" ?>" title="<?= lang('Items.generate_barcodes') ?>">
-            <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
-        </button>
-        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-        <?= form_multiselect('filters[]', $filters, [''], [
-            'id'                        => 'filters',
-            'class'                     => 'selectpicker show-menu-arrow',
-            'data-none-selected-text'   => lang('Common.none_selected_text'),
-            'data-selected-text-format' => 'count > 1',
-            'data-style'                => 'btn-default btn-sm',
-            'data-width'                => 'fit'
-        ]) ?>
-        <?php
-        if (count($stock_locations) > 1) {
-            echo form_dropdown(
-                'stock_location',
-                $stock_locations,
-                $stock_location,
-                [
-                    'id'         => 'stock_location',
-                    'class'      => 'selectpicker show-menu-arrow',
-                    'data-style' => 'btn-default btn-sm',
-                    'data-width' => 'fit'
-                ]
-            );
-        }
-        ?>
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="delete" class="btn btn-default btn-sm print_hide">
+                <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
+            </button>
+            <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
+                <span class="glyphicon glyphicon-edit">&nbsp;</span><?= lang('Items.bulk_edit') ?>
+            </button>
+            <button id="generate_barcodes" class="btn btn-default btn-sm print_hide" data-href="<?= "$controller_name/generateBarcodes" ?>" title="<?= lang('Items.generate_barcodes') ?>">
+                <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
+            </button>
+            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
+            <?= form_multiselect('filters[]', $filters, [''], [
+                'id'                        => 'filters',
+                'class'                     => 'selectpicker show-menu-arrow',
+                'data-none-selected-text'   => lang('Common.none_selected_text'),
+                'data-selected-text-format' => 'count > 1',
+                'data-style'                => 'btn-default btn-sm',
+                'data-width'                => 'fit'
+            ]) ?>
+            <?php
+            if (count($stock_locations) > 1) {
+                echo form_dropdown(
+                    'stock_location',
+                    $stock_locations,
+                    $stock_location,
+                    [
+                        'id'         => 'stock_location',
+                        'class'      => 'selectpicker show-menu-arrow',
+                        'data-style' => 'btn-default btn-sm',
+                        'data-width' => 'fit'
+                    ]
+                );
+            }
+            ?>
+        </div>
     </div>
-</div>
 
-<div id="table_holder">
-    <table id="table"></table>
-</div>
+    <div id="table_holder" class="neo-table-holder">
+        <table id="table"></table>
+    </div>
+</section>
 
 <?= view('partial/footer') ?>

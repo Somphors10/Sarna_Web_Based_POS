@@ -97,3 +97,8 @@
     background-color: #2563eb;
     border-color: #2563eb;
 }
+
+/* Hide Bootstrap Table loading overlay/text in module pages */
+.neo-global-content .bootstrap-table .fixed-table-loading {
+    display: none !important;
+}

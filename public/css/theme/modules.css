@@ -74,10 +74,62 @@
     gap: var(--neo-gap-xs);
 }
 
+.neo-global-content #toolbar .form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.neo-global-content #toolbar .form-inline .btn,
+.neo-global-content #toolbar .form-inline .btn-group > .btn {
+    height: 34px;
+    border-radius: 8px;
+}
+
+.neo-global-content #toolbar .form-inline .form-control {
+    height: 34px;
+    border-radius: 8px;
+}
+
+.neo-global-content #toolbar .bootstrap-select > .dropdown-toggle {
+    height: 34px;
+    border-radius: 8px;
+    border-color: #d5dee8;
+    background: #ffffff;
+    color: #334155;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu {
+    border-radius: 10px;
+    border-color: #dbe4ee;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+/* Fallback styling when bootstrap-select is unavailable */
+.neo-global-content #toolbar:not(.items-selectpicker-ready) select.selectpicker {
+    height: 34px;
+    border: 1px solid #d5dee8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334155;
+    padding: 4px 8px;
+}
+
+.neo-global-content #toolbar:not(.items-selectpicker-ready) #filters.selectpicker {
+    min-width: 220px;
+}
+
+/* Hide native select only after selectpicker is initialized */
+.neo-global-content #toolbar.items-selectpicker-ready select.selectpicker {
+    display: none !important;
+}
+
 .neo-global-content [id="table_holder"] {
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: var(--neo-radius-sm);
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
     padding: var(--neo-gap-xs);
+    overflow-x: auto;
 }

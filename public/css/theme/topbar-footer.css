@@ -1,7 +1,8 @@
 .pos-topbar {
-    background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%) !important;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-    padding: 6px 0 !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e7edf6;
+    padding: 7px 0 !important;
+    margin-bottom: 8px;
 }
 
 .pos-topbar-inner {
@@ -9,42 +10,46 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-}
-
-.pos-topbar-clock,
-.pos-topbar-company,
-.pos-topbar-user {
-    flex: 1;
+    padding-left: 14px;
+    padding-right: 14px;
 }
 
 .pos-topbar-company {
+    flex: 1 1 auto;
+    min-width: 0;
     text-align: center;
-    color: #e2e8f0;
+    color: #64748b;
     font-weight: 600;
     letter-spacing: 0.01em;
 }
 
 .pos-topbar-clock {
-    color: #cbd5e1;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: #94a3b8;
     font-size: 12px;
 }
 
 .pos-topbar-user {
     display: flex;
+    flex: 0 0 auto;
     justify-content: flex-end;
+    align-items: center;
     gap: 10px;
     font-size: 12px;
+    white-space: nowrap;
+    padding-right: 10px;
 }
 
 .pos-user-link,
 .pos-logout-link {
-    color: #7dd3fc !important;
+    color: #4f46e5 !important;
     text-decoration: none !important;
 }
 
 .pos-user-link:hover,
 .pos-logout-link:hover {
-    color: #bae6fd !important;
+    color: #3730a3 !important;
 }
 
 .pos-footer-wrap {

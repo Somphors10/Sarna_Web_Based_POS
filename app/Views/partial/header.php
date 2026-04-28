@@ -41,6 +41,17 @@ $request = Services::request();
         <!-- endinject -->
     <?php endif; ?>
 
+    <?php
+    // Fallback for setups where gulp inject tags are not populated.
+    $jquery_bundle = glob(FCPATH . 'resources/jquery-*.min.js');
+    $ospos_bundle = glob(FCPATH . 'resources/opensourcepos-*.min.js');
+    if (!empty($jquery_bundle)) { ?>
+        <script src="<?= 'resources/' . basename($jquery_bundle[0]) ?>"></script>
+    <?php }
+    if (!empty($ospos_bundle)) { ?>
+        <script src="<?= 'resources/' . basename($ospos_bundle[0]) ?>"></script>
+    <?php } ?>
+
     <?= view('partial/header_js') ?>
     <?= view('partial/lang_lines') ?>
 
@@ -53,23 +64,6 @@ $request = Services::request();
 
 <body>
     <div class="wrapper">
-        <div class="topbar pos-topbar">
-            <div class="container pos-topbar-inner">
-                <div class="navbar-left pos-topbar-clock">
-                    <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
-                </div>
-
-                <div class="navbar-center pos-topbar-company">
-                    <strong><?= esc($config['company']) ?></strong>
-                </div>
-
-                <div class="navbar-right pos-topbar-user">
-                    <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                    <?= anchor('home/logout', lang('Login.logout'), ['class' => 'pos-logout-link']) ?>
-                </div>
-            </div>
-        </div>
-
         <div class="neo-layout">
             <aside class="neo-global-sidebar">
                 <a class="neo-global-brand" href="<?= site_url() ?>">OSPOS</a>
@@ -82,15 +76,25 @@ $request = Services::request();
                             </a>
                         <?php endforeach; ?>
                     </nav>
-
-                    <div class="neo-subscription-card">
-                        <h4>Subscription</h4>
-                        <p>Explore 20+ features with lifetime membership</p>
-                        <button type="button">Upgrade Now</button>
-                    </div>
                 </div>
             </aside>
 
             <main class="neo-global-content">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner">
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
+                        </div>
+
+                        <div class="navbar-center pos-topbar-company">
+                            <strong><?= esc($config['company']) ?></strong>
+                        </div>
+
+                        <div class="navbar-right pos-topbar-user">
+                            <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
+                            <?= anchor('home/logout', lang('Login.logout'), ['class' => 'pos-logout-link']) ?>
+                        </div>
+                    </div>
+                </div>
                 <div class="container">
                     <div class="row">

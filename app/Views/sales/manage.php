@@ -60,36 +60,44 @@
 
 <?= view('partial/print_receipt', ['print_after_sale' => false, 'selected_printer' => 'takings_printer']) ?>
 
-<div id="title_bar" class="print_hide btn-toolbar">
-    <button onclick="javascript:printdoc()" class="btn btn-info btn-sm pull-right">
-        <span class="glyphicon glyphicon-print">&nbsp;</span><?= lang('Common.print') ?>
-    </button>
-    <?= anchor("sales", '<span class="glyphicon glyphicon-shopping-cart">&nbsp;</span>' . lang('Sales.register'), ['class' => 'btn btn-info btn-sm pull-right', 'id' => 'show_sales_button']) ?>
-</div>
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
+            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+        </div>
+        <div id="title_bar" class="print_hide btn-toolbar neo-module-actions">
+            <button onclick="javascript:printdoc()" class="btn btn-info btn-sm">
+                <span class="glyphicon glyphicon-print">&nbsp;</span><?= lang('Common.print') ?>
+            </button>
+            <?= anchor("sales", '<span class="glyphicon glyphicon-shopping-cart">&nbsp;</span>' . lang('Sales.register'), ['class' => 'btn btn-primary btn-sm', 'id' => 'show_sales_button']) ?>
+        </div>
+    </header>
 
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <button id="delete" class="btn btn-default btn-sm print_hide">
-            <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
-        </button>
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="delete" class="btn btn-default btn-sm print_hide">
+                <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
+            </button>
 
-        <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-        <?= form_multiselect('filters[]', $filters, $selected_filters, [
-            'id'                        => 'filters',
-            'data-none-selected-text'   => lang('Common.none_selected_text'),
-            'class'                     => 'selectpicker show-menu-arrow',
-            'data-selected-text-format' => 'count > 1',
-            'data-style'                => 'btn-default btn-sm',
-            'data-width'                => 'fit'
-        ]) ?>
+            <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
+            <?= form_multiselect('filters[]', $filters, $selected_filters, [
+                'id'                        => 'filters',
+                'data-none-selected-text'   => lang('Common.none_selected_text'),
+                'class'                     => 'selectpicker show-menu-arrow',
+                'data-selected-text-format' => 'count > 1',
+                'data-style'                => 'btn-default btn-sm',
+                'data-width'                => 'fit'
+            ]) ?>
+        </div>
     </div>
-</div>
 
-<div id="table_holder">
-    <table id="table"></table>
-</div>
+    <div id="table_holder" class="neo-table-holder">
+        <table id="table"></table>
+    </div>
 
-<div id="payment_summary">
-</div>
+    <div id="payment_summary">
+    </div>
+</section>
 
 <?= view('partial/footer') ?>

@@ -22,8 +22,12 @@
         });
 
         <?= view('partial/bootstrap_tables_locale') ?>
+        <?php
+        $employee = model(\App\Models\Employee::class);
+        ?>
 
         table_support.init({
+            employee_id: <?= (int) $employee->get_logged_in_employee_info()->person_id ?>,
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
             pageSize: <?= $config['lines_per_page'] ?>,
