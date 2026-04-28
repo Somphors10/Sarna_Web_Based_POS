@@ -24,6 +24,12 @@
     font-weight: 600;
 }
 
+.neo-main-subtitle {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
 .neo-search-wrap {
     width: 280px;
 }
@@ -35,9 +41,36 @@
 
 .neo-info-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--neo-gap-sm);
     margin-bottom: var(--neo-gap-sm);
+}
+
+.neo-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--neo-gap-sm);
+    margin-bottom: var(--neo-gap-sm);
+}
+
+.neo-kpi-card {
+    border-radius: var(--neo-radius-sm);
+    border: 1px solid #dbe4ee;
+    background: #ffffff;
+    padding: 10px 12px;
+}
+
+.neo-kpi-label {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+.neo-kpi-value {
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 700;
 }
 
 .neo-info-card {
@@ -72,6 +105,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: var(--neo-gap-sm);
+}
+
+.neo-section-title {
+    margin: 2px 0 10px;
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .neo-module-card {

@@ -33,7 +33,11 @@ use App\Models\Employee;
             );
         });
 
-        // When any filter is clicked and the dropdown window is closed
+        // When filter selection changes, refresh table.
+        $('#filters').on('change', function() {
+            table_support.refresh();
+        });
+        // Bootstrap-select compatibility (if plugin is active elsewhere)
         $('#filters').on('hidden.bs.select', function(e) {
             table_support.refresh();
         });
@@ -116,11 +120,8 @@ use App\Models\Employee;
             <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
             <?= form_multiselect('filters[]', $filters, [''], [
                 'id'                        => 'filters',
-                'class'                     => 'selectpicker show-menu-arrow',
-                'data-none-selected-text'   => lang('Common.none_selected_text'),
-                'data-selected-text-format' => 'count > 1',
-                'data-style'                => 'btn-default btn-sm',
-                'data-width'                => 'fit'
+                'class'                     => 'form-control input-sm pos-items-filter-select',
+                'size'                      => 1
             ]) ?>
             <?php
             if (count($stock_locations) > 1) {
@@ -130,9 +131,7 @@ use App\Models\Employee;
                     $stock_location,
                     [
                         'id'         => 'stock_location',
-                        'class'      => 'selectpicker show-menu-arrow',
-                        'data-style' => 'btn-default btn-sm',
-                        'data-width' => 'fit'
+                        'class'      => 'form-control input-sm'
                     ]
                 );
             }

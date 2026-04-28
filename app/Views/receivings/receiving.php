@@ -34,6 +34,14 @@ if (isset($success)) {
 }
 ?>
 
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
+            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+        </div>
+    </header>
+
 <div id="register_wrapper">
 
     <!-- Top register controls -->
@@ -238,6 +246,7 @@ if (isset($success)) {
         </tbody>
     </table>
 </div>
+</section>
 
 <!-- Overall Receiving -->
 

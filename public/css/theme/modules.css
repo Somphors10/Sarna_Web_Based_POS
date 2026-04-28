@@ -104,6 +104,28 @@
     border-radius: 10px;
     border-color: #dbe4ee;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    background: #ffffff;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a {
+    color: #334155 !important;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a .text {
+    color: #334155 !important;
+    display: block;
+    white-space: normal;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:hover,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:focus {
+    background: #f1f5f9;
+    color: #0f172a !important;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu.inner {
+    max-height: 220px !important;
+    overflow-y: auto !important;
 }
 
 /* Fallback styling when bootstrap-select is unavailable */
@@ -125,6 +147,59 @@
     display: none !important;
 }
 
+.neo-global-content #toolbar .pos-items-filter-select {
+    min-width: 96px;
+    max-width: 140px;
+}
+
+.neo-global-content select.form-control[multiple][size="1"] {
+    height: 34px;
+    overflow: hidden;
+    padding-right: 28px;
+    background-color: #fff;
+    color: #334155;
+}
+
+.neo-global-content select.form-control[multiple][size="1"] option {
+    color: #334155;
+    background: #ffffff;
+}
+
+/* Global bootstrap-select fix (outside toolbar too) */
+.neo-global-content select.bs-select-hidden,
+.neo-global-content select.selectpicker.bs-select-hidden {
+    display: none !important;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle {
+    height: 34px;
+    border-radius: 8px;
+    border-color: #d5dee8;
+    background: #ffffff;
+    color: #334155;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu {
+    border-radius: 10px;
+    border-color: #dbe4ee;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    background: #ffffff;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li > a {
+    color: #334155 !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li > a .text {
+    color: #334155 !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li > a:hover,
+.neo-global-content .bootstrap-select .dropdown-menu > li > a:focus {
+    background: #f1f5f9;
+    color: #0f172a !important;
+}
+
 .neo-global-content [id="table_holder"] {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -132,4 +207,379 @@
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
     padding: var(--neo-gap-xs);
     overflow-x: auto;
+}
+
+/* Reports feature modernized shell */
+.neo-global-content #page_title {
+    margin: 0 0 4px;
+    color: #0f172a;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.neo-global-content #page_subtitle {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.neo-global-content #item_form {
+    background: #f8fafc;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.neo-global-content #item_form .form-group {
+    margin-bottom: 10px;
+}
+
+.neo-global-content #item_form .control-label {
+    color: #334155;
+    font-weight: 600;
+}
+
+.neo-global-content #item_form .btn-primary {
+    margin-top: 2px;
+}
+
+.neo-global-content #report_summary,
+.neo-global-content #chart_report_summary,
+.neo-global-content #payment_summary {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.neo-global-content #report_summary .summary_row,
+.neo-global-content #chart_report_summary .summary_row,
+.neo-global-content #payment_summary .summary_row {
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.neo-global-content .ct-chart {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.neo-global-content .panel.panel-primary {
+    border-color: #dbe4ee;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.neo-global-content .panel.panel-primary > .panel-heading {
+    background: #f1f5f9;
+    border-bottom-color: #dbe4ee;
+    color: #0f172a;
+}
+
+.neo-global-content .panel.panel-primary .list-group-item {
+    border-color: #e2e8f0;
+    color: #334155;
+    font-weight: 500;
+}
+
+.neo-global-content .panel.panel-primary .list-group-item:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+/* Receivings feature refresh */
+.neo-global-content #register_wrapper,
+.neo-global-content #overall_sale,
+.neo-global-content #finish_sale {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.neo-global-content #register_wrapper {
+    padding: 10px 10px 2px;
+    margin-bottom: 12px;
+}
+
+.neo-global-content #register_wrapper .panel.panel-default,
+.neo-global-content #overall_sale.panel.panel-default,
+.neo-global-content #finish_sale.panel.panel-default {
+    border-color: #e2e8f0;
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.neo-global-content #register_wrapper .panel-body,
+.neo-global-content #overall_sale .panel-body,
+.neo-global-content #finish_sale .panel-body {
+    padding: 10px 12px;
+}
+
+.neo-global-content #register_wrapper .panel-body ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.neo-global-content #register_wrapper .panel-body ul li {
+    float: none !important;
+    margin: 0 !important;
+}
+
+.neo-global-content #register_wrapper .panel-body ul li.first_li {
+    min-width: 170px;
+}
+
+.neo-global-content #register_wrapper .form-control,
+.neo-global-content #overall_sale .form-control,
+.neo-global-content #finish_sale .form-control {
+    border-radius: 8px;
+    border-color: #d5dee8;
+    box-shadow: none;
+}
+
+.neo-global-content #register_wrapper .btn,
+.neo-global-content #overall_sale .btn,
+.neo-global-content #finish_sale .btn {
+    border-radius: 8px;
+}
+
+.neo-global-content #register {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.neo-global-content #register thead th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    border-bottom: 1px solid #dbe4ee;
+    padding: 8px 8px;
+}
+
+.neo-global-content #register tbody td {
+    border-bottom: 1px solid #e8eef5;
+    padding: 8px 8px;
+    vertical-align: middle;
+}
+
+.neo-global-content #register tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Sales register stronger layout polish */
+.neo-global-content #register_wrapper {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.neo-global-content #mode_form.panel.panel-default,
+.neo-global-content #add_item_form.panel.panel-default {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: none;
+    margin-bottom: 10px;
+    background: #ffffff;
+}
+
+.neo-global-content #mode_form .panel-body,
+.neo-global-content #add_item_form .panel-body {
+    padding: 10px 12px;
+}
+
+.neo-global-content #mode_form .panel-body ul,
+.neo-global-content #add_item_form .panel-body ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.neo-global-content #mode_form .panel-body li,
+.neo-global-content #add_item_form .panel-body li {
+    float: none !important;
+    margin: 0 !important;
+}
+
+.neo-global-content #mode_form .panel-body li.first_li,
+.neo-global-content #add_item_form .panel-body li.first_li {
+    min-width: 110px;
+}
+
+.neo-global-content #mode_form .control-label,
+.neo-global-content #add_item_form .control-label {
+    color: #334155;
+    font-weight: 600;
+}
+
+.neo-global-content #overall_sale {
+    margin-top: 12px;
+}
+
+.neo-global-content #select_customer {
+    margin-bottom: 10px;
+}
+
+.neo-global-content #select_customer .control-label {
+    margin: 0 0 8px !important;
+    color: #334155;
+    font-weight: 600;
+}
+
+.neo-global-content #select_customer .btn {
+    margin-top: 8px;
+}
+
+.neo-global-content #overall_sale .sales_table_100 th,
+.neo-global-content #overall_sale .sales_table_100 td {
+    padding: 6px 4px;
+}
+
+.neo-global-content #cart_contents .alert-info {
+    margin: 0;
+    border: 0;
+    border-radius: 8px;
+    background: #e0f2fe;
+    color: #0c4a6e;
+    font-weight: 500;
+}
+
+.neo-global-content #sale_totals th,
+.neo-global-content #payment_totals th {
+    color: #334155;
+    font-weight: 600;
+}
+
+.neo-global-content #sale_totals tr:last-child th,
+.neo-global-content #payment_totals tr:last-child th {
+    font-size: 26px !important;
+    color: #0f172a;
+}
+
+.neo-global-content #sale_totals tr:last-child #sale_total,
+.neo-global-content #payment_totals tr:last-child #sale_amount_due {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.neo-global-content #buttons_sale {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.neo-global-content #buttons_sale .btn {
+    float: none !important;
+}
+
+.neo-global-content #payment_details .sales_table_100 {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: #ffffff;
+}
+
+.neo-global-content #payment_details td {
+    padding: 8px;
+}
+
+.neo-global-content #payment_details .btn {
+    min-width: 150px;
+}
+
+.neo-global-content #register_wrapper .selectpicker,
+.neo-global-content #register_wrapper .form-control.input-sm {
+    height: 34px;
+    border-radius: 8px;
+}
+
+/* Global legacy feature harmonization */
+.neo-global-content .panel.panel-default {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.neo-global-content .panel.panel-default > .panel-body {
+    padding: 12px;
+}
+
+.neo-global-content .form-horizontal .form-group {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.neo-global-content .form-horizontal .control-label {
+    color: #334155;
+    font-weight: 600;
+}
+
+.neo-global-content .sales_table_100 {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.neo-global-content .sales_table_100 thead th {
+    background: #f1f5f9;
+    color: #334155;
+    border-bottom: 1px solid #dbe4ee;
+    font-weight: 700;
+    padding: 8px 8px;
+}
+
+.neo-global-content .sales_table_100 tbody td,
+.neo-global-content .sales_table_100 tbody th {
+    border-bottom: 1px solid #e8eef5;
+    padding: 8px 8px;
+    vertical-align: middle;
+}
+
+.neo-global-content .sales_table_100 tbody tr:last-child td,
+.neo-global-content .sales_table_100 tbody tr:last-child th {
+    border-bottom: 0;
+}
+
+.neo-global-content #register_wrapper > .panel,
+.neo-global-content #overall_sale > .panel,
+.neo-global-content #finish_sale > .panel {
+    margin-bottom: 10px;
+}
+
+.neo-global-content .alert {
+    border-radius: 10px;
 }

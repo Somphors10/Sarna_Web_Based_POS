@@ -11,6 +11,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        $('#filters').on('change', function() {
+            table_support.refresh();
+        });
         // When any filter is clicked and the dropdown window is closed
         $('#filters').on('hidden.bs.select', function(e) {
             table_support.refresh();
@@ -67,11 +70,8 @@
             <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
             <?= form_multiselect('filters[]', $filters, [''], [
                 'id'                        => 'filters',
-                'data-none-selected-text'   => lang('Common.none_selected_text'),
-                'class'                     => 'selectpicker show-menu-arrow',
-                'data-selected-text-format' => 'count > 1',
-                'data-style'                => 'btn-default btn-sm',
-                'data-width'                => 'fit'
+                'class'                     => 'form-control input-sm pos-items-filter-select',
+                'size'                      => 1
             ]) ?>
         </div>
     </div>

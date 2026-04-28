@@ -61,6 +61,14 @@ if (isset($success)) {
 helper('url');
 ?>
 
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
+            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+        </div>
+    </header>
+
 <div id="register_wrapper">
 
     <!-- Top register controls -->
@@ -563,6 +571,7 @@ helper('url');
         ?>
     </div>
 </div>
+</section>
 
 <script type="text/javascript">
     $(document).ready(function() {
