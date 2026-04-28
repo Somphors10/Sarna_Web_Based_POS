@@ -12,7 +12,14 @@
 </script>
 
 
-<div id="page_title"><?= lang('Reports.report_input') ?></div>
+<div class="neo-report-head">
+    <div class="neo-report-breadcrumb" aria-label="breadcrumb">
+        <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
+        <span class="neo-report-breadcrumb-sep">/</span>
+        <span class="neo-report-breadcrumb-current"><?= lang('Reports.report_input') ?></span>
+    </div>
+    <div id="page_title"><?= lang('Reports.report_input') ?></div>
+</div>
 
 <?php
 if (isset($error)) {

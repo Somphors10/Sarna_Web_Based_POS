@@ -19,6 +19,26 @@ $detailed_reports = [
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
+
+    $(document).ready(function() {
+        const storageKey = 'reports:last-link';
+
+        $('.list-group-item').on('click', function() {
+            const href = $(this).attr('href');
+            if (href) {
+                localStorage.setItem(storageKey, href);
+            }
+        });
+
+        const lastHref = localStorage.getItem(storageKey);
+        if (lastHref) {
+            $('.list-group-item').each(function() {
+                if ($(this).attr('href') === lastHref) {
+                    $(this).addClass('is-active-report');
+                }
+            });
+        }
+    });
 </script>
 
 <?php

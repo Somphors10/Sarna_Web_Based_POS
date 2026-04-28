@@ -248,6 +248,41 @@
     margin-top: 2px;
 }
 
+.neo-global-content .neo-report-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.neo-global-content .neo-report-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.neo-global-content .neo-report-breadcrumb a {
+    color: #0f766e;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.neo-global-content .neo-report-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.neo-global-content .neo-report-breadcrumb-sep {
+    color: #94a3b8;
+}
+
+.neo-global-content .neo-report-breadcrumb-current {
+    color: #475569;
+    font-weight: 600;
+}
+
 .neo-global-content #report_summary,
 .neo-global-content #chart_report_summary,
 .neo-global-content #payment_summary {
@@ -297,6 +332,13 @@
 .neo-global-content .panel.panel-primary .list-group-item:hover {
     background: #f8fafc;
     color: #0f172a;
+}
+
+.neo-global-content .panel.panel-primary .list-group-item.is-active-report {
+    background: #ecfdf5;
+    color: #0f766e;
+    border-left: 3px solid #22c55e;
+    font-weight: 600;
 }
 
 /* Receivings feature refresh */
