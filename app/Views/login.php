@@ -98,6 +98,9 @@
                 <div class="d-grid">
                     <button class="btn btn-lg btn-primary" name="login-button" type="submit"><?= lang('Login.go') ?></button>
                 </div>
+                <div class="d-flex justify-content-center mt-3 small">
+                    <a href="<?= site_url('saas') ?>">Our POS Service</a>
+                </div>
                 <?= form_close() ?>
             </section>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\TenantContext;
 use App\Models\Employee;
 use App\Models\Module;
 
@@ -44,7 +45,24 @@ class Secure_Controller extends BaseController
             exit();
         }
 
+        $this->session = session();
         $logged_in_employee_info = $this->employee->get_logged_in_employee_info();
+        $tenant_id = (int)($this->session->get('tenant_id') ?? 0);
+        if ($tenant_id <= 0) {
+            $tenant_id = (int)($logged_in_employee_info->tenant_id ?? 0);
+            if ($tenant_id <= 0) {
+                $tenant_row = db_connect('platform')
+                    ->table('tenants')
+                    ->select('tenant_id')
+                    ->where('tenant_code', 'default')
+                    ->get(1)
+                    ->getRow();
+                $tenant_id = (int)($tenant_row->tenant_id ?? 1);
+            }
+            $this->session->set('tenant_id', $tenant_id);
+        }
+        (new TenantContext())->bootstrapSessionTenantDatabase($tenant_id);
+
         if (
             !$this->employee->has_module_grant($module_id, $logged_in_employee_info->person_id)
             || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, $logged_in_employee_info->person_id))
@@ -54,7 +72,6 @@ class Secure_Controller extends BaseController
         }
 
         // Load up global global_view_data visible to all the loaded views
-        $this->session = session();
         if ($menu_group == null) {
             $menu_group = $this->session->get('menu_group');
         } else {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
@@ -14,6 +15,9 @@ use ReflectionException;
  */
 class Sale extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'sales';
     protected $primaryKey = 'sale_id';
     protected $useAutoIncrement = true;
@@ -28,7 +32,8 @@ class Sale extends Model
         'invoice_number',
         'dinner_table_id',
         'work_order_number',
-        'sale_type'
+        'sale_type',
+        'tenant_id'
     ];
 
     public function __construct()
@@ -93,6 +98,7 @@ class Sale extends Model
         );
 
         $builder->where('sales.sale_id', $sale_id);
+        $this->scopeTenant($builder, 'sales.tenant_id');
 
         $builder->groupBy('sales.sale_id');
         $builder->orderBy('sales.sale_time', 'asc');
@@ -426,6 +432,7 @@ class Sale extends Model
     public function exists(int $sale_id): bool
     {
         $builder = $this->db->table('sales');
+        $this->scopeTenant($builder, 'sales.tenant_id');
         $builder->where('sale_id', $sale_id);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
@@ -436,7 +443,13 @@ class Sale extends Model
      */
     public function update($sale_id = null, $sale_data = null): bool
     {
+        if (!is_array($sale_data)) {
+            return false;
+        }
+
+        $sale_data['tenant_id'] = $this->getTenantId();
         $builder = $this->db->table('sales');
+        $this->scopeTenant($builder, 'sales.tenant_id');
         $builder->where('sale_id', $sale_id);
         $update_data = $sale_data;
         unset($update_data['payments']);
@@ -466,7 +479,8 @@ class Sale extends Model
                         'payment_amount'  => $payment_amount,
                         'cash_refund'     => $cash_refund,
                         'cash_adjustment' => $cash_adjustment,
-                        'employee_id'     => $employee_id
+                        'employee_id'     => $employee_id,
+                        'tenant_id'       => $this->getTenantId()
                     ];
                     $success = $builder->insert($sales_payments_data);
                 } elseif ($payment_id != NEW_ENTRY) {
@@ -480,10 +494,13 @@ class Sale extends Model
                         ];
 
                         $builder->where('payment_id', $payment_id);
+                        $this->scopeTenant($builder, 'sales_payments.tenant_id');
                         $success = $builder->update($sales_payments_data);
                     } else {
                         // Remove existing payment transactions with a payment amount of zero
-                        $success = $builder->delete(['payment_id' => $payment_id]);
+                        $builder->where('payment_id', $payment_id);
+                        $this->scopeTenant($builder, 'sales_payments.tenant_id');
+                        $success = $builder->delete();
                     }
                 }
             }
@@ -542,7 +559,8 @@ class Sale extends Model
             'quote_number'      => $quote_number,
             'work_order_number' => $work_order_number,
             'dinner_table_id'   => $dinner_table_id,
-            'sale_type'         => $sale_type
+            'sale_type'         => $sale_type,
+            'tenant_id'         => $this->getTenantId()
         ];
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
@@ -555,6 +573,7 @@ class Sale extends Model
         } else {
             $builder = $this->db->table('sales');
             $builder->where('sale_id', $sale_id);
+            $this->scopeTenant($builder, 'sales.tenant_id');
             $builder->update($sales_data);
         }
 
@@ -579,7 +598,8 @@ class Sale extends Model
                 'payment_amount'  => $payment['payment_amount'],
                 'cash_refund'     => $payment['cash_refund'],
                 'cash_adjustment' => $payment['cash_adjustment'],
-                'employee_id'     => $employee_id
+                'employee_id'     => $employee_id,
+                'tenant_id'       => $this->getTenantId()
             ];
 
             $builder = $this->db->table('sales_payments');
@@ -611,7 +631,8 @@ class Sale extends Model
                 'item_cost_price'    => $item_data['cost_price'],
                 'item_unit_price'    => $item_data['price'],
                 'item_location'      => $item_data['item_location'],
-                'print_option'       => $item_data['print_option']
+                'print_option'       => $item_data['print_option'],
+                'tenant_id'          => $this->getTenantId()
             ];
 
             $builder = $this->db->table('sales_items');
@@ -644,7 +665,8 @@ class Sale extends Model
                     'trans_user'      => $employee_id,
                     'trans_location'  => $item_data['item_location'],
                     'trans_comment'   => $sale_remarks,
-                    'trans_inventory' => -$item_data['quantity']
+                    'trans_inventory' => -$item_data['quantity'],
+                    'tenant_id'       => $this->getTenantId()
                 ];
 
                 $inventory->insert($inv_data, false);
@@ -681,6 +703,7 @@ class Sale extends Model
 
         foreach ($sales_taxes as $line => $sales_tax) {
             $sales_tax['sale_id'] = $sale_id;
+            $sales_tax['tenant_id'] = $this->getTenantId();
             $builder->insert($sales_tax);
         }
     }
@@ -709,7 +732,8 @@ class Sale extends Model
                 'item_tax_amount'   => $tax_item['item_tax_amount'],
                 'sales_tax_code_id' => $tax_item['sales_tax_code_id'],
                 'tax_category_id'   => $tax_item['tax_category_id'],
-                'jurisdiction_id'   => $tax_item['jurisdiction_id']
+                'jurisdiction_id'   => $tax_item['jurisdiction_id'],
+                'tenant_id'         => $this->getTenantId()
             ];
 
             $builder->insert($sales_items_taxes);
@@ -722,6 +746,7 @@ class Sale extends Model
     public function get_sales_taxes(int $sale_id): array
     {
         $builder = $this->db->table('sales_taxes');
+        $this->scopeTenant($builder, 'sales_taxes.tenant_id');
         $builder->where('sale_id', $sale_id);
         $builder->orderBy('print_sequence', 'asc');
 
@@ -736,6 +761,7 @@ class Sale extends Model
     public function get_sales_item_taxes(int $sale_id, int $item_id): array
     {
         $builder = $this->db->table('sales_items_taxes');
+        $this->scopeTenant($builder, 'sales_items_taxes.tenant_id');
         $builder->select('item_id, name, percent');
         $builder->where('sale_id', $sale_id);
         $builder->where('item_id', $item_id);

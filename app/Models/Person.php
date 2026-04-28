@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -11,6 +12,9 @@ use stdClass;
  */
 class Person extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'people';
     protected $primaryKey = 'person_id';
     protected $useAutoIncrement = true;
@@ -27,8 +31,18 @@ class Person extends Model
         'zip',
         'country',
         'comments',
-        'gender'
+        'gender',
+        'tenant_id'
     ];
+
+    protected function initialize(): void
+    {
+        // Some tenant records can store an empty db_prefix.
+        // Enforce the legacy OSPOS prefix so tenant queries continue to work.
+        if (trim((string)$this->db->getPrefix()) === '') {
+            $this->db->setPrefix('ospos_');
+        }
+    }
 
     /**
      * Determines whether the given person exists in the people database table
@@ -41,6 +55,7 @@ class Person extends Model
     {
         $builder = $this->db->table('people');
         $builder->where('people.person_id', $person_id);
+        $this->scopeTenant($builder, 'people.tenant_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -54,6 +69,7 @@ class Person extends Model
     public function get_all(int $limit = 10000, int $offset = 0): ResultInterface
     {
         $builder = $this->db->table('people');
+        $this->scopeTenant($builder, 'people.tenant_id');
         $builder->orderBy('last_name', 'asc');
         $builder->limit($limit);
         $builder->offset($offset);
@@ -69,6 +85,7 @@ class Person extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('people');
+        $this->scopeTenant($builder, 'people.tenant_id');
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -84,6 +101,7 @@ class Person extends Model
     public function get_info(int $person_id): object
     {
         $builder = $this->db->table('people');
+        $this->scopeTenant($builder, 'people.tenant_id');
         $query = $builder->getWhere(['person_id' => $person_id], 1);
 
         if ($query->getNumRows() == 1) {
@@ -127,6 +145,7 @@ class Person extends Model
     public function get_multiple_info(array $person_ids): ResultInterface
     {
         $builder = $this->db->table('people');
+        $this->scopeTenant($builder, 'people.tenant_id');
         $builder->whereIn('person_id', $person_ids);
         $builder->orderBy('last_name', 'asc');
 
@@ -143,6 +162,7 @@ class Person extends Model
     public function save_value(array &$person_data, int $person_id = NEW_ENTRY): bool
     {
         $builder = $this->db->table('people');
+        $person_data['tenant_id'] = $this->getTenantId();
 
         if ($person_id == NEW_ENTRY || !$this->exists($person_id)) {
             if ($builder->insert($person_data)) {
@@ -155,6 +175,7 @@ class Person extends Model
         }
 
         $builder->where('person_id', $person_id);
+        $this->scopeTenant($builder, 'people.tenant_id');
 
         return $builder->update($person_data);
     }
@@ -171,6 +192,7 @@ class Person extends Model
         $suggestions = [];
 
         $builder = $this->db->table('people');
+        $this->scopeTenant($builder, 'people.tenant_id');
 
         // TODO: If this won't be added back into the code later, we should delete this commented section of code
         // $builder->select('person_id');

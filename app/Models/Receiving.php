@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -12,6 +13,9 @@ use ReflectionException;
  */
 class Receiving extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'receivings';
     protected $primaryKey = 'receiving_id';
     protected $useAutoIncrement = true;
@@ -23,7 +27,8 @@ class Receiving extends Model
         'comment',
         'receiving_id',
         'payment_type',
-        'reference'
+        'reference',
+        'tenant_id'
     ];
 
     /**
@@ -33,6 +38,7 @@ class Receiving extends Model
     public function get_info(int $receiving_id): ResultInterface
     {
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->join('people', 'people.person_id = receivings.supplier_id', 'LEFT');
         $builder->join('suppliers', 'suppliers.person_id = receivings.supplier_id', 'LEFT');
         $builder->where('receiving_id', $receiving_id);
@@ -47,6 +53,7 @@ class Receiving extends Model
     public function get_receiving_by_reference(string $reference): ResultInterface
     {
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->where('reference', $reference);
 
         return $builder->get();
@@ -79,6 +86,7 @@ class Receiving extends Model
     public function exists(int $receiving_id): bool
     {
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->where('receiving_id', $receiving_id);
 
         return ($builder->get()->getNumRows() == 1);
@@ -91,7 +99,13 @@ class Receiving extends Model
      */
     public function update($receiving_id = null, $receiving_data = null): bool
     {
+        if (!is_array($receiving_data)) {
+            return false;
+        }
+
+        $receiving_data['tenant_id'] = $this->getTenantId();
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->where('receiving_id', $receiving_id);
 
         return $builder->update($receiving_data);
@@ -118,7 +132,8 @@ class Receiving extends Model
             'employee_id'    => $employee_id,
             'payment_type'   => $payment_type,
             'comment'        => $comment,
-            'reference'      => $reference
+            'reference'      => $reference,
+            'tenant_id'      => $this->getTenantId()
         ];
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
@@ -146,7 +161,8 @@ class Receiving extends Model
                 'discount_type'      => $item_data['discount_type'],
                 'item_cost_price'    => $cur_item_info->cost_price,
                 'item_unit_price'    => $item_data['price'],
-                'item_location'      => $item_data['item_location']
+                'item_location'      => $item_data['item_location'],
+                'tenant_id'          => $this->getTenantId()
             ];
 
             $builder->insert($receivings_items_data);
@@ -177,7 +193,8 @@ class Receiving extends Model
                 'trans_user'      => $employee_id,
                 'trans_location'  => $item_data['item_location'],
                 'trans_comment'   => $recv_remarks,
-                'trans_inventory' => $items_received
+                'trans_inventory' => $items_received,
+                'tenant_id'       => $this->getTenantId()
             ];
 
             $inventory->insert($inv_data, false);
@@ -247,10 +264,12 @@ class Receiving extends Model
 
         // Delete all items
         $builder = $this->db->table('receivings_items');
+        $this->scopeTenant($builder, 'receivings_items.tenant_id');
         $builder->delete(['receiving_id' => $receiving_id]);
 
         // Delete sale itself
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->delete(['receiving_id' => $receiving_id]);
 
         // Execute transaction

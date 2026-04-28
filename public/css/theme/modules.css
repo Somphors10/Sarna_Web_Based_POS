@@ -274,6 +274,14 @@
     text-decoration: underline;
 }
 
+.neo-global-content .neo-report-breadcrumb a:focus,
+.neo-global-content .neo-report-breadcrumb a:active,
+.neo-global-content .neo-report-breadcrumb a:focus-visible {
+    outline: none;
+    box-shadow: none;
+    text-decoration: underline;
+}
+
 .neo-global-content .neo-report-breadcrumb-sep {
     color: #94a3b8;
 }
@@ -332,6 +340,16 @@
 .neo-global-content .panel.panel-primary .list-group-item:hover {
     background: #f8fafc;
     color: #0f172a;
+}
+
+.neo-global-content .panel.panel-primary .list-group-item:focus,
+.neo-global-content .panel.panel-primary .list-group-item:active,
+.neo-global-content .panel.panel-primary .list-group-item:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background: #f8fafc;
+    color: #0f172a;
+    text-decoration: none;
 }
 
 .neo-global-content .panel.panel-primary .list-group-item.is-active-report {

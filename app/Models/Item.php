@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -16,6 +17,9 @@ use stdClass;
  */
 class Item extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'items';
     protected $primaryKey = 'item_id';
     protected $useAutoIncrement = true;
@@ -40,7 +44,8 @@ class Item extends Model
         'qty_per_pack',
         'pack_name',
         'low_sell_item_id',
-        'hsn_code'
+        'hsn_code',
+        'tenant_id'
     ];
 
 
@@ -50,8 +55,11 @@ class Item extends Model
     public function exists(string $item_id, bool $ignore_deleted = false, bool $deleted = false): bool
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
+        $builder->groupStart();
         $builder->where('item_id', $item_id);
         $builder->orWhere('item_number', $item_id);
+        $builder->groupEnd();
 
         if (!$ignore_deleted) {
             $builder->where('deleted', $deleted);
@@ -72,6 +80,7 @@ class Item extends Model
         }
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->where('item_number', $item_number);
         $builder->where('deleted !=', 1);
         $builder->where('item_id !=', intval($item_id));
@@ -90,6 +99,7 @@ class Item extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -102,6 +112,7 @@ class Item extends Model
     public function get_tax_category_usage(int $tax_category_id): int    // TODO: This function is never called in the code.
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->where('tax_category_id', $tax_category_id);
 
         return $builder->countAllResults();
@@ -139,12 +150,21 @@ class Item extends Model
 
         $config = config(OSPOS::class)->settings;
         $builder = $this->db->table('items AS items');    // TODO: I'm not sure if it's needed to write items AS items... I think you can just get away with items
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         // get_found_rows case
         if ($count_only) {
             $builder->select('COUNT(DISTINCT items.item_id) AS count');
         } else {
             $builder->select('MAX(items.item_id) AS item_id');
+            $builder->select('MAX(
+                (
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('items') . ' AS i2
+                    WHERE i2.tenant_id = items.tenant_id
+                      AND i2.item_id <= items.item_id
+                )
+            ) AS tenant_item_seq', false);
             $builder->select('MAX(items.name) AS name');
             $builder->select('MAX(items.category) AS category');
             $builder->select('MAX(items.supplier_id) AS supplier_id');
@@ -272,10 +292,11 @@ class Item extends Model
     public function get_all(int $stock_location_id = NEW_ENTRY, int $rows = 0, int $limit_from = 0): ResultInterface
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         if ($stock_location_id > -1) {
             $builder->join('item_quantities', 'item_quantities.item_id = items.item_id');
-            $builder->where('location_id', $stock_location_id);
+            $builder->where('item_quantities.location_id', $stock_location_id);
         }
 
         $builder->where('items.deleted', 0);
@@ -296,6 +317,7 @@ class Item extends Model
     public function get_info(int $item_id): object
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('items.*');
         $builder->select('GROUP_CONCAT(attribute_value SEPARATOR \'|\') AS attribute_values');
         $builder->select('GROUP_CONCAT(attribute_decimal SEPARATOR \'|\') AS attribute_dvalues');
@@ -344,6 +366,7 @@ class Item extends Model
     public function get_info_by_id_or_number(string $item_id, bool $include_deleted = true)
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->groupStart();
         $builder->where('items.item_number', $item_id);
 
@@ -378,9 +401,12 @@ class Item extends Model
     public function get_item_id(string $item_number, bool $ignore_deleted = false, bool $deleted = false): bool|int
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->join('suppliers', 'suppliers.person_id = items.supplier_id', 'left');
-        $builder->where('item_number', $item_number);
-        $builder->orWhere('item_id', $item_number);
+        $builder->groupStart();
+        $builder->where('items.item_number', $item_number);
+        $builder->orWhere('items.item_id', $item_number);
+        $builder->groupEnd();
 
         if (!$ignore_deleted) {
             $builder->where('items.deleted', $deleted);
@@ -403,7 +429,14 @@ class Item extends Model
         $format = $this->db->escape(dateformat_mysql());
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('items.*');
+        $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('items') . ' AS i2
+                WHERE i2.tenant_id = items.tenant_id
+                  AND i2.item_id <= items.item_id
+            ) AS tenant_item_seq', false);
         $builder->select('MAX(company_name) AS company_name');
         $builder->select('GROUP_CONCAT(DISTINCT CONCAT_WS(\'_\', definition_id, attribute_value) ORDER BY definition_id SEPARATOR \'|\') AS attribute_values');
         $builder->select("GROUP_CONCAT(DISTINCT CONCAT_WS('_', definition_id, DATE_FORMAT(attribute_date, $format)) ORDER BY definition_id SEPARATOR '|') AS attribute_dtvalues");
@@ -415,7 +448,7 @@ class Item extends Model
         $builder->join('attribute_links', 'attribute_links.item_id = items.item_id AND sale_id IS NULL AND receiving_id IS NULL', 'left');
         $builder->join('attribute_values', 'attribute_links.attribute_id = attribute_values.attribute_id', 'left');
 
-        $builder->where('location_id', $location_id);
+        $builder->where('item_quantities.location_id', $location_id);
         $builder->whereIn('items.item_id', $item_ids);
 
         $builder->groupBy('items.item_id');
@@ -429,6 +462,7 @@ class Item extends Model
     public function save_value(array &$item_data, int $item_id = NEW_ENTRY): bool    // TODO: need to bring this in line with parent or change the name
     {
         $builder = $this->db->table('items');
+        $item_data['tenant_id'] = $this->getTenantId();
 
         if ($item_id < 1 || !$this->exists($item_id, true)) {
             if ($builder->insert($item_data)) {
@@ -436,6 +470,7 @@ class Item extends Model
                 if ($item_id < 1) {
                     $builder = $this->db->table('items');
                     $builder->where('item_id', $item_data['item_id']);
+                    $this->scopeTenant($builder, 'items.tenant_id');
                     $builder->update(['low_sell_item_id' => $item_data['item_id']]);
                 }
 
@@ -449,6 +484,7 @@ class Item extends Model
 
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         return $builder->update($item_data);
     }
@@ -458,8 +494,10 @@ class Item extends Model
      */
     public function update_multiple(array $item_data, string $item_ids): bool
     {
+        $item_data['tenant_id'] = $this->getTenantId();
         $builder = $this->db->table('items');
         $builder->whereIn('item_id', explode(':', $item_ids));
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         return $builder->update($item_data);
     }
@@ -477,6 +515,7 @@ class Item extends Model
 
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
         $success = $builder->update(['deleted' => 1]);
 
         $inventory = model(Inventory::class);
@@ -496,6 +535,7 @@ class Item extends Model
     {
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         return $builder->update(['deleted' => 0]);
     }
@@ -514,6 +554,7 @@ class Item extends Model
 
         $builder = $this->db->table('items');
         $builder->whereIn('item_id', $item_ids);
+        $this->scopeTenant($builder, 'items.tenant_id');
         $success = $builder->update(['deleted' => 1]);
 
         $inventory = model(Inventory::class);
@@ -638,6 +679,7 @@ class Item extends Model
         $non_kit = [ITEM, ITEM_AMOUNT_ENTRY];
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select($this->get_search_suggestion_format('item_id, name, pack_name'));
         $builder->where('deleted', $filters['is_deleted']);
         $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -649,6 +691,7 @@ class Item extends Model
         }
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select($this->get_search_suggestion_format('item_id, item_number, pack_name'));
         $builder->where('deleted', $filters['is_deleted']);
         $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -662,6 +705,7 @@ class Item extends Model
         if (!$unique) {
             // Search by category
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select('category');
             $builder->where('deleted', $filters['is_deleted']);
             $builder->distinct();    // TODO: duplicate code.  Refactor method.
@@ -689,6 +733,7 @@ class Item extends Model
 
             // Search by description
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select($this->get_search_suggestion_format('item_id, name, pack_name, description'));
             $builder->where('deleted', $filters['is_deleted']);
             $builder->like('description', $search);    // TODO: duplicate code, refactor method.
@@ -742,6 +787,7 @@ class Item extends Model
         $non_kit = [ITEM, ITEM_AMOUNT_ENTRY];
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select($this->get_search_suggestion_format('item_id, name, pack_name'));
         $builder->where('deleted', $filters['is_deleted']);
         $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -754,6 +800,7 @@ class Item extends Model
         }
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select($this->get_search_suggestion_format('item_id, item_number, pack_name'));
         $builder->where('deleted', $filters['is_deleted']);
         $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -768,6 +815,7 @@ class Item extends Model
         if (!$unique) {
             // Search by category
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select('category');
             $builder->where('deleted', $filters['is_deleted']);
             $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -796,6 +844,7 @@ class Item extends Model
 
             // Search by description
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select($this->get_search_suggestion_format('item_id, name, pack_name, description'));
             $builder->where('deleted', $filters['is_deleted']);
             $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
@@ -849,6 +898,7 @@ class Item extends Model
         $non_kit = [ITEM, ITEM_AMOUNT_ENTRY];    // TODO: This variable is never used.
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('item_id, name');
         $builder->where('deleted', $filters['is_deleted']);
         $builder->where('item_type', ITEM_KIT);
@@ -860,6 +910,7 @@ class Item extends Model
         }
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('item_id, item_number');
         $builder->where('deleted', $filters['is_deleted']);
         $builder->like('item_number', $search);
@@ -873,6 +924,7 @@ class Item extends Model
         if (!$unique) {
             // Search by category
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select('category');
             $builder->where('deleted', $filters['is_deleted']);
             $builder->where('item_type', ITEM_KIT);
@@ -900,6 +952,7 @@ class Item extends Model
 
             // Search by description
             $builder = $this->db->table('items');
+            $this->scopeTenant($builder, 'items.tenant_id');
             $builder->select('item_id, name, description');
             $builder->where('deleted', $filters['is_deleted']);
             $builder->where('item_type', ITEM_KIT);
@@ -948,6 +1001,7 @@ class Item extends Model
         $suggestions = [];
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select($this->get_search_suggestion_format('item_id, pack_name'));
         $builder->where('deleted', '0');
         $builder->where('stock_type', '0'); // Stocked items only    // TODO: '0' should be replaced with a constant.
@@ -970,6 +1024,7 @@ class Item extends Model
         $suggestions = [];
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->distinct();
         $builder->select('category');
         $builder->like('category', $search);
@@ -992,6 +1047,7 @@ class Item extends Model
         $suggestions = [];
 
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->distinct();
         $builder->select('location');
         $builder->like('location', $search);
@@ -1010,6 +1066,7 @@ class Item extends Model
     public function get_categories(): ResultInterface|bool    // TODO: This function is never called in the code.
     {
         $builder = $this->db->table('items');
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('category');
         $builder->where('deleted', 0);
         $builder->distinct();
@@ -1061,6 +1118,7 @@ class Item extends Model
     {
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->update(['item_number' => $item_number]);    // TODO: this function should probably return the result of update() and add ": bool" to the function signature
     }
 
@@ -1073,6 +1131,7 @@ class Item extends Model
     {
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->update(['name' => $item_name]);
     }
 
@@ -1085,6 +1144,7 @@ class Item extends Model
     {
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
+        $this->scopeTenant($builder, 'items.tenant_id');
         $builder->update(['description' => $item_description]);
     }
 

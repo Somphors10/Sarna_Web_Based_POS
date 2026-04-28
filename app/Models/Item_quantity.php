@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Model;
 use stdClass;
 
@@ -10,12 +11,16 @@ use stdClass;
  */
 class Item_quantity extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'item_quantities';
     protected $primaryKey = 'item_id';
     protected $useAutoIncrement = false;
     protected $useSoftDeletes = false;
     protected $allowedFields = [
-        'quantity'
+        'quantity',
+        'tenant_id'
     ];
 
     protected $item_id;
@@ -30,6 +35,7 @@ class Item_quantity extends Model
     public function exists(int $item_id, int $location_id): bool
     {
         $builder = $this->db->table('item_quantities');
+        $this->scopeTenant($builder, 'item_quantities.tenant_id');
         $builder->where('item_id', $item_id);
         $builder->where('location_id', $location_id);
 
@@ -44,12 +50,14 @@ class Item_quantity extends Model
      */
     public function save_value(array $location_detail, int $item_id, int $location_id): bool
     {
+        $location_detail['tenant_id'] = $this->getTenantId();
         if (!$this->exists($item_id, $location_id)) {
             $builder = $this->db->table('item_quantities');
             return $builder->insert($location_detail);
         }
 
         $builder = $this->db->table('item_quantities');
+        $this->scopeTenant($builder, 'item_quantities.tenant_id');
         $builder->where('item_id', $item_id);
         $builder->where('location_id', $location_id);
 
@@ -64,6 +72,7 @@ class Item_quantity extends Model
     public function get_item_quantity(int $item_id, int $location_id): array|Item_quantity|StdClass|null
     {
         $builder = $this->db->table('item_quantities');
+        $this->scopeTenant($builder, 'item_quantities.tenant_id');
         $builder->where('item_id', $item_id);
         $builder->where('location_id', $location_id);
         $result = $builder->get()->getRow();
@@ -103,6 +112,7 @@ class Item_quantity extends Model
     public function reset_quantity(int $item_id): bool
     {
         $builder = $this->db->table('item_quantities');
+        $this->scopeTenant($builder, 'item_quantities.tenant_id');
         $builder->where('item_id', $item_id);
 
         return $builder->update(['quantity' => 0]);
@@ -114,6 +124,7 @@ class Item_quantity extends Model
     public function reset_quantity_list(array $item_ids): bool
     {
         $builder = $this->db->table('item_quantities');
+        $this->scopeTenant($builder, 'item_quantities.tenant_id');
         $builder->whereIn('item_id', $item_ids);
 
         return $builder->update(['quantity' => 0]);

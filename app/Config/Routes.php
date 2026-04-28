@@ -10,6 +10,20 @@ $routes->setDefaultController('Login');
 $routes->get('/', 'Login::index');
 $routes->get('login', 'Login::index');
 $routes->post('login', 'Login::index');
+$routes->get('saas', 'Saas::index');
+$routes->get('saas/register', 'Saas::register');
+$routes->post('saas/register', 'Saas::postRegister');
+$routes->get('register-company', 'Company_register::index');
+$routes->post('register-company', 'Company_register::index');
+
+$routes->get('super-admin', 'Super_admin::index');
+$routes->get('super-admin/login', 'Super_admin::login');
+$routes->post('super-admin/login', 'Super_admin::login');
+$routes->get('super-admin/logout', 'Super_admin::logout');
+$routes->post('super-admin/toggle-status/(:num)', 'Super_admin::postToggleStatus/$1');
+$routes->post('super-admin/create-admin', 'Super_admin::postCreateAdmin');
+$routes->post('super-admin/approve-request/(:num)', 'Super_admin::postApproveRequest/$1');
+$routes->post('super-admin/reject-request/(:num)', 'Super_admin::postRejectRequest/$1');
 
 $routes->add('no_access/index/(:segment)', 'No_access::index/$1');
 $routes->add('no_access/index/(:segment)/(:segment)', 'No_access::index/$1/$2');

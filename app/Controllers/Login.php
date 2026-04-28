@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\TenantContext;
 use App\Libraries\MY_Migration;
 use App\Models\Employee;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -23,6 +24,10 @@ class Login extends BaseController
     {
         $this->employee = model(Employee::class);
         if (!$this->employee->is_logged_in()) {
+            // Login must always start from neutral DB context.
+            // Stale tenant DB session overrides can break auth and render Whoops.
+            (new TenantContext())->clearTenantDatabaseSession();
+
             $migration = new MY_Migration(config('Migrations'));
             $config = config(OSPOS::class)->settings;
 

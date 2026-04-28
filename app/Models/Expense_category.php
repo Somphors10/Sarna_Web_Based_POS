@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -11,6 +13,9 @@ use stdClass;
  */
 class Expense_category extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'expense_categories';
     protected $primaryKey = 'expense_category_id';
     protected $useAutoIncrement = true;
@@ -18,8 +23,16 @@ class Expense_category extends Model
     protected $allowedFields = [
         'category_name',
         'category_description',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
+
+    private function scopeTenantIfSupported(BaseBuilder $builder, string $column = 'expense_categories.tenant_id'): void
+    {
+        if ($this->db->tableExists('expense_categories') && $this->db->fieldExists('tenant_id', 'expense_categories')) {
+            $builder->where($column, $this->getTenantId());
+        }
+    }
 
     /**
      * Determines if a given Expense_id is an Expense category
@@ -28,6 +41,7 @@ class Expense_category extends Model
     {
         $builder = $this->db->table('expense_categories');
         $builder->where('expense_category_id', $expense_category_id);
+        $this->scopeTenantIfSupported($builder);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -38,6 +52,7 @@ class Expense_category extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('expense_categories');
+        $this->scopeTenantIfSupported($builder);
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -50,6 +65,7 @@ class Expense_category extends Model
     {
         $builder = $this->db->table('expense_categories');
         $builder->where('expense_category_id', $expense_category_id);
+        $this->scopeTenantIfSupported($builder);
         $builder->where('deleted', 0);
         $query = $builder->get();
 
@@ -74,6 +90,7 @@ class Expense_category extends Model
     public function get_all(int $rows = 0, int $limit_from = 0, bool $no_deleted = false): ResultInterface
     {
         $builder = $this->db->table('expense_categories');
+        $this->scopeTenantIfSupported($builder);
 
         if ($no_deleted) {
             $builder->where('deleted', 0);
@@ -94,6 +111,7 @@ class Expense_category extends Model
     public function get_multiple_info(array $expense_category_ids): ResultInterface
     {
         $builder = $this->db->table('expense_categories');
+        $this->scopeTenantIfSupported($builder);
         $builder->whereIn('expense_category_id', $expense_category_ids);
         $builder->orderBy('category_name', 'asc');
 
@@ -106,6 +124,9 @@ class Expense_category extends Model
     public function save_value(array &$expense_category_data, int $expense_category_id = NEW_ENTRY): bool
     {
         $builder = $this->db->table('expense_categories');
+        if ($this->db->tableExists('expense_categories') && $this->db->fieldExists('tenant_id', 'expense_categories')) {
+            $expense_category_data['tenant_id'] = $this->getTenantId();
+        }
 
         if ($expense_category_id == NEW_ENTRY || !$this->exists($expense_category_id)) {
             if ($builder->insert($expense_category_data)) {
@@ -118,6 +139,7 @@ class Expense_category extends Model
         }
 
         $builder->where('expense_category_id', $expense_category_id);
+        $this->scopeTenantIfSupported($builder);
 
         return $builder->update($expense_category_data);
     }
@@ -128,6 +150,7 @@ class Expense_category extends Model
     public function delete_list(array $expense_category_ids): bool
     {
         $builder = $this->db->table('expense_categories');
+        $this->scopeTenantIfSupported($builder);
         $builder->whereIn('expense_category_id', $expense_category_ids);
 
         return $builder->update(['deleted' => 1]);
@@ -154,10 +177,23 @@ class Expense_category extends Model
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('expense_categories AS expense_categories');
+        $this->scopeTenantIfSupported($builder, 'expense_categories.tenant_id');
 
         // get_found_rows case
         if ($count_only) {
             $builder->select('COUNT(expense_categories.expense_category_id) as count');
+        } else {
+            $builder->select('expense_categories.*');
+
+            if ($this->db->tableExists('expense_categories') && $this->db->fieldExists('tenant_id', 'expense_categories')) {
+                $builder->select('(
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('expense_categories') . ' AS ec2
+                    WHERE ec2.tenant_id = expense_categories.tenant_id
+                      AND ec2.deleted = 0
+                      AND ec2.expense_category_id <= expense_categories.expense_category_id
+                ) AS tenant_expense_category_seq', false);
+            }
         }
 
         $builder->groupStart();

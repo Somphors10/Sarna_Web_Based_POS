@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 
@@ -13,6 +14,9 @@ use CodeIgniter\Model;
  */
 class Inventory extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'inventory';
     protected $primaryKey = 'trans_id';
     protected $useAutoIncrement = true;
@@ -23,8 +27,18 @@ class Inventory extends Model
         'trans_date',
         'trans_comment',
         'trans_inventory',
-        'trans_location'
+        'trans_location',
+        'tenant_id'
     ];
+
+    public function insert($data = null, bool $returnID = true): bool|int|string
+    {
+        if (is_array($data) && !array_key_exists('tenant_id', $data)) {
+            $data['tenant_id'] = $this->getTenantId();
+        }
+
+        return parent::insert($data, $returnID);
+    }
 
     /**
      * @param $comment
@@ -34,6 +48,7 @@ class Inventory extends Model
     public function update($comment = null, $inventory_data = null): bool
     {
         $builder = $this->db->table('inventory');
+        $this->scopeTenant($builder, 'inventory.tenant_id');
         $builder->where('trans_comment', $comment);
 
         return $builder->update($inventory_data);
@@ -49,6 +64,7 @@ class Inventory extends Model
     public function get_inventory_data_for_item(int $item_id, bool $location_id = false): ResultInterface
     {
         $builder = $this->db->table('inventory');
+        $this->scopeTenant($builder, 'inventory.tenant_id');
         $builder->where('trans_items', $item_id);
 
         if ($location_id) {
@@ -76,7 +92,8 @@ class Inventory extends Model
                     'trans_items'     => $item_id,
                     'trans_location'  => $inventory_sum['location_id'],
                     'trans_comment'   => lang('Items.is_deleted'),
-                    'trans_user'      => $employee->get_logged_in_employee_info()->person_id
+                    'trans_user'      => $employee->get_logged_in_employee_info()->person_id,
+                    'tenant_id'       => $this->getTenantId()
                 ]);
             }
         }
@@ -91,6 +108,7 @@ class Inventory extends Model
     public function get_inventory_sum(int $item_id): array
     {
         $builder = $this->db->table('inventory');
+        $this->scopeTenant($builder, 'inventory.tenant_id');
         $builder->select('SUM(trans_inventory) AS sum, MAX(trans_location) AS location_id');
         $builder->where('trans_items', $item_id);
         $builder->groupBy('trans_location');

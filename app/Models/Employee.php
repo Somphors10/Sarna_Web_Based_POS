@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Libraries\TenantContext;
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Session\Session;
+use Throwable;
 
 /**
  * Employee class
@@ -13,6 +16,8 @@ use CodeIgniter\Session\Session;
  */
 class Employee extends Person
 {
+    use TenantAware;
+
     public Session $session;
     protected $table = 'Employees';
     protected $primaryKey = 'person_id';
@@ -24,7 +29,8 @@ class Employee extends Person
         'deleted',
         'hashversion',
         'language',
-        'language_code'
+        'language_code',
+        'tenant_id'
     ];
 
     public function __construct()
@@ -41,6 +47,7 @@ class Employee extends Person
         $builder = $this->db->table('employees');
         $builder->join('people', 'people.person_id = employees.person_id');
         $builder->where('employees.person_id', $person_id);
+        $this->scopeTenant($builder, 'employees.tenant_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -55,6 +62,7 @@ class Employee extends Person
         $builder = $this->db->table('employees');
         $builder->where('employees.username', $username);
         $builder->where('employees.person_id <>', $employee_id);
+        $this->scopeTenant($builder, 'employees.tenant_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -65,6 +73,7 @@ class Employee extends Person
     public function get_total_rows(): int
     {
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -76,6 +85,7 @@ class Employee extends Person
     public function get_all(int $limit = 10000, int $offset = 0): ResultInterface
     {
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->where('deleted', 0);
         $builder->join('people', 'employees.person_id = people.person_id');
         $builder->orderBy('last_name', 'asc');
@@ -93,6 +103,7 @@ class Employee extends Person
         $builder = $this->db->table('employees');
         $builder->join('people', 'people.person_id = employees.person_id');
         $builder->where('employees.person_id', $person_id);
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $query = $builder->get();
 
         if ($query->getNumRows() == 1) {    // TODO: ===
@@ -119,6 +130,7 @@ class Employee extends Person
         $builder = $this->db->table('employees');
         $builder->join('people', 'people.person_id = employees.person_id');
         $builder->whereIn('employees.person_id', $person_ids);
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->orderBy('last_name', 'asc');
 
         return $builder->get();
@@ -130,6 +142,9 @@ class Employee extends Person
     public function save_employee(array &$person_data, array &$employee_data, array &$grants_data, int $employee_id = NEW_ENTRY): bool
     {
         $success = false;
+        $tenant_id = $this->getTenantId();
+        $person_data['tenant_id'] = $tenant_id;
+        $employee_data['tenant_id'] = $tenant_id;
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
@@ -194,6 +209,7 @@ class Employee extends Person
         if ($builder->delete(['person_id' => $employee_id])) {
             $builder = $this->db->table('employees');
             $builder->where('person_id', $employee_id);
+            $this->scopeTenant($builder, 'employees.tenant_id');
             $success = $builder->update(['deleted' => 1]);
         }
 
@@ -224,6 +240,7 @@ class Employee extends Person
             // Delete from employee table
             $builder = $this->db->table('employees');
             $builder->whereIn('person_id', $person_ids);
+            $this->scopeTenant($builder, 'employees.tenant_id');
             $success = $builder->update(['deleted' => 1]);
         }
 
@@ -366,20 +383,31 @@ class Employee extends Person
     public function login(string $username, string $password): bool
     {
         $builder = $this->db->table('employees');
-        $query = $builder->getWhere(['username' => $username, 'deleted' => 0], 1);
+        $builder->where('username', $username);
+        $builder->where('deleted', 0);
+        $query = $builder->get(1);
 
         if ($query->getNumRows() === 1) {
             $row = $query->getRow();
+            $tenant_id = (int)($row->tenant_id ?? 0);
+
+            if (!$this->is_tenant_active($tenant_id)) {
+                return false;
+            }
 
             // Compare passwords depending on the hash version
             if ($row->hash_version === '1' && $row->password === md5($password)) {
                 $builder->where('person_id', $row->person_id);
                 $this->session->set('person_id', $row->person_id);
+                $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
+                (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
                 return $builder->update(['hash_version' => 2, 'password' => $password_hash]);
             } elseif ($row->hash_version === '2' && password_verify($password, $row->password)) {
                 $this->session->set('person_id', $row->person_id);
+                $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
+                (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
 
                 return true;
             }
@@ -500,10 +528,16 @@ class Employee extends Person
     public function check_password(string $username, string $password): bool
     {
         $builder = $this->db->table('employees');
-        $query = $builder->getWhere(['username' => $username, 'deleted' => 0], 1);
+        $builder->where('username', $username);
+        $builder->where('deleted', 0);
+        $query = $builder->get(1);
 
         if ($query->getNumRows() == 1) {    // TODO: ===
             $row = $query->getRow();
+
+            if (!$this->is_tenant_active((int)($row->tenant_id ?? 0))) {
+                return false;
+            }
 
             if (password_verify($password, $row->password)) {
                 return true;
@@ -533,5 +567,35 @@ class Employee extends Person
         }
 
         return $success;
+    }
+
+    private function is_tenant_active(int $tenant_id): bool
+    {
+        if ($tenant_id <= 0) {
+            return true;
+        }
+
+        try {
+            $platform_db = db_connect('platform');
+            if (!$platform_db->tableExists('tenants')) {
+                return true;
+            }
+
+            $row = $platform_db->table('tenants')
+                ->select('status')
+                ->where('tenant_id', $tenant_id)
+                ->get(1)
+                ->getRow();
+
+            if ($row === null) {
+                return false;
+            }
+
+            return ((string)($row->status ?? 'active')) === 'active';
+        } catch (Throwable $e) {
+            // Fail open to avoid blocking authentication if platform DB
+            // is temporarily unavailable during migration setup.
+            return true;
+        }
     }
 }

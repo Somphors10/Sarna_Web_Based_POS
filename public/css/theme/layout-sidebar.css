@@ -43,10 +43,18 @@
 .neo-global-brand {
     display: block;
     margin: 6px 14px 10px;
-    color: #22c55e;
+    color: #2563eb;
     font-weight: 700;
     font-size: 28px;
     letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+.neo-global-brand:hover,
+.neo-global-brand:focus,
+.neo-global-brand:active,
+.neo-global-brand:visited {
+    color: #2563eb;
     text-decoration: none;
 }
 
@@ -86,7 +94,7 @@
 
 .neo-global-menu-item:hover {
     background: #f8fafc;
-    border-color: #e8f3ea;
+    border-color: #dbeafe;
     color: #334155;
     text-decoration: none;
 }
@@ -99,11 +107,11 @@
 }
 
 .neo-global-menu-item.is-active {
-    background: #ecfdf5;
-    border-color: #bbf7d0;
-    color: #0f766e;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
     font-weight: 600;
-    box-shadow: 0 6px 14px rgba(34, 197, 94, 0.18);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
 }
 
 .neo-global-menu-item.is-active::before {
@@ -114,7 +122,7 @@
     bottom: 7px;
     width: 4px;
     border-radius: 999px;
-    background: #22c55e;
+    background: #2563eb;
 }
 
 .neo-global-menu-item img {

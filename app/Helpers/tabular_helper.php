@@ -254,9 +254,8 @@ function get_person_data_row(object $person): array
 function customer_headers(): array
 {
     return [
-        ['people.person_id' => lang('Common.id')],
+        ['account_number'   => 'Customer ID'],
         ['company_name'      => lang('Customers.company_name')],
-        ['account_number'    => lang('Customers.account_number')],
         ['last_name'        => lang('Common.last_name')],
         ['first_name'       => lang('Common.first_name')],
         ['email'            => lang('Common.email')],
@@ -290,11 +289,15 @@ function get_customer_manage_table_headers(): string
 function get_customer_data_row(object $person, object $stats): array
 {
     $controller = get_controller();
+    $tenant_seq = isset($person->tenant_customer_seq) ? (int)$person->tenant_customer_seq : (int)$person->person_id;
+    $tenant_customer_code = empty($person->account_number)
+        ? ('CUST-' . str_pad((string)$tenant_seq, 5, '0', STR_PAD_LEFT))
+        : $person->account_number;
 
     return [
         'people.person_id' => $person->person_id,
+        'account_number'   => $tenant_customer_code,
         'company_name'     => $person->company_name,
-        'account_number'   => $person->account_number,
         'last_name'        => $person->last_name,
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
@@ -486,10 +489,14 @@ function get_item_data_row(object $item): array
         $item->name .= NAME_SEPARATOR . $item->pack_name;
     }
 
+    $tenant_item_seq = isset($item->tenant_item_seq)
+        ? (int)$item->tenant_item_seq
+        : (int)$item->item_id;
+
     $definition_names = $attribute->get_definitions_by_flags($attribute::SHOW_IN_ITEMS);
 
     $columns = [
-        'items.item_id' => $item->item_id,
+        'items.item_id' => $tenant_item_seq,
         'item_number'   => $item->item_number,
         'name'          => $item->name,
         'category'      => $item->category,
@@ -748,9 +755,12 @@ function get_expense_category_manage_table_headers(): string
 function get_expense_category_data_row(object $expense_category): array
 {
     $controller = get_controller();
+    $tenant_expense_category_seq = isset($expense_category->tenant_expense_category_seq)
+        ? (int)$expense_category->tenant_expense_category_seq
+        : (int)$expense_category->expense_category_id;
 
     return [
-        'expense_category_id'  => $expense_category->expense_category_id,
+        'expense_category_id'  => $tenant_expense_category_seq,
         'category_name'        => $expense_category->category_name,
         'category_description' => $expense_category->category_description,
         'edit'                 => anchor(
