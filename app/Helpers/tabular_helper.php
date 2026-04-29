@@ -365,9 +365,13 @@ function get_suppliers_manage_table_headers(): string
 function get_supplier_data_row(object $supplier): array
 {
     $controller = get_controller();
+    $tenant_supplier_seq = isset($supplier->tenant_supplier_seq)
+        ? (int)$supplier->tenant_supplier_seq
+        : (int)$supplier->person_id;
 
     return [
-        'people.person_id' => $supplier->person_id,
+        'person_id_key'     => (int)$supplier->person_id,
+        'people.person_id' => $tenant_supplier_seq,
         'company_name'     => html_entity_decode($supplier->company_name),
         'agency_name'      => $supplier->agency_name,
         'category'         => $supplier->category,
@@ -565,9 +569,13 @@ function get_giftcards_manage_table_headers(): string
 function get_giftcard_data_row(object $giftcard): array
 {
     $controller = get_controller();
+    $tenant_giftcard_seq = isset($giftcard->tenant_giftcard_seq)
+        ? (int)$giftcard->tenant_giftcard_seq
+        : (int)$giftcard->giftcard_id;
 
     return [
-        'giftcard_id'     => $giftcard->giftcard_id,
+        'giftcard_id_key' => (int)$giftcard->giftcard_id,
+        'giftcard_id'     => $tenant_giftcard_seq,
         'last_name'       => $giftcard->last_name,
         'first_name'      => $giftcard->first_name,
         'giftcard_number' => $giftcard->giftcard_number,
@@ -805,9 +813,13 @@ function get_expenses_manage_table_headers(): string
 function get_expenses_data_row(object $expense): array
 {
     $controller = get_controller();
+    $tenant_expense_seq = isset($expense->tenant_expense_seq)
+        ? (int)$expense->tenant_expense_seq
+        : (int)$expense->expense_id;
 
     return [
-        'expense_id'        => $expense->expense_id,
+        'expense_id_key'    => (int)$expense->expense_id,
+        'expense_id'        => $tenant_expense_seq,
         'date'              => to_datetime(strtotime($expense->date)),
         'supplier_name'     => $expense->supplier_name,
         'supplier_tax_code' => $expense->supplier_tax_code,

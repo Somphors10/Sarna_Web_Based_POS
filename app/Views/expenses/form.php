@@ -14,10 +14,15 @@
 
 <?= form_open("expenses/save/$expenses_info->expense_id", ['id' => 'expenses_edit_form', 'class' => 'form-horizontal']) ?>
     <fieldset id="item_basic_info">
+        <?php
+            $display_expense_id = isset($expenses_info->tenant_expense_seq)
+                ? (int)$expenses_info->tenant_expense_seq
+                : (int)$expenses_info->expense_id;
+        ?>
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Expenses.info'), 'expenses_info', ['class' => 'control-label col-xs-3']) ?>
-            <?= form_label(!empty($expenses_info->expense_id) ? lang('Expenses.expense_id') . " $expenses_info->expense_id" : '', 'expenses_info_id', ['class' => 'control-label col-xs-8', 'style' => 'text-align: left']) ?>
+            <?= form_label(!empty($expenses_info->expense_id) ? lang('Expenses.expense_id') . " $display_expense_id" : '', 'expenses_info_id', ['class' => 'control-label col-xs-8', 'style' => 'text-align: left']) ?>
         </div>
 
         <div class="form-group form-group-sm">

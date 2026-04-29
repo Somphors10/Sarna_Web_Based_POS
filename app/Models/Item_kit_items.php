@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Model;
 
 /**
@@ -9,12 +10,15 @@ use CodeIgniter\Model;
  */
 class Item_kit_items extends Model
 {
+    use TenantAware;
+
     protected $table = 'item_kit_items';
     protected $primaryKey = 'item_kit_id';
     protected $useAutoIncrement = true;
     protected $useSoftDeletes = false;
     protected $allowedFields = [
-        'kit_sequence'
+        'kit_sequence',
+        'tenant_id'
     ];
 
     /**
@@ -26,8 +30,11 @@ class Item_kit_items extends Model
         $builder->select('item_kits.item_kit_id, item_kit_items.item_id, quantity, kit_sequence, unit_price, item_type, stock_type');
         $builder->join('items as items', 'item_kit_items.item_id = items.item_id');
         $builder->join('item_kits as item_kits', 'item_kits.item_kit_id = item_kit_items.item_kit_id');
+        $this->scopeTenant($builder, 'item_kit_items.tenant_id');
+        $builder->groupStart();
         $builder->where('item_kits.item_kit_id', $item_kit_id);
         $builder->orWhere('item_kit_number', $item_kit_id);
+        $builder->groupEnd();
         $builder->orderBy('kit_sequence', 'asc');
 
         // Return an array of item kit items for an item
@@ -41,6 +48,7 @@ class Item_kit_items extends Model
     {
         $builder = $this->db->table('item_kit_items');
         $builder->where('item_kit_id', $item_kit_id);
+        $this->scopeTenant($builder, 'item_kit_items.tenant_id');
 
         $builder->orderBy('kit_sequence', 'desc');
 
@@ -64,6 +72,7 @@ class Item_kit_items extends Model
 
             foreach ($item_kit_items_data as $row) {
                 $row['item_kit_id'] = $item_kit_id;
+                $row['tenant_id'] = $this->getTenantId();
                 $success &= $builder->insert($row);
             }
         }
@@ -81,7 +90,9 @@ class Item_kit_items extends Model
     public function delete($item_kit_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('item_kit_items');
+        $builder->where('item_kit_id', $item_kit_id);
+        $this->scopeTenant($builder, 'item_kit_items.tenant_id');
 
-        return $builder->delete(['item_kit_id' => $item_kit_id]);
+        return $builder->delete();
     }
 }

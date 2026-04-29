@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -12,6 +14,8 @@ use stdClass;
  */
 class Expense extends Model
 {
+    use TenantAware;
+
     protected $table = 'expenses';
     protected $primaryKey = 'expense_id';
     protected $useAutoIncrement = true;
@@ -26,8 +30,35 @@ class Expense extends Model
         'deleted',
         'supplier_tax_code',
         'tax_amount',
-        'supplier_id'
+        'supplier_id',
+        'tenant_id'
     ];
+
+    private function hasExpensesTenantColumn(): bool
+    {
+        return $this->db->tableExists('expenses') && $this->db->fieldExists('tenant_id', 'expenses');
+    }
+
+    private function hasPeopleTenantColumn(): bool
+    {
+        return $this->db->tableExists('people') && $this->db->fieldExists('tenant_id', 'people');
+    }
+
+    private function scopeExpensesByTenant(BaseBuilder $builder, string $expenseColumn = 'expenses.tenant_id', string $employeeColumn = 'expenses.employee_id'): void
+    {
+        if ($this->hasExpensesTenantColumn()) {
+            $builder->where($expenseColumn, $this->getTenantId());
+            return;
+        }
+
+        if ($this->hasPeopleTenantColumn()) {
+            $builder->whereIn($employeeColumn, function (BaseBuilder $subquery) {
+                $subquery->select('person_id')
+                    ->from('people')
+                    ->where('tenant_id', $this->getTenantId());
+            });
+        }
+    }
 
     /**
      * Determines if a given Expense_id is an Expense
@@ -36,6 +67,7 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -47,6 +79,7 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         $expense_category = model(Expense_category::class);
         return $expense_category->get_info($builder->get()->getRow()->expense_category_id);    // TODO: refactor out the nested function call.
@@ -59,6 +92,7 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         $employee = model(Employee::class);
 
@@ -73,6 +107,7 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
         $builder->whereIn('expenses.expense_id', $expense_ids);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
         $builder->orderBy('expense_id', 'asc');
 
         return $builder->get();
@@ -127,11 +162,29 @@ class Expense extends Model
                 MAX(employees.last_name) AS last_name,
                 MAX(expense_categories.category_name) AS category_name
             ');
+
+            if ($this->hasExpensesTenantColumn()) {
+                $builder->select('(
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('expenses') . ' AS e2
+                    WHERE e2.tenant_id = expenses.tenant_id
+                      AND e2.expense_id <= expenses.expense_id
+                ) AS tenant_expense_seq', false);
+            } elseif ($this->hasPeopleTenantColumn()) {
+                $builder->select('(
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('expenses') . ' AS e2
+                    JOIN ' . $this->db->prefixTable('people') . ' AS p2 ON p2.person_id = e2.employee_id
+                    WHERE p2.tenant_id = ' . (int)$this->getTenantId() . '
+                      AND e2.expense_id <= expenses.expense_id
+                ) AS tenant_expense_seq', false);
+            }
         }
 
         $builder->join('people AS employees', 'employees.person_id = expenses.employee_id', 'LEFT');
         $builder->join('expense_categories AS expense_categories', 'expense_categories.expense_category_id = expenses.expense_category_id', 'LEFT');
         $builder->join('suppliers AS suppliers', 'suppliers.person_id = expenses.supplier_id', 'LEFT');
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         $builder->groupStart();
             $builder->like('employees.first_name', $search);
@@ -217,6 +270,24 @@ class Expense extends Model
         $builder->join('expense_categories AS expense_categories', 'expense_categories.expense_category_id = expenses.expense_category_id', 'LEFT');
         $builder->join('suppliers AS suppliers', 'suppliers.person_id = expenses.supplier_id', 'LEFT');
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
+
+        if ($this->hasExpensesTenantColumn()) {
+            $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('expenses') . ' AS e2
+                WHERE e2.tenant_id = expenses.tenant_id
+                  AND e2.expense_id <= expenses.expense_id
+            ) AS tenant_expense_seq', false);
+        } elseif ($this->hasPeopleTenantColumn()) {
+            $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('expenses') . ' AS e2
+                JOIN ' . $this->db->prefixTable('people') . ' AS p2 ON p2.person_id = e2.employee_id
+                WHERE p2.tenant_id = ' . (int)$this->getTenantId() . '
+                  AND e2.expense_id <= expenses.expense_id
+            ) AS tenant_expense_seq', false);
+        }
 
         $query = $builder->get();
 
@@ -261,6 +332,10 @@ class Expense extends Model
      */
     public function save_value(array &$expense_data, int $expense_id = NEW_ENTRY): bool
     {
+        if ($this->hasExpensesTenantColumn()) {
+            $expense_data['tenant_id'] = $this->getTenantId();
+        }
+
         $builder = $this->db->table('expenses');
 
         if ($expense_id == NEW_ENTRY || !$this->exists($expense_id)) {
@@ -274,6 +349,7 @@ class Expense extends Model
         }
 
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         return $builder->update($expense_data);
     }
@@ -284,15 +360,11 @@ class Expense extends Model
     public function delete_list(array $expense_ids): bool
     {
         $builder = $this->db->table('expenses');
-
-        $this->db->transStart();
         $builder->whereIn('expense_id', $expense_ids);
-        $success = $builder->update(['deleted' => 1]);
-        $this->db->transComplete();
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
+        $builder->delete();
 
-        $success &= $this->db->transStatus();
-
-        return $success;
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -305,6 +377,7 @@ class Expense extends Model
         // get payment summary
         $builder = $this->db->table('expenses');
         $builder->select('payment_type, COUNT(amount) AS count, SUM(amount) AS amount');
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
         $builder->where('deleted', $filters['is_deleted']);
 
         if (empty($config['date_or_time_format'])) {
@@ -353,6 +426,7 @@ class Expense extends Model
     {
         $builder = $this->db->table('expenses');
         $builder->where('expense_id', $expense_id);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
 
         return $builder->get();
     }

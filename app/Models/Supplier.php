@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 
 /**
@@ -19,8 +20,31 @@ class Supplier extends Person
         'tax_id',
         'deleted',
         'agency_name',
-        'category'
+        'category',
+        'tenant_id'
     ];
+
+    private function hasSupplierTenantColumn(): bool
+    {
+        return $this->db->tableExists('suppliers') && $this->db->fieldExists('tenant_id', 'suppliers');
+    }
+
+    private function hasPeopleTenantColumn(): bool
+    {
+        return $this->db->tableExists('people') && $this->db->fieldExists('tenant_id', 'people');
+    }
+
+    private function scopeSupplierTenant(BaseBuilder $builder): void
+    {
+        if ($this->hasPeopleTenantColumn()) {
+            $builder->where('people.tenant_id', $this->getTenantId());
+            return;
+        }
+
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->where('tenant_id', $this->getTenantId());
+        }
+    }
 
     /**
      * Determines if a given person_id is a customer
@@ -30,6 +54,7 @@ class Supplier extends Person
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'people.person_id = suppliers.person_id');
         $builder->where('suppliers.person_id', $person_id);
+        $this->scopeSupplierTenant($builder);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -40,6 +65,15 @@ class Supplier extends Person
     public function get_total_rows(): int
     {
         $builder = $this->db->table('suppliers');
+        if ($this->hasPeopleTenantColumn()) {
+            $builder->whereIn('person_id', function (BaseBuilder $subquery) {
+                $subquery->select('person_id')
+                    ->from('people')
+                    ->where('tenant_id', $this->getTenantId());
+            });
+        } elseif ($this->hasSupplierTenantColumn()) {
+            $builder->where('tenant_id', $this->getTenantId());
+        }
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -52,6 +86,7 @@ class Supplier extends Person
     {
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'suppliers.person_id = people.person_id');
+        $this->scopeSupplierTenant($builder);
         $builder->where('category', $category);
         $builder->where('deleted', 0);
         $builder->orderBy('company_name', 'asc');
@@ -68,9 +103,29 @@ class Supplier extends Person
      */
     public function get_info(?int $person_id): object
     {
-        $builder = $this->db->table('suppliers');
+        $builder = $this->db->table('suppliers AS suppliers');
         $builder->join('people', 'people.person_id = suppliers.person_id');
+        $builder->select('suppliers.*, people.*');
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
+                WHERE s2.tenant_id = suppliers.tenant_id
+                  AND s2.deleted = 0
+                  AND s2.person_id <= suppliers.person_id
+            ) AS tenant_supplier_seq', false);
+        } elseif ($this->hasPeopleTenantColumn()) {
+            $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
+                JOIN ' . $this->db->prefixTable('people') . ' AS p2 ON p2.person_id = s2.person_id
+                WHERE p2.tenant_id = ' . (int)$this->getTenantId() . '
+                  AND s2.deleted = 0
+                  AND s2.person_id <= suppliers.person_id
+            ) AS tenant_supplier_seq', false);
+        }
         $builder->where('suppliers.person_id', $person_id);
+        $this->scopeSupplierTenant($builder);
         $query = $builder->get();
 
         if ($query->getNumRows() == 1) {    // TODO: ===
@@ -97,6 +152,7 @@ class Supplier extends Person
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'people.person_id = suppliers.person_id');
         $builder->whereIn('suppliers.person_id', $person_ids);
+        $this->scopeSupplierTenant($builder);
         $builder->orderBy('last_name', 'asc');
 
         return $builder->get();
@@ -108,6 +164,11 @@ class Supplier extends Person
     public function save_supplier(array &$person_data, array &$supplier_data, int $supplier_id = NEW_ENTRY): bool
     {
         $success = false;
+        $tenant_id = $this->getTenantId();
+        $person_data['tenant_id'] = $tenant_id;
+        if ($this->hasSupplierTenantColumn()) {
+            $supplier_data['tenant_id'] = $tenant_id;
+        }
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
@@ -119,6 +180,9 @@ class Supplier extends Person
                 $success = $builder->insert($supplier_data);
             } else {
                 $builder->where('person_id', $supplier_id);
+                if ($this->hasSupplierTenantColumn()) {
+                    $builder->where('tenant_id', $tenant_id);
+                }
                 $success = $builder->update($supplier_data);
             }
         }
@@ -137,8 +201,19 @@ class Supplier extends Person
     {
         $builder = $this->db->table('suppliers');
         $builder->where('person_id', $supplier_id);
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->where('tenant_id', $this->getTenantId());
+        } elseif ($this->hasPeopleTenantColumn()) {
+            $builder->whereIn('person_id', function (BaseBuilder $subquery) {
+                $subquery->select('person_id')
+                    ->from('people')
+                    ->where('tenant_id', $this->getTenantId());
+            });
+        }
 
-        return $builder->update(['deleted' => 1]);
+        $builder->delete();
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -148,8 +223,19 @@ class Supplier extends Person
     {
         $builder = $this->db->table('suppliers');
         $builder->whereIn('person_id', $person_ids);
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->where('tenant_id', $this->getTenantId());
+        } elseif ($this->hasPeopleTenantColumn()) {
+            $builder->whereIn('person_id', function (BaseBuilder $subquery) {
+                $subquery->select('person_id')
+                    ->from('people')
+                    ->where('tenant_id', $this->getTenantId());
+            });
+        }
 
-        return $builder->update(['deleted' => 1]);
+        $builder->delete();
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -161,7 +247,8 @@ class Supplier extends Person
 
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'suppliers.person_id = people.person_id');
-        $builder->where('deleted', 0);
+        $this->scopeSupplierTenant($builder);
+        $builder->where('suppliers.deleted', 0);
         $builder->like('company_name', $search);
         $builder->orderBy('company_name', 'asc');
 
@@ -171,7 +258,8 @@ class Supplier extends Person
 
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'suppliers.person_id = people.person_id');
-        $builder->where('deleted', 0);
+        $this->scopeSupplierTenant($builder);
+        $builder->where('suppliers.deleted', 0);
         $builder->distinct();
         $builder->like('agency_name', $search);
         $builder->where('agency_name IS NOT NULL');
@@ -183,12 +271,13 @@ class Supplier extends Person
 
         $builder = $this->db->table('suppliers');
         $builder->join('people', 'suppliers.person_id = people.person_id');
+        $this->scopeSupplierTenant($builder);
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('suppliers.deleted', 0);
         $builder->orderBy('last_name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
@@ -198,7 +287,8 @@ class Supplier extends Person
         if (!$unique) {
             $builder = $this->db->table('suppliers');
             $builder->join('people', 'suppliers.person_id = people.person_id');
-            $builder->where('deleted', 0);
+            $this->scopeSupplierTenant($builder);
+            $builder->where('suppliers.deleted', 0);
             $builder->like('email', $search);
             $builder->orderBy('email', 'asc');
 
@@ -208,7 +298,8 @@ class Supplier extends Person
 
             $builder = $this->db->table('suppliers');
             $builder->join('people', 'suppliers.person_id = people.person_id');
-            $builder->where('deleted', 0);
+            $this->scopeSupplierTenant($builder);
+            $builder->where('suppliers.deleted', 0);
             $builder->like('phone_number', $search);
             $builder->orderBy('phone_number', 'asc');
 
@@ -218,7 +309,8 @@ class Supplier extends Person
 
             $builder = $this->db->table('suppliers');
             $builder->join('people', 'suppliers.person_id = people.person_id');
-            $builder->where('deleted', 0);
+            $this->scopeSupplierTenant($builder);
+            $builder->where('suppliers.deleted', 0);
             $builder->like('account_number', $search);
             $builder->orderBy('account_number', 'asc');
 
@@ -256,13 +348,39 @@ class Supplier extends Person
         $count_only = $count_only ?? false;
 
         $builder = $this->db->table('suppliers AS suppliers');
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->where('suppliers.tenant_id', $this->getTenantId());
+        }
 
         // get_found_rows case
         if ($count_only) {
             $builder->select('COUNT(suppliers.person_id) as count');
+        } else {
+            $builder->select('suppliers.*, people.*');
+            if ($this->hasSupplierTenantColumn()) {
+                $builder->select('(
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
+                    WHERE s2.tenant_id = suppliers.tenant_id
+                      AND s2.deleted = 0
+                      AND s2.person_id <= suppliers.person_id
+                ) AS tenant_supplier_seq', false);
+            } elseif ($this->hasPeopleTenantColumn()) {
+                $builder->select('(
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
+                    JOIN ' . $this->db->prefixTable('people') . ' AS p2 ON p2.person_id = s2.person_id
+                    WHERE p2.tenant_id = ' . (int)$this->getTenantId() . '
+                      AND s2.deleted = 0
+                      AND s2.person_id <= suppliers.person_id
+                ) AS tenant_supplier_seq', false);
+            }
         }
 
         $builder->join('people', 'suppliers.person_id = people.person_id');
+        if (!$this->hasSupplierTenantColumn() && $this->hasPeopleTenantColumn()) {
+            $builder->where('people.tenant_id', $this->getTenantId());
+        }
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
@@ -273,7 +391,7 @@ class Supplier extends Person
         $builder->orLike('account_number', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);    // TODO: According to PHPStorm, this line down to the return is repeated in Customer.php and Employee.php... perhaps refactoring a method in a library could be helpful?
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('suppliers.deleted', 0);
 
         if ($count_only) {
             return $builder->get()->getRow()->count;

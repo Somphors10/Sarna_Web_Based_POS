@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -11,6 +12,9 @@ use stdClass;
  */
 class Giftcard extends Model
 {
+    use TenantAware;
+
+    protected $DBGroup = 'tenant';
     protected $table = 'giftcards';
     protected $primaryKey = 'giftcard_id';
     protected $useAutoIncrement = true;
@@ -20,17 +24,27 @@ class Giftcard extends Model
         'value',
         'deleted',
         'person_id',
-        'record_time'
+        'record_time',
+        'tenant_id'
     ];
+
+    protected function initialize(): void
+    {
+        // Keep legacy OSPOS prefix in tenant DBs that provide an empty prefix.
+        if (trim((string)$this->db->getPrefix()) === '') {
+            $this->db->setPrefix('ospos_');
+        }
+    }
 
     /**
      * Determines if a given giftcard_id is a giftcard
      */
     public function exists(int $giftcard_id): bool
     {
-        $builder = $this->db->table('giftcards');
+        $builder = $this->db->table('giftcards AS giftcards');
         $builder->where('giftcard_id', $giftcard_id);
-        $builder->where('deleted', 0);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.deleted', 0);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -40,8 +54,9 @@ class Giftcard extends Model
      */
     public function get_max_number(): ?object
     {
-        $builder = $this->db->table('giftcards');
+        $builder = $this->db->table('giftcards AS giftcards');
         $builder->select('CAST(giftcard_number AS UNSIGNED) AS giftcard_number');
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
         $builder->where('giftcard_number REGEXP \'^[0-9]+$\'');
         $builder->orderBy("giftcard_number", "desc");
         $builder->limit(1);
@@ -54,8 +69,9 @@ class Giftcard extends Model
      */
     public function get_total_rows(): int
     {
-        $builder = $this->db->table('giftcards');
-        $builder->where('deleted', 0);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.deleted', 0);
 
         return $builder->countAllResults();
     }
@@ -65,10 +81,23 @@ class Giftcard extends Model
      */
     public function get_info(int $giftcard_id): object
     {
-        $builder = $this->db->table('giftcards');
+        if ($giftcard_id <= NEW_ENTRY) {
+            return $this->getEmptyObject('giftcards');
+        }
+
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->select('giftcards.*, people.*,
+            (
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('giftcards') . ' AS g2
+                WHERE g2.tenant_id = giftcards.tenant_id
+                  AND g2.deleted = 0
+                  AND g2.giftcard_id <= giftcards.giftcard_id
+            ) AS tenant_giftcard_seq', false);
         $builder->join('people', 'people.person_id = giftcards.person_id', 'left');
-        $builder->where('giftcard_id', $giftcard_id);
-        $builder->where('deleted', 0);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.giftcard_id', $giftcard_id);
+        $builder->where('giftcards.deleted', 0);
 
         $query = $builder->get();
 
@@ -108,9 +137,10 @@ class Giftcard extends Model
      */
     public function get_giftcard_id(string $giftcard_number): bool
     {
-        $builder = $this->db->table('giftcards');
-        $builder->where('giftcard_number', $giftcard_number);
-        $builder->where('deleted', 0);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->where('giftcards.giftcard_number', $giftcard_number);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.deleted', 0);
 
         $query = $builder->get();
 
@@ -126,9 +156,10 @@ class Giftcard extends Model
      */
     public function get_multiple_info(array $giftcard_ids): ResultInterface
     {
-        $builder = $this->db->table('giftcards');
-        $builder->whereIn('giftcard_id', $giftcard_ids);
-        $builder->where('deleted', 0);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->whereIn('giftcards.giftcard_id', $giftcard_ids);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.deleted', 0);
         $builder->orderBy('giftcard_number', 'asc');
 
         return $builder->get();
@@ -139,7 +170,8 @@ class Giftcard extends Model
      */
     public function save_value(array &$giftcard_data, int $giftcard_id = NEW_ENTRY): bool
     {
-        $builder = $this->db->table('giftcards');
+        $giftcard_data['tenant_id'] = $this->getTenantId();
+        $builder = $this->db->table('giftcards AS giftcards');
 
         if ($giftcard_id == NEW_ENTRY || !$this->exists($giftcard_id)) {
             if ($builder->insert($giftcard_data)) {
@@ -153,6 +185,7 @@ class Giftcard extends Model
         }
 
         $builder->where('giftcard_id', $giftcard_id);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
 
         return $builder->update($giftcard_data);
     }
@@ -162,8 +195,9 @@ class Giftcard extends Model
      */
     public function update_multiple(array $giftcard_data, array $giftcard_ids): bool    // TODO: This function appears to never be used in the code.
     {
-        $builder = $this->db->table('giftcards');
+        $builder = $this->db->table('giftcards AS giftcards');
         $builder->whereIn('giftcard_id', $giftcard_ids);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
 
         return $builder->update($giftcard_data);
     }
@@ -175,8 +209,11 @@ class Giftcard extends Model
     {
         $builder = $this->db->table('giftcards');
         $builder->where('giftcard_id', $giftcard_id);
+        $this->scopeTenant($builder, 'tenant_id');
 
-        return $builder->update(['deleted' => 1]);
+        $builder->delete();
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -186,8 +223,11 @@ class Giftcard extends Model
     {
         $builder = $this->db->table('giftcards');
         $builder->whereIn('giftcard_id', $giftcard_ids);
+        $this->scopeTenant($builder, 'tenant_id');
 
-        return $builder->update(['deleted' => 1]);
+        $builder->delete();
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -198,22 +238,24 @@ class Giftcard extends Model
         $suggestions = [];
 
         $builder = $this->db->table('giftcards');
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
         $builder->like('giftcard_number', $search);
-        $builder->where('deleted', 0);
+        $builder->where('giftcards.deleted', 0);
         $builder->orderBy('giftcard_number', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
             $suggestions[] = ['label' => $row->giftcard_number];
         }
 
-        $builder = $this->db->table('customers');
+        $builder = $this->db->table('customers AS customers');
         $builder->join('people', 'customers.person_id = people.person_id', 'left');
+        $this->scopeTenant($builder, 'customers.tenant_id');
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('customers.deleted', 0);
         $builder->orderBy('last_name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
@@ -255,11 +297,21 @@ class Giftcard extends Model
         if ($order == null) $order = 'asc';
         if ($count_only == null) $count_only = false;
 
-        $builder = $this->db->table('giftcards');
+        $builder = $this->db->table('giftcards AS giftcards');
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
 
         // get_found_rows case
         if ($count_only) {    // TODO: replace this with `if ($count_only)`
             $builder->select('COUNT(giftcard_id) as count');
+        } else {
+            $builder->select('giftcards.*, person.*,
+                (
+                    SELECT COUNT(*)
+                    FROM ' . $this->db->prefixTable('giftcards') . ' AS g2
+                    WHERE g2.tenant_id = giftcards.tenant_id
+                      AND g2.deleted = 0
+                      AND g2.giftcard_id <= giftcards.giftcard_id
+                ) AS tenant_giftcard_seq', false);
         }
 
         $builder->join('people AS person', 'giftcards.person_id = person.person_id', 'left');
@@ -295,8 +347,9 @@ class Giftcard extends Model
             return 0;
         }
 
-        $builder = $this->db->table('giftcards');
-        $builder->where('giftcard_number', $giftcard_number);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->where('giftcards.giftcard_number', $giftcard_number);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
 
         return $builder->get()->getRow()->value;
     }
@@ -306,8 +359,9 @@ class Giftcard extends Model
      */
     public function update_giftcard_value(string $giftcard_number, float $value): void    // TODO: Should we return the value of update like other similar functions do?
     {
-        $builder = $this->db->table('giftcards');
-        $builder->where('giftcard_number', $giftcard_number);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->where('giftcards.giftcard_number', $giftcard_number);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
         $builder->update(['value' => $value]);
     }
 
@@ -318,9 +372,10 @@ class Giftcard extends Model
     {
         $giftcard_name = strtoupper($giftcard_name);
 
-        $builder = $this->db->table('giftcards');
-        $builder->where('giftcard_number', $giftcard_name);
-        $builder->where('deleted', 0);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->where('giftcards.giftcard_number', $giftcard_name);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $builder->where('giftcards.deleted', 0);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -353,8 +408,9 @@ class Giftcard extends Model
             return 0;
         }
 
-        $builder = $this->db->table('giftcards');
-        $builder->where('giftcard_number', $giftcard_number);
+        $builder = $this->db->table('giftcards AS giftcards');
+        $builder->where('giftcards.giftcard_number', $giftcard_number);
+        $this->scopeTenant($builder, 'giftcards.tenant_id');
 
         return $builder->get()->getRow()->person_id;
     }

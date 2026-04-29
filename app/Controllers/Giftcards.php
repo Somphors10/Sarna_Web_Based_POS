@@ -173,7 +173,16 @@ class Giftcards extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $giftcards_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $giftcards_to_delete = (array)$this->request->getPost('ids');
+        $giftcards_to_delete = array_values(array_filter(array_map('intval', $giftcards_to_delete), static fn(int $id): bool => $id > 0));
+
+        if (empty($giftcards_to_delete)) {
+            echo json_encode([
+                'success' => false,
+                'message' => lang('Giftcards.none_selected')
+            ]);
+            return;
+        }
 
         if ($this->giftcard->delete_list($giftcards_to_delete)) {
             echo json_encode([
