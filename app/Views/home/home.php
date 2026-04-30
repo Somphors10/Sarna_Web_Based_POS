@@ -8,17 +8,32 @@
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
+
+    $(document).ready(function() {
+        const $search = $('#neo_module_search');
+        const $cards = $('.neo-module-card');
+
+        $search.on('input', function() {
+            const q = $(this).val().toLowerCase().trim();
+
+            $cards.each(function() {
+                const text = ($(this).data('search') || '').toLowerCase();
+                $(this).toggle(text.indexOf(q) !== -1);
+            });
+        });
+    });
 </script>
 
 <section class="neo-home">
     <div class="neo-main">
         <header class="neo-main-header">
             <div>
+                <p class="neo-main-eyebrow">POS Dashboard</p>
                 <h2><?= lang('Common.welcome_message') ?></h2>
-                <p class="neo-main-subtitle">Run sales quickly, manage inventory, and track operations.</p>
+                <p class="neo-main-subtitle">Run sales quickly, manage inventory, and track daily operations in one place.</p>
             </div>
             <div class="neo-search-wrap">
-                <input type="text" class="form-control" placeholder="<?= lang('Common.search') ?>">
+                <input id="neo_module_search" type="text" class="form-control" placeholder="<?= lang('Common.search') ?> modules">
             </div>
         </header>
 
@@ -56,9 +71,13 @@
         <h3 class="neo-section-title">Quick Access</h3>
         <div class="neo-module-grid">
             <?php foreach($allowed_modules as $module) { ?>
-                <a class="neo-module-card" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id" . '_desc') ?>">
+                <a class="neo-module-card"
+                   href="<?= base_url($module->module_id) ?>"
+                   title="<?= lang("Module.$module->module_id" . '_desc') ?>"
+                   data-search="<?= esc(lang("Module.$module->module_id") . ' ' . lang("Module.$module->module_id" . '_desc')) ?>">
                     <img class="neo-module-icon" src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
                     <span class="neo-module-title"><?= lang("Module.$module->module_id") ?></span>
+                    <span class="neo-module-subtitle"><?= lang("Module.$module->module_id" . '_desc') ?></span>
                 </a>
             <?php } ?>
         </div>

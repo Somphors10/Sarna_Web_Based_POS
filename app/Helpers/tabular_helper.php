@@ -618,9 +618,13 @@ function get_item_kits_manage_table_headers(): string
 function get_item_kit_data_row(object $item_kit): array
 {
     $controller = get_controller();
+    $tenant_item_kit_seq = isset($item_kit->tenant_item_kit_seq)
+        ? (int)$item_kit->tenant_item_kit_seq
+        : (int)$item_kit->item_kit_id;
 
     return [
-        'item_kit_id'      => $item_kit->item_kit_id,
+        'item_kit_id_key'  => (int)$item_kit->item_kit_id,
+        'item_kit_id'      => $tenant_item_kit_seq,
         'item_kit_number'  => $item_kit->item_kit_number,
         'name'             => $item_kit->name,
         'description'      => $item_kit->description,
@@ -713,6 +717,9 @@ function get_attribute_definition_data_row(object $attribute_row): array
 
     $attribute = model(Attribute::class);
     $controller = get_controller();
+    $tenant_definition_seq = isset($attribute_row->tenant_definition_seq)
+        ? (int)$attribute_row->tenant_definition_seq
+        : (int)$attribute_row->definition_id;
 
     if (count($attribute->get_definition_flags()) == 0) {
         $definition_flags = lang('Common.none_selected_text');
@@ -723,7 +730,8 @@ function get_attribute_definition_data_row(object $attribute_row): array
     }
 
     return [
-        'definition_id'    => $attribute_row->definition_id,
+        'definition_id_key'=> (int)$attribute_row->definition_id,
+        'definition_id'    => $tenant_definition_seq,
         'definition_name'  => $attribute_row->definition_name,
         'definition_type'  => $attribute_row->definition_type,
         'definition_group' => $attribute_row->definition_group,
@@ -916,9 +924,13 @@ function get_cashups_manage_table_headers(): string
 function get_cash_up_data_row(object $cash_up): array
 {
     $controller = get_controller();
+    $tenant_cashup_seq = isset($cash_up->tenant_cashup_seq)
+        ? (int)$cash_up->tenant_cashup_seq
+        : (int)$cash_up->cashup_id;
 
     return [
-        'cashup_id'            => $cash_up->cashup_id,
+        'cashup_id_key'        => (int)$cash_up->cashup_id,
+        'cashup_id'            => $tenant_cashup_seq,
         'open_date'            => to_datetime(strtotime($cash_up->open_date)),
         'open_employee_id'     => $cash_up->open_first_name . ' ' . $cash_up->open_last_name,
         'open_amount_cash'     => to_currency($cash_up->open_amount_cash),

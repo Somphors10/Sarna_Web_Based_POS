@@ -60,13 +60,72 @@ $request = Services::request();
             overflow: auto;
         }
     </style>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+            const isCollapsed = localStorage.getItem(key) === '1';
+            if (window.innerWidth > 992 && isCollapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
 </head>
 
 <body>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+
+            const syncForViewport = function() {
+                if (window.innerWidth <= 992) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem(key) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('neo_sidebar_toggle');
+                if (!toggle) {
+                    return;
+                }
+
+                const setExpandedState = function() {
+                    toggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+                };
+
+                toggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        return;
+                    }
+
+                    document.documentElement.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(key, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                    setExpandedState();
+                });
+
+                window.addEventListener('resize', function() {
+                    syncForViewport();
+                    setExpandedState();
+                });
+
+                syncForViewport();
+                setExpandedState();
+            });
+        })();
+    </script>
     <div class="wrapper">
         <div class="neo-layout">
             <aside class="neo-global-sidebar">
-                <a class="neo-global-brand" href="<?= site_url() ?>">OSPOS</a>
+                <div class="neo-global-brand-row">
+                    <a class="neo-global-brand" href="<?= site_url() ?>">
+                        <span class="neo-global-brand-full">OSPOS</span>
+                        <span class="neo-global-brand-mini">O</span>
+                    </a>
+                    <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </button>
+                </div>
                 <div class="neo-global-sidebar-body">
                     <nav class="neo-global-menu">
                         <?php foreach ($allowed_modules as $module): ?>

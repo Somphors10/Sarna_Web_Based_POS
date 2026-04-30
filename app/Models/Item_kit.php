@@ -38,7 +38,7 @@ class Item_kit extends Model
     {
         $builder = $this->db->table('item_kits');
         $builder->where('item_kit_id', $item_kit_id);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -75,7 +75,7 @@ class Item_kit extends Model
 
         $builder = $this->db->table('item_kits');
         $builder->where('item_kit_number', $item_kit_number);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         // Check if $item_id is a number and not a string starting with 0
         // because cases like 00012345 will be seen as a number where it is a barcode
@@ -92,7 +92,7 @@ class Item_kit extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('item_kits');
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->countAllResults();
     }
@@ -102,7 +102,7 @@ class Item_kit extends Model
      */
     public function get_info(string $item_kit_id): object
     {
-        $builder = $this->db->table('item_kits');
+        $builder = $this->db->table('item_kits AS item_kits');
         $builder->select('
             item_kit_id,
             item_kits.name as name,
@@ -129,6 +129,12 @@ class Item_kit extends Model
             item_type,
             stock_type
         ');
+        $builder->select('(
+            SELECT COUNT(*)
+            FROM ' . $this->db->prefixTable('item_kits') . ' AS ik2
+            WHERE ik2.tenant_id = item_kits.tenant_id
+              AND ik2.item_kit_id <= item_kits.item_kit_id
+        ) AS tenant_item_kit_seq', false);
 
         $builder->join('items', 'item_kits.item_id = items.item_id', 'left');
         $this->scopeTenant($builder, 'item_kits.tenant_id');
@@ -161,7 +167,7 @@ class Item_kit extends Model
     {
         $builder = $this->db->table('item_kits');
         $builder->whereIn('item_kit_id', $item_kit_ids);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
         $builder->orderBy('name', 'asc');
 
         return $builder->get();
@@ -185,7 +191,7 @@ class Item_kit extends Model
         }
 
         $builder->where('item_kit_id', $item_kit_id);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->update($item_kit_data);
     }
@@ -197,7 +203,7 @@ class Item_kit extends Model
     {
         $builder = $this->db->table('item_kits');
         $builder->where('item_kit_id', $item_kit_id);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->delete();
     }
@@ -209,7 +215,7 @@ class Item_kit extends Model
     {
         $builder = $this->db->table('item_kits');
         $builder->whereIn('item_kit_id', $item_kit_ids);
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->delete();
     }
@@ -224,7 +230,7 @@ class Item_kit extends Model
         $suggestions = [];
 
         $builder = $this->db->table('item_kits');
-        $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         // KIT #
         if (stripos($search, 'KIT ') !== false) {
@@ -274,12 +280,20 @@ class Item_kit extends Model
         if ($order == null) $order = 'asc';
         if ($count_only == null) $count_only = false;
 
-        $builder = $this->db->table('item_kits');
+        $builder = $this->db->table('item_kits AS item_kits');
         $this->scopeTenant($builder, 'item_kits.tenant_id');
 
         // get_found_rows case
         if ($count_only) {
             $builder->select('COUNT(item_kit_id) as count');
+        } else {
+            $builder->select('item_kits.*');
+            $builder->select('(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('item_kits') . ' AS ik2
+                WHERE ik2.tenant_id = item_kits.tenant_id
+                  AND ik2.item_kit_id <= item_kits.item_kit_id
+            ) AS tenant_item_kit_seq', false);
         }
 
         $builder->groupStart();

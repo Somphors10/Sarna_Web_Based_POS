@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -13,6 +15,8 @@ use stdClass;
  */
 class Cashup extends Model
 {
+    use TenantAware;
+
     protected $table = 'cash_up';
     protected $primaryKey = 'cashup_id';
     protected $useAutoIncrement = true;
@@ -31,8 +35,74 @@ class Cashup extends Model
         'open_employee_id',
         'close_employee_id',
         'deleted',
-        'closed_amount_due'
+        'closed_amount_due',
+        'tenant_id'
     ];
+
+    private function hasCashupTenantColumn(): bool
+    {
+        return $this->db->tableExists('cash_up') && $this->db->fieldExists('tenant_id', 'cash_up');
+    }
+
+    private function hasPeopleTenantColumn(): bool
+    {
+        return $this->db->tableExists('people') && $this->db->fieldExists('tenant_id', 'people');
+    }
+
+    /**
+     * Scope by tenant and include legacy cashups with tenant_id=0
+     * mapped to employees of the current tenant.
+     */
+    private function scopeCashupByTenant(BaseBuilder $builder, string $tenantColumn = 'tenant_id', string $openEmployeeColumn = 'open_employee_id'): void
+    {
+        if (!$this->hasCashupTenantColumn()) {
+            return;
+        }
+
+        $tenant_id = $this->getTenantId();
+
+        if (!$this->hasPeopleTenantColumn()) {
+            $builder->where($tenantColumn, $tenant_id);
+            return;
+        }
+
+        $builder->groupStart();
+        $builder->where($tenantColumn, $tenant_id);
+        $builder->orGroupStart();
+        $builder->where($tenantColumn, 0);
+        $builder->whereIn($openEmployeeColumn, function (BaseBuilder $subquery) use ($tenant_id) {
+            $subquery->select('person_id')
+                ->from('people')
+                ->where('tenant_id', $tenant_id);
+        });
+        $builder->groupEnd();
+        $builder->groupEnd();
+    }
+
+    private function tenantCashupSequenceSelect(): string
+    {
+        $tenant_id = (int)$this->getTenantId();
+        $cashup_table = $this->db->prefixTable('cash_up');
+        $people_table = $this->db->prefixTable('people');
+
+        return '(
+            SELECT COUNT(*)
+            FROM ' . $cashup_table . ' AS c2
+            WHERE (
+                    c2.tenant_id = ' . $tenant_id . '
+                    OR (
+                        c2.tenant_id = 0
+                        AND c2.open_employee_id IN (
+                            SELECT p2.person_id
+                            FROM ' . $people_table . ' AS p2
+                            WHERE p2.tenant_id = ' . $tenant_id . '
+                        )
+                    )
+                )
+                AND c2.deleted = 0
+                AND c2.cashup_id <= cash_up.cashup_id
+        ) AS tenant_cashup_seq';
+    }
 
     /**
      * Determines if a given Cashup_id is a Cashup
@@ -41,6 +111,7 @@ class Cashup extends Model
     {
         $builder = $this->db->table('cash_up');
         $builder->where('cashup_id', $cashup_id);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -52,6 +123,7 @@ class Cashup extends Model
     {
         $builder = $this->db->table('cash_up');
         $builder->where('cashup_id', $cashup_id);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
 
         $employee = model(Employee::class);
 
@@ -66,6 +138,7 @@ class Cashup extends Model
     {
         $builder = $this->db->table('cash_up');
         $builder->whereIn('cashup_id', $cashup_ids);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
         $builder->orderBy('cashup_id', 'asc');
 
         return $builder->get();
@@ -93,6 +166,7 @@ class Cashup extends Model
 
         $config = config(OSPOS::class)->settings;
         $builder = $this->db->table('cash_up AS cash_up');
+        $this->scopeCashupByTenant($builder, 'cash_up.tenant_id', 'cash_up.open_employee_id');
 
         // get_found_rows case
         if ($count_only) {
@@ -118,6 +192,9 @@ class Cashup extends Model
             MAX(close_employees.first_name) AS close_first_name,
             MAX(close_employees.last_name) AS close_last_name
         ');
+            if ($this->hasCashupTenantColumn()) {
+                $builder->select($this->tenantCashupSequenceSelect(), false);
+            }
         }
 
         $builder->join('people AS open_employees', 'open_employees.person_id = cash_up.open_employee_id', 'LEFT');
@@ -185,9 +262,13 @@ class Cashup extends Model
             close_employees.first_name AS close_first_name,
             close_employees.last_name AS close_last_name
         ');
+        if ($this->hasCashupTenantColumn()) {
+            $builder->select($this->tenantCashupSequenceSelect(), false);
+        }
         $builder->join('people AS open_employees', 'open_employees.person_id = cash_up.open_employee_id', 'LEFT');
         $builder->join('people AS close_employees', 'close_employees.person_id = cash_up.close_employee_id', 'LEFT');
         $builder->where('cashup_id', $cashup_id);
+        $this->scopeCashupByTenant($builder, 'cash_up.tenant_id', 'cash_up.open_employee_id');
 
         $query = $builder->get();
         if ($query->getNumRows() == 1) {    // TODO: ===
@@ -227,6 +308,8 @@ class Cashup extends Model
      */
     public function save_value(array &$cash_up_data, $cashup_id = NEW_ENTRY): bool
     {
+        $cash_up_data['tenant_id'] = $this->getTenantId();
+
         if (!$cashup_id == NEW_ENTRY || !$this->exists($cashup_id)) {
             $builder = $this->db->table('cash_up');
             if ($builder->insert($cash_up_data)) {
@@ -240,6 +323,7 @@ class Cashup extends Model
 
         $builder = $this->db->table('cash_up');
         $builder->where('cashup_id', $cashup_id);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
 
         return $builder->update($cash_up_data);
     }
@@ -253,6 +337,7 @@ class Cashup extends Model
         $this->db->transStart();
         $builder = $this->db->table('cash_up');
         $builder->whereIn('cashup_id', $cashup_ids);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
         $success = $builder->update(['deleted' => 1]);
         $this->db->transComplete();
 

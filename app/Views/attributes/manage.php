@@ -16,7 +16,7 @@
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
             pageSize: <?= $config['lines_per_page'] ?>,
-            uniqueId: 'definition_id'
+            uniqueId: 'definition_id_key'
         });
     });
 </script>

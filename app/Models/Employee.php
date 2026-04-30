@@ -258,6 +258,7 @@ class Employee extends Person
         $suggestions = [];
 
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->join('people', 'employees.person_id = people.person_id');
         $builder->groupStart();
         $builder->like('first_name', $search);
@@ -276,6 +277,7 @@ class Employee extends Person
         }
 
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->join('people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
@@ -290,6 +292,7 @@ class Employee extends Person
         }
 
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->join('people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
@@ -304,6 +307,7 @@ class Employee extends Person
         }
 
         $builder = $this->db->table('employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->join('people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
@@ -346,6 +350,7 @@ class Employee extends Person
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('employees AS employees');
+        $this->scopeTenant($builder, 'employees.tenant_id');
 
         // get_found_rows case
         if ($count_only) {
@@ -361,7 +366,7 @@ class Employee extends Person
         $builder->orLike('username', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('employees.deleted', 0);
 
         // get_found_rows case
         if ($count_only) {

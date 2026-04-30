@@ -10,25 +10,25 @@
 
 .neo-layout {
     display: grid;
-    grid-template-columns: 210px 1fr;
-    gap: 12px;
+    grid-template-columns: 250px 1fr;
+    gap: 14px;
     padding: 0;
     max-width: none;
     margin: 0;
     width: 100%;
     min-height: 100vh;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 .neo-global-sidebar {
-    background: #ffffff;
-    border-right: 1px solid #e9edf5;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border-right: 1px solid #e5ebf5;
     border-left: 0;
     border-top: 0;
     border-bottom: 0;
     border-radius: 0;
-    padding: 10px 0 12px;
+    padding: 12px 0 14px;
     align-self: stretch;
     position: sticky;
     top: 0;
@@ -36,18 +36,61 @@
     min-height: 100vh;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: visible;
     display: flex;
     flex-direction: column;
 }
 
 .neo-global-brand {
     display: block;
-    margin: 6px 14px 10px;
+    margin: 0;
     color: #2563eb;
     font-weight: 700;
     font-size: 28px;
     letter-spacing: -0.02em;
     text-decoration: none;
+}
+
+.neo-global-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 14px 14px;
+    gap: 8px;
+}
+
+.neo-global-brand-mini {
+    display: none;
+}
+
+.neo-sidebar-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid #dbe3f0;
+    background: #ffffff;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: absolute;
+    top: 70px;
+    right: -17px;
+    z-index: 20;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    transition: transform .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.neo-sidebar-toggle:hover {
+    background: #f8fbff;
+    color: #1d4ed8;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
+.neo-sidebar-toggle .glyphicon {
+    font-size: 13px;
+    transition: transform .18s ease;
 }
 
 .neo-global-brand:hover,
@@ -69,21 +112,21 @@
 .neo-global-menu {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 0 10px;
+    gap: 4px;
+    padding: 0 12px;
 }
 
 .neo-global-menu-item {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 9px;
-    min-height: 38px;
-    padding: 7px 10px;
-    border-radius: 9px;
+    gap: 10px;
+    min-height: 42px;
+    padding: 8px 11px;
+    border-radius: 12px;
     border: 1px solid transparent;
     background: transparent;
-    color: #475569;
+    color: #334155;
     text-decoration: none;
     text-align: left;
     position: relative;
@@ -93,9 +136,9 @@
 }
 
 .neo-global-menu-item:hover {
-    background: #f8fafc;
-    border-color: #dbeafe;
-    color: #334155;
+    background: #f8fbff;
+    border-color: #d6e4ff;
+    color: #1e293b;
     text-decoration: none;
 }
 
@@ -107,34 +150,83 @@
 }
 
 .neo-global-menu-item.is-active {
-    background: #eff6ff;
-    border-color: #bfdbfe;
+    background: linear-gradient(180deg, #eff5ff 0%, #e9f1ff 100%);
+    border-color: #bad0f8;
     color: #1d4ed8;
     font-weight: 600;
-    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.16);
 }
 
 .neo-global-menu-item.is-active::before {
     content: "";
     position: absolute;
-    left: -10px;
-    top: 7px;
-    bottom: 7px;
-    width: 4px;
+    left: -13px;
+    top: 8px;
+    bottom: 8px;
+    width: 5px;
     border-radius: 999px;
     background: #2563eb;
 }
 
 .neo-global-menu-item img {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
-    opacity: 0.75;
+    opacity: 0.88;
 }
 
 .neo-global-menu-item span {
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.2;
+}
+
+html.sidebar-collapsed .neo-layout {
+    grid-template-columns: 88px 1fr;
+}
+
+html.sidebar-collapsed .neo-global-brand-full {
+    display: none;
+}
+
+html.sidebar-collapsed .neo-global-brand-mini {
+    display: inline;
+}
+
+html.sidebar-collapsed .neo-global-brand-row {
+    justify-content: center;
+    flex-direction: column;
+}
+
+html.sidebar-collapsed .neo-sidebar-toggle .glyphicon {
+    transform: rotate(180deg);
+}
+
+html.sidebar-collapsed .neo-global-menu {
+    padding: 0 10px;
+}
+
+html.sidebar-collapsed .neo-global-menu-item {
+    justify-content: center;
+    min-height: 42px;
+    padding: 8px 8px;
+}
+
+html.sidebar-collapsed .neo-global-menu-item span {
+    display: none;
+}
+
+html.sidebar-collapsed .neo-global-menu-item.is-active::before {
+    display: none;
+}
+
+html.sidebar-collapsed .neo-sidebar-toggle {
+    right: -15px;
+}
+
+@media (max-width: 992px) {
+    .neo-sidebar-toggle {
+        display: none;
+    }
 }
 
 .neo-global-content .container {

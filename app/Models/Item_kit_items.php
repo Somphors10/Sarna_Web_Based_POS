@@ -48,7 +48,7 @@ class Item_kit_items extends Model
     {
         $builder = $this->db->table('item_kit_items');
         $builder->where('item_kit_id', $item_kit_id);
-        $this->scopeTenant($builder, 'item_kit_items.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         $builder->orderBy('kit_sequence', 'desc');
 
@@ -91,7 +91,7 @@ class Item_kit_items extends Model
     {
         $builder = $this->db->table('item_kit_items');
         $builder->where('item_kit_id', $item_kit_id);
-        $this->scopeTenant($builder, 'item_kit_items.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->delete();
     }

@@ -32,7 +32,7 @@
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
             pageSize: <?= $config['lines_per_page'] ?>,
-            uniqueId: 'cashup_id',
+            uniqueId: 'cashup_id_key',
             queryParams: function() {
                 return $.extend(arguments[0], {
                     "end_date": end_date,

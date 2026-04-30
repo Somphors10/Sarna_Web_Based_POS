@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\BaseResult;
 use CodeIgniter\Database\Query;
 use CodeIgniter\Database\ResultInterface;
@@ -17,6 +18,8 @@ use ReflectionClass;
  */
 class Attribute extends Model
 {
+    use TenantAware;
+
     protected $table = 'attribute_definitions';
     protected $primaryKey = 'definition_id';
     protected $useAutoIncrement = true;
@@ -26,6 +29,7 @@ class Attribute extends Model
         'definition_type',
         'definition_unit',
         'definition_flags',
+        'tenant_id',
         'deleted',
         'attribute_id',
         'definition_id',
@@ -40,6 +44,31 @@ class Attribute extends Model
     public const SHOW_IN_ITEMS = 1;    // TODO: These need to be moved to constants.php
     public const SHOW_IN_SALES = 2;
     public const SHOW_IN_RECEIVINGS = 4;
+
+    private function hasDefinitionTenantColumn(): bool
+    {
+        return $this->db->tableExists('attribute_definitions') && $this->db->fieldExists('tenant_id', 'attribute_definitions');
+    }
+
+    private function scopeDefinitionTenant($builder, string $column = 'tenant_id'): void
+    {
+        if ($this->hasDefinitionTenantColumn()) {
+            $builder->where($column, $this->getTenantId());
+        }
+    }
+
+    private function tenantDefinitionSequenceSelect(): string
+    {
+        $definition_table = $this->db->prefixTable('attribute_definitions');
+
+        return '(
+            SELECT COUNT(*)
+            FROM ' . $definition_table . ' AS d2
+            WHERE d2.tenant_id = definition.tenant_id
+              AND d2.deleted = 0
+              AND d2.definition_id <= definition.definition_id
+        ) AS tenant_definition_seq';
+    }
     public function deleteDropdownAttributeValue(string $attribute_value, int $definition_id): bool
     {
         $attribute_id = $this->getAttributeIdByValue($attribute_value);
@@ -74,6 +103,7 @@ class Attribute extends Model
         $builder = $this->db->table('attribute_definitions');
         $builder->where('definition_id', $definition_id);
         $builder->where('deleted', $deleted);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         return ($builder->get()->getNumRows() === 1);
     }
@@ -144,8 +174,12 @@ class Attribute extends Model
     {
         $builder = $this->db->table('attribute_definitions AS definition');
         $builder->select('parent_definition.definition_name AS definition_group, definition.*');
+        if ($this->hasDefinitionTenantColumn()) {
+            $builder->select($this->tenantDefinitionSequenceSelect(), false);
+        }
         $builder->join('attribute_definitions AS parent_definition', 'parent_definition.definition_id = definition.definition_fk', 'left');
         $builder->where('definition.definition_id', $definition_id);
+        $this->scopeDefinitionTenant($builder, 'definition.tenant_id');
 
         $query = $builder->get();
 
@@ -177,7 +211,11 @@ class Attribute extends Model
 
         $builder = $this->db->table('attribute_definitions AS definition');
         $builder->select('parent_definition.definition_name AS definition_group, definition.*');
+        if ($this->hasDefinitionTenantColumn()) {
+            $builder->select($this->tenantDefinitionSequenceSelect(), false);
+        }
         $builder->join('attribute_definitions AS parent_definition', 'parent_definition.definition_id = definition.definition_fk', 'left');
+        $this->scopeDefinitionTenant($builder, 'definition.tenant_id');
 
         $builder->groupStart();
         $builder->like('definition.definition_name', $search);
@@ -223,6 +261,7 @@ class Attribute extends Model
     {
         if (count($definition_ids ?: [])) {
             $builder = $this->db->table('attribute_definitions');
+            $this->scopeDefinitionTenant($builder, 'tenant_id');
             $builder->groupStart();
             $builder->whereIn('definition_fk', array_keys($definition_ids));
             $builder->orWhereIn('definition_id', array_keys($definition_ids));
@@ -249,6 +288,7 @@ class Attribute extends Model
         $builder = $this->db->table('attribute_definitions');
         $builder->where('definition_type', $attribute_type);
         $builder->where('deleted', 0);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
         $builder->where('definition_fk');
 
         if ($definition_id != CATEGORY_DEFINITION_ID) {
@@ -269,6 +309,7 @@ class Attribute extends Model
         $builder = $this->db->table('attribute_definitions');
         $builder->where(new RawSql("definition_flags & $definition_flags"));    // TODO: we need to heed CI warnings to escape properly
         $builder->where('deleted', 0);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
         $builder->where('definition_type <>', GROUP);
         $builder->orderBy('definition_id');
 
@@ -287,6 +328,7 @@ class Attribute extends Model
     {
         $builder = $this->db->table('attribute_definitions');
         $builder->where('deleted', 0);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
         $builder->orderBy('definition_name', 'ASC');
 
         if (!$groups) {
@@ -312,6 +354,13 @@ class Attribute extends Model
             $builder->join('attribute_values', 'attribute_values.attribute_id = attribute_links.attribute_id');
             $builder->where('item_id', null);
             $builder->where('definition_id', $definition_id);
+            if ($this->hasDefinitionTenantColumn()) {
+                $builder->whereIn('definition_id', function ($subquery) {
+                    $subquery->select('definition_id')
+                        ->from('attribute_definitions')
+                        ->where('tenant_id', $this->getTenantId());
+                });
+            }
             $builder->orderBy('attribute_value', 'ASC');
 
             $results = $builder->get()->getResultArray();
@@ -342,6 +391,7 @@ class Attribute extends Model
     {
         $builder = $this->db->table('attribute_definitions');
         $builder->where('deleted', 0);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         return $builder->countAllResults();
     }
@@ -517,6 +567,9 @@ class Attribute extends Model
     public function save_definition(array &$definition_data, int $definition_id = NO_DEFINITION_ID): bool
     {
         $this->db->transStart();
+        if ($this->hasDefinitionTenantColumn()) {
+            $definition_data['tenant_id'] = $this->getTenantId();
+        }
 
         // Definition doesn't exist
         if ($definition_id === NO_DEFINITION_ID || !$this->exists($definition_id)) {
@@ -535,6 +588,7 @@ class Attribute extends Model
             $builder->select('definition_type');
             $builder->where('definition_id', $definition_id);
             $builder->where('deleted', ACTIVE);
+            $this->scopeDefinitionTenant($builder, 'tenant_id');
             $query = $builder->get();
             $row = $query->getRow();
 
@@ -543,6 +597,7 @@ class Attribute extends Model
 
             // Update the definition values
             $builder->where('definition_id', $definition_id);
+            $this->scopeDefinitionTenant($builder, 'tenant_id');
 
             $success = $builder->update($definition_data);
             $definition_data['definition_id'] = $definition_id;
@@ -571,6 +626,7 @@ class Attribute extends Model
         $builder = $this->db->table('attribute_definitions');
         $builder->where('definition_name', $definition_name);
         $builder->where('deleted', 0);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         if ($definition_type) {
             $builder->where('definition_type', $definition_type);
@@ -784,6 +840,7 @@ class Attribute extends Model
         $builder->like('attribute_value', $term);
         $builder->where('deleted', ACTIVE);
         $builder->where('definition.definition_id', $definition_id);
+        $this->scopeDefinitionTenant($builder, 'definition.tenant_id');
         $builder->orderBy('attribute_value', 'ASC');
 
         foreach ($builder->get()->getResult('array') as $suggestion) {
@@ -865,10 +922,16 @@ class Attribute extends Model
      */
     public function deleteDefinition(int $definition_id): bool
     {
-        $this->deleteAttributeLinksByDefinitionId($definition_id);
+        $definition_ids = $this->getTenantDefinitionIds([$definition_id]);
+        if (empty($definition_ids)) {
+            return false;
+        }
+
+        $this->deleteAttributeLinksByDefinitionId($definition_ids);
 
         $builder = $this->db->table('attribute_definitions');
-        $builder->where('definition_id', $definition_id);
+        $builder->whereIn('definition_id', $definition_ids);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         return $builder->update(['deleted' => DELETED]);
     }
@@ -879,10 +942,16 @@ class Attribute extends Model
      */
     public function deleteDefinitionList(array $definition_ids): bool
     {
+        $definition_ids = $this->getTenantDefinitionIds($definition_ids);
+        if (empty($definition_ids)) {
+            return false;
+        }
+
         $this->deleteAttributeLinksByDefinitionId($definition_ids);
 
         $builder = $this->db->table('attribute_definitions');
         $builder->whereIn('definition_id', $definition_ids);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         return $builder->update(['deleted' => DELETED]);
     }
@@ -963,8 +1032,19 @@ class Attribute extends Model
     {
         $builder = $this->db->table('attribute_definitions');
         $builder->where('definition_id', $definition_id);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
 
         return $builder->update(['deleted' => ACTIVE]);
+    }
+
+    private function getTenantDefinitionIds(array $definition_ids): array
+    {
+        $builder = $this->db->table('attribute_definitions');
+        $builder->select('definition_id');
+        $builder->whereIn('definition_id', $definition_ids);
+        $this->scopeDefinitionTenant($builder, 'tenant_id');
+
+        return array_map('intval', array_column($builder->get()->getResultArray(), 'definition_id'));
     }
 
     /**

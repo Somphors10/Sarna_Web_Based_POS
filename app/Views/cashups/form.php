@@ -10,12 +10,17 @@
 <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
 <ul id="error_message_box" class="error_message_box"></ul>
 
+<?php
+$display_cashup_id = isset($cash_ups_info->tenant_cashup_seq)
+    ? (int)$cash_ups_info->tenant_cashup_seq
+    : (int)$cash_ups_info->cashup_id;
+?>
 <?= form_open('cashups/save/' . $cash_ups_info->cashup_id, ['id' => 'cashups_edit_form', 'class' => 'form-horizontal'])    // TODO: String Interpolation ?>
     <fieldset id="item_basic_info">
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Cashups.info'), 'cash_ups_info', ['class' => 'control-label col-xs-3']) ?>
-            <?= form_label(!empty($cash_ups_info->cashup_id) ? lang('Cashups.id') . ' ' . $cash_ups_info->cashup_id : '', 'cashup_id', ['class' => 'control-label col-xs-8', 'style' => 'text-align: left']) ?>
+            <?= form_label(!empty($cash_ups_info->cashup_id) ? lang('Cashups.id') . ' ' . $display_cashup_id : '', 'cashup_id', ['class' => 'control-label col-xs-8', 'style' => 'text-align: left']) ?>
         </div>
 
         <div class="form-group form-group-sm">
