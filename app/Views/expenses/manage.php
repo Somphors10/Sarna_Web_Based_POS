@@ -22,6 +22,28 @@
         // Load the preset datarange picker
         <?= view('partial/daterangepicker') ?>
 
+        // Expenses should show existing records immediately (not only today's).
+        // Force default range to All Time for this module.
+        var picker = $('#daterangepicker').data('daterangepicker');
+        if (picker) {
+            var allTimeStart = moment('2010-01-01 00:00:00');
+            var allTimeEnd = moment();
+
+            if (picker.timePicker) {
+                start_date = allTimeStart.format('YYYY-MM-DD HH:mm:ss');
+                end_date = allTimeEnd.endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            } else {
+                start_date = allTimeStart.format('YYYY-MM-DD');
+                end_date = allTimeEnd.format('YYYY-MM-DD');
+            }
+
+            picker.setStartDate(allTimeStart);
+            picker.setEndDate(allTimeEnd);
+            $('#daterangepicker').val(
+                picker.startDate.format(picker.locale.format) + ' - ' + picker.endDate.format(picker.locale.format)
+            );
+        }
+
         $("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
             table_support.refresh();
         });

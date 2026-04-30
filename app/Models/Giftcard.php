@@ -94,12 +94,15 @@ class Giftcard extends Model
                   AND g2.deleted = 0
                   AND g2.giftcard_id <= giftcards.giftcard_id
             ) AS tenant_giftcard_seq', false);
-        $builder->join('people', 'people.person_id = giftcards.person_id', 'left');
+        $builder->join('people AS people', 'people.person_id = giftcards.person_id', 'left');
         $this->scopeTenant($builder, 'giftcards.tenant_id');
         $builder->where('giftcards.giftcard_id', $giftcard_id);
         $builder->where('giftcards.deleted', 0);
 
         $query = $builder->get();
+        if ($query === false) {
+            return $this->getEmptyObject('giftcards');
+        }
 
         if ($query->getNumRows() == 1) {    // TODO: ===
             return $query->getRow();
@@ -237,7 +240,7 @@ class Giftcard extends Model
     {
         $suggestions = [];
 
-        $builder = $this->db->table('giftcards');
+        $builder = $this->db->table('giftcards AS giftcards');
         $this->scopeTenant($builder, 'giftcards.tenant_id');
         $builder->like('giftcard_number', $search);
         $builder->where('giftcards.deleted', 0);
@@ -248,7 +251,7 @@ class Giftcard extends Model
         }
 
         $builder = $this->db->table('customers AS customers');
-        $builder->join('people', 'customers.person_id = people.person_id', 'left');
+        $builder->join('people AS people', 'customers.person_id = people.person_id', 'left');
         $this->scopeTenant($builder, 'customers.tenant_id');
         $builder->groupStart();
         $builder->like('first_name', $search);

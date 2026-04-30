@@ -54,8 +54,8 @@ class Customer extends Person
      */
     public function exists(int $person_id): bool
     {
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'people.person_id = customers.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'people.person_id = customers.person_id');
         $builder->where('customers.person_id', $person_id);
         $this->scopeTenant($builder, 'customers.tenant_id');
         return ($builder->get()->getNumRows() == 1);
@@ -66,7 +66,7 @@ class Customer extends Person
      */
     public function check_account_number_exists(string $account_number, string $person_id = ''): bool
     {
-        $builder = $this->db->table('customers');
+        $builder = $this->db->table('customers AS customers');
         $builder->where('account_number', $account_number);
         $this->scopeTenant($builder, 'customers.tenant_id');
 
@@ -82,9 +82,9 @@ class Customer extends Person
      */
     public function get_total_rows(): int
     {
-        $builder = $this->db->table('customers');
+        $builder = $this->db->table('customers AS customers');
         $this->scopeTenant($builder, 'customers.tenant_id');
-        $builder->where('deleted', 0);
+        $builder->where('customers.deleted', 0);
 
         return $builder->countAllResults();
     }
@@ -94,8 +94,8 @@ class Customer extends Person
      */
     public function get_all(int $limit = 0, int $offset = 0): ResultInterface
     {
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'customers.person_id = people.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'customers.person_id = people.person_id');
         $builder->select('customers.*, people.*,
             (
                 SELECT COUNT(*)
@@ -105,7 +105,7 @@ class Customer extends Person
                   AND c2.person_id <= customers.person_id
             ) AS tenant_customer_seq', false);
         $this->scopeTenant($builder, 'customers.tenant_id');
-        $builder->where('deleted', 0);
+        $builder->where('customers.deleted', 0);
         $builder->orderBy('last_name', 'asc');
 
         if ($limit > 0) {
@@ -124,8 +124,8 @@ class Customer extends Person
             return $this->getNewCustomerObject();
         }
 
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'people.person_id = customers.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'people.person_id = customers.person_id');
         $builder->select('customers.*, people.*,
             (
                 SELECT COUNT(*)
@@ -246,8 +246,8 @@ class Customer extends Person
      */
     public function get_multiple_info(array $person_ids): ResultInterface
     {
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'people.person_id = customers.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'people.person_id = customers.person_id');
         $builder->whereIn('customers.person_id', $person_ids);
         $this->scopeTenant($builder, 'customers.tenant_id');
         $builder->orderBy('last_name', 'asc');
@@ -265,8 +265,8 @@ class Customer extends Person
             return false;
         }
 
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'people.person_id = customers.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'people.person_id = customers.person_id');
         $builder->where('people.email', $email);
         $builder->where('customers.deleted', 0);
         $this->scopeTenant($builder, 'customers.tenant_id');
@@ -296,7 +296,7 @@ class Customer extends Person
         $this->db->transStart();
 
         if (parent::save_value($person_data, $customer_id)) {
-            $builder = $this->db->table('customers');
+            $builder = $this->db->table('customers AS customers');
             if ($customer_id == NEW_ENTRY || !$customer_id || !$this->exists($customer_id)) {
                 $customer_data['person_id'] = $person_data['person_id'];
                 $success = $builder->insert($customer_data);
@@ -319,7 +319,7 @@ class Customer extends Person
      */
     public function update_reward_points_value(int $customer_id, int $value): void
     {
-        $builder = $this->db->table('customers');
+        $builder = $this->db->table('customers AS customers');
         $builder->where('person_id', $customer_id);
         $this->scopeTenant($builder, 'customers.tenant_id');
         $builder->update(['points' => $value]);
@@ -340,12 +340,12 @@ class Customer extends Person
 
         // Remove customer row first, then base person row.
         // This enforces true DB deletion (not soft-delete).
-        $builder = $this->db->table('customers');
+        $builder = $this->db->table('customers AS customers');
         $builder->where('person_id', $customer_id);
         $this->scopeTenant($builder, 'customers.tenant_id');
         $result = $builder->delete();
 
-        $builder = $this->db->table('people');
+        $builder = $this->db->table('people AS people');
         $builder->where('person_id', $customer_id);
         $this->scopeTenant($builder, 'people.tenant_id');
         $result = $result && $builder->delete();
@@ -376,8 +376,8 @@ class Customer extends Person
     {
         $suggestions = [];
 
-        $builder = $this->db->table('customers');
-        $builder->join('people', 'customers.person_id = people.person_id');
+        $builder = $this->db->table('customers AS customers');
+        $builder->join('people AS people', 'customers.person_id = people.person_id');
         $this->scopeTenant($builder, 'customers.tenant_id');
         $builder->groupStart();
         $builder->like('first_name', $search);
@@ -390,7 +390,7 @@ class Customer extends Person
             $builder->orLike('company_name', $search);
         }
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('customers.deleted', 0);
         $builder->orderBy('last_name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
@@ -401,10 +401,10 @@ class Customer extends Person
         }
 
         if (!$unique) {
-            $builder = $this->db->table('customers');
-            $builder->join('people', 'customers.person_id = people.person_id');
+            $builder = $this->db->table('customers AS customers');
+            $builder->join('people AS people', 'customers.person_id = people.person_id');
             $this->scopeTenant($builder, 'customers.tenant_id');
-            $builder->where('deleted', 0);
+            $builder->where('customers.deleted', 0);
             $builder->like('email', $search);
             $builder->orderBy('email', 'asc');
 
@@ -412,10 +412,10 @@ class Customer extends Person
                 $suggestions[] = ['value' => $row->person_id, 'label' => $row->email];
             }
 
-            $builder = $this->db->table('customers');
-            $builder->join('people', 'customers.person_id = people.person_id');
+            $builder = $this->db->table('customers AS customers');
+            $builder->join('people AS people', 'customers.person_id = people.person_id');
             $this->scopeTenant($builder, 'customers.tenant_id');
-            $builder->where('deleted', 0);
+            $builder->where('customers.deleted', 0);
             $builder->like('phone_number', $search);
             $builder->orderBy('phone_number', 'asc');
 
@@ -423,10 +423,10 @@ class Customer extends Person
                 $suggestions[] = ['value' => $row->person_id, 'label' => $row->phone_number];
             }
 
-            $builder = $this->db->table('customers');
-            $builder->join('people', 'customers.person_id = people.person_id');
+            $builder = $this->db->table('customers AS customers');
+            $builder->join('people AS people', 'customers.person_id = people.person_id');
             $this->scopeTenant($builder, 'customers.tenant_id');
-            $builder->where('deleted', 0);
+            $builder->where('customers.deleted', 0);
             $builder->like('account_number', $search);
             $builder->orderBy('account_number', 'asc');
 
@@ -434,10 +434,10 @@ class Customer extends Person
                 $suggestions[] = ['value' => $row->person_id, 'label' => $row->account_number];
             }
 
-            $builder = $this->db->table('customers');
-            $builder->join('people', 'customers.person_id = people.person_id');
+            $builder = $this->db->table('customers AS customers');
+            $builder->join('people AS people', 'customers.person_id = people.person_id');
             $this->scopeTenant($builder, 'customers.tenant_id');
-            $builder->where('deleted', 0);
+            $builder->where('customers.deleted', 0);
             $builder->like('company_name', $search);
             $builder->orderBy('company_name', 'asc');
 

@@ -93,18 +93,23 @@ class Giftcards extends Secure_Controller
     {
         $config = config(OSPOS::class)->settings;
         $giftcard_info = $this->giftcard->get_info($giftcard_id);
+        $person_id = (int)($giftcard_info->person_id ?? 0);
+        $first_name = (string)($giftcard_info->first_name ?? '');
+        $last_name = (string)($giftcard_info->last_name ?? '');
+        $giftcard_number = (string)($giftcard_info->giftcard_number ?? '');
+        $giftcard_value = (float)($giftcard_info->value ?? 0);
 
-        $data['selected_person_name'] = ($giftcard_id > 0 && isset($giftcard_info->person_id)) ? $giftcard_info->first_name . ' ' . $giftcard_info->last_name : '';
-        $data['selected_person_id'] = $giftcard_info->person_id;
+        $data['selected_person_name'] = ($giftcard_id > 0 && $person_id > 0) ? trim($first_name . ' ' . $last_name) : '';
+        $data['selected_person_id'] = $person_id;
         if ($config['giftcard_number'] == 'random') {
-            $data['giftcard_number'] = $giftcard_id > 0 ? $giftcard_info->giftcard_number : '';
+            $data['giftcard_number'] = $giftcard_id > 0 ? $giftcard_number : '';
         } else {
             $max_number_obj = $this->giftcard->get_max_number();
             $max_giftnumber = isset($max_number_obj) ? $this->giftcard->get_max_number()->giftcard_number : 0;    // TODO: variable does not follow naming standard.
-            $data['giftcard_number'] = $giftcard_id > 0 ? $giftcard_info->giftcard_number : $max_giftnumber + 1;
+            $data['giftcard_number'] = $giftcard_id > 0 ? $giftcard_number : $max_giftnumber + 1;
         }
         $data['giftcard_id'] = $giftcard_id;
-        $data['giftcard_value'] = $giftcard_info->value;
+        $data['giftcard_value'] = $giftcard_value;
 
         echo view("giftcards/form", $data);
     }
