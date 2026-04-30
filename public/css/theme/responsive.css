@@ -1,12 +1,54 @@
+@media (max-width: 1280px) {
+    .neo-layout {
+        grid-template-columns: 220px 1fr;
+        gap: 10px;
+    }
+
+    html.sidebar-collapsed .neo-layout {
+        grid-template-columns: 78px 1fr;
+    }
+
+    .neo-global-menu-item span {
+        font-size: 13px;
+    }
+
+    .neo-main,
+    .neo-module-page {
+        padding: 12px;
+    }
+}
+
 @media (max-width: 992px) {
     .neo-layout {
         grid-template-columns: 1fr;
-        padding: var(--neo-gap-sm);
+        padding: 10px;
+        gap: 10px;
     }
 
     .neo-global-sidebar {
-        position: static;
-        min-height: auto;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(320px, 88vw);
+        height: 100vh;
+        min-height: 100vh;
+        z-index: 1200;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 0;
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        padding: 14px 0 16px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .neo-global-brand-row {
+        margin: 6px 14px 12px;
+    }
+
+    .neo-global-brand {
+        font-size: 22px;
     }
 
     .neo-global-sidebar-body {
@@ -14,35 +56,84 @@
     }
 
     .neo-global-menu {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 0 12px;
     }
 
     .neo-global-menu-item {
-        justify-content: center;
-        text-align: center;
-        min-height: 72px;
-        flex-direction: column;
-        gap: 6px;
-        border: 1px solid #e2e8f0;
-        background: #fff;
+        justify-content: flex-start;
+        text-align: left;
+        min-height: 44px;
+        min-width: 0;
+        flex-direction: row;
+        gap: 11px;
+        padding: 9px 12px;
+        border-radius: 11px;
     }
 
     .neo-global-menu-item.is-active::before {
-        display: none;
+        left: -11px;
+        display: block;
     }
 
     .neo-global-menu-item span {
-        font-size: 11px;
+        display: inline;
+        font-size: 14px;
+    }
+
+    .neo-global-menu-item img {
+        width: 19px;
+        height: 19px;
+    }
+
+    .neo-mobile-menu-toggle {
+        display: inline-flex;
+    }
+
+    .neo-sidebar-toggle {
+        display: none;
+    }
+
+    .neo-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .2s ease;
+        z-index: 1150;
+    }
+
+    html.mobile-sidebar-open .neo-global-sidebar {
+        transform: translateX(0);
+    }
+
+    html.mobile-sidebar-open .neo-sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    html.mobile-sidebar-open,
+    html.mobile-sidebar-open body {
+        overflow: hidden;
     }
 }
 
 @media (max-width: 767.98px) {
+    .neo-layout {
+        padding: 10px 8px;
+    }
+
     .pos-topbar-inner {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
     }
 
     .pos-topbar-company,
@@ -52,7 +143,21 @@
     }
 
     .pos-topbar-user {
-        justify-content: center;
+        justify-content: flex-end;
+        min-width: 54px;
+        padding-right: 0;
+        font-size: 11px;
+    }
+
+    .pos-user-link {
+        display: none;
+    }
+
+    .neo-mobile-menu-toggle {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        margin-right: 0;
     }
 
     .neo-main-header {
@@ -74,7 +179,7 @@
 
     .neo-main,
     .neo-module-page {
-        padding: var(--neo-gap-sm);
+        padding: 10px;
     }
 
     .neo-module-header {
@@ -86,7 +191,7 @@
         width: 100%;
     }
 
-    .neo-global-menu {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .pos-topbar-clock {
+        display: none;
     }
 }

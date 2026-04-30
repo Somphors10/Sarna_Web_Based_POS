@@ -16,6 +16,7 @@ $request = Services::request();
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <base href="<?= base_url() ?>">
     <title><?= esc($config['company']) . ' | ' . lang('Common.powered_by') . ' OSPOS ' . esc(config('App')->application_version) ?></title>
     <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
@@ -86,6 +87,8 @@ $request = Services::request();
 
             document.addEventListener('DOMContentLoaded', function() {
                 const toggle = document.getElementById('neo_sidebar_toggle');
+                const mobileToggle = document.getElementById('neo_mobile_sidebar_toggle');
+                const mobileBackdrop = document.getElementById('neo_sidebar_backdrop');
                 if (!toggle) {
                     return;
                 }
@@ -104,9 +107,43 @@ $request = Services::request();
                     setExpandedState();
                 });
 
+                const closeMobileSidebar = function() {
+                    document.documentElement.classList.remove('mobile-sidebar-open');
+                };
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function() {
+                        if (window.innerWidth > 992) {
+                            return;
+                        }
+                        document.documentElement.classList.toggle('mobile-sidebar-open');
+                    });
+                }
+
+                if (mobileBackdrop) {
+                    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+
                 window.addEventListener('resize', function() {
                     syncForViewport();
                     setExpandedState();
+                    if (window.innerWidth > 992) {
+                        document.documentElement.classList.remove('mobile-sidebar-open');
+                    }
                 });
 
                 syncForViewport();
@@ -137,10 +174,14 @@ $request = Services::request();
                     </nav>
                 </div>
             </aside>
+            <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
 
             <main class="neo-global-content">
                 <div class="topbar pos-topbar">
                     <div class="container pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
+                            <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                        </button>
                         <div class="navbar-left pos-topbar-clock">
                             <div id="liveclock"><?= date($config['dateformat'] . ' ' . $config['timeformat']) ?></div>
                         </div>

@@ -59,14 +59,14 @@
 
 .neo-info-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 8px;
     margin-bottom: 10px;
 }
 
 .neo-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 8px;
     margin-bottom: 10px;
 }
@@ -132,7 +132,7 @@
 
 .neo-module-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 8px;
 }
 
@@ -182,23 +182,13 @@
     display: none;
 }
 
-@media (max-width: 1400px) {
-    .neo-module-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
 @media (max-width: 1100px) {
-    .neo-kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .neo-main {
+        padding: 12px;
     }
 
-    .neo-info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .neo-module-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .neo-main-header h2 {
+        font-size: 28px;
     }
 }
 
@@ -214,5 +204,23 @@
 
     .neo-module-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .neo-kpi-value {
+        font-size: 24px;
+    }
+
+    .neo-main-header h2 {
+        font-size: 24px;
+    }
+
+    .neo-main-subtitle {
+        font-size: 12px;
+    }
+
+    /* Reduce mobile dashboard clutter: keep quick access focus */
+    .neo-kpi-grid,
+    .neo-info-grid {
+        display: none;
     }
 }
