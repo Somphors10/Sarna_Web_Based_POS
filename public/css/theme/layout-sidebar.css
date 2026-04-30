@@ -36,7 +36,7 @@
     min-height: 100vh;
     height: 100vh;
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -76,7 +76,7 @@
     cursor: pointer;
     position: absolute;
     top: 70px;
-    right: -17px;
+    right: 8px;
     z-index: 20;
     box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
     transition: transform .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
@@ -202,13 +202,17 @@ html.sidebar-collapsed .neo-sidebar-toggle .glyphicon {
 }
 
 html.sidebar-collapsed .neo-global-menu {
-    padding: 0 10px;
+    padding: 0;
 }
 
 html.sidebar-collapsed .neo-global-menu-item {
     justify-content: center;
-    min-height: 42px;
-    padding: 8px 8px;
+    min-height: 46px;
+    padding: 8px 0;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-color: transparent;
 }
 
 html.sidebar-collapsed .neo-global-menu-item span {
@@ -219,8 +223,14 @@ html.sidebar-collapsed .neo-global-menu-item.is-active::before {
     display: none;
 }
 
+html.sidebar-collapsed .neo-global-menu-item.is-active {
+    background: #e9f1ff;
+    box-shadow: inset 4px 0 0 #2563eb;
+    border-color: transparent;
+}
+
 html.sidebar-collapsed .neo-sidebar-toggle {
-    right: -15px;
+    right: 8px;
 }
 
 @media (max-width: 992px) {
