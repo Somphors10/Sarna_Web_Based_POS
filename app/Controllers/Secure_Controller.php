@@ -10,6 +10,7 @@ use CodeIgniter\Model;
 use CodeIgniter\Session\Session;
 use Config\OSPOS;
 use Config\Services;
+use Throwable;
 
 /**
  * Controllers that are considered secure extend Secure_Controller, optionally a $module_id can
@@ -51,13 +52,22 @@ class Secure_Controller extends BaseController
         if ($tenant_id <= 0) {
             $tenant_id = (int)($logged_in_employee_info->tenant_id ?? 0);
             if ($tenant_id <= 0) {
-                $tenant_row = db_connect('platform')
-                    ->table('tenants')
-                    ->select('tenant_id')
-                    ->where('tenant_code', 'default')
-                    ->get(1)
-                    ->getRow();
-                $tenant_id = (int)($tenant_row->tenant_id ?? 1);
+                try {
+                    $platform_db = db_connect('platform');
+                    if ($platform_db->tableExists('tenants')) {
+                        $tenant_row = $platform_db
+                            ->table('tenants')
+                            ->select('tenant_id')
+                            ->where('tenant_code', 'default')
+                            ->get(1)
+                            ->getRow();
+                        $tenant_id = (int)($tenant_row->tenant_id ?? 1);
+                    } else {
+                        $tenant_id = 1;
+                    }
+                } catch (Throwable $e) {
+                    $tenant_id = 1;
+                }
             }
             $this->session->set('tenant_id', $tenant_id);
         }
