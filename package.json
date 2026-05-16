@@ -26,9 +26,7 @@
     },
     "scripts": {
         "build": "gulp default",
-        "gulp": "gulp",
-        "tw:build": "npx @tailwindcss/cli -i resources/css/tailwind.css -o public/css/tailwind.css --minify",
-        "tw:watch": "npx @tailwindcss/cli -i resources/css/tailwind.css -o public/css/tailwind.css --watch"
+        "gulp": "gulp"
     },
     "type": "module",
     "dependencies": {
@@ -66,7 +64,6 @@
         "tableexport.jquery.plugin": "^1.30.0"
     },
     "devDependencies": {
-        "@tailwindcss/cli": "^4.2.4",
         "autoprefixer": "^10.5.0",
         "gulp": "^5.0.0",
         "gulp-clean": "^0.4.0",
@@ -86,7 +83,6 @@
         "npm-check-updates": "^17.1.14",
         "postcss": "^8.5.12",
         "readable-stream": "^4.4.2",
-        "stream-series": "^0.1.1",
-        "tailwindcss": "^4.2.4"
+        "stream-series": "^0.1.1"
     }
 }

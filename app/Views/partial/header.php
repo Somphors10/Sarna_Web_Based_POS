@@ -30,7 +30,6 @@ $request = Services::request();
     <?php else : ?>
         <!--inject:prod:css -->
         <!-- endinject -->
-        <link rel="stylesheet" href="css/tailwind.css">
         <link rel="stylesheet" href="css/dashboard.css">
         <link rel="stylesheet" href="css/forms.css">
 

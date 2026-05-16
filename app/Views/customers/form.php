@@ -11,13 +11,13 @@
  */
 ?>
 
-<div class="pos-form-shell tw-p-2">
-    <div id="required_fields_message" class="pos-form-required tw-mb-3 tw-rounded-lg tw-border tw-border-blue-200 tw-bg-blue-50 tw-p-2 tw-text-sm tw-text-blue-900"><?= lang('Common.fields_required_message') ?></div>
+<div class="pos-form-shell">
+    <div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
     <ul id="error_message_box" class="error_message_box"></ul>
 
-<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'customer_form', 'class' => 'form-horizontal pos-modern-form tw-overflow-hidden tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-shadow-sm']) ?>
+<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'customer_form', 'class' => 'form-horizontal pos-modern-form']) ?>
 
-    <ul class="nav nav-tabs nav-justified pos-form-tabs tw-border-b tw-border-slate-200 tw-bg-slate-50" data-tabs="tabs">
+    <ul class="nav nav-tabs nav-justified pos-form-tabs" data-tabs="tabs">
         <li class="active" role="presentation">
             <a data-toggle="tab" href="#customer_basic_info"><?= lang('Customers.basic_information') ?></a>
         </li>
@@ -33,7 +33,7 @@
         <?php } ?>
     </ul>
 
-    <div class="tab-content tw-p-4">
+    <div class="tab-content">
         <div class="tab-pane fade in active" id="customer_basic_info">
             <fieldset>
                 <div class="form-group form-group-sm">
@@ -461,15 +461,6 @@
     // Validation and submit handling
     $(document).ready(function() {
         const standaloneMode = <?= !empty($standalone) ? 'true' : 'false' ?>;
-
-        // Tailwind-based modern form skin without changing backend logic.
-        $('#customer_form .form-group').addClass('tw-mb-3');
-        $('#customer_form .control-label').addClass('tw-text-slate-700 tw-font-medium');
-        $('#customer_form .form-control').addClass('tw-rounded-lg tw-border-slate-300 focus:tw-border-blue-400 focus:tw-ring-2 focus:tw-ring-blue-100');
-        $('#customer_form .input-group-addon').addClass('tw-bg-slate-50 tw-border-slate-300 tw-text-slate-500');
-        $('#customer_form .radio-inline').addClass('tw-mr-3 tw-text-slate-700');
-        $('#customer_form textarea.form-control').addClass('tw-min-h-24');
-        $('#customer_form .nav-tabs > li > a').addClass('tw-font-semibold tw-text-slate-600');
 
         $("input[name='sales_tax_code_name']").change(function() {
             if (!$("input[name='sales_tax_code_name']").val()) {

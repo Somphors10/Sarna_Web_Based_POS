@@ -13,8 +13,10 @@
 
 <?= view('partial/header') ?>
 
-<div class="tw-my-4 tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-4 tw-shadow-sm">
+<div class="panel panel-default" style="margin: 16px 0;">
+    <div class="panel-body">
     <?= view('customers/form') ?>
+    </div>
 </div>
 
 <?= view('partial/footer') ?>
