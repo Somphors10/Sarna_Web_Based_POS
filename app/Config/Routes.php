@@ -21,7 +21,6 @@ $routes->get('super-admin/login', 'Super_admin::login');
 $routes->post('super-admin/login', 'Super_admin::login');
 $routes->get('super-admin/logout', 'Super_admin::logout');
 $routes->post('super-admin/toggle-status/(:num)', 'Super_admin::postToggleStatus/$1');
-$routes->post('super-admin/create-admin', 'Super_admin::postCreateAdmin');
 $routes->post('super-admin/approve-request/(:num)', 'Super_admin::postApproveRequest/$1');
 $routes->post('super-admin/reject-request/(:num)', 'Super_admin::postRejectRequest/$1');
 

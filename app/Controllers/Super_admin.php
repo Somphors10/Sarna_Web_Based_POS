@@ -99,31 +99,7 @@ class Super_admin extends BaseController
 
     public function postCreateAdmin(): RedirectResponse
     {
-        $platform_admin = model(Platform_admin::class);
-        if (!$platform_admin->is_logged_in()) {
-            return redirect()->to('super-admin/login');
-        }
-
-        if (!$platform_admin->is_owner()) {
-            return redirect()->to('super-admin?error=only_owner');
-        }
-
-        $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $full_name = (string)$this->request->getPost('full_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $email = (string)$this->request->getPost('email', FILTER_SANITIZE_EMAIL);
-        $password = (string)$this->request->getPost('password');
-
-        if (strlen($username) < 4 || strlen($password) < 8 || strlen($full_name) < 2) {
-            return redirect()->to('super-admin?error=invalid_admin_input');
-        }
-
-        if ($platform_admin->username_exists($username)) {
-            return redirect()->to('super-admin?error=admin_username_exists');
-        }
-
-        $platform_admin->create_admin($username, $password, $full_name, $email ?: null);
-
-        return redirect()->to('super-admin?admin_created=1');
+        return redirect()->to('super-admin?error=admin_creation_disabled');
     }
 
     public function postApproveRequest(int $request_id): RedirectResponse

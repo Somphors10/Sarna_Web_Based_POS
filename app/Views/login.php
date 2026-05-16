@@ -5,7 +5,7 @@
  * @var string $latest_version
  * @var bool $gcaptcha_enabled
  * @var array $config
- * @var $validation
+ * @var \CodeIgniter\Validation\ValidationInterface|null $validation
  */
 ?>
 
@@ -49,7 +49,7 @@
                 <?= form_open('login') ?>
                 <h3 class="text-center m-0"><?= lang('Login.welcome', [lang('Common.software_short')]) ?></h3>
                 <?php if ($has_errors): ?>
-                    <?php foreach ($validation->getErrors() as $error): ?>
+                    <?php foreach (($validation?->getErrors() ?? []) as $error): ?>
                         <div class="alert alert-danger mt-3">
                             <?= $error ?>
                         </div>
