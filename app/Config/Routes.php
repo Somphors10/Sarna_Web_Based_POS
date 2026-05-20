@@ -17,6 +17,10 @@ $routes->get('register-company', 'Company_register::index');
 $routes->post('register-company', 'Company_register::index');
 
 $routes->get('super-admin', 'Super_admin::index');
+$routes->get('super-admin/overview', 'Super_admin::index/overview');
+$routes->get('super-admin/businesses', 'Super_admin::index/businesses');
+$routes->get('super-admin/admins', 'Super_admin::index/admins');
+$routes->get('super-admin/requests', 'Super_admin::index/requests');
 $routes->get('super-admin/login', 'Super_admin::login');
 $routes->post('super-admin/login', 'Super_admin::login');
 $routes->get('super-admin/logout', 'Super_admin::logout');

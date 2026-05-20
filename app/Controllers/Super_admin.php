@@ -53,11 +53,16 @@ class Super_admin extends BaseController
         return redirect()->to('super-admin');
     }
 
-    public function index(): string|RedirectResponse
+    public function index(string $page = 'overview'): string|RedirectResponse
     {
         $platform_admin = model(Platform_admin::class);
         if (!$platform_admin->is_logged_in()) {
             return redirect()->to('super-admin/login');
+        }
+
+        $allowed_pages = ['overview', 'businesses', 'admins', 'requests'];
+        if (!in_array($page, $allowed_pages, true)) {
+            return redirect()->to('super-admin/overview');
         }
 
         $tenant_model = model(Tenant::class);
@@ -66,7 +71,8 @@ class Super_admin extends BaseController
             'tenants' => $tenant_model->get_with_owner_summary(),
             'platform_admins' => $platform_admin->get_all_admins(),
             'is_owner' => $platform_admin->is_owner(),
-            'subscription_requests' => $request_model->get_pending_with_plan()
+            'subscription_requests' => $request_model->get_pending_with_plan(),
+            'active_page' => $page
         ];
 
         return view('super_admin/dashboard', $data);
@@ -82,12 +88,12 @@ class Super_admin extends BaseController
         $status = (string)$this->request->getPost('status', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $allowed = ['active', 'suspended', 'cancelled'];
         if (!in_array($status, $allowed, true)) {
-            return redirect()->to('super-admin');
+            return redirect()->to('super-admin/businesses');
         }
 
         model(Tenant::class)->set_status($tenant_id, $status);
 
-        return redirect()->to('super-admin');
+        return redirect()->to('super-admin/businesses');
     }
 
     public function logout(): RedirectResponse
@@ -112,14 +118,14 @@ class Super_admin extends BaseController
         $request_model = model(Subscription_request::class);
         $request = $request_model->get_info_for_review($request_id);
         if ($request === null || $request->status !== 'pending') {
-            return redirect()->to('super-admin?error=request_not_found');
+            return redirect()->to('super-admin/requests?error=request_not_found');
         }
 
         $db = db_connect();
         $tenant_exists = $db->table('tenants')->where('tenant_code', $request->tenant_code)->countAllResults();
         $username_exists = $db->table('employees')->where('username', $request->owner_username)->countAllResults();
         if ($tenant_exists > 0 || $username_exists > 0) {
-            return redirect()->to('super-admin?error=tenant_or_user_exists');
+            return redirect()->to('super-admin/requests?error=tenant_or_user_exists');
         }
 
         $db->transStart();
@@ -218,10 +224,10 @@ class Super_admin extends BaseController
         $db->transComplete();
 
         if (!$db->transStatus()) {
-            return redirect()->to('super-admin?error=approve_failed');
+            return redirect()->to('super-admin/requests?error=approve_failed');
         }
 
-        return redirect()->to('super-admin?request_approved=1');
+        return redirect()->to('super-admin/requests?request_approved=1');
     }
 
     public function postRejectRequest(int $request_id): RedirectResponse
@@ -240,6 +246,6 @@ class Super_admin extends BaseController
                 'reviewed_at' => date('Y-m-d H:i:s')
             ]);
 
-        return redirect()->to('super-admin?request_rejected=1');
+        return redirect()->to('super-admin/requests?request_rejected=1');
     }
 }

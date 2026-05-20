@@ -56,8 +56,13 @@
             </div>
         </div>
 
+        <?php
+            $hidden_dashboard_modules = ['messages', 'migrate'];
+            $visible_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_dashboard_modules, true)));
+        ?>
+
         <div class="neo-info-grid">
-            <?php foreach(array_slice($allowed_modules, 0, 3) as $module) { ?>
+            <?php foreach(array_slice($visible_modules, 0, 3) as $module) { ?>
                 <a class="neo-info-card" href="<?= base_url($module->module_id) ?>">
                     <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
                     <div>
@@ -70,7 +75,7 @@
 
         <h3 class="neo-section-title">Quick Access</h3>
         <div class="neo-module-grid">
-            <?php foreach($allowed_modules as $module) { ?>
+            <?php foreach($visible_modules as $module) { ?>
                 <a class="neo-module-card"
                    href="<?= base_url($module->module_id) ?>"
                    title="<?= lang("Module.$module->module_id" . '_desc') ?>"

@@ -164,9 +164,15 @@ $request = Services::request();
                 </div>
                 <div class="neo-global-sidebar-body">
                     <nav class="neo-global-menu">
-                        <?php foreach ($allowed_modules as $module): ?>
+                        <?php
+                            $hidden_sidebar_modules = ['messages', 'migrate'];
+                            $sidebar_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_sidebar_modules, true)));
+                        ?>
+                        <?php foreach ($sidebar_modules as $module): ?>
                             <a class="neo-global-menu-item <?= $module->module_id == $request->getUri()->getSegment(1) ? 'is-active' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>">
-                                <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
+                                <span class="neo-global-menu-icon">
+                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
+                                </span>
                                 <span><?= lang('Module.' . $module->module_id) ?></span>
                             </a>
                         <?php endforeach; ?>
