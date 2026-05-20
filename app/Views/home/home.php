@@ -37,29 +37,31 @@
             </div>
         </header>
 
+        <?php
+            // For assignment/demo: hide only a few low-priority modules.
+            $hidden_dashboard_modules = ['messages', 'migrate', 'giftcards', 'cashups'];
+            $visible_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_dashboard_modules, true)));
+            $visible_module_ids = array_map(static fn($module) => $module->module_id, $visible_modules);
+        ?>
+
         <div class="neo-kpi-grid">
             <div class="neo-kpi-card">
                 <span class="neo-kpi-label">Active Modules</span>
-                <strong class="neo-kpi-value"><?= count($allowed_modules) ?></strong>
+                <strong class="neo-kpi-value"><?= count($visible_modules) ?></strong>
             </div>
             <div class="neo-kpi-card">
                 <span class="neo-kpi-label">Sales Shortcuts</span>
-                <strong class="neo-kpi-value"><?= in_array('sales', array_map(fn($m) => $m->module_id, $allowed_modules), true) ? 'Ready' : 'N/A' ?></strong>
+                <strong class="neo-kpi-value"><?= in_array('sales', $visible_module_ids, true) ? 'Ready' : 'N/A' ?></strong>
             </div>
             <div class="neo-kpi-card">
                 <span class="neo-kpi-label">Inventory Access</span>
-                <strong class="neo-kpi-value"><?= in_array('items', array_map(fn($m) => $m->module_id, $allowed_modules), true) ? 'Enabled' : 'N/A' ?></strong>
+                <strong class="neo-kpi-value"><?= in_array('items', $visible_module_ids, true) ? 'Enabled' : 'N/A' ?></strong>
             </div>
             <div class="neo-kpi-card">
                 <span class="neo-kpi-label">Receivings Access</span>
-                <strong class="neo-kpi-value"><?= in_array('receivings', array_map(fn($m) => $m->module_id, $allowed_modules), true) ? 'Enabled' : 'N/A' ?></strong>
+                <strong class="neo-kpi-value"><?= in_array('receivings', $visible_module_ids, true) ? 'Enabled' : 'N/A' ?></strong>
             </div>
         </div>
-
-        <?php
-            $hidden_dashboard_modules = ['messages', 'migrate'];
-            $visible_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_dashboard_modules, true)));
-        ?>
 
         <div class="neo-info-grid">
             <?php foreach(array_slice($visible_modules, 0, 3) as $module) { ?>

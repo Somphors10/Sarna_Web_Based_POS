@@ -13,6 +13,8 @@ use Config\Services;
  */
 class Employees extends Persons
 {
+    private const HIDDEN_PERMISSION_MODULES = ['messages', 'migrate', 'giftcards', 'cashups'];
+
     public function __construct()
     {
         parent::__construct('employees');
@@ -82,6 +84,9 @@ class Employees extends Persons
 
         $modules = [];
         foreach ($this->module->get_all_modules()->getResult() as $module) {
+            if (in_array($module->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+                continue;
+            }
             $module->grant = $this->employee->has_grant($module->module_id, $person_info->person_id);
             $module->menu_group = $this->employee->get_menu_group($module->module_id, $person_info->person_id);
 
@@ -91,6 +96,9 @@ class Employees extends Persons
 
         $permissions = [];
         foreach ($this->module->get_all_subpermissions()->getResult() as $permission) {    // TODO: subpermissions does not follow naming standards.
+            if (in_array($permission->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+                continue;
+            }
             $permission->permission_id = str_replace(' ', '_', $permission->permission_id);
             $permission->grant = $this->employee->has_grant($permission->permission_id, $person_info->person_id);
 
@@ -131,6 +139,9 @@ class Employees extends Persons
 
         $grants_array = [];
         foreach ($this->module->get_all_permissions()->getResult() as $permission) {
+            if (in_array($permission->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+                continue;
+            }
             $grants = [];
             $grant = $this->request->getPost('grant_' . $permission->permission_id) != null ? $this->request->getPost('grant_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
 
