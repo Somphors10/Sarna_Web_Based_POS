@@ -166,7 +166,7 @@ $request = Services::request();
                     <nav class="neo-global-menu">
                         <?php
                             // Keep the menu mostly complete, hide only low-priority modules.
-                            $hidden_sidebar_modules = ['messages', 'migrate', 'giftcards', 'cashups'];
+                            $hidden_sidebar_modules = ['messages', 'migrate', 'giftcards'];
                             $sidebar_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_sidebar_modules, true)));
                         ?>
                         <?php foreach ($sidebar_modules as $module): ?>

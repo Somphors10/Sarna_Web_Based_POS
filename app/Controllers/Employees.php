@@ -13,7 +13,7 @@ use Config\Services;
  */
 class Employees extends Persons
 {
-    private const HIDDEN_PERMISSION_MODULES = ['messages', 'migrate', 'giftcards', 'cashups'];
+    private const HIDDEN_PERMISSION_MODULES = ['messages', 'migrate', 'giftcards'];
 
     public function __construct()
     {

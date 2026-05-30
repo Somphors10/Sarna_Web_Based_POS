@@ -39,7 +39,7 @@
 
         <?php
             // For assignment/demo: hide only a few low-priority modules.
-            $hidden_dashboard_modules = ['messages', 'migrate', 'giftcards', 'cashups'];
+            $hidden_dashboard_modules = ['messages', 'migrate', 'giftcards'];
             $visible_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_dashboard_modules, true)));
             $visible_module_ids = array_map(static fn($module) => $module->module_id, $visible_modules);
         ?>
