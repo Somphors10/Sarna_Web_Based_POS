@@ -6,7 +6,12 @@
  * @var bool $show_currency
  * @var string $xaxis_title
  * @var array $config
+ * @var string $chart_id
+ * @var string $chart_var
  */
+
+$chart_id = $chart_id ?? 'chart1';
+$chart_var = $chart_var ?? 'chart';
 ?>
 
 <script type="text/javascript">
@@ -160,9 +165,9 @@
          */
     ];
 
-    chart = new Chartist.Line('#chart1', data, options, responsiveOptions);
+    var <?= esc($chart_var, 'js') ?> = new Chartist.Line('#<?= esc($chart_id, 'js') ?>', data, options, responsiveOptions);
 
-    chart.on('draw', function(data) {
+    <?= esc($chart_var, 'js') ?>.on('draw', function(data) {
         // If the draw event was triggered from drawing a point on the line chart
         if (data.type === 'point') {
             // We are creating a new path SVG element that draws a triangle around the point coordinates

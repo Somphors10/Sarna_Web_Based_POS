@@ -1,6 +1,10 @@
 <?php
 /**
  * @var array $allowed_modules
+ * @var array $config
+ * @var array $kpis
+ * @var array $charts
+ * @var string $period_label
  */
 ?>
 
@@ -8,86 +12,85 @@
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
-
-    $(document).ready(function() {
-        const $search = $('#neo_module_search');
-        const $cards = $('.neo-module-card');
-
-        $search.on('input', function() {
-            const q = $(this).val().toLowerCase().trim();
-
-            $cards.each(function() {
-                const text = ($(this).data('search') || '').toLowerCase();
-                $(this).toggle(text.indexOf(q) !== -1);
-            });
-        });
-    });
 </script>
 
 <section class="neo-home">
     <div class="neo-main">
-        <header class="neo-main-header">
+        <header class="neo-dash-header">
             <div>
-                <p class="neo-main-eyebrow">POS Dashboard</p>
-                <h2><?= lang('Common.welcome_message') ?></h2>
-                <p class="neo-main-subtitle">Run sales quickly, manage inventory, and track daily operations in one place.</p>
-            </div>
-            <div class="neo-search-wrap">
-                <input id="neo_module_search" type="text" class="form-control" placeholder="<?= lang('Common.search') ?> modules">
+                <h2 class="neo-dash-header__title">Business Dashboard</h2>
+                <p class="neo-dash-header__subtitle"><?= esc($period_label) ?></p>
             </div>
         </header>
 
-        <?php
-            // For assignment/demo: hide only a few low-priority modules.
-            $hidden_dashboard_modules = ['messages', 'migrate', 'giftcards'];
-            $visible_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_dashboard_modules, true)));
-            $visible_module_ids = array_map(static fn($module) => $module->module_id, $visible_modules);
-        ?>
-
-        <div class="neo-kpi-grid">
-            <div class="neo-kpi-card">
-                <span class="neo-kpi-label">Active Modules</span>
-                <strong class="neo-kpi-value"><?= count($visible_modules) ?></strong>
-            </div>
-            <div class="neo-kpi-card">
-                <span class="neo-kpi-label">Sales Shortcuts</span>
-                <strong class="neo-kpi-value"><?= in_array('sales', $visible_module_ids, true) ? 'Ready' : 'N/A' ?></strong>
-            </div>
-            <div class="neo-kpi-card">
-                <span class="neo-kpi-label">Inventory Access</span>
-                <strong class="neo-kpi-value"><?= in_array('items', $visible_module_ids, true) ? 'Enabled' : 'N/A' ?></strong>
-            </div>
-            <div class="neo-kpi-card">
-                <span class="neo-kpi-label">Receivings Access</span>
-                <strong class="neo-kpi-value"><?= in_array('receivings', $visible_module_ids, true) ? 'Enabled' : 'N/A' ?></strong>
-            </div>
-        </div>
-
-        <div class="neo-info-grid">
-            <?php foreach(array_slice($visible_modules, 0, 3) as $module) { ?>
-                <a class="neo-info-card" href="<?= base_url($module->module_id) ?>">
-                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
-                    <div>
-                        <strong><?= lang("Module.$module->module_id") ?></strong>
-                        <p><?= lang("Module.$module->module_id" . '_desc') ?></p>
+        <?php if (!empty($kpis)): ?>
+            <div class="neo-kpi-grid">
+                <?php foreach ($kpis as $kpi): ?>
+                    <div class="neo-kpi-card">
+                        <span class="neo-kpi-label"><?= esc($kpi['label']) ?></span>
+                        <strong class="neo-kpi-value"><?= esc($kpi['value']) ?></strong>
+                        <?php if (!empty($kpi['hint'])): ?>
+                            <span class="neo-kpi-hint"><?= esc($kpi['hint']) ?></span>
+                        <?php endif; ?>
                     </div>
-                </a>
-            <?php } ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
-        <h3 class="neo-section-title">Quick Access</h3>
-        <div class="neo-module-grid">
-            <?php foreach($visible_modules as $module) { ?>
-                <a class="neo-module-card"
-                   href="<?= base_url($module->module_id) ?>"
-                   title="<?= lang("Module.$module->module_id" . '_desc') ?>"
-                   data-search="<?= esc(lang("Module.$module->module_id") . ' ' . lang("Module.$module->module_id" . '_desc')) ?>">
-                    <img class="neo-module-icon" src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
-                    <span class="neo-module-title"><?= lang("Module.$module->module_id") ?></span>
-                    <span class="neo-module-subtitle"><?= lang("Module.$module->module_id" . '_desc') ?></span>
-                </a>
-            <?php } ?>
-        </div>
+        <?php if (!empty($charts)): ?>
+            <h3 class="neo-section-title">Reports Overview</h3>
+            <div class="neo-chart-grid">
+                <?php foreach ($charts as $chart): ?>
+                    <article class="neo-chart-card <?= !empty($chart['wide']) ? 'neo-chart-card--wide' : '' ?>">
+                        <div class="neo-chart-card__header">
+                            <h4 class="neo-chart-card__title"><?= esc($chart['title']) ?></h4>
+                            <?php if (!empty($chart['report_url'])): ?>
+                                <a class="neo-chart-card__link" href="<?= esc($chart['report_url']) ?>">Full report</a>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if (!empty($chart['has_data'])): ?>
+                            <div class="neo-chart-card__body">
+                                <div class="neo-chart-card__canvas ct-chart" id="<?= esc($chart['chart_id']) ?>"></div>
+                            </div>
+
+                            <?php if (!empty($chart['summary']) && !empty($chart['summary_keys'])): ?>
+                                <div class="neo-chart-stats">
+                                    <?php foreach ($chart['summary_keys'] as $key): ?>
+                                        <?php if (isset($chart['summary'][$key]) && is_numeric($chart['summary'][$key])): ?>
+                                            <div class="neo-chart-stat">
+                                                <span class="neo-chart-stat__label"><?= lang("Reports.$key") ?></span>
+                                                <strong class="neo-chart-stat__value"><?= to_currency($chart['summary'][$key]) ?></strong>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php
+                            echo view($chart['chart_type'], [
+                                'labels_1'      => $chart['labels_1'],
+                                'series_data_1' => $chart['series_data_1'],
+                                'show_currency' => $chart['show_currency'] ?? false,
+                                'config'        => $config,
+                                'chart_id'      => $chart['chart_id'],
+                                'chart_var'     => $chart['chart_var'],
+                            ]);
+                            ?>
+                        <?php else: ?>
+                            <div class="neo-chart-empty">
+                                <p>No data for this period.</p>
+                                <span>Charts appear after you record sales or transactions.</span>
+                            </div>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="neo-dashboard-empty">
+                No report data available. Check your report permissions or add sales data.
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 

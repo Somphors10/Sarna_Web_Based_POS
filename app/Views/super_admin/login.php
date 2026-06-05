@@ -2,54 +2,158 @@
 /**
  * @var array $config
  * @var bool $has_errors
- * @var $validation
+ * @var \CodeIgniter\Validation\ValidationInterface|null $validation
  */
 ?>
+
 <!doctype html>
-<html lang="<?= current_language_code() ?>">
+<html lang="en">
+
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title><?= esc($config['company']) ?> | Super Admin Login</title>
+    <title>Super Admin | Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=7') ?>">
+    <meta name="theme-color" content="#4f46e5">
 </head>
-<body class="saas-modern">
-<main class="container saas-shell saas-auth-shell">
-    <section class="saas-card login-card saas-login-card">
-        <div class="card-header">
-            <div class="d-flex align-items-center gap-3">
-                <div class="saas-login-accent">S</div>
-                <div>
-                    <h4 class="mb-1">Platform Admin Login</h4>
-                    <p class="saas-subtitle mb-0">Sign in to manage tenants and subscriptions</p>
-                </div>
+
+<body class="login-page login-page--super-admin">
+    <div class="login-pos-bg" aria-hidden="true">
+        <div class="login-pos-receipt">
+            <p class="login-pos-receipt__title">Platform</p>
+            <div class="login-pos-receipt__line"></div>
+            <div class="login-pos-receipt__line login-pos-receipt__line--short"></div>
+            <div class="login-pos-receipt__line"></div>
+            <div class="login-pos-receipt__dash"></div>
+            <div class="login-pos-receipt__total">
+                <span>Tenants</span>
+                <span>12</span>
             </div>
         </div>
-        <div class="card-body saas-login-content">
+
+        <div class="login-pos-barcode">
+            <?php for ($i = 0; $i < 18; $i++): ?>
+                <span></span>
+            <?php endfor; ?>
+        </div>
+
+        <div class="login-pos-tile">
+            <div class="login-pos-tile__icon">A</div>
+            <p class="login-pos-tile__name">Admin Panel</p>
+            <p class="login-pos-tile__price">Secure</p>
+        </div>
+
+        <div class="login-pos-total">
+            <p class="login-pos-total__label">System Status</p>
+            <p class="login-pos-total__amount">Online</p>
+        </div>
+    </div>
+
+    <main class="login-main">
+        <div class="login-card">
+            <h1 class="login-card__title">Super Admin Sign In</h1>
+            <p class="login-card__subtitle">Platform administration access</p>
+
+            <?= form_open('super-admin/login', ['id' => 'super-admin-login-form']) ?>
+
             <?php if ($has_errors): ?>
-                <?php foreach ($validation->getErrors() as $error): ?>
-                    <div class="alert alert-danger"><?= esc($error) ?></div>
+                <?php foreach (($validation?->getErrors() ?? []) as $error): ?>
+                    <div class="login-alert login-alert--danger">
+                        <?= esc($error) ?>
+                    </div>
                 <?php endforeach; ?>
             <?php endif; ?>
 
-            <?= form_open('super-admin/login') ?>
-            <div class="mb-4">
-                <label class="form-label" for="username">Username</label>
-                <input class="form-control" id="username" name="username" required>
+            <div class="login-field">
+                <label class="login-field__label" for="input-username">
+                    Username<span class="login-field__required">*</span>
+                </label>
+                <input
+                    class="login-field__input login-field__input--text"
+                    id="input-username"
+                    name="username"
+                    type="text"
+                    autocomplete="username"
+                    required
+                >
             </div>
-            <div class="mb-4">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+
+            <div class="login-field">
+                <label class="login-field__label" for="input-password">
+                    Password<span class="login-field__required">*</span>
+                </label>
+                <div class="login-field__input-wrap">
+                    <input
+                        class="login-field__input"
+                        id="input-password"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button class="login-field__toggle" type="button" id="toggle-password" aria-label="Show password">
+                        <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="icon-eye-off is-hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-6.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="d-grid gap-3">
-                <button class="btn btn-primary" type="submit">Login to Dashboard</button>
-            </div>
+
+            <label class="login-remember" for="remember-me">
+                <input type="checkbox" id="remember-me" name="remember_me" value="1">
+                <span>Remember me</span>
+            </label>
+
+            <button class="login-submit" name="login-button" type="submit">Login</button>
             <?= form_close() ?>
-            <p class="saas-subtitle text-center mt-4 mb-0">Secure access for platform-level administration</p>
         </div>
-    </section>
-</main>
+    </main>
+
+    <script>
+        (function () {
+            const usernameInput = document.getElementById('input-username');
+            const passwordInput = document.getElementById('input-password');
+            const rememberCheckbox = document.getElementById('remember-me');
+            const toggleButton = document.getElementById('toggle-password');
+            const loginForm = document.getElementById('super-admin-login-form');
+            const storageKey = 'ospos_super_admin_username';
+
+            if (localStorage.getItem(storageKey) && usernameInput) {
+                usernameInput.value = localStorage.getItem(storageKey);
+                if (rememberCheckbox) {
+                    rememberCheckbox.checked = true;
+                }
+            }
+
+            if (toggleButton && passwordInput) {
+                toggleButton.addEventListener('click', function () {
+                    const isHidden = passwordInput.type === 'password';
+                    passwordInput.type = isHidden ? 'text' : 'password';
+                    toggleButton.querySelector('.icon-eye').classList.toggle('is-hidden', !isHidden);
+                    toggleButton.querySelector('.icon-eye-off').classList.toggle('is-hidden', isHidden);
+                });
+            }
+
+            if (loginForm && usernameInput && rememberCheckbox) {
+                loginForm.addEventListener('submit', function () {
+                    if (rememberCheckbox.checked) {
+                        localStorage.setItem(storageKey, usernameInput.value);
+                    } else {
+                        localStorage.removeItem(storageKey);
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
+
 </html>

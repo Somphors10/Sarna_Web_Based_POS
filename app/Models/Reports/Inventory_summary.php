@@ -57,6 +57,7 @@ class Inventory_summary extends Report
         $builder->where('items.deleted', 0);
         $builder->where('items.stock_type', 0);
         $builder->where('stock_locations.deleted', 0);
+        $this->scopeTenant($builder, 'items.tenant_id');
 
         // Should be corresponding to the values Inventory_summary::getItemCountDropdownArray() returns
         if ($inputs['item_count'] == 'zero_and_less') {

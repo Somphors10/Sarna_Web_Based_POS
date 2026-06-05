@@ -22,6 +22,8 @@ abstract class Summary_report extends Report
             $where .= 'sale_time BETWEEN ' . $this->db->escape(rawurldecode($inputs['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($inputs['end_date']));
         }
 
+        $where .= $this->tenantSqlAnd('sales.tenant_id');
+
         $decimals = totals_decimals();
 
         $sale_price = 'CASE WHEN sales_items.discount_type = ' . PERCENT
@@ -120,6 +122,8 @@ abstract class Summary_report extends Report
         if ($inputs['location_id'] != 'all') {
             $builder->where('sales_items.item_location', $inputs['location_id']);
         }
+
+        $this->scopeTenant($builder, 'sales.tenant_id');
 
         if ($inputs['sale_type'] == 'complete') {
             $builder->where('sales.sale_status', COMPLETED);

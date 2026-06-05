@@ -64,6 +64,15 @@ trait TenantAware
         $builder->where($column, $this->getTenantId());
     }
 
+    protected function tenantSqlAnd(string $column): string
+    {
+        if (!$this->isTenantScopingEnabled()) {
+            return '';
+        }
+
+        return ' AND ' . $column . ' = ' . (int)$this->getTenantId();
+    }
+
     private function isTenantScopingEnabled(): bool
     {
         if ($this->tenantScopingEnabled !== null) {

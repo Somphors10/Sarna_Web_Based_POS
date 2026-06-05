@@ -50,6 +50,8 @@ class Summary_payments extends Summary_report
             $where .= 'sale_time BETWEEN ' . $this->db->escape(rawurldecode($inputs['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($inputs['end_date']));
         }
 
+        $where .= $this->tenantSqlAnd('sales.tenant_id');
+
         $this->create_summary_payments_temp_tables($where);
 
         $select = '\'' . lang('Reports.trans_sales') . '\' AS trans_group, ';

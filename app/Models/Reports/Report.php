@@ -2,6 +2,7 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\HTTP\Response;
 use CodeIgniter\Model;
 
@@ -13,6 +14,7 @@ use CodeIgniter\Model;
  */
 abstract class Report extends Model
 {
+    use TenantAware;
     public function __construct()
     {
         parent::__construct();

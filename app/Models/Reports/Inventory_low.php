@@ -44,7 +44,7 @@ class Inventory_low extends Report
             WHERE items.deleted = 0
             AND items.stock_type = 0
             AND item_quantities.quantity <= items.reorder_level
-            AND stock_locations.deleted = 0
+            AND stock_locations.deleted = 0" . $this->tenantSqlAnd('items.tenant_id') . "
             ORDER BY items.name");
 
         return $query->getResultArray() ?: [];

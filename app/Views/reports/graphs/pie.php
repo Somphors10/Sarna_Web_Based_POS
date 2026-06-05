@@ -4,7 +4,12 @@
  * @var array $series_data_1
  * @var bool $show_currency
  * @var array $config
+ * @var string $chart_id
+ * @var string $chart_var
  */
+
+$chart_id = $chart_id ?? 'chart1';
+$chart_var = $chart_var ?? 'chart';
 ?>
 
 <script type="text/javascript">
@@ -66,10 +71,10 @@
          */
     ];
 
-    chart = new Chartist.Pie('#chart1', data, options, responsiveOptions);
+    var <?= esc($chart_var, 'js') ?> = new Chartist.Pie('#<?= esc($chart_id, 'js') ?>', data, options, responsiveOptions);
 
     // Generate random colours for the pie sliced because Chartist is currently limited to 15 colours
-    chart.on('draw', function(data) {
+    <?= esc($chart_var, 'js') ?>.on('draw', function(data) {
         if (data.type === 'slice') {
             var r = Math.floor(Math.random() * 256);
             var g = Math.floor(Math.random() * 256);
