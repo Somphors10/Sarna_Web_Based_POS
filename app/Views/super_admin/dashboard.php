@@ -8,304 +8,17 @@
  */
 ?>
 <!doctype html>
-<html lang="<?= current_language_code() ?>">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title>Super Admin - Tenants</title>
+    <title>Super Admin Console</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css">
-    <style>
-        .tenant-confirm-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1200;
-            padding: 1rem;
-        }
-
-        .tenant-confirm-overlay.is-open {
-            display: flex;
-        }
-
-        .tenant-confirm-modal {
-            width: min(440px, 100%);
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.3);
-            overflow: hidden;
-        }
-
-        .tenant-confirm-header {
-            padding: 1rem 1.25rem 0.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .tenant-confirm-body {
-            padding: 0 1.25rem 1rem;
-            color: #334155;
-            line-height: 1.4;
-        }
-
-        .tenant-confirm-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-            padding: 0.9rem 1.25rem 1.1rem;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
-
-        .logout-confirm-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1300;
-            padding: 1rem;
-        }
-
-        .logout-confirm-overlay.is-open {
-            display: flex;
-        }
-
-        .logout-confirm-modal {
-            width: min(420px, 100%);
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.3);
-            overflow: hidden;
-        }
-
-        .logout-confirm-header {
-            padding: 1rem 1.25rem 0.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .logout-confirm-body {
-            padding: 0 1.25rem 1rem;
-            color: #334155;
-            line-height: 1.4;
-        }
-
-        .logout-confirm-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-            padding: 0.9rem 1.25rem 1.1rem;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
-
-        .saas-highlight-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.75rem;
-        }
-
-        .saas-highlight-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            background: #f8fbff;
-            padding: 0.85rem 0.95rem;
-        }
-
-        .saas-highlight-card strong {
-            display: block;
-            color: #0f172a;
-            font-size: 0.92rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .saas-highlight-card span {
-            color: #475569;
-            font-size: 0.82rem;
-        }
-
-        .saas-bi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 0.75rem;
-        }
-
-        .saas-bi-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.9rem 0.95rem;
-            background: #fff;
-        }
-
-        .saas-bi-title {
-            font-size: 0.82rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: #64748b;
-            margin-bottom: 0.4rem;
-        }
-
-        .saas-bi-value {
-            font-size: 1.45rem;
-            font-weight: 700;
-            color: #0f172a;
-            line-height: 1.1;
-        }
-
-        .saas-bi-sub {
-            color: #475569;
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
-        }
-
-        .sa-super-layout {
-            display: grid;
-            grid-template-columns: 205px minmax(0, 1fr);
-            gap: 10px;
-            align-items: stretch;
-            padding: 0;
-        }
-
-        .sa-super-sidebar {
-            position: sticky;
-            top: 0;
-            border-right: 1px solid #e5ebf5;
-            background: #ffffff;
-            box-shadow: none;
-            min-height: 100vh;
-            height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sa-super-sidebar-head {
-            padding: 20px 16px 14px;
-        }
-
-        .sa-super-brand {
-            display: block;
-            color: #2563eb;
-            font-weight: 700;
-            font-size: 48px;
-            letter-spacing: -0.02em;
-            text-decoration: none;
-            line-height: 1;
-        }
-
-        .sa-super-brand:hover,
-        .sa-super-brand:focus {
-            color: #2563eb;
-            text-decoration: none;
-        }
-
-        .sa-super-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 6px 10px 14px;
-            flex: 1;
-        }
-
-        .sa-super-nav a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: #2f3d4f;
-            padding: 8px 8px;
-            border-radius: 9px;
-            font-size: 15px;
-            font-weight: 500;
-            border: 1px solid transparent;
-        }
-
-        .sa-super-nav a span:last-child {
-            line-height: 1.2;
-        }
-
-        .sa-super-nav a:hover {
-            background: #f7f9fc;
-            border-color: #e7edf7;
-            color: #1f2937;
-        }
-
-        .sa-super-nav a.is-active {
-            background: #f2f6fd;
-            border-color: #deebff;
-            color: #1d4ed8;
-            font-weight: 600;
-        }
-
-        .sa-super-nav .sa-super-nav-logout {
-            margin-top: auto;
-        }
-
-        .sa-super-menu-dot {
-            width: 24px;
-            height: 24px;
-            flex: 0 0 auto;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sa-super-menu-dot img {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
-            opacity: 0.95;
-        }
-
-        .sa-super-content {
-            min-width: 0;
-        }
-
-        .sa-super-toolbar {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 180px;
-            gap: 0.75rem;
-            margin-top: 0.75rem;
-        }
-
-        .sa-super-toolbar .form-control,
-        .sa-super-toolbar .form-select {
-            min-height: 44px;
-        }
-
-        @media (max-width: 992px) {
-            .sa-super-layout {
-                grid-template-columns: 1fr;
-                padding: 0.75rem;
-            }
-
-            .sa-super-sidebar {
-                position: static;
-                min-height: auto;
-                height: auto;
-                border-right: 0;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                margin-top: 0.75rem;
-            }
-
-            .sa-super-toolbar {
-                grid-template-columns: 1fr;
-            }
-        }
-
-    </style>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=2') ?>">
 </head>
-<body class="saas-modern">
+<body class="sa-dashboard">
 <?php
     $total_tenants = count($tenants);
     $pending_count = count($subscription_requests);
@@ -326,244 +39,294 @@
         }
     }
 
-    $approval_load = $total_tenants > 0 ? round(($pending_count / $total_tenants) * 100, 1) : 0;
+    $page_meta = [
+        'overview' => [
+            'title' => 'Tenant Management',
+            'subtitle' => 'Control business accounts, platform admins, and signup approvals.',
+        ],
+        'businesses' => [
+            'title' => 'Businesses',
+            'subtitle' => 'View and update tenant status for every registered company.',
+        ],
+        'admins' => [
+            'title' => 'Platform Admins',
+            'subtitle' => 'Accounts allowed to operate this platform dashboard.',
+        ],
+        'requests' => [
+            'title' => 'Pending Requests',
+            'subtitle' => 'Review website registrations and approve new POS accounts.',
+        ],
+    ];
+    $current_meta = $page_meta[$active_page] ?? $page_meta['overview'];
+
+    $flash_messages = [];
+    if (service('request')->getGet('request_approved') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Registration approved. The business account is now active.'];
+    }
+    if (service('request')->getGet('request_rejected') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Registration request rejected.'];
+    }
+    if (service('request')->getGet('company_created') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'New company created successfully.'];
+    }
+
+    $error_code = (string)service('request')->getGet('error');
+    $error_messages = [
+        'request_not_found' => 'Request not found or already processed.',
+        'tenant_or_user_exists' => 'Tenant code or owner username already exists.',
+        'approve_failed' => 'Could not approve the request. Please try again.',
+        'admin_creation_disabled' => 'Creating platform admins from this screen is disabled.',
+    ];
+    if ($error_code !== '' && isset($error_messages[$error_code])) {
+        $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
+    }
 ?>
-<div class="sa-super-layout">
-    <aside class="sa-super-sidebar">
-        <div class="sa-super-sidebar-head">
-            <a class="sa-super-brand" href="<?= site_url('super-admin/overview') ?>">OSPOS</a>
+<div class="sa-layout">
+    <aside class="sa-sidebar">
+        <div class="sa-sidebar__head">
+            <a class="sa-brand" href="<?= site_url('super-admin/overview') ?>">OSPOS</a>
+            <span class="sa-brand__tag">Super Admin</span>
         </div>
-        <nav class="sa-super-nav">
-            <a class="<?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>"><span class="sa-super-menu-dot"><img src="<?= base_url('images/menubar/home.svg') ?>" alt="Overview"></span><span>Overview</span></a>
-            <a class="<?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>"><span class="sa-super-menu-dot"><img src="<?= base_url('images/menubar/office.svg') ?>" alt="Businesses"></span><span>Businesses</span></a>
-            <a class="<?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>"><span class="sa-super-menu-dot"><img src="<?= base_url('images/menubar/employees.svg') ?>" alt="Platform Admins"></span><span>Platform Admins</span></a>
-            <a class="<?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>"><span class="sa-super-menu-dot"><img src="<?= base_url('images/menubar/messages.svg') ?>" alt="Pending Requests"></span><span>Pending Requests</span></a>
-            <a class="sa-super-nav-logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>"><span class="sa-super-menu-dot"><img src="<?= base_url('images/menubar/config.svg') ?>" alt="Logout"></span><span>Logout</span></a>
+        <nav class="sa-nav">
+            <a class="<?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>">
+                <img class="sa-nav__icon" src="<?= base_url('images/menubar/home.svg') ?>" alt="">
+                <span>Overview</span>
+            </a>
+            <a class="<?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>">
+                <img class="sa-nav__icon" src="<?= base_url('images/menubar/office.svg') ?>" alt="">
+                <span>Businesses</span>
+            </a>
+            <a class="<?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>">
+                <img class="sa-nav__icon" src="<?= base_url('images/menubar/employees.svg') ?>" alt="">
+                <span>Platform Admins</span>
+            </a>
+            <a class="<?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>">
+                <img class="sa-nav__icon" src="<?= base_url('images/menubar/messages.svg') ?>" alt="">
+                <span>Pending Requests</span>
+                <?php if ($pending_count > 0): ?>
+                    <span class="sa-nav__badge"><?= $pending_count ?></span>
+                <?php endif; ?>
+            </a>
+            <a class="sa-nav__logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>">
+                <img class="sa-nav__icon" src="<?= base_url('images/menubar/config.svg') ?>" alt="">
+                <span>Logout</span>
+            </a>
         </nav>
     </aside>
 
-    <div class="sa-super-content">
-        <main class="container py-4 saas-shell">
-            <div class="saas-topbar mb-3">
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                    <div>
-                        <p class="saas-eyebrow mb-1">Platform Console</p>
-                        <h4 class="saas-title">Tenant Management</h4>
-                        <p class="saas-subtitle">Control business accounts, platform admins, and signup approvals.</p>
+    <div class="sa-main">
+        <header class="sa-hero">
+            <p class="sa-hero__eyebrow">Platform Console</p>
+            <h1 class="sa-hero__title"><?= esc($current_meta['title']) ?></h1>
+            <p class="sa-hero__subtitle"><?= esc($current_meta['subtitle']) ?></p>
+            <div class="sa-hero__chips">
+                <span class="sa-chip">Businesses: <?= $total_tenants ?></span>
+                <span class="sa-chip">Pending: <?= $pending_count ?></span>
+                <span class="sa-chip">Admins: <?= $admins_count ?></span>
+            </div>
+            <?php if (in_array($active_page, ['businesses', 'admins', 'requests'], true)): ?>
+            <div class="sa-toolbar">
+                <div class="sa-search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                    </svg>
+                    <input type="text" id="super_admin_search" class="sa-input" placeholder="Search businesses, admins, requests...">
+                </div>
+                <?php if ($active_page === 'businesses'): ?>
+                <select id="super_admin_status_filter" class="sa-select">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <?php else: ?>
+                <select id="super_admin_status_filter" class="sa-select" hidden aria-hidden="true">
+                    <option value=""></option>
+                </select>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </header>
+
+        <?php foreach ($flash_messages as $flash): ?>
+            <div class="sa-alert sa-alert--<?= esc($flash['type']) ?>">
+                <?= esc($flash['text']) ?>
+            </div>
+        <?php endforeach; ?>
+
+        <?php if ($active_page === 'overview'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Tenant Status Breakdown</h2>
+                <p class="sa-panel__subtitle">How your <?= $total_tenants ?> registered businesses are split by status.</p>
+            </div>
+            <div class="sa-panel__body">
+                <div class="sa-metrics sa-metrics--status">
+                    <div class="sa-metric">
+                        <div class="sa-metric__label">Active</div>
+                        <div class="sa-metric__value"><?= $active_tenants ?></div>
+                        <div class="sa-metric__hint">Currently operating</div>
+                    </div>
+                    <div class="sa-metric">
+                        <div class="sa-metric__label">Suspended</div>
+                        <div class="sa-metric__value"><?= $suspended_tenants ?></div>
+                        <div class="sa-metric__hint">Needs intervention</div>
+                    </div>
+                    <div class="sa-metric">
+                        <div class="sa-metric__label">Cancelled</div>
+                        <div class="sa-metric__value"><?= $cancelled_tenants ?></div>
+                        <div class="sa-metric__hint">Closed accounts</div>
                     </div>
                 </div>
-                <div class="saas-topbar-meta">
-                    <span class="saas-meta-chip">Businesses: <?= $total_tenants ?></span>
-                    <span class="saas-meta-chip">Pending: <?= $pending_count ?></span>
-                    <span class="saas-meta-chip">Admins: <?= $admins_count ?></span>
-                </div>
-                <div class="sa-super-toolbar">
-                    <input type="text" id="super_admin_search" class="form-control" placeholder="Search businesses, admins, requests...">
-                    <select id="super_admin_status_filter" class="form-select">
-                        <option value="">All Business Status</option>
-                        <option value="active">active</option>
-                        <option value="suspended">suspended</option>
-                        <option value="cancelled">cancelled</option>
-                    </select>
-                </div>
             </div>
+        </section>
 
-            <?php if ($active_page === 'overview'): ?>
-            <div id="section-overview" class="saas-summary-grid">
-                <div class="saas-summary-card">
-                    <p class="saas-summary-label">Total Businesses</p>
-                    <p class="saas-summary-value"><?= $total_tenants ?></p>
-                </div>
-                <div class="saas-summary-card">
-                    <p class="saas-summary-label">Pending Signups</p>
-                    <p class="saas-summary-value"><?= $pending_count ?></p>
-                </div>
-                <div class="saas-summary-card">
-                    <p class="saas-summary-label">Platform Admins</p>
-                    <p class="saas-summary-value"><?= $admins_count ?></p>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Quick Actions</h2>
+                <p class="sa-panel__subtitle">Jump to the pages you use most often.</p>
+            </div>
+            <div class="sa-panel__body">
+                <div class="sa-checklist">
+                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/requests') ?>">
+                        <strong>Pending Registrations<?= $pending_count > 0 ? ' (' . $pending_count . ')' : '' ?></strong>
+                        <span>Review and approve incoming business signups.</span>
+                    </a>
+                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/businesses') ?>">
+                        <strong>Manage Businesses<?= $suspended_tenants > 0 ? ' (' . $suspended_tenants . ' suspended)' : '' ?></strong>
+                        <span>Update tenant status and view owner accounts.</span>
+                    </a>
+                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/admins') ?>">
+                        <strong>Platform Admins (<?= $admins_count ?>)</strong>
+                        <span>View who can access this console.</span>
+                    </a>
                 </div>
             </div>
+        </section>
+        <?php endif; ?>
 
-    <div class="saas-card saas-section mt-3">
-        <div class="card-header">
-            <p class="saas-block-title">Must Show</p>
-            <p class="saas-block-subtitle">Primary controls every Super Admin should check each day.</p>
-        </div>
-        <div class="saas-highlight-grid px-3 pb-3">
-            <div class="saas-highlight-card">
-                <strong>Pending Registrations</strong>
-                <span>Review and approve incoming business signups.</span>
+        <?php if ($active_page === 'businesses'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">All Businesses</h2>
+                <p class="sa-panel__subtitle">Manage tenant status and owner account visibility.</p>
             </div>
-            <div class="saas-highlight-card">
-                <strong>Tenant Status Health</strong>
-                <span>Keep active businesses running and resolve suspended accounts.</span>
-            </div>
-            <div class="saas-highlight-card">
-                <strong>Platform Admin Access</strong>
-                <span>Ensure only authorized admins can manage the platform.</span>
-            </div>
-            <div class="saas-highlight-card">
-                <strong>Business Intelligence</strong>
-                <span>Track growth and operational load in BI cards below.</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="saas-card saas-section mt-3">
-        <div class="card-header">
-            <p class="saas-block-title">BI Overview</p>
-            <p class="saas-block-subtitle">Live platform intelligence to support operational decisions.</p>
-        </div>
-        <div class="saas-bi-grid px-3 pb-3">
-            <div class="saas-bi-card">
-                <div class="saas-bi-title">Active Businesses</div>
-                <div class="saas-bi-value"><?= $active_tenants ?></div>
-                <div class="saas-bi-sub">Healthy active tenant count</div>
-            </div>
-            <div class="saas-bi-card">
-                <div class="saas-bi-title">Suspended Businesses</div>
-                <div class="saas-bi-value"><?= $suspended_tenants ?></div>
-                <div class="saas-bi-sub">Accounts needing intervention</div>
-            </div>
-            <div class="saas-bi-card">
-                <div class="saas-bi-title">Cancelled Businesses</div>
-                <div class="saas-bi-value"><?= $cancelled_tenants ?></div>
-                <div class="saas-bi-sub">Inactive and churned accounts</div>
-            </div>
-            <div class="saas-bi-card">
-                <div class="saas-bi-title">Approval Load</div>
-                <div class="saas-bi-value"><?= $approval_load ?>%</div>
-                <div class="saas-bi-sub">Pending approvals vs total businesses</div>
-            </div>
-        </div>
-    </div>
-            <?php endif; ?>
-
-    <?php if ($active_page === 'businesses'): ?>
-    <div id="section-businesses" class="saas-card saas-section mt-3">
-        <div class="card-header">
-            <p class="saas-block-title">Businesses</p>
-            <p class="saas-block-subtitle">Manage tenant status and owner account visibility.</p>
-        </div>
-        <div class="table-responsive">
-            <table class="table saas-table mb-0">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Code</th>
-                    <th>Company</th>
-                    <th>Owner</th>
-                    <th>Owner Username</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($tenants)): ?>
-                    <tr><td colspan="7" class="saas-empty">No businesses yet.</td></tr>
-                <?php else: ?>
-                <?php foreach ($tenants as $tenant): ?>
-                    <tr class="js-searchable-row"
-                        data-group="tenant"
-                        data-status="<?= esc(strtolower((string)($tenant['status'] ?? ''))) ?>"
-                        data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '')))) ?>">
-                        <td><?= esc($tenant['tenant_id']) ?></td>
-                        <td><?= esc($tenant['tenant_code']) ?></td>
-                        <td><?= esc($tenant['company_name']) ?></td>
-                        <td><?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? ''))) ?></td>
-                        <td><?= esc($tenant['username'] ?? '') ?></td>
-                        <td>
-                            <?php $status = strtolower((string)($tenant['status'] ?? '')); ?>
-                            <span class="badge saas-status saas-status-<?= esc($status) ?>"><?= esc($tenant['status']) ?></span>
-                        </td>
-                        <td>
-                            <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form']) ?>
-                            <div class="d-flex gap-1">
-                                <select class="form-select form-select-sm" name="status">
-                                    <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>active</option>
-                                    <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>suspended</option>
-                                    <option value="cancelled" <?= $tenant['status'] === 'cancelled' ? 'selected' : '' ?>>cancelled</option>
-                                </select>
-                                <input type="hidden" name="tenant_code" value="<?= esc($tenant['tenant_code']) ?>">
-                                <button class="btn btn-sm btn-primary saas-btn-save" type="submit">Save</button>
-                            </div>
-                            <?= form_close() ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($active_page === 'admins'): ?>
-    <div id="section-admins" class="saas-card saas-section mt-3">
-        <div class="card-header">
-            <p class="saas-block-title">Platform Admins</p>
-            <p class="saas-block-subtitle">Accounts allowed to operate this platform dashboard.</p>
-        </div>
-        <div class="table-responsive">
-            <table class="table saas-table mb-0">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($platform_admins)): ?>
-                    <tr><td colspan="5" class="saas-empty">No platform admins.</td></tr>
-                <?php else: ?>
-                <?php foreach ($platform_admins as $admin): ?>
-                    <tr class="js-searchable-row"
-                        data-group="admin"
-                        data-search="<?= esc(strtolower(trim(($admin['username'] ?? '') . ' ' . ($admin['full_name'] ?? '') . ' ' . ($admin['email'] ?? '')))) ?>">
-                        <td><?= esc($admin['admin_id']) ?></td>
-                        <td><?= esc($admin['username']) ?></td>
-                        <td><?= esc($admin['full_name']) ?></td>
-                        <td><?= esc($admin['email'] ?? '') ?></td>
-                        <?php $admin_status = strtolower((string)($admin['status'] ?? '')); ?>
-                        <td><span class="badge saas-status saas-status-<?= esc($admin_status) ?>"><?= esc($admin['status']) ?></span></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($active_page === 'requests'): ?>
-    <div id="section-requests" class="saas-card saas-section mt-3">
-        <div class="card-header">
-            <p class="saas-block-title">Pending Website Registrations</p>
-            <p class="saas-block-subtitle">Approve paid requests to auto-create active business POS accounts.</p>
-        </div>
-        <div class="table-responsive">
-            <table class="table saas-table mb-0">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Company</th>
-                    <th>Code</th>
-                    <th>Owner</th>
-                    <th>Email</th>
-                    <th>Plan</th>
-                    <th>Payment Ref</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($subscription_requests)): ?>
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
                     <tr>
-                        <td colspan="8" class="saas-empty">No pending requests.</td>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Company</th>
+                        <th>Owner</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
-                <?php else: ?>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($tenants)): ?>
+                        <tr><td colspan="7" class="sa-empty">No businesses yet.</td></tr>
+                    <?php else: ?>
+                    <?php foreach ($tenants as $tenant): ?>
+                        <?php $status = strtolower((string)($tenant['status'] ?? '')); ?>
+                        <tr class="js-searchable-row"
+                            data-group="tenant"
+                            data-status="<?= esc($status) ?>"
+                            data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '')))) ?>">
+                            <td><?= esc($tenant['tenant_id']) ?></td>
+                            <td><?= esc($tenant['tenant_code']) ?></td>
+                            <td><?= esc($tenant['company_name']) ?></td>
+                            <td><?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? ''))) ?></td>
+                            <td><?= esc($tenant['username'] ?? '') ?></td>
+                            <td><span class="sa-status sa-status--<?= esc($status) ?>"><?= esc($tenant['status']) ?></span></td>
+                            <td>
+                                <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form']) ?>
+                                <div class="sa-row-actions">
+                                    <select class="sa-select--sm" name="status">
+                                        <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                                        <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+                                        <option value="cancelled" <?= $tenant['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                    </select>
+                                    <input type="hidden" name="tenant_code" value="<?= esc($tenant['tenant_code']) ?>">
+                                    <button class="sa-btn sa-btn--primary" type="submit">Save</button>
+                                </div>
+                                <?= form_close() ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'admins'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Platform Admins</h2>
+                <p class="sa-panel__subtitle">Accounts allowed to operate this platform dashboard.</p>
+            </div>
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($platform_admins)): ?>
+                        <tr><td colspan="5" class="sa-empty">No platform admins.</td></tr>
+                    <?php else: ?>
+                    <?php foreach ($platform_admins as $admin): ?>
+                        <?php $admin_status = strtolower((string)($admin['status'] ?? '')); ?>
+                        <tr class="js-searchable-row"
+                            data-group="admin"
+                            data-search="<?= esc(strtolower(trim(($admin['username'] ?? '') . ' ' . ($admin['full_name'] ?? '') . ' ' . ($admin['email'] ?? '')))) ?>">
+                            <td><?= esc($admin['admin_id']) ?></td>
+                            <td><?= esc($admin['username']) ?></td>
+                            <td><?= esc($admin['full_name']) ?></td>
+                            <td><?= esc($admin['email'] ?? '') ?></td>
+                            <td><span class="sa-status sa-status--<?= esc($admin_status) ?>"><?= esc($admin['status']) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'requests'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Pending Website Registrations</h2>
+                <p class="sa-panel__subtitle">Approve paid requests to auto-create active business POS accounts.</p>
+            </div>
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company</th>
+                        <th>Code</th>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Payment Ref</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($subscription_requests)): ?>
+                        <tr><td colspan="8" class="sa-empty">No pending requests.</td></tr>
+                    <?php else: ?>
                     <?php foreach ($subscription_requests as $request): ?>
                         <tr class="js-searchable-row"
                             data-group="request"
@@ -576,46 +339,48 @@
                             <td><?= esc($request['plan_name'] ?? '') ?></td>
                             <td><?= esc($request['payment_reference']) ?></td>
                             <td>
-                                <div class="d-flex gap-1">
+                                <div class="sa-row-actions">
                                     <?= form_open('super-admin/approve-request/' . (int)$request['request_id']) ?>
-                                    <button class="btn btn-sm btn-success saas-action-btn" type="submit">Approve</button>
+                                    <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-request/' . (int)$request['request_id']) ?>
-                                    <button class="btn btn-sm btn-outline-danger saas-action-btn" type="submit">Reject</button>
+                                    <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
                                     <?= form_close() ?>
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
-        </main>
-    </div>
-</div>
-<div id="tenant-status-confirm" class="tenant-confirm-overlay" aria-hidden="true">
-    <div class="tenant-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="tenant-confirm-title">
-        <div class="tenant-confirm-header" id="tenant-confirm-title">Confirm status update</div>
-        <div class="tenant-confirm-body" id="tenant-confirm-message">Are you sure you want to save this change?</div>
-        <div class="tenant-confirm-actions">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="tenant-confirm-cancel">Cancel</button>
-            <button type="button" class="btn btn-primary btn-sm" id="tenant-confirm-save">Save</button>
-        </div>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <?php endif; ?>
     </div>
 </div>
-<div id="super-admin-logout-confirm" class="logout-confirm-overlay" aria-hidden="true">
-    <div class="logout-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title">
-        <div class="logout-confirm-header" id="logout-confirm-title">Confirm logout</div>
-        <div class="logout-confirm-body">Are you sure you want to logout from Super Admin?</div>
-        <div class="logout-confirm-actions">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="logout-confirm-cancel">Cancel</button>
-            <button type="button" class="btn btn-danger btn-sm" id="logout-confirm-continue">Logout</button>
+
+<div id="tenant-status-confirm" class="sa-modal-overlay" aria-hidden="true">
+    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="tenant-confirm-title">
+        <div class="sa-modal__head" id="tenant-confirm-title">Confirm status update</div>
+        <div class="sa-modal__body" id="tenant-confirm-message">Are you sure you want to save this change?</div>
+        <div class="sa-modal__actions">
+            <button type="button" class="sa-btn sa-btn--ghost" id="tenant-confirm-cancel">Cancel</button>
+            <button type="button" class="sa-btn sa-btn--primary" id="tenant-confirm-save">Save</button>
         </div>
     </div>
 </div>
+
+<div id="super-admin-logout-confirm" class="sa-modal-overlay" aria-hidden="true">
+    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title">
+        <div class="sa-modal__head" id="logout-confirm-title">Confirm logout</div>
+        <div class="sa-modal__body">Are you sure you want to logout from Super Admin?</div>
+        <div class="sa-modal__actions">
+            <button type="button" class="sa-btn sa-btn--ghost" id="logout-confirm-cancel">Cancel</button>
+            <button type="button" class="sa-btn sa-btn--danger-solid" id="logout-confirm-continue">Logout</button>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const overlay = document.getElementById('tenant-status-confirm');
@@ -670,7 +435,7 @@
 
         const applyRowFilters = function() {
             const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-            const status = statusFilter ? statusFilter.value.toLowerCase() : '';
+            const status = statusFilter && !statusFilter.hidden ? statusFilter.value.toLowerCase() : '';
 
             document.querySelectorAll('.js-searchable-row').forEach(function(row) {
                 const haystack = (row.dataset.search || '').toLowerCase();
@@ -720,27 +485,33 @@
             });
         }
 
-        saveBtn.addEventListener('click', function() {
-            if (!pendingForm) {
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                if (!pendingForm) {
+                    closeModal();
+                    return;
+                }
+
+                const formToSubmit = pendingForm;
                 closeModal();
-                return;
-            }
+                formToSubmit.submit();
+            });
+        }
 
-            const formToSubmit = pendingForm;
-            closeModal();
-            formToSubmit.submit();
-        });
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeModal);
+        }
 
-        cancelBtn.addEventListener('click', closeModal);
-
-        overlay.addEventListener('click', function(event) {
-            if (event.target === overlay) {
-                closeModal();
-            }
-        });
+        if (overlay) {
+            overlay.addEventListener('click', function(event) {
+                if (event.target === overlay) {
+                    closeModal();
+                }
+            });
+        }
 
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && overlay.classList.contains('is-open')) {
+            if (event.key === 'Escape' && overlay && overlay.classList.contains('is-open')) {
                 closeModal();
             }
             if (logoutOverlay && event.key === 'Escape' && logoutOverlay.classList.contains('is-open')) {

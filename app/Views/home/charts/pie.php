@@ -21,17 +21,20 @@ if (empty($series_data_1)) {
         var palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'];
 
         var data = {
-            labels: <?= json_encode(esc($labels_1, 'js')) ?>,
-            series: <?= json_encode(esc($series_data_1, 'js')) ?>
+            labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            series: <?= json_encode($series_data_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
         };
 
         var options = {
             width: '100%',
-            height: '220px',
+            height: '100%',
             donut: true,
-            donutWidth: 52,
-            chartPadding: 10,
+            donutWidth: 44,
+            chartPadding: 4,
             labelPosition: 'outside',
+            labelInterpolationFnc: function () {
+                return '';
+            },
             plugins: [
                 Chartist.plugins.tooltip({
                     transformTooltipTextFnc: function (value) {
@@ -52,13 +55,7 @@ if (empty($series_data_1)) {
         <?= esc($chart_var, 'js') ?>.on('draw', function (ctx) {
             if (ctx.type === 'slice') {
                 ctx.element.attr({
-                    style: 'fill: ' + palette[ctx.index % palette.length]
-                });
-            }
-
-            if (ctx.type === 'label') {
-                ctx.element.attr({
-                    style: 'fill: #475569; font-size: 11px;'
+                    style: 'fill: ' + palette[ctx.index % palette.length] + '; stroke: #ffffff; stroke-width: 2px;'
                 });
             }
         });

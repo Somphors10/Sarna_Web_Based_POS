@@ -74,9 +74,12 @@ class Home extends Secure_Controller
             $sales_labels = [];
             $sales_series = [];
             foreach ($sales_rows as $row) {
-                $date = to_date(strtotime($row['sale_date']));
-                $sales_labels[] = $date;
-                $sales_series[] = ['meta' => $date, 'value' => $row['total']];
+                $sale_timestamp = strtotime($row['sale_date']);
+                $sales_labels[] = date('M j', $sale_timestamp);
+                $sales_series[] = [
+                    'meta'  => to_date($sale_timestamp),
+                    'value' => $row['total'],
+                ];
             }
 
             $charts[] = [
@@ -88,7 +91,6 @@ class Home extends Secure_Controller
                 'series_data_1' => $sales_series,
                 'show_currency' => true,
                 'has_data'      => !empty($sales_series),
-                'wide'          => true,
                 'summary'       => $period_summary,
                 'summary_keys'  => ['total', 'profit'],
                 'report_url'    => site_url("reports/graphical_summary_sales/$start_date/$end_date/complete/all"),

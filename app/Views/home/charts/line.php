@@ -19,35 +19,44 @@ if (empty($series_data_1)) {
 <script type="text/javascript">
     (function () {
         var data = {
-            labels: <?= json_encode(esc($labels_1, 'js')) ?>,
+            labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
             series: [{
-                data: <?= json_encode(esc($series_data_1, 'js')) ?>
+                data: <?= json_encode($series_data_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
             }]
         };
 
+        var labelCount = data.labels.length;
+
         var options = {
             width: '100%',
-            height: '220px',
-            showPoint: <?= count($series_data_1) <= 14 ? 'true' : 'false' ?>,
+            height: '100%',
+            showPoint: labelCount <= 12,
             showArea: true,
             lineSmooth: true,
             fullWidth: true,
             chartPadding: {
-                top: 16,
-                right: 16,
-                bottom: 8,
-                left: 8
+                top: 12,
+                right: 12,
+                bottom: 4,
+                left: 4
             },
             axisX: {
-                offset: 24,
+                offset: 28,
                 showGrid: false,
                 labelOffset: {
                     x: 0,
-                    y: 6
+                    y: 8
+                },
+                labelInterpolationFnc: function (value, index) {
+                    if (labelCount <= 8) {
+                        return value;
+                    }
+
+                    return index % 2 === 0 ? value : null;
                 }
             },
             axisY: {
-                offset: 48,
+                offset: 42,
                 showGrid: true,
                 labelInterpolationFnc: function (value) {
                     <?php if ($show_currency && is_right_side_currency_symbol()): ?>
@@ -80,29 +89,29 @@ if (empty($series_data_1)) {
         <?= esc($chart_var, 'js') ?>.on('draw', function (ctx) {
             if (ctx.type === 'line') {
                 ctx.element.attr({
-                    style: 'stroke: #4f46e5; stroke-width: 2px;'
+                    style: 'stroke: #4f46e5; stroke-width: 2.5px;'
                 });
             }
 
             if (ctx.type === 'point') {
-                var circle = new Chartist.Svg('circle', {
-                    cx: [ctx.x],
-                    cy: [ctx.y],
-                    r: [4],
-                    'ct:value': ctx.value.y,
-                    'ct:meta': ctx.meta,
-                    class: 'ct-tooltip-point'
-                }, 'ct-area');
-
-                ctx.element.replace(circle);
-                ctx.element.attr({ style: 'fill: #4f46e5;' });
+                ctx.element.attr({
+                    style: 'stroke: #4f46e5; stroke-width: 8px; fill: #ffffff;'
+                });
             }
 
             if (ctx.type === 'area') {
                 ctx.element.attr({
-                    style: 'fill: rgba(79, 70, 229, 0.08);'
+                    style: 'fill: url(#<?= esc($chart_id, 'js') ?>-gradient);'
                 });
             }
         });
     })();
 </script>
+<svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="<?= esc($chart_id) ?>-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(79, 70, 229, 0.28)"></stop>
+            <stop offset="100%" stop-color="rgba(79, 70, 229, 0.02)"></stop>
+        </linearGradient>
+    </defs>
+</svg>
