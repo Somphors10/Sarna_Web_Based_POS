@@ -16,7 +16,8 @@
 
         <div class="form-group form-group-sm">
             <?= form_label(lang('Receivings.receipt_number'), 'supplier', ['class' => 'control-label col-xs-3']) ?>
-            <?= anchor('receivings/receipt/' . $receiving_info['receiving_id'], 'RECV ' . $receiving_info['receiving_id'], ['target' => '_blank', 'class' => 'control-label col-xs-8', "style" => "text-align: left"]) ?>
+            <?php $display_receiving_id = (int)($receiving_info['tenant_receiving_seq'] ?? $receiving_info['receiving_id']); ?>
+            <?= anchor('receivings/receipt/' . $receiving_info['receiving_id'], 'RECV ' . $display_receiving_id, ['target' => '_blank', 'class' => 'control-label col-xs-8', "style" => "text-align: left"]) ?>
         </div>
 
         <div class="form-group form-group-sm">

@@ -14,7 +14,6 @@ class Giftcard extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'giftcards';
     protected $primaryKey = 'giftcard_id';
     protected $useAutoIncrement = true;

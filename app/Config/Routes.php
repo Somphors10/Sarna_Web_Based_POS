@@ -5,9 +5,9 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->setDefaultController('Login');
+$routes->setDefaultController('Saas');
 
-$routes->get('/', 'Login::index');
+$routes->get('/', 'Saas::index');
 $routes->get('login', 'Login::index');
 $routes->post('login', 'Login::index');
 $routes->get('saas', 'Saas::index');

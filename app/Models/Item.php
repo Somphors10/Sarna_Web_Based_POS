@@ -19,7 +19,6 @@ class Item extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'items';
     protected $primaryKey = 'item_id';
     protected $useAutoIncrement = true;

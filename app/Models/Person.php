@@ -14,7 +14,6 @@ class Person extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'people';
     protected $primaryKey = 'person_id';
     protected $useAutoIncrement = true;

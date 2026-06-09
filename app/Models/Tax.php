@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -11,6 +12,7 @@ use stdClass;
  */
 class Tax extends Model
 {
+    use TenantAware;
     protected $table = 'tax_rates';
     protected $primaryKey = 'tax_rate_id';
     protected $useAutoIncrement = true;
@@ -20,7 +22,8 @@ class Tax extends Model
         'rate_tax_category_id',
         'rate_jurisdiction_id',
         'tax_rate',
-        'tax_rounding_code'
+        'tax_rounding_code',
+        'tenant_id'
     ];
 
     /**
@@ -29,6 +32,7 @@ class Tax extends Model
     public function exists(int $tax_rate_id): bool
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_rate_id', $tax_rate_id);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
@@ -40,6 +44,7 @@ class Tax extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
 
         return $builder->countAllResults();
     }
@@ -50,6 +55,7 @@ class Tax extends Model
     public function get_tax_category_usage(int $tax_category_id): int
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
         $builder->where('rate_tax_category_id', $tax_category_id);
 
         return $builder->countAllResults();
@@ -61,6 +67,7 @@ class Tax extends Model
     public function get_info(int $tax_rate_id): object
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
         $builder->select('tax_rate_id');
         $builder->select('rate_tax_code_id');
         $builder->select('tax_code');
@@ -122,7 +129,8 @@ class Tax extends Model
             left outer join ' . $this->db->prefixTable('tax_codes') . ' on rate_tax_code_id = tax_code_id
             left outer join ' . $this->db->prefixTable('tax_categories') . ' as tax_categories on rate_tax_category_id = tax_category_id
             left outer join ' . $this->db->prefixTable('tax_jurisdictions') . ' as tax_jurisdictions on rate_jurisdiction_id = jurisdiction_id
-            where rate_tax_code_id = ' . $this->db->escape($tax_code_id) . ' and rate_tax_category_id = ' . $this->db->escape($tax_category_id) . '
+            where rate_tax_code_id = ' . $this->db->escape($tax_code_id) . ' and rate_tax_category_id = ' . $this->db->escape($tax_category_id)
+            . $this->tenantSqlAnd('tax_rates.tenant_id') . '
             order by cascade_sequence, tax_group, jurisdiction_name, tax_jurisdictions.tax_group_sequence + tax_categories.tax_group_sequence';
 
         $query = $this->db->query($sql);
@@ -136,6 +144,7 @@ class Tax extends Model
     public function get_rate_info(int $tax_code_id, int $tax_category_id): object
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
         $builder->join('tax_categories', 'rate_tax_category_id = tax_category_id');
         $builder->where('rate_tax_code_id', $tax_code_id);
         $builder->where('rate_tax_category_id', $tax_category_id);
@@ -168,12 +177,16 @@ class Tax extends Model
     {
         $builder = $this->db->table('tax_rates');
         if ($tax_rate_id == NEW_ENTRY || !$this->exists($tax_rate_id)) {
+            if ($tenant_id = $this->tenantIdForInsert()) {
+                $tax_rate_data['tenant_id'] = $tenant_id;
+            }
             if ($builder->insert($tax_rate_data)) {
                 $tax_rate_data['tax_rate_id'] = $this->db->insertID();
 
                 return true;
             }
         } else {
+            $this->scopeModelTenant($builder);
             $builder->where('tax_rate_id', $tax_rate_id);
 
             if ($builder->update($tax_rate_data)) {
@@ -190,6 +203,7 @@ class Tax extends Model
     public function delete($tax_rate_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
 
         return $builder->delete(['tax_rate_id' => $tax_rate_id]);
     }
@@ -200,6 +214,7 @@ class Tax extends Model
     public function delete_list(array $tax_rate_ids): bool
     {
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('tax_rate_id', $tax_rate_ids);
 
         return $builder->delete();
@@ -226,6 +241,7 @@ class Tax extends Model
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder);
 
         // get_found_rows case
         if ($count_only) {

@@ -185,7 +185,7 @@ class Database extends Config
             case 'testing':
                 $this->defaultGroup = 'tests';
                 break;
-            case 'development';
+            case 'development':
                 $this->defaultGroup = 'development';
                 break;
         }
@@ -237,18 +237,64 @@ class Database extends Config
 
         $tenant_db_name = (string)($_SESSION['tenant_db_name'] ?? '');
 
-        if ($tenant_db_name === '') {
+        if ($tenant_db_name === '' || $tenant_db_name === (string)$this->default['database']) {
+            $this->clearTenantDatabaseSessionKeys();
             return;
         }
 
-        $this->tenant['hostname'] = (string)($_SESSION['tenant_db_hostname'] ?? $this->tenant['hostname']);
-        $this->tenant['username'] = (string)($_SESSION['tenant_db_username'] ?? $this->tenant['username']);
-        $this->tenant['password'] = (string)($_SESSION['tenant_db_password'] ?? $this->tenant['password']);
+        $hostname = (string)($_SESSION['tenant_db_hostname'] ?? $this->tenant['hostname']);
+        $username = (string)($_SESSION['tenant_db_username'] ?? $this->tenant['username']);
+        $password = (string)($_SESSION['tenant_db_password'] ?? $this->tenant['password']);
+        $port = (int)($_SESSION['tenant_db_port'] ?? $this->tenant['port']);
+
+        if (!$this->isTenantDatabaseReachable($hostname, $port, $username, $password, $tenant_db_name)) {
+            $this->clearTenantDatabaseSessionKeys();
+            return;
+        }
+
+        $this->tenant['hostname'] = $hostname;
+        $this->tenant['username'] = $username;
+        $this->tenant['password'] = $password;
         $this->tenant['database'] = $tenant_db_name;
-        $this->tenant['port'] = (int)($_SESSION['tenant_db_port'] ?? $this->tenant['port']);
+        $this->tenant['port'] = $port;
         $session_prefix = trim((string)($_SESSION['tenant_db_prefix'] ?? ''));
         if ($session_prefix !== '') {
             $this->tenant['DBPrefix'] = $session_prefix;
+        }
+    }
+
+    private function clearTenantDatabaseSessionKeys(): void
+    {
+        unset(
+            $_SESSION['tenant_db_hostname'],
+            $_SESSION['tenant_db_port'],
+            $_SESSION['tenant_db_name'],
+            $_SESSION['tenant_db_username'],
+            $_SESSION['tenant_db_password'],
+            $_SESSION['tenant_db_prefix']
+        );
+    }
+
+    private function isTenantDatabaseReachable(
+        string $hostname,
+        int $port,
+        string $username,
+        string $password,
+        string $database
+    ): bool {
+        if ($database === '') {
+            return false;
+        }
+
+        try {
+            $mysqli = @new \mysqli($hostname, $username, $password, $database, $port);
+            if ($mysqli->connect_errno) {
+                return false;
+            }
+            $mysqli->close();
+            return true;
+        } catch (\Throwable) {
+            return false;
         }
     }
 

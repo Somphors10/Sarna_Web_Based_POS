@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -12,6 +13,7 @@ use stdClass;
 
 class Tax_jurisdiction extends Model
 {
+    use TenantAware;
     protected $table = 'tax_jurisdictions';
     protected $primaryKey = 'cashup_id';
     protected $useAutoIncrement = true;
@@ -23,7 +25,8 @@ class Tax_jurisdiction extends Model
         'reporting_authority',
         'tax_group_sequence',
         'cascade_sequence',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
 
     /**
@@ -32,6 +35,7 @@ class Tax_jurisdiction extends Model
     public function exists(int $jurisdiction_id): bool
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->where('jurisdiction_id', $jurisdiction_id);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
@@ -43,6 +47,7 @@ class Tax_jurisdiction extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -54,6 +59,7 @@ class Tax_jurisdiction extends Model
     public function get_info(int $jurisdiction_id): object
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->where('jurisdiction_id', $jurisdiction_id);
         $builder->where('deleted', 0);
         $query = $builder->get();
@@ -78,6 +84,7 @@ class Tax_jurisdiction extends Model
     public function get_all(int $rows = 0, int $limit_from = 0, bool $no_deleted = true): ResultInterface
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
 
         if ($no_deleted) {
             $builder->where('deleted', 0);
@@ -98,6 +105,7 @@ class Tax_jurisdiction extends Model
     public function get_multiple_info(array $jurisdiction_ids): ResultInterface
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('jurisdiction_id', $jurisdiction_ids);
         $builder->orderBy('jurisdiction_name', 'asc');
 
@@ -111,6 +119,9 @@ class Tax_jurisdiction extends Model
     {
         $builder = $this->db->table('tax_jurisdictions');
         if ($jurisdiction_id == NEW_ENTRY || !$this->exists($jurisdiction_id)) {
+            if ($tenant_id = $this->tenantIdForInsert()) {
+                $jurisdiction_data['tenant_id'] = $tenant_id;
+            }
             if ($builder->insert($jurisdiction_data)) {    // TODO: Replace this with simply a return of the result of insert()... see update() below.
                 $jurisdiction_data['jurisdiction_id'] = $this->db->insertID();
                 return true;
@@ -119,6 +130,7 @@ class Tax_jurisdiction extends Model
             return false;
         }
 
+        $this->scopeModelTenant($builder);
         $builder->where('jurisdiction_id', $jurisdiction_id);
 
         return $builder->update($jurisdiction_data);
@@ -173,6 +185,7 @@ class Tax_jurisdiction extends Model
     public function delete($jurisdiction_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->where('jurisdiction_id', $jurisdiction_id);
 
         return $builder->update(['deleted' => 1]);
@@ -184,6 +197,7 @@ class Tax_jurisdiction extends Model
     public function delete_list(array $jurisdiction_ids): bool
     {
         $builder = $this->db->table('tax_jurisdictions');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('jurisdiction_id', $jurisdiction_ids);
 
         return $builder->update(['deleted' => 1]);
@@ -210,6 +224,7 @@ class Tax_jurisdiction extends Model
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('tax_jurisdictions AS tax_jurisdictions');
+        $this->scopeModelTenant($builder, 'tax_jurisdictions');
 
         // get_found_rows case
         if ($count_only) {

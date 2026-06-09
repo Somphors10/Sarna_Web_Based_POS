@@ -1,0 +1,294 @@
+
+<div id="required_fields_message">Fields in red are required</div>
+<ul id="error_message_box" class="error_message_box"></ul>
+
+<form action="http://localhost/opensourcepos/public/cashups/save/-1" id="cashups_edit_form" class="form-horizontal" method="post" accept-charset="utf-8">
+<input type="hidden" name="csrf_ospos_v4" value="7a6957583c25d6eebd0ceaff3bc741ad">    <fieldset id="item_basic_info">
+
+        <div class="form-group form-group-sm">
+            <label for="cash_ups_info" class="control-label col-xs-3">Cashups Info</label>            <label for="cashup_id" class="control-label col-xs-8" style="text-align: left">Id -1</label>        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="open_date" class="required control-label col-xs-3">Open Date</label>            <div class="col-xs-6">
+                <div class="input-group">
+                    <span class="input-group-addon input-sm">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                    <input type="text" name="open_date" value="06/09/2026 09:25:34" id="open_date" class="form-control input-sm datepicker">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="open_employee" class="control-label col-xs-3">Opened By</label>            <div class="col-xs-6">
+                <select name="open_employee_id" id="open_employee_id" class="form-control">
+<option value="1021">Maria Cashier</option>
+<option value="1" selected="selected">John Doe</option>
+<option value="1022">Tom Manager</option>
+<option value="1023">Nina Sales</option>
+<option value="1024">Paul Stock</option>
+<option value="1025">Rita Supervisor</option>
+</select>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="open_amount_cash" class="control-label col-xs-3">Open Cash</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="open_amount_cash" value="0.00" id="open_amount_cash" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="transfer_amount_cash" class="control-label col-xs-3">In/Out Cash</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="transfer_amount_cash" value="0.00" id="transfer_amount_cash" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="close_date" class="required control-label col-xs-3">Close Date</label>            <div class="col-xs-6">
+                <div class="input-group">
+                    <span class="input-group-addon input-sm">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                    <input type="text" name="close_date" value="06/09/2026 09:25:34" id="close_date" class="form-control input-sm datepicker">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="close_employee" class="control-label col-xs-3">Closed By</label>            <div class="col-xs-6">
+                <select name="close_employee_id" id="close_employee_id" class="form-control">
+<option value="1021">Maria Cashier</option>
+<option value="1" selected="selected">John Doe</option>
+<option value="1022">Tom Manager</option>
+<option value="1023">Nina Sales</option>
+<option value="1024">Paul Stock</option>
+<option value="1025">Rita Supervisor</option>
+</select>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="closed_amount_cash" class="control-label col-xs-3">Closed Cash</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="closed_amount_cash" value="0.00" id="closed_amount_cash" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="note" class="control-label col-xs-3">Notes</label>            <div class="col-xs-6">
+                <input type="checkbox" name="note" value="0" id="note">
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="closed_amount_due" class="control-label col-xs-3">Dues</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="closed_amount_due" value="0.00" id="closed_amount_due" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="closed_amount_card" class="control-label col-xs-3">Cards</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="closed_amount_card" value="0.00" id="closed_amount_card" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="closed_amount_check" class="control-label col-xs-3">Checks</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="closed_amount_check" value="0.00" id="closed_amount_check" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="closed_amount_total" class="control-label col-xs-3">Total</label>            <div class="col-xs-4">
+                <div class="input-group input-group-sm">
+                                            <span class="input-group-addon input-sm"><b>$</b></span>
+                                        <input type="text" name="closed_amount_total" value="0.00" id="closed_amount_total" readonly="true" class="form-control input-sm">
+                                    </div>
+            </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+            <label for="description" class="control-label col-xs-3">Description</label>            <div class="col-xs-6">
+                <textarea name="description" cols="40" rows="10" id="description" class="form-control input-sm" value=""></textarea>
+            </div>
+        </div>
+
+                    <div class="form-group form-group-sm">
+                <label for="deleted" class="control-label col-xs-3">Deleted:</label>                <div class="col-xs-5">
+                    <input type="checkbox" name="deleted" value="1" id="deleted">
+                </div>
+            </div>
+            </fieldset>
+<div style="display:none"><label>Fill This Field</label><input type="text" name="honeypot" value=""></div></form>
+<script type="text/javascript">
+    // Validation and submit handling
+    $(document).ready(function() {
+        
+var pickerconfig = function(config) {
+    return $.extend({
+        format: "mm/dd/yyyy hh:ii:ss",
+                    showMeridian: false,
+                minView: 2,
+        minuteStep: 1,
+        autoclose: true,
+        todayBtn: true,
+        todayHighlight: true,
+        bootcssVer: 3,
+        language: "en"
+    }, 1);
+};
+
+$.fn.datetimepicker.dates['english'] = {
+    days: [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ],
+    daysShort: [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+    ],
+    daysMin: [
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa"
+    ],
+    months: [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ],
+    monthsShort: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+    ],
+    today: "Today",
+            meridiem: [],
+        weekStart: 0};
+
+$(".datetime").datetimepicker(pickerconfig());
+
+        $('#open_date').datetimepicker({
+            format: "mm/dd/yyyy hh:ii:ss",
+            startDate: "01/01/2010 00x3AM00x3AM00",
+                            showMeridian: false,
+                        minuteStep: 1,
+            autoclose: true,
+            todayBtn: true,
+            todayHighlight: true,
+            bootcssVer: 3,
+            language: 'en'
+        });
+
+        $('#close_date').datetimepicker({
+            format: "mm/dd/yyyy hh:ii:ss",
+            startDate: "01/01/2010 00x3AM00x3AM00",
+                            showMeridian: false,
+                        minuteStep: 1,
+            autoclose: true,
+            todayBtn: true,
+            todayHighlight: true,
+            bootcssVer: 3,
+            language: 'en'
+        });
+
+        $('#open_amount_cash, #transfer_amount_cash, #closed_amount_cash, #closed_amount_due, #closed_amount_card, #closed_amount_check').keyup(function() {
+            $.post("cashups/ajax_cashup_total", {
+                    'open_amount_cash': $('#open_amount_cash').val(),
+                    'transfer_amount_cash': $('#transfer_amount_cash').val(),
+                    'closed_amount_due': $('#closed_amount_due').val(),
+                    'closed_amount_cash': $('#closed_amount_cash').val(),
+                    'closed_amount_card': $('#closed_amount_card').val(),
+                    'closed_amount_check': $('#closed_amount_check').val()
+                },
+                function(response) {
+                    $('#closed_amount_total').val(response.total);
+                },
+                'json'
+            );
+        });
+
+        var submit_form = function() {
+            $(this).ajaxSubmit({
+                success: function(response) {
+                    dialog_support.hide();
+                    table_support.handle_submit('cashups', response);
+                },
+                dataType: 'json'
+            });
+        };
+
+        $('#cashups_edit_form').validate($.extend({
+            submitHandler: function(form) {
+                submit_form.call(form);
+            },
+            rules: {
+
+            },
+            messages: {
+                open_date: {
+                    required: 'Date is a required field'
+
+                },
+                close_date: {
+                    required: 'Date is a required field'
+
+                },
+                amount: {
+                    required: 'Amount is a Required Field.',
+                    number: 'Amount must be a number'
+                }
+            }
+        }, form_support.error));
+    });
+</script>

@@ -1,0 +1,589 @@
+
+
+<!doctype html>
+<html lang="ar-EG">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <base href="http://localhost/opensourcepos/public/">
+    <title>My Company Retail | Powered by OSPOS 3.4.2</title>
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="resources/bootswatch/flatly/bootstrap.min.css">
+
+            <!--inject:prod:css -->
+        <!-- endinject -->
+        <link rel="stylesheet" href="css/dashboard.css">
+        <link rel="stylesheet" href="css/forms.css">
+
+        <!-- Tweaks to the UI for a particular theme should drop here  -->
+                <!-- inject:prod:js -->
+        <!-- endinject -->
+    
+            <script src="resources/jquery-2c872dbe60.min.js"></script>
+            <script src="resources/opensourcepos-887816d5a6.min.js"></script>
+    
+    
+<script type="text/javascript">
+    // Live clock
+    var clock_tick = function clock_tick() {
+        setInterval('update_clock();', 1000);
+    }
+
+    // Start the clock immediately
+    clock_tick();
+
+    var update_clock = function update_clock() {
+        document.getElementById('liveclock').innerHTML = moment().format("MM/DD/YYYY HH:mm:ss");
+    }
+
+    const notify = $.notify;
+
+    $.notify = function(content, options) {
+        const message = typeof content === "object" ? content.message : content;
+        const sanitizedMessage = DOMPurify.sanitize(message);
+        return notify(sanitizedMessage, options);
+    };
+
+    $.notifyDefaults({
+        placement: {
+            align: "center",
+            from: "bottom"
+        }
+    });
+
+    var csrf_token = function() {
+        return "4073c0c2d7a1527cc8f1eef096499d32";
+    };
+
+    var csrf_form_base = function() {
+        return {
+            csrf_ospos_v4: function() {
+                return csrf_token()
+            }
+        }
+    };
+
+    var setup_csrf_token = function() {
+        $('input[name="csrf_ospos_v4"]').val(csrf_token());
+    };
+
+    var ajax = $.ajax;
+
+    $.ajax = function() {
+        var args = arguments[0];
+        if (args['type'] && args['type'].toLowerCase() == 'post' && csrf_token()) {
+            if (typeof args['data'] === 'string') {
+                args['data'] += '&' + $.param(csrf_form_base());
+            } else {
+                args['data'] = $.extend(args['data'], csrf_form_base());
+            }
+        }
+
+        return ajax.apply(this, arguments);
+    };
+
+    $(document).ajaxComplete(setup_csrf_token);
+    $(document).ready(function() {
+        $("#logout").click(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: "http://localhost/opensourcepos/public/home/logout",
+                data: {
+                    "csrf_ospos_v4": csrf_token()
+                },
+                success: function() {
+                    window.location.href = 'http://localhost/opensourcepos/public/';
+                },
+                method: "POST"
+            });
+        });
+    });
+
+    var submit = $.fn.submit;
+
+    $.fn.submit = function() {
+        setup_csrf_token();
+        submit.apply(this, arguments);
+    };
+</script>
+    <script type="text/javascript">
+    (function(lang, $) {
+
+        var lines = {
+            'common_submit': "Submit",
+            'common_close': "Close"
+        };
+
+        $.extend(lang, {
+            line: function(key) {
+                return lines[key];
+            }
+        });
+
+    })(window.lang = window.lang || {}, jQuery);
+</script>
+
+    <style>
+        html {
+            overflow: auto;
+        }
+    </style>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+            const isCollapsed = localStorage.getItem(key) === '1';
+            if (window.innerWidth > 992 && isCollapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+
+            const syncForViewport = function() {
+                if (window.innerWidth <= 992) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem(key) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('neo_sidebar_toggle');
+                const mobileToggle = document.getElementById('neo_mobile_sidebar_toggle');
+                const mobileBackdrop = document.getElementById('neo_sidebar_backdrop');
+                if (!toggle) {
+                    return;
+                }
+
+                const setExpandedState = function() {
+                    toggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+                };
+
+                toggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        return;
+                    }
+
+                    document.documentElement.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(key, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                    setExpandedState();
+                });
+
+                const closeMobileSidebar = function() {
+                    document.documentElement.classList.remove('mobile-sidebar-open');
+                };
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function() {
+                        if (window.innerWidth > 992) {
+                            return;
+                        }
+                        document.documentElement.classList.toggle('mobile-sidebar-open');
+                    });
+                }
+
+                if (mobileBackdrop) {
+                    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+
+                window.addEventListener('resize', function() {
+                    syncForViewport();
+                    setExpandedState();
+                    if (window.innerWidth > 992) {
+                        document.documentElement.classList.remove('mobile-sidebar-open');
+                    }
+                });
+
+                syncForViewport();
+                setExpandedState();
+            });
+        })();
+    </script>
+    <div class="wrapper">
+        <div class="neo-layout">
+            <aside class="neo-global-sidebar">
+                <div class="neo-global-brand-row">
+                    <a class="neo-global-brand" href="http://localhost/opensourcepos/public/">
+                        <span class="neo-global-brand-full">OSPOS</span>
+                        <span class="neo-global-brand-mini">O</span>
+                    </a>
+                    <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </button>
+                </div>
+                <div class="neo-global-sidebar-body">
+                    <nav class="neo-global-menu">
+                                                                            <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/home" title="Home">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/home.svg" alt="Home">
+                                </span>
+                                <span>Home</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/employees" title="Employees">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/employees.svg" alt="Employees">
+                                </span>
+                                <span>Employees</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/attributes" title="Attributes">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/attributes.svg" alt="Attributes">
+                                </span>
+                                <span>Attributes</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/expenses_categories" title="Expenses Categories">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/expenses_categories.svg" alt="Expenses Categories">
+                                </span>
+                                <span>Expenses Categories</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/config" title="Configuration">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/config.svg" alt="Configuration">
+                                </span>
+                                <span>Configuration</span>
+                            </a>
+                                            </nav>
+                </div>
+            </aside>
+            <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
+
+            <main class="neo-global-content">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
+                            <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock">06/09/2026 13:14:07</div>
+                        </div>
+
+                        <div class="navbar-center pos-topbar-company">
+                            <strong>My Company Retail</strong>
+                        </div>
+
+                        <div class="navbar-right pos-topbar-user">
+                            <a href="http://localhost/opensourcepos/public/home/changePassword/12" class="modal-dlg pos-user-link" data-btn-submit="Submit" title="Change Password">Srorn Chansomphors</a>                            <a href="http://localhost/opensourcepos/public/home/logout" class="pos-logout-link">Logout</a>                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var init_select_controls = function() {
+            if ($.fn.selectpicker) {
+                $('.selectpicker').selectpicker();
+                $('#toolbar').addClass('items-selectpicker-ready');
+            } else {
+                $('#toolbar').removeClass('items-selectpicker-ready');
+            }
+        };
+
+        init_select_controls();
+
+        $('#generate_barcodes').click(function() {
+            window.open(
+                'index.php/items/generateBarcodes/' + table_support.selected_ids().join(':'),
+                '_blank'
+            );
+        });
+
+        // When filter selection changes, refresh table.
+        $('#filters').on('change', function() {
+            table_support.refresh();
+        });
+        // Bootstrap-select compatibility (if plugin is active elsewhere)
+        $('#filters').on('hidden.bs.select', function(e) {
+            table_support.refresh();
+        });
+
+        // Load the preset daterange picker
+        
+    $('#daterangepicker').css("width", "180");
+    var start_date = "2026-06-09";
+    var end_date = "2026-06-09";
+
+    $('#daterangepicker').daterangepicker({
+    "ranges": {
+    "Today": [
+    "06/09/2026",
+    "06/09/2026"
+    ],
+    "Today Last Year": [
+    "06/09/2025",
+    "06/09/2025"
+    ],
+    "Yesterday": [
+    "06/08/2026",
+    "06/08/2026"
+    ],
+    "Last 7 Days": [
+    "06/03/2026",
+    "06/09/2026"
+    ],
+    "Last 30 Days": [
+    "05/11/2026",
+    "06/09/2026"
+    ],
+    "Current Month": [
+    "06/01/2026",
+    "06/30/2026"
+    ],
+    "Same Month To Same Day Last Year": [
+    "06/01/2025",
+    "06/09/2025"
+    ],
+    "Same Month Last Year": [
+    "06/01/2025",
+    "06/30/2025"
+    ],
+    "Last Month": [
+    "05/01/2026",
+    "05/31/2026"
+    ],
+    "Current Year": [
+    "01/01/2026",
+    "05/31/2027"
+    ],
+    "Last Year": [
+    "01/01/2025",
+    "12/31/2025"
+    ],
+    "Current Fiscal Year": [
+    "01/01/2026",
+    "05/31/2027"
+    ],
+    "Last Fiscal Year": [
+    "01/01/2025",
+    "12/31/2025"
+    ],
+    "All Time": [
+    "01/01/2010",
+    "06/09/2026"
+    ],
+    },
+    "locale": {
+    "format": 'MM/DD/YYYY',
+    "separator": " - ",
+    "applyLabel": "Apply",
+    "cancelLabel": "Cancel",
+    "fromLabel": "From",
+    "toLabel": "To",
+    "customRangeLabel": "Custom",
+    "daysOfWeek": [
+    "Su",
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa"
+    ],
+    "monthNames": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+    ],
+    "firstDay": 0    },
+    "alwaysShowCalendars": true,
+    "startDate": "06/09/2026",
+    "endDate": "06/09/2026",
+    "minDate": "01/01/2010",
+    "maxDate": "06/09/2026"
+    }, function(start, end, label) {
+    start_date = start.format('YYYY-MM-DD');
+    end_date = end.format('YYYY-MM-DD');
+    });
+        // Set the beginning of time as starting date
+        $('#daterangepicker').data('daterangepicker').setStartDate("01/01/2010");
+        // Update the hidden inputs with the selected dates before submitting the search data
+        var start_date = "2010-01-01";
+        $("#daterangepicker").on('apply.daterangepicker', function(ev, picker) {
+            table_support.refresh();
+        });
+
+        $("#stock_location").change(function() {
+            table_support.refresh();
+        });
+
+        
+(function($) {
+    'use strict';
+
+    $.fn.bootstrapTable.locales['en'] = {
+        formatLoadingMessage: function() {
+            return "Loading, please wait...";
+        },
+        formatRecordsPerPage: function(pageNumber) {
+            return "{0} rows per page".replace('{0}', pageNumber);
+        },
+        formatShowingRows: function(pageFrom, pageTo, totalRows) {
+            return "Showing {0} to {1} of {2} rows".replace('{0}', pageFrom).replace('{1}', pageTo).replace('{2}', totalRows);
+        },
+        formatSearch: function() {
+            return "Search";
+        },
+        formatNoMatches: function() {
+            return "No Items to display.";
+        },
+        formatPaginationSwitch: function() {
+            return "Hide/Show pagination";
+        },
+        formatRefresh: function() {
+            return "Refresh";
+        },
+        formatToggle: function() {
+            return "Toggle";
+        },
+        formatColumns: function() {
+            return "Columns";
+        },
+        formatAllRows: function() {
+            return "all";
+        },
+        formatConfirmAction: function(action) {
+            if (action == "delete") {
+                return "Are you sure you want to delete selected item(s)?";
+            } else {
+                return "Are you sure you want to restore selected item(s)?";
+            }
+        }
+    };
+
+    $.extend($.fn.bootstrapTable.defaults, $.fn.bootstrapTable.locales["en"]);
+
+})(jQuery);
+
+        table_support.init({
+            employee_id: 12,
+            resource: 'items',
+            headers: [{"field":"checkbox","title":"select","switchable":true,"escape":true,"sortable":false,"checkbox":"select","class":"print_hide","sorter":""},{"field":"items.item_id","title":"ID","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"item_number","title":"Barcode","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"name","title":"Item Name","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"category","title":"Category","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"company_name","title":"Company Name","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"cost_price","title":"Wholesale Price","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"unit_price","title":"Retail Price","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"quantity","title":"Quantity","switchable":true,"escape":true,"sortable":true,"checkbox":false,"class":"","sorter":""},{"field":"tax_percents","title":"Tax Percent(s)","switchable":true,"escape":true,"sortable":false,"checkbox":false,"class":"","sorter":""},{"field":"item_pic","title":"Avatar","switchable":true,"escape":false,"sortable":false,"checkbox":false,"class":"","sorter":""},{"field":"inventory","title":"","switchable":false,"escape":false,"sortable":false,"checkbox":false,"class":"print_hide","sorter":""},{"field":"stock","title":"","switchable":false,"escape":false,"sortable":false,"checkbox":false,"class":"print_hide","sorter":""},{"field":"edit","title":"","switchable":false,"escape":false,"sortable":false,"checkbox":false,"class":"print_hide","sorter":""}],
+            pageSize: 25,
+            uniqueId: 'items.item_id',
+            queryParams: function() {
+                return $.extend(arguments[0], {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "stock_location": $("#stock_location").val(),
+                    "filters": $("#filters").val()
+                });
+            },
+            onLoadSuccess: function(response) {
+                $('a.rollover').imgPreview({
+                    imgCSS: {
+                        width: 200
+                    },
+                    distanceFromCursor: {
+                        top: 10,
+                        left: -210
+                    }
+                })
+            }
+        });
+    });
+</script>
+
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title">Items</h3>
+            <p class="neo-module-subtitle">Welcome to OSPOS, click a module below to get started.</p>
+        </div>
+        <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
+            <button class="btn btn-info btn-sm modal-dlg" data-btn-submit="Submit" data-href="items/csvImport" title="Item Import from CSV">
+                <span class="glyphicon glyphicon-import">&nbsp;</span>CSV Import            </button>
+            <button class="btn btn-primary btn-sm modal-dlg" data-btn-new="New" data-btn-submit="Submit" data-href="items/view" title="New Item">
+                <span class="glyphicon glyphicon-tag">&nbsp;</span>New Item            </button>
+        </div>
+    </header>
+
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="delete" class="btn btn-default btn-sm print_hide">
+                <span class="glyphicon glyphicon-trash">&nbsp;</span>Delete            </button>
+            <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="Submit" data-href="items/bulkEdit" title="Editing Multiple Items">
+                <span class="glyphicon glyphicon-edit">&nbsp;</span>Bulk Edit            </button>
+            <button id="generate_barcodes" class="btn btn-default btn-sm print_hide" data-href="items/generateBarcodes" title="Generate Barcodes">
+                <span class="glyphicon glyphicon-barcode">&nbsp;</span>Generate Barcodes            </button>
+            <input type="text" name="daterangepicker" value="" class="form-control input-sm" id="daterangepicker">
+            <select name="filters[]"  id="filters" class="form-control input-sm pos-items-filter-select" size="1" multiple="multiple">
+<option value="empty_upc">Empty Barcode Items</option>
+<option value="low_inventory">Out Of Stock Items</option>
+<option value="is_serialized">Serialized Items</option>
+<option value="no_description">No Description Items</option>
+<option value="search_custom">Search Attributes</option>
+<option value="is_deleted">Deleted</option>
+<option value="temporary">Temporary</option>
+</select>
+            <select name="stock_location" id="stock_location" class="form-control input-sm">
+<option value="1008" selected="selected">Main Store</option>
+<option value="1012">Warehouse A</option>
+<option value="1016">Warehouse B</option>
+<option value="1020">Front Counter</option>
+<option value="1024">Back Room</option>
+<option value="1028">Online Stock</option>
+<option value="1032">Warehouse A</option>
+<option value="1036">Warehouse B</option>
+<option value="1040">Front Counter</option>
+<option value="1044">Back Room</option>
+<option value="1048">Online Stock</option>
+</select>
+        </div>
+    </div>
+
+    <div id="table_holder" class="neo-table-holder">
+        <table id="table"></table>
+    </div>
+</section>
+
+
+        </div>
+    </div>
+</main>
+</div>
+
+    <div id="footer" class="pos-footer-wrap">
+        <div class="jumbotron push-spaces pos-footer">
+            <strong class="pos-footer-text">
+                © 2010 - 2026                <span class="pos-footer-separator">·</span>
+                <a href="https://opensourcepos.org" target="_blank">opensourcepos.org</a>
+                <span class="pos-footer-separator">·</span>
+                3.4.2 -
+                <a target="_blank" href="https://github.com/opensourcepos/opensourcepos/commit/dev">
+                    dev                </a>
+            </strong>
+        </div>
+    </div>
+</body>
+
+</html>

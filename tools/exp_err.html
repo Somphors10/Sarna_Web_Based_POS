@@ -1,0 +1,452 @@
+{
+    "title": "CodeIgniter\\Database\\Exceptions\\DatabaseException",
+    "type": "CodeIgniter\\Database\\Exceptions\\DatabaseException",
+    "code": 500,
+    "message": "Unknown table 'ospos.employees'",
+    "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Database\\BaseConnection.php",
+    "line": 684,
+    "trace": [
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Database\\MySQLi\\Connection.php",
+            "line": 327,
+            "function": "query",
+            "class": "mysqli",
+            "type": "->",
+            "args": [
+                "SELECT employees.*, people.*, (\r\n            SELECT COUNT(*)\r\n            FROM ospos_people AS tenant_seq_inner\r\n            WHERE tenant_seq_inner.tenant_id = people.tenant_id\r\n              AND tenant_seq_inner.person_id <= people.person_id\r\n              \r\n        ) AS tenant_person_seq\nFROM `ospos_employees`\nJOIN `ospos_people` ON `ospos_employees`.`person_id` = `ospos_people`.`person_id`\nWHERE `ospos_employees`.`tenant_id` = 1\nAND `deleted` = 0\nORDER BY `last_name` ASC\n LIMIT 10000",
+                0
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Database\\BaseConnection.php",
+            "line": 729,
+            "function": "execute",
+            "class": "CodeIgniter\\Database\\MySQLi\\Connection",
+            "type": "->",
+            "args": [
+                "SELECT employees.*, people.*, (\r\n            SELECT COUNT(*)\r\n            FROM ospos_people AS tenant_seq_inner\r\n            WHERE tenant_seq_inner.tenant_id = people.tenant_id\r\n              AND tenant_seq_inner.person_id <= people.person_id\r\n              \r\n        ) AS tenant_person_seq\nFROM `ospos_employees`\nJOIN `ospos_people` ON `ospos_employees`.`person_id` = `ospos_people`.`person_id`\nWHERE `ospos_employees`.`tenant_id` = 1\nAND `deleted` = 0\nORDER BY `last_name` ASC\n LIMIT 10000"
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Database\\BaseConnection.php",
+            "line": 646,
+            "function": "simpleQuery",
+            "class": "CodeIgniter\\Database\\BaseConnection",
+            "type": "->",
+            "args": [
+                "SELECT employees.*, people.*, (\r\n            SELECT COUNT(*)\r\n            FROM ospos_people AS tenant_seq_inner\r\n            WHERE tenant_seq_inner.tenant_id = people.tenant_id\r\n              AND tenant_seq_inner.person_id <= people.person_id\r\n              \r\n        ) AS tenant_person_seq\nFROM `ospos_employees`\nJOIN `ospos_people` ON `ospos_employees`.`person_id` = `ospos_people`.`person_id`\nWHERE `ospos_employees`.`tenant_id` = 1\nAND `deleted` = 0\nORDER BY `last_name` ASC\n LIMIT 10000"
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Database\\BaseBuilder.php",
+            "line": 1649,
+            "function": "query",
+            "class": "CodeIgniter\\Database\\BaseConnection",
+            "type": "->",
+            "args": [
+                "SELECT employees.*, people.*, (\r\n            SELECT COUNT(*)\r\n            FROM ospos_people AS tenant_seq_inner\r\n            WHERE tenant_seq_inner.tenant_id = people.tenant_id\r\n              AND tenant_seq_inner.person_id <= people.person_id\r\n              \r\n        ) AS tenant_person_seq\nFROM `ospos_employees`\nJOIN `ospos_people` ON `ospos_employees`.`person_id` = `ospos_people`.`person_id`\nWHERE `ospos_employees`.`tenant_id` = :employees.tenant_id:\nAND `deleted` = :deleted:\nORDER BY `last_name` ASC\n LIMIT 10000",
+                {
+                    "employees.tenant_id": [
+                        1,
+                        true
+                    ],
+                    "deleted": [
+                        0,
+                        true
+                    ]
+                },
+                false
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Models\\Employee.php",
+            "line": 98,
+            "function": "get",
+            "class": "CodeIgniter\\Database\\BaseBuilder",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Controllers\\Expenses.php",
+            "line": 93,
+            "function": "get_all",
+            "class": "App\\Models\\Employee",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\CodeIgniter.php",
+            "line": 933,
+            "function": "getView",
+            "class": "App\\Controllers\\Expenses",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\CodeIgniter.php",
+            "line": 507,
+            "function": "runController",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": [
+                {
+                    "global_view_data": {
+                        "allowed_modules": [
+                            {
+                                "name_lang_key": "module_customers",
+                                "desc_lang_key": "module_customers_desc",
+                                "sort": "10",
+                                "module_id": "customers",
+                                "permission_id": "customers",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_items",
+                                "desc_lang_key": "module_items_desc",
+                                "sort": "20",
+                                "module_id": "items",
+                                "permission_id": "items",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_item_kits",
+                                "desc_lang_key": "module_item_kits_desc",
+                                "sort": "30",
+                                "module_id": "item_kits",
+                                "permission_id": "item_kits",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_suppliers",
+                                "desc_lang_key": "module_suppliers_desc",
+                                "sort": "40",
+                                "module_id": "suppliers",
+                                "permission_id": "suppliers",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_reports",
+                                "desc_lang_key": "module_reports_desc",
+                                "sort": "50",
+                                "module_id": "reports",
+                                "permission_id": "reports",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_receivings",
+                                "desc_lang_key": "module_receivings_desc",
+                                "sort": "60",
+                                "module_id": "receivings",
+                                "permission_id": "receivings",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_sales",
+                                "desc_lang_key": "module_sales_desc",
+                                "sort": "70",
+                                "module_id": "sales",
+                                "permission_id": "sales",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_giftcards",
+                                "desc_lang_key": "module_giftcards_desc",
+                                "sort": "90",
+                                "module_id": "giftcards",
+                                "permission_id": "giftcards",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_messages",
+                                "desc_lang_key": "module_messages_desc",
+                                "sort": "98",
+                                "module_id": "messages",
+                                "permission_id": "messages",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_expenses",
+                                "desc_lang_key": "module_expenses_desc",
+                                "sort": "108",
+                                "module_id": "expenses",
+                                "permission_id": "expenses",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_cashups",
+                                "desc_lang_key": "module_cashups_desc",
+                                "sort": "110",
+                                "module_id": "cashups",
+                                "permission_id": "cashups",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            },
+                            {
+                                "name_lang_key": "module_office",
+                                "desc_lang_key": "module_office_desc",
+                                "sort": "999",
+                                "module_id": "office",
+                                "permission_id": "office",
+                                "location_id": null,
+                                "person_id": "1",
+                                "menu_group": "home"
+                            }
+                        ],
+                        "user_info": {
+                            "username": "admin",
+                            "password": "$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG",
+                            "person_id": "1",
+                            "deleted": "0",
+                            "hash_version": "2",
+                            "language": null,
+                            "language_code": null,
+                            "tenant_id": "1",
+                            "first_name": "John",
+                            "last_name": "Doe",
+                            "gender": null,
+                            "phone_number": "555-555-5555",
+                            "email": "changeme@example.com",
+                            "address_1": "Address 1",
+                            "address_2": "",
+                            "city": "",
+                            "state": "",
+                            "zip": "",
+                            "country": "",
+                            "comments": ""
+                        },
+                        "controller_name": "expenses",
+                        "config": {
+                            "account_number": "",
+                            "address": "123 Nowhere street",
+                            "allow_duplicate_barcodes": "0",
+                            "barcode_content": "id",
+                            "barcode_first_row": "category",
+                            "barcode_font": "Arial",
+                            "barcode_font_size": "10",
+                            "barcode_formats": "[]",
+                            "barcode_generate_if_empty": "0",
+                            "barcode_height": "50",
+                            "barcode_num_in_row": "2",
+                            "barcode_page_cellspacing": "20",
+                            "barcode_page_width": "100",
+                            "barcode_second_row": "item_code",
+                            "barcode_third_row": "unit_price",
+                            "barcode_type": "C39",
+                            "barcode_width": "250",
+                            "cash_decimals": "2",
+                            "cash_rounding_code": "0",
+                            "category_dropdown": "",
+                            "company": "Open Source Point of Sale",
+                            "company_logo": "",
+                            "country_codes": "us",
+                            "currency_code": "",
+                            "currency_decimals": "2",
+                            "currency_symbol": "$",
+                            "customer_reward_enable": "0",
+                            "dateformat": "m/d/Y",
+                            "date_or_time_format": "",
+                            "default_receivings_discount": "0",
+                            "default_receivings_discount_type": "0",
+                            "default_register_mode": "sale",
+                            "default_sales_discount": "0",
+                            "default_sales_discount_type": "0",
+                            "default_tax_1_name": "",
+                            "default_tax_1_rate": "",
+                            "default_tax_2_name": "",
+                            "default_tax_2_rate": "",
+                            "default_tax_category": "Standard",
+                            "default_tax_code": "",
+                            "default_tax_jurisdiction": "",
+                            "default_tax_rate": "8",
+                            "derive_sale_quantity": "0",
+                            "dinner_table_enable": "0",
+                            "email": "changeme@example.com",
+                            "email_receipt_check_behaviour": "last",
+                            "enforce_privacy": "0",
+                            "fax": "",
+                            "financial_year": "1",
+                            "gcaptcha_enable": "0",
+                            "gcaptcha_secret_key": "",
+                            "gcaptcha_site_key": "",
+                            "giftcard_number": "series",
+                            "image_allowed_types": "gif,jpg,png",
+                            "image_max_height": "480",
+                            "image_max_size": "128",
+                            "image_max_width": "640",
+                            "include_hsn": "0",
+                            "invoice_default_comments": "This is a default comment",
+                            "invoice_email_message": "Dear {CU}, In attachment the receipt for sale {ISEQ}",
+                            "invoice_enable": "1",
+                            "invoice_type": "invoice",
+                            "language": "english",
+                            "language_code": "en",
+                            "last_used_invoice_number": "0",
+                            "last_used_quote_number": "0",
+                            "last_used_work_order_number": "0",
+                            "lines_per_page": "25",
+                            "line_sequence": "0",
+                            "login_form": "",
+                            "mailpath": "/usr/sbin/sendmail",
+                            "msg_msg": "",
+                            "msg_pwd": "",
+                            "msg_src": "",
+                            "msg_uid": "",
+                            "multi_pack_enabled": "0",
+                            "notify_horizontal_position": "center",
+                            "notify_vertical_position": "bottom",
+                            "number_locale": "en_US",
+                            "payment_message": "",
+                            "payment_options_order": "cashdebitcredit",
+                            "phone": "555-555-5555",
+                            "print_bottom_margin": "0",
+                            "print_delay_autoreturn": "0",
+                            "print_footer": "0",
+                            "print_header": "0",
+                            "print_left_margin": "0",
+                            "print_receipt_check_behaviour": "last",
+                            "print_right_margin": "0",
+                            "print_silently": "1",
+                            "print_top_margin": "0",
+                            "protocol": "mail",
+                            "quantity_decimals": "0",
+                            "quote_default_comments": "This is a default quote comment",
+                            "receipt_font_size": "12",
+                            "receipt_show_company_name": "1",
+                            "receipt_show_description": "1",
+                            "receipt_show_serialnumber": "1",
+                            "receipt_show_taxes": "0",
+                            "receipt_show_tax_ind": "0",
+                            "receipt_show_total_discount": "1",
+                            "receipt_template": "receipt_default",
+                            "receiving_calculate_average_price": "",
+                            "recv_invoice_format": "{CO}",
+                            "return_policy": "Test",
+                            "sales_invoice_format": "{CO}",
+                            "sales_quote_format": "Q%y{QSEQ:6}",
+                            "smtp_crypto": "ssl",
+                            "smtp_host": "",
+                            "smtp_pass": "",
+                            "smtp_port": "465",
+                            "smtp_timeout": "5",
+                            "smtp_user": "",
+                            "statistics": "1",
+                            "suggestions_first_column": "name",
+                            "suggestions_second_column": "",
+                            "suggestions_third_column": "",
+                            "tax_decimals": "2",
+                            "tax_id": "",
+                            "tax_included": "0",
+                            "theme": "flatly",
+                            "thousands_separator": "1",
+                            "timeformat": "H:i:s",
+                            "timezone": "America/New_York",
+                            "use_destination_based_tax": "0",
+                            "website": "",
+                            "work_order_enable": "0",
+                            "work_order_format": "W%y{WSEQ:6}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\CodeIgniter.php",
+            "line": 354,
+            "function": "handleRequest",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": [
+                null,
+                {
+                    "handler": "file",
+                    "backupHandler": "dummy",
+                    "prefix": "",
+                    "ttl": 300,
+                    "reservedCharacters": "{}()/\\@:",
+                    "file": {
+                        "storePath": "C:\\xampp8\\htdocs\\opensourcepos\\writable\\cache/",
+                        "mode": 416
+                    },
+                    "memcached": {
+                        "host": "127.0.0.1",
+                        "port": 11211,
+                        "weight": 1,
+                        "raw": false
+                    },
+                    "redis": {
+                        "host": "127.0.0.1",
+                        "password": null,
+                        "port": 6379,
+                        "timeout": 0,
+                        "database": 0
+                    },
+                    "validHandlers": {
+                        "dummy": "CodeIgniter\\Cache\\Handlers\\DummyHandler",
+                        "file": "CodeIgniter\\Cache\\Handlers\\FileHandler",
+                        "memcached": "CodeIgniter\\Cache\\Handlers\\MemcachedHandler",
+                        "predis": "CodeIgniter\\Cache\\Handlers\\PredisHandler",
+                        "redis": "CodeIgniter\\Cache\\Handlers\\RedisHandler",
+                        "wincache": "CodeIgniter\\Cache\\Handlers\\WincacheHandler"
+                    },
+                    "cacheQueryString": false
+                },
+                false
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Boot.php",
+            "line": 363,
+            "function": "run",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\vendor\\codeigniter4\\framework\\system\\Boot.php",
+            "line": 68,
+            "function": "runCodeIgniter",
+            "class": "CodeIgniter\\Boot",
+            "type": "::",
+            "args": [
+                {}
+            ]
+        },
+        {
+            "file": "C:\\xampp8\\htdocs\\opensourcepos\\public\\index.php",
+            "line": 56,
+            "function": "bootWeb",
+            "class": "CodeIgniter\\Boot",
+            "type": "::",
+            "args": [
+                {
+                    "systemDirectory": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Config/../../vendor/codeigniter4/framework/system",
+                    "appDirectory": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Config/..",
+                    "writableDirectory": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Config/../../writable",
+                    "testsDirectory": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Config/../../tests",
+                    "viewDirectory": "C:\\xampp8\\htdocs\\opensourcepos\\app\\Config/../Views"
+                }
+            ]
+        }
+    ]
+}

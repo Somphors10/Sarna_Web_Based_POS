@@ -84,10 +84,13 @@ class Employee extends Person
      */
     public function get_all(int $limit = 10000, int $offset = 0): ResultInterface
     {
-        $builder = $this->db->table('employees');
+        $builder = $this->db->table('employees AS employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
-        $builder->where('deleted', 0);
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->where('employees.deleted', 0);
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
+        if ($this->db->fieldExists('tenant_id', 'people')) {
+            $builder->select('employees.*, people.*, ' . $this->tenantSequenceSql('people', 'person_id', 'tenant_person_seq', 'people'), false);
+        }
         $builder->orderBy('last_name', 'asc');
         $builder->limit($limit);
         $builder->offset($offset);
@@ -259,7 +262,7 @@ class Employee extends Person
 
         $builder = $this->db->table('employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
@@ -278,7 +281,7 @@ class Employee extends Person
 
         $builder = $this->db->table('employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
             $builder->where('deleted', 0);
@@ -293,7 +296,7 @@ class Employee extends Person
 
         $builder = $this->db->table('employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
             $builder->where('deleted', 0);
@@ -308,7 +311,7 @@ class Employee extends Person
 
         $builder = $this->db->table('employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
 
         if (!$unique) {
             $builder->where('deleted', 0);
@@ -357,7 +360,7 @@ class Employee extends Person
             $builder->select('COUNT(employees.person_id) as count');
         }
 
-        $builder->join('people', 'employees.person_id = people.person_id');
+        $builder->join('people AS people', 'employees.person_id = people.person_id');
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
@@ -371,6 +374,10 @@ class Employee extends Person
         // get_found_rows case
         if ($count_only) {
             return $builder->get()->getRow()->count;
+        }
+
+        if ($this->db->fieldExists('tenant_id', 'people')) {
+            $builder->select('employees.*, people.*, ' . $this->tenantSequenceSql('people', 'person_id', 'tenant_person_seq', 'people'), false);
         }
 
         $builder->orderBy($sort, $order);
@@ -406,6 +413,7 @@ class Employee extends Person
                 $this->session->set('person_id', $row->person_id);
                 $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
                 (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
+                config(\Config\OSPOS::class)->update_settings();
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
                 return $builder->update(['hash_version' => 2, 'password' => $password_hash]);
@@ -413,6 +421,7 @@ class Employee extends Person
                 $this->session->set('person_id', $row->person_id);
                 $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
                 (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
+                config(\Config\OSPOS::class)->update_settings();
 
                 return true;
             }
@@ -426,6 +435,7 @@ class Employee extends Person
      */
     public function logout(): void
     {
+        (new TenantContext())->clearTenantDatabaseSession();
         session()->destroy();
     }
 

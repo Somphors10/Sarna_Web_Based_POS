@@ -16,7 +16,6 @@ class Inventory extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'inventory';
     protected $primaryKey = 'trans_id';
     protected $useAutoIncrement = true;

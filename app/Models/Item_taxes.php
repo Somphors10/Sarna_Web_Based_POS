@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Model;
 
 /**
@@ -9,14 +10,22 @@ use CodeIgniter\Model;
  */
 class Item_taxes extends Model
 {
+    use TenantAware;
+
     protected $table = 'item_taxes';
     protected $primaryKey = 'item_id';
     protected $useAutoIncrement = false;
     protected $useSoftDeletes = false;
     protected $allowedFields = [
         'name',
-        'percent'
+        'percent',
+        'tenant_id'
     ];
+
+    private function hasTenantColumn(): bool
+    {
+        return $this->db->tableExists('items_taxes') && $this->db->fieldExists('tenant_id', 'items_taxes');
+    }
 
     /**
      * Gets tax info for a particular item
@@ -25,6 +34,9 @@ class Item_taxes extends Model
     {
         $builder = $this->db->table('items_taxes');
         $builder->where('item_id', $item_id);
+        if ($this->hasTenantColumn()) {
+            $this->scopeTenant($builder, 'tenant_id');
+        }
 
         // Return an array of taxes for an item
         return $builder->get()->getResultArray();
@@ -46,6 +58,9 @@ class Item_taxes extends Model
 
         foreach ($items_taxes_data as $row) {
             $row['item_id'] = $item_id;
+            if ($this->hasTenantColumn()) {
+                $row['tenant_id'] = $this->getTenantId();
+            }
             $success &= $builder->insert($row);
         }
 
@@ -73,6 +88,9 @@ class Item_taxes extends Model
 
             foreach ($items_taxes_data as $row) {
                 $row['item_id'] = $item_id;
+                if ($this->hasTenantColumn()) {
+                    $row['tenant_id'] = $this->getTenantId();
+                }
                 $success &= $builder->insert($row);
             }
         }
@@ -90,6 +108,9 @@ class Item_taxes extends Model
     public function delete($item_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('items_taxes');
+        if ($this->hasTenantColumn()) {
+            $this->scopeTenant($builder, 'tenant_id');
+        }
 
         return $builder->delete(['item_id' => $item_id]);
     }

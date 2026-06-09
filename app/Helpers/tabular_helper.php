@@ -60,6 +60,26 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
 }
 
 
+function tenant_sale_display_id(int $sale_id): int
+{
+    return model(\App\Models\Sale::class)->get_tenant_sale_seq($sale_id);
+}
+
+function tenant_sale_label(int $sale_id): string
+{
+    return 'POS ' . tenant_sale_display_id($sale_id);
+}
+
+function tenant_receiving_display_id(int $receiving_id): int
+{
+    return model(\App\Models\Receiving::class)->get_tenant_receiving_seq($receiving_id);
+}
+
+function tenant_receiving_label(int $receiving_id): string
+{
+    return 'RECV ' . tenant_receiving_display_id($receiving_id);
+}
+
 function sales_headers(): array
 {
     return [
@@ -99,8 +119,10 @@ function get_sale_data_row(object $sale): array
     $uri = current_url(true);
     $controller = $uri->getSegment(1);
 
+    $display_sale_id = isset($sale->tenant_sale_seq) ? (int)$sale->tenant_sale_seq : (int)$sale->sale_id;
+
     $row = [
-        'sale_id'         => $sale->sale_id,
+        'sale_id'         => $display_sale_id,
         'sale_time'       => to_datetime(strtotime($sale->sale_time)),
         'customer_name'   => $sale->customer_name,
         'amount_due'      => to_currency($sale->amount_due),
@@ -220,9 +242,12 @@ function get_people_manage_table_headers(): string
 function get_person_data_row(object $person): array
 {
     $controller = get_controller();
+    $display_person_id = isset($person->tenant_person_seq)
+        ? (int)$person->tenant_person_seq
+        : (int)$person->person_id;
 
     return [
-        'people.person_id' => $person->person_id,
+        'people.person_id' => $display_person_id,
         'last_name'        => $person->last_name,
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),

@@ -13,7 +13,6 @@ class Item_quantity extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'item_quantities';
     protected $primaryKey = 'item_id';
     protected $useAutoIncrement = false;

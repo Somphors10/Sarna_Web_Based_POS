@@ -156,6 +156,8 @@ class Company_register extends BaseController
             ['tenant_id' => $tenant_id, 'config_key' => 'currency_code', 'config_value' => 'USD']
         ]);
 
+        (new \App\Libraries\TenantSeeder())->seedForTenant($tenant_id);
+
         $db->transComplete();
 
         if (!$db->transStatus()) {

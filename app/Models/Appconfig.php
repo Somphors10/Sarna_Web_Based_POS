@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
 use ReflectionException;
 
 /**
- * Appconfig class
- *
- *
+ * Appconfig class — per-tenant settings via tenant_config, global defaults via app_config.
  */
 class Appconfig extends Model
 {
+    use TenantAware;
+
     protected $table = 'app_config';
     protected $primaryKey = 'key';
     protected $useAutoIncrement = false;
@@ -23,14 +24,23 @@ class Appconfig extends Model
         'value'
     ];
 
+    private function usesTenantConfig(): bool
+    {
+        return $this->isTenantScopingEnabled() && $this->db->tableExists('tenant_config');
+    }
+
     /**
      * Checks to see if a given configuration exists in the database.
-     *
-     * @param string $key Key name to be searched.
-     * @return bool True if the key is found in the database or false if it does not exist.
      */
     public function exists(string $key): bool
     {
+        if ($this->usesTenantConfig()) {
+            return $this->db->table('tenant_config')
+                    ->where('tenant_id', $this->getTenantId())
+                    ->where('config_key', $key)
+                    ->countAllResults() === 1;
+        }
+
         $builder = $this->db->table('app_config');
         $builder->where('key', $key);
 
@@ -38,16 +48,47 @@ class Appconfig extends Model
     }
 
     /**
-     * Get all OpenSourcePOS configuration values from the database.
-     *
-     * @return ResultInterface
+     * Get all configuration values for the active tenant.
      */
     public function get_all(): ResultInterface
     {
-        $builder = $this->db->table('app_config');
-        $builder->orderBy('key', 'asc');
+        if (!$this->usesTenantConfig()) {
+            $builder = $this->db->table('app_config');
+            $builder->orderBy('key', 'asc');
+            return $builder->get();
+        }
+
+        $builder = $this->db->table('tenant_config');
+        $builder->select('config_key AS `key`, config_value AS `value`');
+        $builder->where('tenant_id', $this->getTenantId());
+        $builder->orderBy('config_key', 'asc');
 
         return $builder->get();
+    }
+
+    /**
+     * Returns merged settings as associative array (used by OSPOS config).
+     */
+    public function get_all_assoc(): array
+    {
+        $settings = [];
+
+        if ($this->db->tableExists('app_config')) {
+            foreach ($this->db->table('app_config')->get()->getResult() as $row) {
+                $settings[$row->key] = $row->value;
+            }
+        }
+
+        if ($this->usesTenantConfig()) {
+            foreach ($this->db->table('tenant_config')
+                ->where('tenant_id', $this->getTenantId())
+                ->get()
+                ->getResult() as $row) {
+                $settings[$row->config_key] = $row->config_value;
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -57,6 +98,17 @@ class Appconfig extends Model
      */
     public function get_value(string $key, string $default = ''): string
     {
+        if ($this->usesTenantConfig()) {
+            $row = $this->db->table('tenant_config')
+                ->where('tenant_id', $this->getTenantId())
+                ->where('config_key', $key)
+                ->get(1)
+                ->getRow();
+            if ($row !== null) {
+                return (string)$row->config_value;
+            }
+        }
+
         $builder = $this->db->table('app_config');
         $query = $builder->getWhere(['key' => $key], 1);
 
@@ -68,25 +120,43 @@ class Appconfig extends Model
     }
 
     /**
-     * Calls the parent save() from BaseModel and updates the cached reference.
+     * Saves config for the active tenant.
      *
      * @param array|object $data
-     * @return bool true when the save was successful and false if the save failed.
+     * @return bool
      * @throws ReflectionException
      */
     public function save($data): bool
     {
         $key = array_keys($data)[0];
         $value = $data[$key];
-        $save_data = ['key' => $key, 'value' => $value];
 
-        $success = parent::save($save_data);
+        if ($this->usesTenantConfig()) {
+            $tenant_id = $this->getTenantId();
+            $builder = $this->db->table('tenant_config');
+            $exists = $builder->where('tenant_id', $tenant_id)->where('config_key', $key)->countAllResults() > 0;
+
+            if ($exists) {
+                $success = $builder->where('tenant_id', $tenant_id)
+                    ->where('config_key', $key)
+                    ->update(['config_value' => $value]);
+            } else {
+                $success = $builder->insert([
+                    'tenant_id' => $tenant_id,
+                    'config_key' => $key,
+                    'config_value' => $value,
+                ]);
+            }
+        } else {
+            $save_data = ['key' => $key, 'value' => $value];
+            $success = parent::save($save_data);
+        }
 
         if ($success) {
             config(OSPOS::class)->update_settings();
         }
 
-        return $success;
+        return (bool)$success;
     }
 
     /**
@@ -110,24 +180,32 @@ class Appconfig extends Model
     }
 
     /**
-     * Deletes a row from the Appconfig table given the name of the setting to delete.
-     *
-     * @param ?string $id The field name to be deleted in the Appconfig table.
-     * @param bool $purge A hard delete is conducted if true and soft delete on false.
-     * @return bool Result of the delete operation.
+     * Deletes a row from config.
      */
     public function delete($id = null, bool $purge = false): bool
     {
+        if ($this->usesTenantConfig()) {
+            return $this->db->table('tenant_config')
+                ->where('tenant_id', $this->getTenantId())
+                ->where('config_key', $id)
+                ->delete();
+        }
+
         $builder = $this->db->table('app_config');
         return $builder->delete(['key' => $id]);
     }
 
-
     /**
      * @return bool
      */
-    public function delete_all(): bool    // TODO: This function is never used in the code. Consider removing it.
+    public function delete_all(): bool
     {
+        if ($this->usesTenantConfig()) {
+            return $this->db->table('tenant_config')
+                ->where('tenant_id', $this->getTenantId())
+                ->delete();
+        }
+
         $builder = $this->db->table('app_config');
         return $builder->emptyTable();
     }
@@ -137,14 +215,13 @@ class Appconfig extends Model
      */
     public function acquire_next_invoice_sequence(bool $save = true): string
     {
-        $config = config(OSPOS::class)->settings;
-        $last_used = (int)$config['last_used_invoice_number'] + 1;
+        $last_used = (int)$this->get_value('last_used_invoice_number', '0') + 1;
 
         if ($save) {
             $this->save(['last_used_invoice_number' => $last_used]);
         }
 
-        return $last_used;
+        return (string)$last_used;
     }
 
     /**
@@ -152,14 +229,13 @@ class Appconfig extends Model
      */
     public function acquire_next_quote_sequence(bool $save = true): string
     {
-        $config = config(OSPOS::class)->settings;
-        $last_used = (int)$config['last_used_quote_number'] + 1;
+        $last_used = (int)$this->get_value('last_used_quote_number', '0') + 1;
 
         if ($save) {
             $this->save(['last_used_quote_number' => $last_used]);
         }
 
-        return $last_used;
+        return (string)$last_used;
     }
 
     /**
@@ -167,13 +243,13 @@ class Appconfig extends Model
      */
     public function acquire_next_work_order_sequence(bool $save = true): string
     {
-        $config = config(OSPOS::class)->settings;
-        $last_used = (int)$config['last_used_work_order_number'] + 1;
+        $last_used = (int)$this->get_value('last_used_work_order_number', '0') + 1;
 
         if ($save) {
             $this->save(['last_used_work_order_number' => $last_used]);
         }
 
-        return $last_used;
+        return (string)$last_used;
     }
+
 }

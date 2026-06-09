@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\TenantContext;
+use App\Libraries\TenantSeeder;
 use App\Models\Platform_admin;
 use App\Models\Subscription_request;
 use App\Models\Tenant;
@@ -202,6 +203,8 @@ class Super_admin extends BaseController
             ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'UTC'],
             ['tenant_id' => $tenant_id, 'config_key' => 'currency_code', 'config_value' => 'USD']
         ]);
+
+        (new TenantSeeder())->seedForTenant($tenant_id);
 
         $db->table('subscriptions')->insert([
             'tenant_id' => $tenant_id,

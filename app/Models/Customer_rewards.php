@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 
@@ -10,6 +11,7 @@ use CodeIgniter\Model;
  */
 class Customer_rewards extends Model
 {
+    use TenantAware;
     protected $table = 'customer_packages';
     protected $primaryKey = 'package_id';
     protected $useAutoIncrement = true;
@@ -17,7 +19,8 @@ class Customer_rewards extends Model
     protected $allowedFields = [
         'package_name',
         'points_percent',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
 
     /**
@@ -27,6 +30,7 @@ class Customer_rewards extends Model
     public function exists(int $package_id): bool
     {
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
         return ($builder->get()->getNumRows() >= 1);
@@ -46,11 +50,15 @@ class Customer_rewards extends Model
         ];
 
         if (!$this->exists($package_id)) {
+            if ($tenant_id = $this->tenantIdForInsert('customers_packages')) {
+                $package_data_to_save['tenant_id'] = $tenant_id;
+            }
             $builder = $this->db->table('customers_packages');
             return $builder->insert($package_data_to_save);
         }
 
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
         return $builder->update($package_data_to_save);
@@ -63,6 +71,7 @@ class Customer_rewards extends Model
     public function get_name(int $package_id): string
     {
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
         return $builder->get()->getRow()->package_name;
@@ -75,6 +84,7 @@ class Customer_rewards extends Model
     public function get_points_percent(int $package_id): float
     {
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
         return $builder->get()->getRow()->points_percent;
@@ -86,6 +96,7 @@ class Customer_rewards extends Model
     public function get_all(): ResultInterface
     {
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->get();
@@ -97,6 +108,7 @@ class Customer_rewards extends Model
     public function delete($package_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('customers_packages');
+        $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
         return $builder->update(['deleted' => 1]);

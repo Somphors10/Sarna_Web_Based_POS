@@ -7,31 +7,42 @@ use Config\OSPOS;
 
 class Saas extends BaseController
 {
+    private const SUBSCRIPTION_PLAN_CODE = 'pos_monthly';
+
+    private function getSubscriptionPlan(): ?array
+    {
+        $db = db_connect();
+
+        $plan = $db->table('plans')
+            ->where('plan_code', self::SUBSCRIPTION_PLAN_CODE)
+            ->where('is_active', 1)
+            ->get()
+            ->getRowArray();
+
+        if ($plan !== null) {
+            return $plan;
+        }
+
+        return $db->table('plans')
+            ->where('is_active', 1)
+            ->orderBy('price_monthly', 'desc')
+            ->get()
+            ->getRowArray();
+    }
+
     public function index(): string
     {
-        $plans = db_connect()->table('plans')
-            ->where('is_active', 1)
-            ->orderBy('price_monthly', 'asc')
-            ->get()
-            ->getResultArray();
-
         return view('saas/landing', [
             'config' => config(OSPOS::class)->settings,
-            'plans' => $plans
+            'plan' => $this->getSubscriptionPlan()
         ]);
     }
 
     public function register(): string
     {
-        $plans = db_connect()->table('plans')
-            ->where('is_active', 1)
-            ->orderBy('price_monthly', 'asc')
-            ->get()
-            ->getResultArray();
-
         return view('saas/register', [
             'config' => config(OSPOS::class)->settings,
-            'plans' => $plans,
+            'plan' => $this->getSubscriptionPlan(),
             'validation' => service('validation'),
             'has_errors' => false
         ]);
@@ -53,14 +64,26 @@ class Saas extends BaseController
             'payment_reference' => 'required|min_length[3]|max_length[100]'
         ];
 
+        $plan = $this->getSubscriptionPlan();
+        $register_view_data = [
+            'config' => config(OSPOS::class)->settings,
+            'plan' => $plan,
+            'validation' => $validation,
+        ];
+
+        if ($plan === null) {
+            $validation->setError('payment_reference', 'Subscription plan is not configured. Please contact support.');
+            return view('saas/register', $register_view_data + ['has_errors' => true]);
+        }
+
         if (!$this->validate($rules)) {
-            $plans = db_connect()->table('plans')->where('is_active', 1)->orderBy('price_monthly', 'asc')->get()->getResultArray();
-            return view('saas/register', [
-                'config' => config(OSPOS::class)->settings,
-                'plans' => $plans,
-                'validation' => $validation,
-                'has_errors' => true
-            ]);
+            return view('saas/register', $register_view_data + ['has_errors' => true]);
+        }
+
+        $submitted_plan_id = (int)$this->request->getPost('plan_id');
+        if ($submitted_plan_id !== (int)$plan['plan_id']) {
+            $validation->setError('payment_reference', 'Invalid subscription plan selected.');
+            return view('saas/register', $register_view_data + ['has_errors' => true]);
         }
 
         $db = db_connect();
@@ -71,13 +94,7 @@ class Saas extends BaseController
         $username_exists = $db->table('employees')->where('username', $owner_username)->countAllResults();
         if ($tenant_exists > 0 || $username_exists > 0) {
             $validation->setError('tenant_code', 'Company code or owner username already exists.');
-            $plans = $db->table('plans')->where('is_active', 1)->orderBy('price_monthly', 'asc')->get()->getResultArray();
-            return view('saas/register', [
-                'config' => config(OSPOS::class)->settings,
-                'plans' => $plans,
-                'validation' => $validation,
-                'has_errors' => true
-            ]);
+            return view('saas/register', $register_view_data + ['has_errors' => true]);
         }
 
         $request_model = model(Subscription_request::class);
@@ -90,7 +107,7 @@ class Saas extends BaseController
             'owner_phone' => (string)$this->request->getPost('owner_phone', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'owner_username' => $owner_username,
             'owner_password_hash' => password_hash((string)$this->request->getPost('owner_password'), PASSWORD_DEFAULT),
-            'plan_id' => (int)$this->request->getPost('plan_id'),
+            'plan_id' => (int)$plan['plan_id'],
             'payment_reference' => (string)$this->request->getPost('payment_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'status' => 'pending',
             'notes' => 'Submitted from website signup flow'

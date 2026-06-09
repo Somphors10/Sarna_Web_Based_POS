@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Model;
 
 /**
@@ -10,6 +11,8 @@ use CodeIgniter\Model;
 
 class Rewards extends Model    // TODO: This class is named with plural while the general practice is to name models singular
 {
+    use TenantAware;
+
     protected $table = 'sales_reward_points';
     protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
@@ -17,7 +20,8 @@ class Rewards extends Model    // TODO: This class is named with plural while th
     protected $allowedFields = [
         'sale_id',
         'earned',
-        'used'
+        'used',
+        'tenant_id'
     ];
 
     /**
@@ -27,6 +31,9 @@ class Rewards extends Model    // TODO: This class is named with plural while th
     {
         $builder = $this->db->table('sales_reward_points');
         if (!$rewards_id || !$this->exists($rewards_id)) {    // TODO: looks like we are missing the exists function in this class
+            if ($tenant_id = $this->tenantIdForInsert()) {
+                $rewards_data['tenant_id'] = $tenant_id;
+            }
             if ($builder->insert($rewards_data)) {
                 $rewards_data['id'] = $this->db->insertID();
 
@@ -36,6 +43,7 @@ class Rewards extends Model    // TODO: This class is named with plural while th
             return false;
         }
 
+        $this->scopeModelTenant($builder);
         $builder->where('id', $rewards_id);
 
         return $builder->update($rewards_data);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -12,6 +13,7 @@ use stdClass;
  */
 class Tax_code extends Model
 {
+    use TenantAware;
     protected $table = 'tax_codes';
     protected $primaryKey = 'tax_code_id';
     protected $useAutoIncrement = true;
@@ -21,7 +23,8 @@ class Tax_code extends Model
         'tax_code_name',
         'city',
         'state',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
 
     /**
@@ -30,6 +33,7 @@ class Tax_code extends Model
     public function exists(string $tax_code): bool
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_code', $tax_code);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: this should be === since getNumRows returns an int
@@ -41,6 +45,7 @@ class Tax_code extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -53,6 +58,7 @@ class Tax_code extends Model
     {
         if ($tax_code_id != null) {
             $builder = $this->db->table('tax_codes');
+            $this->scopeModelTenant($builder);
 
             $builder->where('tax_code_id', $tax_code_id);
             $builder->where('deleted', 0);
@@ -79,6 +85,7 @@ class Tax_code extends Model
     public function get_all(int $rows = 0, int $limit_from = 0, bool $no_deleted = true): ResultInterface    // TODO: $no_deleted should be something like $is_deleted and flip the logic.
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         if ($no_deleted) {
             $builder->where('deleted', 0);
         }
@@ -98,6 +105,7 @@ class Tax_code extends Model
     public function get_multiple_info(array $tax_codes): ResultInterface
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('tax_code', $tax_codes);
         $builder->orderBy('tax_code_name', 'asc');
 
@@ -112,12 +120,16 @@ class Tax_code extends Model
         $builder = $this->db->table('tax_codes');
 
         if (!$this->exists($tax_code_data['tax_code'])) {
+            if ($tenant_id = $this->tenantIdForInsert()) {
+                $tax_code_data['tenant_id'] = $tenant_id;
+            }
             if ($builder->insert($tax_code_data)) {    // TODO: this should be refactored to return $builder->insert($tax_code_data); in the same way that $builder->update() below is the return.  Look for this in the other save functions as well.
                 return true;
             }
             return false;
         }
 
+        $this->scopeModelTenant($builder);
         $builder->where('tax_code', $tax_code_data['tax_code']);
 
         return $builder->update($tax_code_data);
@@ -164,6 +176,7 @@ class Tax_code extends Model
     public function delete($tax_code = null, bool $purge = false): bool
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_code', $tax_code);
 
         return $builder->update(['deleted' => 1]);
@@ -175,6 +188,7 @@ class Tax_code extends Model
     public function delete_list(array $tax_codes): bool
     {
         $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('tax_code', $tax_codes);
 
         return $builder->update(['deleted' => 1]);
@@ -201,6 +215,7 @@ class Tax_code extends Model
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('tax_codes AS tax_codes');
+        $this->scopeModelTenant($builder, 'tax_codes');
 
         // get_found_rows case
         if ($count_only) {

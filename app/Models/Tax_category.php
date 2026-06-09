@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use stdClass;
@@ -12,6 +13,7 @@ use stdClass;
 
 class Tax_category extends Model
 {
+    use TenantAware;
     protected $table = 'tax_categories';
     protected $primaryKey = 'tax_category_id';
     protected $useAutoIncrement = true;
@@ -19,7 +21,8 @@ class Tax_category extends Model
     protected $allowedFields = [
         'tax_category',
         'tax_group_sequence',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
 
     /**
@@ -28,6 +31,7 @@ class Tax_category extends Model
     public function exists(int $tax_category_id): bool
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_category_id', $tax_category_id);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: probably should be ===
@@ -39,6 +43,7 @@ class Tax_category extends Model
     public function get_total_rows(): int
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->countAllResults();
@@ -50,6 +55,7 @@ class Tax_category extends Model
     public function get_info(int $tax_category_id): object
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_category_id', $tax_category_id);
         $builder->where('deleted', 0);
         $query = $builder->get();
@@ -75,6 +81,7 @@ class Tax_category extends Model
     public function get_all(int $rows = 0, int $limit_from = 0, bool $no_deleted = true): ResultInterface    // TODO: $no_deleted needs a new name.  $not_deleted is the correct grammar, but it's a bit confusing by naming the variable a negative.  Probably better to name it is_deleted and flip the logic
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         if ($no_deleted) {
             $builder->where('deleted', 0);
         }
@@ -95,6 +102,7 @@ class Tax_category extends Model
     public function get_multiple_info(array $tax_category_ids): ResultInterface
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('tax_category_id', $tax_category_ids);
         $builder->orderBy('tax_category', 'asc');
 
@@ -109,6 +117,9 @@ class Tax_category extends Model
         $builder = $this->db->table('tax_categories');
 
         if ($tax_category_id == NEW_ENTRY || !$this->exists($tax_category_id)) {
+            if ($tenant_id = $this->tenantIdForInsert()) {
+                $tax_category_data['tenant_id'] = $tenant_id;
+            }
             if ($builder->insert($tax_category_data)) {
                 $tax_category_data['tax_category_id'] = $this->db->insertID();
 
@@ -118,6 +129,7 @@ class Tax_category extends Model
             return false;
         }
 
+        $this->scopeModelTenant($builder);
         $builder->where('tax_category_id', $tax_category_id);
 
         return $builder->update($tax_category_data);
@@ -168,6 +180,7 @@ class Tax_category extends Model
     public function delete($tax_category_id = null, bool $purge = false): bool
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->where('tax_category_id', $tax_category_id);
 
         return $builder->update(['deleted' => 1]);
@@ -179,6 +192,7 @@ class Tax_category extends Model
     public function delete_list(array $tax_category_ids): bool
     {
         $builder = $this->db->table('tax_categories');
+        $this->scopeModelTenant($builder);
         $builder->whereIn('tax_category_id', $tax_category_ids);
 
         return $builder->update(['deleted' => 1]);
@@ -205,6 +219,7 @@ class Tax_category extends Model
         if ($count_only == null) $count_only = false;
 
         $builder = $this->db->table('tax_categories AS tax_categories');
+        $this->scopeModelTenant($builder, 'tax_categories');
 
         // get_found_rows case
         if ($count_only) {

@@ -15,7 +15,6 @@ class Receiving extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'receivings';
     protected $primaryKey = 'receiving_id';
     protected $useAutoIncrement = true;
@@ -70,7 +69,9 @@ class Receiving extends Model
             $pieces = explode(' ', $receipt_receiving_id);
 
             if (count($pieces) == 2 && preg_match('/(RECV|KIT)/', $pieces[0])) {
-                return $this->exists($pieces[1]);
+                $receiving_id = $this->resolveTenantPkBySequence('receivings', 'receiving_id', (int)$pieces[1]);
+
+                return $receiving_id !== null && $this->exists($receiving_id);
             } else {
                 return $this->get_receiving_by_reference($receipt_receiving_id)->getNumRows() > 0;
             }
@@ -285,6 +286,7 @@ class Receiving extends Model
     public function get_receiving_items(int $receiving_id): ResultInterface
     {
         $builder = $this->db->table('receivings_items');
+        $this->scopeTenant($builder, 'receivings_items.tenant_id');
         $builder->where('receiving_id', $receiving_id);
 
         return $builder->get();
@@ -297,10 +299,30 @@ class Receiving extends Model
     public function get_supplier(int $receiving_id): object
     {
         $builder = $this->db->table('receivings');
+        $this->scopeTenant($builder, 'receivings.tenant_id');
         $builder->where('receiving_id', $receiving_id);
 
         $supplier = model(Supplier::class);
         return $supplier->get_info($builder->get()->getRow()->supplier_id);
+    }
+
+    /**
+     * Per-tenant display number for a receiving (1, 2, 3...).
+     */
+    public function get_tenant_receiving_seq(int $receiving_id): int
+    {
+        if (!$this->db->fieldExists('tenant_id', 'receivings')) {
+            return $receiving_id;
+        }
+
+        $builder = $this->db->table('receivings AS receivings');
+        $builder->select($this->tenantSequenceSql('receivings', 'receiving_id', 'tenant_receiving_seq', 'receivings'), false);
+        $this->scopeTenant($builder, 'receivings.tenant_id');
+        $builder->where('receivings.receiving_id', $receiving_id);
+
+        $row = $builder->get()->getRow();
+
+        return $row ? (int)$row->tenant_receiving_seq : $receiving_id;
     }
 
     /**
@@ -332,6 +354,8 @@ class Receiving extends Model
         } else {
             $where = 'receivings_items.receiving_id = ' . $this->db->escape($inputs['receiving_id']);
         }
+
+        $where .= $this->tenantSqlAnd('receivings.tenant_id');
 
         $builder = $this->db->table('receivings_items');
         $builder->select([

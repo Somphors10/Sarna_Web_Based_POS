@@ -15,7 +15,6 @@ class Expense_category extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'expense_categories';
     protected $primaryKey = 'expense_category_id';
     protected $useAutoIncrement = true;

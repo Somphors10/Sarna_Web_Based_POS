@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantAware;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use CodeIgniter\Session\Session;
@@ -16,13 +17,16 @@ use CodeIgniter\Session\Session;
  */
 class Stock_location extends Model
 {
+    use TenantAware;
+
     protected $table = 'stock_locations';
     protected $primaryKey = 'location_id';
     protected $useAutoIncrement = true;
     protected $useSoftDeletes = false;
     protected $allowedFields = [
         'location_name',
-        'deleted'
+        'deleted',
+        'tenant_id'
     ];
 
     private Session $session;
@@ -35,6 +39,18 @@ class Stock_location extends Model
         $this->session = session();
     }
 
+    private function hasTenantColumn(): bool
+    {
+        return $this->db->tableExists('stock_locations') && $this->db->fieldExists('tenant_id', 'stock_locations');
+    }
+
+    private function scopeLocationTenant($builder, string $column = 'stock_locations.tenant_id'): void
+    {
+        if ($this->hasTenantColumn()) {
+            $this->scopeTenant($builder, $column);
+        }
+    }
+
     /**
      * @param int $location_id
      * @return bool
@@ -42,6 +58,7 @@ class Stock_location extends Model
     public function exists(int $location_id = NEW_ENTRY): bool
     {
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('location_id', $location_id);
 
         return ($builder->get()->getNumRows() >= 1);
@@ -53,6 +70,7 @@ class Stock_location extends Model
     public function get_all(): ResultInterface
     {
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->get();
@@ -64,14 +82,67 @@ class Stock_location extends Model
      */
     public function get_undeleted_all(string $module_id = 'items'): ResultInterface
     {
+        if ($this->hasTenantColumn() && $this->isTenantScopingEnabled()) {
+            return $this->getTenantScopedLocations($module_id);
+        }
+
         $builder = $this->db->table('stock_locations');
         $builder->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
         $builder->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
         $builder->where('person_id', $this->session->get('person_id'));
         $builder->like('permissions.permission_id', $module_id, 'after');
+        $this->scopeLocationTenant($builder);
         $builder->where('deleted', 0);
 
         return $builder->get();
+    }
+
+    /**
+     * Resolve stock locations for a tenant user.
+     * Grants copied from the default tenant still reference location_id=1 in permissions,
+     * so module-level grants must map to this tenant's own stock locations.
+     */
+    private function getTenantScopedLocations(string $module_id): ResultInterface
+    {
+        $person_id = (int)$this->session->get('person_id');
+        $builder = $this->db->table('stock_locations');
+        $builder->where('deleted', 0);
+        $this->scopeLocationTenant($builder);
+
+        if ($this->personHasTenantModuleAccess($person_id, $module_id)) {
+            $builder->orderBy('location_id', 'ASC');
+
+            return $builder->get();
+        }
+
+        $builder->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
+        $builder->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
+        $builder->where('person_id', $person_id);
+        $builder->like('permissions.permission_id', $module_id, 'after');
+
+        return $builder->get();
+    }
+
+    private function personHasTenantModuleAccess(int $person_id, string $module_id): bool
+    {
+        if ($person_id <= 0) {
+            return false;
+        }
+
+        $grants = $this->db->table('grants')
+            ->select('permission_id')
+            ->where('person_id', $person_id)
+            ->get()
+            ->getResultArray();
+
+        foreach ($grants as $grant) {
+            $permission_id = (string)$grant['permission_id'];
+            if ($permission_id === $module_id || $permission_id === $module_id . '_stock') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -116,12 +187,19 @@ class Stock_location extends Model
      */
     public function is_allowed_location(int $location_id, string $module_id = 'items'): bool
     {
+        if ($this->hasTenantColumn() && $this->isTenantScopingEnabled()) {
+            $allowed = $this->get_allowed_locations($module_id);
+
+            return isset($allowed[$location_id]);
+        }
+
         $builder = $this->db->table('stock_locations');
         $builder->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
         $builder->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
         $builder->where('person_id', $this->session->get('person_id'));
         $builder->like('permissions.permission_id', $module_id, 'after');
         $builder->where('stock_locations.location_id', $location_id);
+        $this->scopeLocationTenant($builder);
         $builder->where('deleted', 0);
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
@@ -133,15 +211,19 @@ class Stock_location extends Model
      */
     public function get_default_location_id(string $module_id = 'items'): int
     {
-        $builder = $this->db->table('stock_locations');
-        $builder->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
-        $builder->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
-        $builder->where('person_id', $this->session->get('person_id'));
-        $builder->like('permissions.permission_id', $module_id, 'after');
-        $builder->where('deleted', 0);
-        $builder->limit(1);
+        $row = $this->get_undeleted_all($module_id)->getRow();
+        if ($row !== null) {
+            return (int)$row->location_id;
+        }
 
-        return $builder->get()->getRow()->location_id;    // TODO: this is puking. Trying to get property 'location_id' of non-object
+        $builder = $this->db->table('stock_locations');
+        $builder->where('deleted', 0);
+        $this->scopeLocationTenant($builder);
+        $builder->orderBy('location_id', 'ASC');
+        $builder->limit(1);
+        $fallback = $builder->get()->getRow();
+
+        return $fallback !== null ? (int)$fallback->location_id : 0;
     }
 
     /**
@@ -151,9 +233,11 @@ class Stock_location extends Model
     public function get_location_name(int $location_id): string
     {
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('location_id', $location_id);
+        $row = $builder->get()->getRow();
 
-        return $builder->get()->getRow()->location_name;
+        return $row !== null ? (string)$row->location_name : '';
     }
 
     /**
@@ -163,9 +247,11 @@ class Stock_location extends Model
     public function get_location_id(string $location_name): int
     {
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('location_name', $location_name);
+        $row = $builder->get()->getRow();
 
-        return $builder->get()->getRow()->location_id;
+        return $row !== null ? (int)$row->location_id : 0;
     }
 
     /**
@@ -178,6 +264,9 @@ class Stock_location extends Model
         $location_name = $location_data['location_name'];
 
         $location_data_to_save = ['location_name' => $location_name, 'deleted' => 0];
+        if ($this->hasTenantColumn()) {
+            $location_data_to_save['tenant_id'] = $this->getTenantId();
+        }
 
         if (!$this->exists($location_id)) {
             $this->db->transStart();
@@ -201,6 +290,9 @@ class Stock_location extends Model
                     'location_id' => $location_id,
                     'quantity'    => 0
                 ];
+                if ($this->db->fieldExists('tenant_id', 'item_quantities')) {
+                    $quantity_data['tenant_id'] = $this->getTenantId();
+                }
                 $builder->insert($quantity_data);
             }
 
@@ -221,6 +313,7 @@ class Stock_location extends Model
         }
 
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('location_id', $location_id);
 
         return $builder->update($location_data_to_save);
@@ -241,7 +334,7 @@ class Stock_location extends Model
         $builder = $this->db->table('permissions');
         $builder->insert($permission_data);
 
-        // Insert grants for new permission
+        // Insert grants for new permission (current tenant employees only)
         $employee = model(Employee::class);
         $employees = $employee->get_all();
 
@@ -270,6 +363,7 @@ class Stock_location extends Model
         $this->db->transStart();
 
         $builder = $this->db->table('stock_locations');
+        $this->scopeLocationTenant($builder);
         $builder->where('location_id', $location_id);
         $builder->update(['deleted' => 1]);
 

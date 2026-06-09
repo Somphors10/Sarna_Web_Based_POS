@@ -17,6 +17,8 @@ use ReflectionException;
 
 class Receivings extends Secure_Controller
 {
+    protected $helpers = ['tabular'];
+
     private Receiving_lib $receiving_lib;
     private Token_lib $token_lib;
     private Barcode_lib $barcode_lib;
@@ -247,6 +249,7 @@ class Receivings extends Secure_Controller
         }
 
         $receiving_info = $this->receiving->get_info($receiving_id)->getRowArray();
+        $receiving_info['tenant_receiving_seq'] = $this->receiving->get_tenant_receiving_seq((int)$receiving_id);
         $data['selected_supplier_name'] = !empty($receiving_info['supplier_id']) ? $receiving_info['company_name'] : '';
         $data['selected_supplier_id'] = $receiving_info['supplier_id'];
         $data['receiving_info'] = $receiving_info;
@@ -346,9 +349,10 @@ class Receivings extends Secure_Controller
         }
 
         // SAVE receiving to database
-        $data['receiving_id'] = 'RECV ' . $this->receiving->save_value($data['cart'], $supplier_id, $employee_id, $data['comment'], $data['reference'], $data['payment_type'], $data['stock_location']);
+        $receiving_pk = $this->receiving->save_value($data['cart'], $supplier_id, $employee_id, $data['comment'], $data['reference'], $data['payment_type'], $data['stock_location']);
+        $data['receiving_id'] = tenant_receiving_label($receiving_pk);
 
-        if ($data['receiving_id'] == 'RECV -1') {
+        if ($receiving_pk == -1) {
             $data['error_message'] = lang('Receivings.transaction_failed');
         } else {
             $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
@@ -402,7 +406,7 @@ class Receivings extends Secure_Controller
         $data['show_stock_locations'] = $this->stock_location->show_locations('receivings');
         $data['payment_type'] = $receiving_info['payment_type'];
         $data['reference'] = $this->receiving_lib->get_reference();
-        $data['receiving_id'] = 'RECV ' . $receiving_id;
+        $data['receiving_id'] = tenant_receiving_label((int)$receiving_id);
         $data['barcode'] = $this->barcode_lib->generate_receipt_barcode($data['receiving_id']);
         $employee_info = $this->employee->get_info($receiving_info['employee_id']);
         $data['employee'] = $employee_info->first_name . ' ' . $employee_info->last_name;

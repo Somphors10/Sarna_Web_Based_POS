@@ -1,0 +1,746 @@
+
+
+<!doctype html>
+<html lang="ar-EG">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <base href="http://localhost/opensourcepos/public/">
+    <title>Open Source Point of Sale | Powered by OSPOS 3.4.2</title>
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="resources/bootswatch/flatly/bootstrap.min.css">
+
+            <!--inject:prod:css -->
+        <!-- endinject -->
+        <link rel="stylesheet" href="css/dashboard.css">
+        <link rel="stylesheet" href="css/forms.css">
+
+        <!-- Tweaks to the UI for a particular theme should drop here  -->
+                <!-- inject:prod:js -->
+        <!-- endinject -->
+    
+            <script src="resources/jquery-2c872dbe60.min.js"></script>
+            <script src="resources/opensourcepos-887816d5a6.min.js"></script>
+    
+    
+<script type="text/javascript">
+    // Live clock
+    var clock_tick = function clock_tick() {
+        setInterval('update_clock();', 1000);
+    }
+
+    // Start the clock immediately
+    clock_tick();
+
+    var update_clock = function update_clock() {
+        document.getElementById('liveclock').innerHTML = moment().format("MM/DD/YYYY HH:mm:ss");
+    }
+
+    const notify = $.notify;
+
+    $.notify = function(content, options) {
+        const message = typeof content === "object" ? content.message : content;
+        const sanitizedMessage = DOMPurify.sanitize(message);
+        return notify(sanitizedMessage, options);
+    };
+
+    $.notifyDefaults({
+        placement: {
+            align: "center",
+            from: "bottom"
+        }
+    });
+
+    var csrf_token = function() {
+        return "6238a59faf1059f051b87a4db8360755";
+    };
+
+    var csrf_form_base = function() {
+        return {
+            csrf_ospos_v4: function() {
+                return csrf_token()
+            }
+        }
+    };
+
+    var setup_csrf_token = function() {
+        $('input[name="csrf_ospos_v4"]').val(csrf_token());
+    };
+
+    var ajax = $.ajax;
+
+    $.ajax = function() {
+        var args = arguments[0];
+        if (args['type'] && args['type'].toLowerCase() == 'post' && csrf_token()) {
+            if (typeof args['data'] === 'string') {
+                args['data'] += '&' + $.param(csrf_form_base());
+            } else {
+                args['data'] = $.extend(args['data'], csrf_form_base());
+            }
+        }
+
+        return ajax.apply(this, arguments);
+    };
+
+    $(document).ajaxComplete(setup_csrf_token);
+    $(document).ready(function() {
+        $("#logout").click(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: "http://localhost/opensourcepos/public/home/logout",
+                data: {
+                    "csrf_ospos_v4": csrf_token()
+                },
+                success: function() {
+                    window.location.href = 'http://localhost/opensourcepos/public/';
+                },
+                method: "POST"
+            });
+        });
+    });
+
+    var submit = $.fn.submit;
+
+    $.fn.submit = function() {
+        setup_csrf_token();
+        submit.apply(this, arguments);
+    };
+</script>
+    <script type="text/javascript">
+    (function(lang, $) {
+
+        var lines = {
+            'common_submit': "Submit",
+            'common_close': "Close"
+        };
+
+        $.extend(lang, {
+            line: function(key) {
+                return lines[key];
+            }
+        });
+
+    })(window.lang = window.lang || {}, jQuery);
+</script>
+
+    <style>
+        html {
+            overflow: auto;
+        }
+    </style>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+            const isCollapsed = localStorage.getItem(key) === '1';
+            if (window.innerWidth > 992 && isCollapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+
+            const syncForViewport = function() {
+                if (window.innerWidth <= 992) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem(key) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('neo_sidebar_toggle');
+                const mobileToggle = document.getElementById('neo_mobile_sidebar_toggle');
+                const mobileBackdrop = document.getElementById('neo_sidebar_backdrop');
+                if (!toggle) {
+                    return;
+                }
+
+                const setExpandedState = function() {
+                    toggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+                };
+
+                toggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        return;
+                    }
+
+                    document.documentElement.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(key, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                    setExpandedState();
+                });
+
+                const closeMobileSidebar = function() {
+                    document.documentElement.classList.remove('mobile-sidebar-open');
+                };
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function() {
+                        if (window.innerWidth > 992) {
+                            return;
+                        }
+                        document.documentElement.classList.toggle('mobile-sidebar-open');
+                    });
+                }
+
+                if (mobileBackdrop) {
+                    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+
+                window.addEventListener('resize', function() {
+                    syncForViewport();
+                    setExpandedState();
+                    if (window.innerWidth > 992) {
+                        document.documentElement.classList.remove('mobile-sidebar-open');
+                    }
+                });
+
+                syncForViewport();
+                setExpandedState();
+            });
+        })();
+    </script>
+    <div class="wrapper">
+        <div class="neo-layout">
+            <aside class="neo-global-sidebar">
+                <div class="neo-global-brand-row">
+                    <a class="neo-global-brand" href="http://localhost/opensourcepos/public/">
+                        <span class="neo-global-brand-full">OSPOS</span>
+                        <span class="neo-global-brand-mini">O</span>
+                    </a>
+                    <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </button>
+                </div>
+                <div class="neo-global-sidebar-body">
+                    <nav class="neo-global-menu">
+                                                                            <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/home" title="Home">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/home.svg" alt="Home">
+                                </span>
+                                <span>Home</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/employees" title="Employees">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/employees.svg" alt="Employees">
+                                </span>
+                                <span>Employees</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/attributes" title="Attributes">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/attributes.svg" alt="Attributes">
+                                </span>
+                                <span>Attributes</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/expenses_categories" title="Expenses Categories">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/expenses_categories.svg" alt="Expenses Categories">
+                                </span>
+                                <span>Expenses Categories</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/config" title="Configuration">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/config.svg" alt="Configuration">
+                                </span>
+                                <span>Configuration</span>
+                            </a>
+                                            </nav>
+                </div>
+            </aside>
+            <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
+
+            <main class="neo-global-content">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
+                            <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock">06/09/2026 09:01:51</div>
+                        </div>
+
+                        <div class="navbar-center pos-topbar-company">
+                            <strong>Open Source Point of Sale</strong>
+                        </div>
+
+                        <div class="navbar-right pos-topbar-user">
+                            <a href="http://localhost/opensourcepos/public/home/changePassword/1" class="modal-dlg pos-user-link" data-btn-submit="Submit" title="Change Password">John Doe</a>                            <a href="http://localhost/opensourcepos/public/home/logout" class="pos-logout-link">Logout</a>                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+
+
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title">Sales</h3>
+            <p class="neo-module-subtitle">Welcome to OSPOS, click a module below to get started.</p>
+        </div>
+    </header>
+
+<div id="register_wrapper">
+
+    <!-- Top register controls -->
+    <form action="http://localhost/opensourcepos/public/sales/changeMode" id="mode_form" class="form-horizontal panel panel-default" method="post" accept-charset="utf-8">
+<input type="hidden" name="csrf_ospos_v4" value="6238a59faf1059f051b87a4db8360755">        <div class="panel-body form-group">
+            <ul>
+                <li class="pull-left first_li">
+                    <label class="control-label">Register Mode</label>
+                </li>
+                <li class="pull-left">
+                    <select name="mode" onchange="$(&#039;#mode_form&#039;).submit();" class="selectpicker show-menu-arrow" data-style="btn-default btn-sm" data-width="fit">
+<option value="sale" selected="selected">Sales Receipt</option>
+<option value="sale_quote">Quote</option>
+<option value="sale_invoice">Invoice</option>
+<option value="return">Return</option>
+</select>
+                </li>
+                                
+                <li class="pull-right">
+                    <button class="btn btn-default btn-sm modal-dlg" id="show_suspended_sales_button" data-href="sales/suspended"
+                        title="Suspended">
+                        <span class="glyphicon glyphicon-align-justify">&nbsp;</span>Suspended                    </button>
+                </li>
+
+                                    <li class="pull-right">
+                        <a href="http://localhost/opensourcepos/public/sales/manage" class="btn btn-primary btn-sm" id="sales_takings_button" title="Daily Sales"><span class="glyphicon glyphicon-list-alt">&nbsp;</span>Daily Sales</a>                    </li>
+                            </ul>
+        </div>
+    <div style="display:none"><label>Fill This Field</label><input type="text" name="honeypot" value=""></div></form>
+    
+    <form action="http://localhost/opensourcepos/public/sales/add" id="add_item_form" class="form-horizontal panel panel-default" method="post" accept-charset="utf-8">
+<input type="hidden" name="csrf_ospos_v4" value="6238a59faf1059f051b87a4db8360755">        <div class="panel-body form-group">
+            <ul>
+                <li class="pull-left first_li">
+                    <label for="item" class="control-label">Find or Scan Item or Receipt</label>
+                </li>
+                <li class="pull-left">
+                    <input type="text" name="item" value="" id="item" class="form-control input-sm" size="50" tabindex="1">
+                    <span class="ui-helper-hidden-accessible" role="status"></span>
+                </li>
+                <li class="pull-right">
+                    <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="New" data-btn-submit="Submit" data-href="items/view" title="New Item">
+                        <span class="glyphicon glyphicon-tag">&nbsp;</span>New Item                    </button>
+                </li>
+            </ul>
+        </div>
+    <div style="display:none"><label>Fill This Field</label><input type="text" name="honeypot" value=""></div></form>
+
+    <!-- Sale Items List -->
+
+    <table class="sales_table_100" id="register">
+        <thead>
+            <tr>
+                <th style="width: 5%;">Delete</th>
+                <th style="width: 15%;">Item #</th>
+                <th style="width: 30%;">Item Name</th>
+                <th style="width: 10%;">Price</th>
+                <th style="width: 10%;">Quantity</th>
+                <th style="width: 15%;">Disc</th>
+                <th style="width: 10%;">Total</th>
+                <th style="width: 5%;">Update</th>
+            </tr>
+        </thead>
+
+        <tbody id="cart_contents">
+                            <tr>
+                    <td colspan="8">
+                        <div class="alert alert-dismissible alert-info">There are no Items in the cart.</div>
+                    </td>
+                </tr>
+                    </tbody>
+    </table>
+</div>
+
+<!-- Overall Sale -->
+
+<div id="overall_sale" class="panel panel-default">
+    <div class="panel-body">
+        <form action="http://localhost/opensourcepos/public/sales/selectCustomer" id="select_customer_form" class="form-horizontal" method="post" accept-charset="utf-8">
+<input type="hidden" name="csrf_ospos_v4" value="6238a59faf1059f051b87a4db8360755">                            <div class="form-group" id="select_customer">
+                    <label id="customer_label" for="customer" class="control-label" style="margin-bottom: 1em; margin-top: -1em;">
+                        Select Customer (Required for Due Payments)                    </label>
+                    <input type="text" name="customer" value="Start typing customer details..." id="customer" class="form-control input-sm">
+
+                    <button class="btn btn-info btn-sm modal-dlg" data-btn-submit="Submit" data-href="customers/view" title="New Customer">
+                        <span class="glyphicon glyphicon-user">&nbsp;</span>New Customer                    </button>
+                    <button class="btn btn-default btn-sm modal-dlg" id="show_keyboard_help" data-href="sales/salesKeyboardHelp" title="Sales Keyboard Shortcuts">
+                        <span class="glyphicon glyphicon-share-alt">&nbsp;</span>Shortcuts                    </button>
+                </div>
+                    <div style="display:none"><label>Fill This Field</label><input type="text" name="honeypot" value=""></div></form>
+        <table class="sales_table_100" id="sale_totals">
+            <tr>
+                <th style="width: 55%;">Quantity of 0 Items</th>
+                <th style="width: 45%; text-align: right;">0</th>
+            </tr>
+            <tr>
+                <th style="width: 55%;">Subtotal</th>
+                <th style="width: 45%; text-align: right;">$0.00</th>
+            </tr>
+                        <tr>
+                <th style="width: 55%; font-size: 150%">Total</th>
+                <th style="width: 45%; font-size: 150%; text-align: right;"><span id="sale_total">$0.00</span></th>
+            </tr>
+        </table>
+
+            </div>
+</div>
+</section>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        const redirect = function() {
+            window.location.href = "http://localhost/opensourcepos/public/sales";
+        };
+
+        $("#remove_customer_button").click(function() {
+            $.post("http://localhost/opensourcepos/public/sales/removeCustomer", redirect);
+        });
+
+        $(".delete_item_button").click(function() {
+            const item_id = $(this).data('item-id');
+            $.post("http://localhost/opensourcepos/public/sales/deleteItem/" + item_id, redirect);
+        });
+
+        $(".delete_payment_button").click(function() {
+            const item_id = $(this).data('payment-id');
+            $.post("http://localhost/opensourcepos/public/sales/deletePayment/" + item_id, redirect);
+        });
+
+        $("input[name='item_number']").change(function() {
+            var item_id = $(this).parents('tr').find("input[name='item_id']").val();
+            var item_number = $(this).val();
+            $.ajax({
+                url: "http://localhost/opensourcepos/public/sales/changeItemNumber",
+                method: 'post',
+                data: {
+                    'item_id': item_id,
+                    'item_number': item_number,
+                },
+                dataType: 'json'
+            });
+        });
+
+        $("input[name='name']").change(function() {
+            var item_id = $(this).parents('tr').find("input[name='item_id']").val();
+            var item_name = $(this).val();
+            $.ajax({
+                url: "http://localhost/opensourcepos/public/sales/changeItemName",
+                method: 'post',
+                data: {
+                    'item_id': item_id,
+                    'item_name': item_name,
+                },
+                dataType: 'json'
+            });
+        });
+
+        $("input[name='item_description']").change(function() {
+            var item_id = $(this).parents('tr').find("input[name='item_id']").val();
+            var item_description = $(this).val();
+            $.ajax({
+                url: "http://localhost/opensourcepos/public/sales/changeItemDescription",
+                method: 'post',
+                data: {
+                    'item_id': item_id,
+                    'item_description': item_description,
+                },
+                dataType: 'json'
+            });
+        });
+
+        $('#item').focus();
+
+        $('#item').blur(function() {
+            $(this).val("Start typing Item Name or scan Barcode...");
+        });
+
+        $('#item').autocomplete({
+            source: "sales/itemSearch",
+            minChars: 0,
+            autoFocus: false,
+            delay: 500,
+            select: function(a, ui) {
+                $(this).val(ui.item.value);
+                $('#add_item_form').submit();
+                return false;
+            }
+        });
+
+        $('#item').keypress(function(e) {
+            if (e.which == 13) {
+                $('#add_item_form').submit();
+                return false;
+            }
+        });
+
+        var clear_fields = function() {
+            if ($(this).val().match("Start typing Item Name or scan Barcode...|Start typing customer details...")) {
+                $(this).val('');
+            }
+        };
+
+        $('#item, #customer').click(clear_fields).dblclick(function(event) {
+            $(this).autocomplete('search');
+        });
+
+        $('#customer').blur(function() {
+            $(this).val("Start typing customer details...");
+        });
+
+        $('#customer').autocomplete({
+            source: "http://localhost/opensourcepos/public/customers/suggest",
+            minChars: 0,
+            delay: 10,
+            select: function(a, ui) {
+                $(this).val(ui.item.value);
+                $('#select_customer_form').submit();
+                return false;
+            }
+        });
+
+        $('#customer').keypress(function(e) {
+            if (e.which == 13) {
+                $('#select_customer_form').submit();
+                return false;
+            }
+        });
+
+        $('.giftcard-input').autocomplete({
+            source: "http://localhost/opensourcepos/public/giftcards/suggest",
+            minChars: 0,
+            delay: 10,
+            select: function(a, ui) {
+                $(this).val(ui.item.value);
+                $('#add_payment_form').submit();
+                return false;
+            }
+        });
+
+        $('#comment').keyup(function() {
+            $.post("http://localhost/opensourcepos/public/sales/setComment", {
+                comment: $('#comment').val()
+            });
+        });
+
+                    $('#sales_invoice_number').keyup(function() {
+                $.post("http://localhost/opensourcepos/public/sales/setInvoiceNumber", {
+                    sales_invoice_number: $('#sales_invoice_number').val()
+                });
+            });
+
+        
+        $('#sales_print_after_sale').change(function() {
+            $.post("http://localhost/opensourcepos/public/sales/setPrintAfterSale", {
+                sales_print_after_sale: $(this).is(':checked')
+            });
+        });
+
+        $('#price_work_orders').change(function() {
+            $.post("http://localhost/opensourcepos/public/sales/setPriceWorkOrders", {
+                price_work_orders: $(this).is(':checked')
+            });
+        });
+
+        $('#email_receipt').change(function() {
+            $.post("http://localhost/opensourcepos/public/sales/setEmailReceipt", {
+                email_receipt: $(this).is(':checked')
+            });
+        });
+
+        $('#finish_sale_button').click(function() {
+            $('#buttons_form').attr('action', "sales/complete");
+            $('#buttons_form').submit();
+        });
+
+        $('#finish_invoice_quote_button').click(function() {
+            $('#buttons_form').attr('action', "sales/complete");
+            $('#buttons_form').submit();
+        });
+
+        $('#suspend_sale_button').click(function() {
+            $('#buttons_form').attr('action', "http://localhost/opensourcepos/public/sales/suspend");
+            $('#buttons_form').submit();
+        });
+
+        $('#cancel_sale_button').click(function() {
+            if (confirm("Are you sure you want to clear this sale? All items will be cleared.")) {
+                $('#buttons_form').attr('action', "http://localhost/opensourcepos/public/sales/cancel");
+                $('#buttons_form').submit();
+            }
+        });
+
+        $('#add_payment_button').click(function() {
+            $('#add_payment_form').submit();
+        });
+
+        $('#payment_types').change(check_payment_type).ready(check_payment_type);
+
+        $('#cart_contents input').keypress(function(event) {
+            if (event.which == 13) {
+                $(this).parents('tr').prevAll('form:first').submit();
+            }
+        });
+
+        $('#amount_tendered').keypress(function(event) {
+            if (event.which == 13) {
+                $('#add_payment_form').submit();
+            }
+        });
+
+        $('#finish_sale_button').keypress(function(event) {
+            if (event.which == 13) {
+                $('#finish_sale_form').submit();
+            }
+        });
+
+        dialog_support.init('a.modal-dlg, button.modal-dlg');
+
+        table_support.handle_submit = function(resource, response, stay_open) {
+            $.notify({
+                message: response.message
+            }, {
+                type: response.success ? 'success' : 'danger'
+            })
+
+            if (response.success) {
+                if (resource.match(/customers$/)) {
+                    $('#customer').val(response.id);
+                    $('#select_customer_form').submit();
+                } else {
+                    var $stock_location = $("select[name='stock_location']").val();
+                    $('#item_location').val($stock_location);
+                    $('#item').val(response.id);
+                    if (stay_open) {
+                        $('#add_item_form').ajaxSubmit();
+                    } else {
+                        $('#add_item_form').submit();
+                    }
+                }
+            }
+        }
+
+        $('[name="price"],[name="quantity"],[name="discount"],[name="description"],[name="serialnumber"],[name="discounted_total"]').change(function() {
+            $(this).parents('tr').prevAll('form:first').submit()
+        });
+
+        $('[name="discount_toggle"]').change(function() {
+            var input = $('<input>').attr('type', 'hidden').attr('name', 'discount_type').val(($(this).prop('checked')) ? 1 : 0);
+            $('#cart_' + $(this).attr('data-line')).append($(input));
+            $('#cart_' + $(this).attr('data-line')).submit();
+        });
+    });
+
+    function check_payment_type() {
+        var cash_mode = 0;
+
+        if ($("#payment_types").val() == "Gift Card") {
+            $("#sale_total").html("$0.00");
+            $("#sale_amount_due").html("$0.00");
+            $("#amount_tendered_label").html("Gift Card Number");
+            $("#amount_tendered:enabled").val('').focus();
+            $(".giftcard-input").attr('disabled', false);
+            $(".non-giftcard-input").attr('disabled', true);
+            $(".giftcard-input:enabled").val('').focus();
+        } else if (($("#payment_types").val() == "Cash" && cash_mode == '1')) {
+            $("#sale_total").html("$0.00");
+            $("#sale_amount_due").html("$0.00");
+            $("#amount_tendered_label").html("Amount Tendered");
+            $("#amount_tendered:enabled").val("0.00");
+            $(".giftcard-input").attr('disabled', true);
+            $(".non-giftcard-input").attr('disabled', false);
+        } else {
+            $("#sale_total").html("$0.00");
+            $("#sale_amount_due").html("$0.00");
+            $("#amount_tendered_label").html("Amount Tendered");
+            $("#amount_tendered:enabled").val("0.00");
+            $(".giftcard-input").attr('disabled', true);
+            $(".non-giftcard-input").attr('disabled', false);
+        }
+    }
+
+    // Add Keyboard Shortcuts/Hotkeys to Sale Register
+    document.body.onkeyup = function(e) {
+        switch (event.altKey && event.keyCode) {
+            case 49: // Alt + 1 Items Seach
+                $("#item").focus();
+                $("#item").select();
+                break;
+            case 50: // Alt + 2 Customers Search
+                $("#customer").focus();
+                $("#customer").select();
+                break;
+            case 51: // Alt + 3 Suspend Current Sale
+                $("#suspend_sale_button").click();
+                break;
+            case 52: // Alt + 4 Check Suspended
+                $("#show_suspended_sales_button").click();
+                break;
+            case 53: // Alt + 5 Edit Amount Tendered Value
+                $("#amount_tendered").focus();
+                $("#amount_tendered").select();
+                break;
+            case 54: // Alt + 6 Add Payment
+                $("#add_payment_button").click();
+                break;
+            case 55: // Alt + 7 Add Payment and Complete Sales/Invoice
+                $("#add_payment_button").click();
+                window.location.href = "sales/complete";
+                break;
+            case 56: // Alt + 8 Finish Quote/Invoice without payment
+                $("#finish_invoice_quote_button").click();
+                break;
+            case 57: // Alt + 9 Open Shortcuts Help Modal
+                $("#show_keyboard_help").click();
+                break;
+        }
+
+        switch (event.keyCode) {
+            case 27: // ESC Cancel Current Sale
+                $("#cancel_sale_button").click();
+                break;
+        }
+    }
+</script>
+
+
+        </div>
+    </div>
+</main>
+</div>
+
+    <div id="footer" class="pos-footer-wrap">
+        <div class="jumbotron push-spaces pos-footer">
+            <strong class="pos-footer-text">
+                © 2010 - 2026                <span class="pos-footer-separator">·</span>
+                <a href="https://opensourcepos.org" target="_blank">opensourcepos.org</a>
+                <span class="pos-footer-separator">·</span>
+                3.4.2 -
+                <a target="_blank" href="https://github.com/opensourcepos/opensourcepos/commit/dev">
+                    dev                </a>
+            </strong>
+        </div>
+    </div>
+</body>
+
+</html>

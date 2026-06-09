@@ -30,6 +30,53 @@ body.login-page {
     background-color: var(--pos-bg);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-topbar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+    padding: 0.85rem 1.5rem;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--pos-border);
+    backdrop-filter: blur(8px);
+}
+
+.login-topbar__brand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--pos-text);
+    text-decoration: none;
+}
+
+.login-topbar__brand:hover {
+    color: var(--pos-accent);
+}
+
+.login-topbar__link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--pos-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--pos-accent);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.login-topbar__link:hover {
+    border-color: var(--pos-accent);
+    background: var(--pos-accent-soft);
 }
 
 /* Workspace grid like register screen */
@@ -206,9 +253,10 @@ body.login-page::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     padding: 1.25rem;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .login-card {
@@ -219,7 +267,6 @@ body.login-page::before {
     border-radius: 12px;
     box-shadow: var(--login-shadow);
     padding: 2.25rem 2rem 1.85rem;
-    overflow: hidden;
 }
 
 .login-card__title {
@@ -375,6 +422,22 @@ body.login-page::before {
 
 .login-submit:active {
     transform: translateY(1px);
+}
+
+.login-card__footer {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.login-card__link {
+    color: var(--pos-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-card__link:hover {
+    text-decoration: underline;
 }
 
 .login-alert {

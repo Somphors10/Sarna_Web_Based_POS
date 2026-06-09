@@ -1,121 +1,181 @@
 <?php
 /**
  * @var array $config
- * @var array $plans
+ * @var array|null $plan
  * @var bool $has_errors
  * @var $validation
  */
+$monthly_price = 10.00;
+$plan_id = (int)($plan['plan_id'] ?? 0);
+$company = esc($config['company']);
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title><?= esc($config['company']) ?> | Register Service</title>
+    <title><?= $company ?> | Start Subscription</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=5">
 </head>
-<body class="saas-modern">
-<main class="container py-4 saas-shell">
-    <section class="saas-card">
-        <div class="saas-register-layout">
-            <div class="saas-register-main">
-                <h1 class="saas-register-title">Start Your POS Subscription</h1>
-                <p class="saas-subtitle mb-4">Create your business account and submit payment reference for fast activation.</p>
+<body class="saas-modern saas-landing-body">
 
+<header class="lp-nav lp-nav--scrolled" id="lp-nav">
+    <div class="lp-nav__inner saas-shell">
+        <a class="lp-brand" href="<?= site_url() ?>">
+            <span class="lp-brand__mark">P</span>
+            <span class="lp-brand__name"><?= $company ?></span>
+        </a>
+        <div class="lp-nav__actions">
+            <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
+            <a class="lp-btn lp-btn--outline" href="<?= site_url() ?>">Back to home</a>
+        </div>
+    </div>
+</header>
+
+<main class="lp-reg">
+    <div class="lp-reg__header saas-shell">
+        <p class="lp-label">POS Subscription</p>
+        <h1 class="lp-reg__title">Start Your POS Subscription</h1>
+        <p class="lp-reg__subtitle">Full access to sales, inventory, reports &amp; staff — <strong>$<?= number_format($monthly_price, 0) ?>/month</strong></p>
+    </div>
+
+    <div class="lp-reg__layout saas-shell">
+        <div class="lp-reg__form-wrap">
             <?php if ($has_errors): ?>
-                <?php foreach ($validation->getErrors() as $error): ?>
-                    <div class="alert alert-danger"><?= esc($error) ?></div>
-                <?php endforeach; ?>
+                <div class="lp-reg__alert">
+                    <?php foreach ($validation->getErrors() as $error): ?>
+                        <p><?= esc($error) ?></p>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
 
-            <?= form_open('saas/register') ?>
-            <p class="saas-section-title">Business Information</p>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Company Name</label>
-                    <input class="form-control" name="company_name" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Company Code</label>
-                    <input class="form-control" name="tenant_code" required>
-                </div>
-            </div>
+            <?= form_open('saas/register', ['class' => 'lp-reg__form']) ?>
+            <input type="hidden" name="plan_id" value="<?= esc($plan_id) ?>">
 
-            <p class="saas-section-title mt-4">Owner Account</p>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Owner First Name</label>
-                    <input class="form-control" name="owner_first_name" required>
+            <section class="lp-reg__section">
+                <div class="lp-reg__section-head">
+                    <span class="lp-reg__step">1</span>
+                    <div>
+                        <h2>Business information</h2>
+                        <p>Tell us about your store</p>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Owner Last Name</label>
-                    <input class="form-control" name="owner_last_name" required>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="company_name">Company name</label>
+                        <input class="lp-field-input" id="company_name" name="company_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="tenant_code">Company code</label>
+                        <input class="lp-field-input" id="tenant_code" name="tenant_code" placeholder="my-store" required>
+                        <span class="lp-field-hint">Short unique code (letters, numbers, dash)</span>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Owner Email</label>
-                    <input type="email" class="form-control" name="owner_email" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Owner Phone</label>
-                    <input class="form-control" name="owner_phone">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">POS Username</label>
-                    <input class="form-control" name="owner_username" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">POS Password</label>
-                    <input type="password" class="form-control" name="owner_password" required>
-                </div>
-            </div>
+            </section>
 
-            <p class="saas-section-title mt-4">Subscription and Payment</p>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Plan</label>
-                    <select class="form-select" name="plan_id" required>
-                        <?php foreach ($plans as $plan): ?>
-                            <option value="<?= esc($plan['plan_id']) ?>">
-                                <?= esc($plan['plan_name']) ?> - $<?= esc(number_format((float)$plan['price_monthly'], 2)) ?>/month
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+            <section class="lp-reg__section">
+                <div class="lp-reg__section-head">
+                    <span class="lp-reg__step">2</span>
+                    <div>
+                        <h2>Owner account</h2>
+                        <p>Your login credentials for the POS</p>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Payment Reference</label>
-                    <input class="form-control" name="payment_reference" placeholder="Transaction/Receipt ID" required>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_first_name">First name</label>
+                        <input class="lp-field-input" id="owner_first_name" name="owner_first_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_last_name">Last name</label>
+                        <input class="lp-field-input" id="owner_last_name" name="owner_last_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_email">Email</label>
+                        <input class="lp-field-input" type="email" id="owner_email" name="owner_email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_phone">Phone</label>
+                        <input class="lp-field-input" id="owner_phone" name="owner_phone">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_username">POS username</label>
+                        <input class="lp-field-input" id="owner_username" name="owner_username" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_password">POS password</label>
+                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" required>
+                        <span class="lp-field-hint">Minimum 8 characters</span>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="mt-4 d-flex flex-wrap gap-2">
-                <button class="btn btn-primary" type="submit">Submit and Buy</button>
-                <a class="btn btn-outline-secondary" href="<?= site_url('saas') ?>">Back</a>
+            <section class="lp-reg__section">
+                <div class="lp-reg__section-head">
+                    <span class="lp-reg__step">3</span>
+                    <div>
+                        <h2>Payment reference</h2>
+                        <p>Scan the QR code, pay $<?= number_format($monthly_price, 0) ?>, then paste your receipt ID</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="lp-field-label" for="payment_reference">Transaction / receipt ID</label>
+                        <input class="lp-field-input" id="payment_reference" name="payment_reference" placeholder="e.g. ABA receipt number" required>
+                    </div>
+                </div>
+            </section>
+
+            <div class="lp-reg__actions">
+                <button class="lp-btn lp-btn--primary lp-btn--lg" type="submit">Submit subscription</button>
+                <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Cancel</a>
             </div>
             <?= form_close() ?>
+        </div>
+
+        <aside class="lp-reg__aside">
+            <div class="lp-reg__qr">
+                <div class="lp-reg__qr-head">
+                    <span class="lp-reg__qr-badge">Scan to pay</span>
+                    <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
+                </div>
+                <div class="lp-reg__qr-frame">
+                    <img
+                        src="<?= base_url('images/payment/aba-khqr.png') ?>"
+                        alt="Scan QR code to pay $10 per month"
+                    >
+                </div>
+                <p class="lp-reg__qr-hint">Open ABA or any KHQR app and scan</p>
             </div>
 
-            <aside class="saas-register-side">
-                <h5 class="mb-3">What happens next?</h5>
-                <div class="saas-kpi">
-                    <p class="saas-kpi-label">Step 1</p>
-                    <p class="saas-kpi-value">Submit registration</p>
-                </div>
-                <div class="saas-kpi">
-                    <p class="saas-kpi-label">Step 2</p>
-                    <p class="saas-kpi-value">Admin verifies payment</p>
-                </div>
-                <div class="saas-kpi">
-                    <p class="saas-kpi-label">Step 3</p>
-                    <p class="saas-kpi-value">POS account activated</p>
-                </div>
-                <p class="small text-muted mb-0 mt-3">
-                    Use a clear payment reference so activation can be processed quickly.
-                </p>
-            </aside>
-        </div>
-    </section>
+            <ul class="lp-reg__checklist">
+                <li>Sales &amp; inventory management</li>
+                <li>Staff roles &amp; permissions</li>
+                <li>Reports &amp; dashboard</li>
+                <li>Cloud access — any device</li>
+            </ul>
+        </aside>
+    </div>
 </main>
+
+<footer class="lp-footer">
+    <div class="lp-footer__inner saas-shell">
+        <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
+            <span class="lp-brand__mark">P</span>
+            <span class="lp-brand__name"><?= $company ?></span>
+        </a>
+        <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>
+        <div class="lp-footer__links">
+            <a href="<?= site_url('login') ?>">Log in</a>
+            <a href="<?= site_url() ?>">Home</a>
+        </div>
+    </div>
+</footer>
+
 </body>
 </html>

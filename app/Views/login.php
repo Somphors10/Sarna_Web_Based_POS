@@ -19,11 +19,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/login.css?v=7') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=9') ?>">
     <meta name="theme-color" content="#4f46e5">
 </head>
 
 <body class="login-page">
+    <header class="login-topbar">
+        <a class="login-topbar__brand" href="<?= site_url() ?>"><?= esc($config['company']) ?></a>
+        <a class="login-topbar__link" href="<?= site_url() ?>">View our services</a>
+    </header>
+
     <div class="login-pos-bg" aria-hidden="true">
         <div class="login-pos-receipt">
             <p class="login-pos-receipt__title">Receipt</p>
@@ -132,6 +137,10 @@
 
             <button class="login-submit" name="login-button" type="submit">Login</button>
             <?= form_close() ?>
+
+            <p class="login-card__footer">
+                <a class="login-card__link" href="<?= site_url() ?>">View our services</a>
+            </p>
         </div>
     </main>
 

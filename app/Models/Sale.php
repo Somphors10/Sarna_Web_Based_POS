@@ -17,7 +17,6 @@ class Sale extends Model
 {
     use TenantAware;
 
-    protected $DBGroup = 'tenant';
     protected $table = 'sales';
     protected $primaryKey = 'sale_id';
     protected $useAutoIncrement = true;
@@ -107,6 +106,25 @@ class Sale extends Model
     }
 
     /**
+     * Per-tenant display number for a sale (1, 2, 3...).
+     */
+    public function get_tenant_sale_seq(int $sale_id): int
+    {
+        if (!$this->db->fieldExists('tenant_id', 'sales')) {
+            return $sale_id;
+        }
+
+        $builder = $this->db->table('sales AS sales');
+        $builder->select($this->tenantSequenceSql('sales', 'sale_id', 'tenant_sale_seq', 'sales'), false);
+        $this->scopeTenant($builder, 'sales.tenant_id');
+        $builder->where('sales.sale_id', $sale_id);
+
+        $row = $builder->get()->getRow();
+
+        return $row ? (int)$row->tenant_sale_seq : $sale_id;
+    }
+
+    /**
      * Get number of rows for the takings (sales/manage) view
      */
     public function get_found_rows(?string $search, array $filters): int
@@ -135,6 +153,7 @@ class Sale extends Model
         $where .= empty($config['date_or_time_format'])
             ? 'DATE(' . $db_prefix . 'sales.sale_time) BETWEEN ' . $this->db->escape($filters['start_date']) . ' AND ' . $this->db->escape($filters['end_date'])
             : 'sales.sale_time BETWEEN ' . $this->db->escape(rawurldecode($filters['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($filters['end_date']));
+        $where .= $this->tenantSqlAnd($db_prefix . 'sales.tenant_id');
 
         $this->create_temp_table_sales_payments_data($where);
 
@@ -162,6 +181,7 @@ class Sale extends Model
         } else {
             $builder->select([
                 '`' . $db_prefix . 'sales`.`sale_id` AS sale_id',
+                'MAX(' . $this->tenantSequenceSql('sales', 'sale_id', 'tenant_sale_seq', $db_prefix . 'sales') . ')',
                 'MAX(DATE(`' . $db_prefix . 'sales`.`sale_time`)) AS sale_date',
                 'MAX(`' . $db_prefix . 'sales`.`sale_time`) AS sale_time',
                 'MAX(`' . $db_prefix . 'sales`.`invoice_number`) AS invoice_number',
@@ -233,10 +253,15 @@ class Sale extends Model
             $builder->where('sales.sale_time BETWEEN ' . $this->db->escape(rawurldecode($filters['start_date'])) . ' AND ' . $this->db->escape(rawurldecode($filters['end_date'])));
         }
 
+        $this->scopeTenant($builder, 'sales.tenant_id');
+
         if (!empty($search)) {    // TODO: duplicated code.  We should think about refactoring out a method.
             if ($filters['is_valid_receipt']) {
                 $pieces = explode(' ', $search);
-                $builder->where('sales.sale_id', $pieces[1]);
+                $sale_id = $this->resolveTenantPkBySequence('sales', 'sale_id', (int)($pieces[1] ?? 0));
+                if ($sale_id !== null) {
+                    $builder->where('sales.sale_id', $sale_id);
+                }
             } else {
                 $builder->groupStart();
                 $builder->like('customer_p.last_name', $search);    // Customer last name
@@ -1054,6 +1079,8 @@ class Sale extends Model
             $where = 'sales.sale_id = ' . $this->db->escape($inputs['sale_id']);
         }
 
+        $where .= $this->tenantSqlAnd('sales.tenant_id');
+
         $decimals = totals_decimals();
 
         $sale_price = 'CASE WHEN sales_items.discount_type = ' . PERCENT
@@ -1480,7 +1507,10 @@ class Sale extends Model
         if (!empty($search)) {    // TODO: this is duplicated code.  We should think about refactoring out a method
             if ($filters['is_valid_receipt']) {
                 $pieces = explode(' ', $search);
-                $builder->where('sales.sale_id', $pieces[1]);
+                $sale_id = $this->resolveTenantPkBySequence('sales', 'sale_id', (int)($pieces[1] ?? 0));
+                if ($sale_id !== null) {
+                    $builder->where('sales.sale_id', $sale_id);
+                }
             } else {
                 $builder->groupStart();
                 // Customer last name

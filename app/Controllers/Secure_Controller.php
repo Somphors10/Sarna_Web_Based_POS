@@ -36,6 +36,12 @@ class Secure_Controller extends BaseController
      */
     public function __construct(string $module_id = '', ?string $submodule_id = null, ?string $menu_group = null)
     {
+        $this->session = session();
+
+        // Clear stale per-tenant DB overrides before any model connects.
+        $bootstrap_tenant_id = (int)($this->session->get('tenant_id') ?? 0);
+        (new TenantContext())->bootstrapSessionTenantDatabase($bootstrap_tenant_id > 0 ? $bootstrap_tenant_id : 1);
+
         $this->employee = model(Employee::class);
         $this->module = model(Module::class);
         $config = config(OSPOS::class)->settings;
@@ -46,7 +52,6 @@ class Secure_Controller extends BaseController
             exit();
         }
 
-        $this->session = session();
         $logged_in_employee_info = $this->employee->get_logged_in_employee_info();
         $tenant_id = (int)($this->session->get('tenant_id') ?? 0);
         if ($tenant_id <= 0) {
