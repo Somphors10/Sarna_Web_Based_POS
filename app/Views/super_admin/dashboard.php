@@ -16,7 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=2') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=3') ?>">
 </head>
 <body class="sa-dashboard">
 <?php
@@ -84,31 +84,31 @@
 <div class="sa-layout">
     <aside class="sa-sidebar">
         <div class="sa-sidebar__head">
-            <a class="sa-brand" href="<?= site_url('super-admin/overview') ?>">OSPOS</a>
+            <a class="sa-brand" href="<?= site_url('super-admin/overview') ?>">WBPOS</a>
             <span class="sa-brand__tag">Super Admin</span>
         </div>
         <nav class="sa-nav">
             <a class="<?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/menubar/home.svg') ?>" alt="">
+                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt="">
                 <span>Overview</span>
             </a>
             <a class="<?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/menubar/office.svg') ?>" alt="">
+                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/businesses.svg') ?>" alt="">
                 <span>Businesses</span>
             </a>
             <a class="<?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/menubar/employees.svg') ?>" alt="">
+                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt="">
                 <span>Platform Admins</span>
             </a>
             <a class="<?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/menubar/messages.svg') ?>" alt="">
+                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/pending.svg') ?>" alt="">
                 <span>Pending Requests</span>
                 <?php if ($pending_count > 0): ?>
                     <span class="sa-nav__badge"><?= $pending_count ?></span>
                 <?php endif; ?>
             </a>
             <a class="sa-nav__logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/menubar/config.svg') ?>" alt="">
+                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
                 <span>Logout</span>
             </a>
         </nav>

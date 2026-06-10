@@ -9,6 +9,8 @@ return [
     "login"                         => "Login",
     "login_title"                   => "Sign In",
     "logout"                        => "Logout",
+    "confirm_logout_title"          => "Confirm logout",
+    "confirm_logout"                => "Are you sure you want to logout?",
     "remember_me"                   => "Remember me",
     "show_password"                 => "Show password",
     "migration_needed"              => "A database migration to {0} will start after login.",

@@ -7,7 +7,8 @@
  */
 $monthly_price = 10.00;
 $plan_id = (int)($plan['plan_id'] ?? 0);
-$company = esc($config['company']);
+$brand_name = esc(lang('Common.software_title'));
+$company = $brand_name;
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
@@ -27,7 +28,7 @@ $company = esc($config['company']);
 <header class="lp-nav lp-nav--scrolled" id="lp-nav">
     <div class="lp-nav__inner saas-shell">
         <a class="lp-brand" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">P</span>
+            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <div class="lp-nav__actions">
@@ -166,7 +167,7 @@ $company = esc($config['company']);
 <footer class="lp-footer">
     <div class="lp-footer__inner saas-shell">
         <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">P</span>
+            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>

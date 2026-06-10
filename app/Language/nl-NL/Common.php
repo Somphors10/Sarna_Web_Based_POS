@@ -82,7 +82,7 @@ return [
     "view_recent_sales"              => "Recente verkopen bekijken",
     "website"                        => "opensourcepos.org",
     "welcome"                        => "Welkom",
-    "welcome_message"                => "Welkom bij OSPOS, klik op een module hieronder om te beginnen.",
+    "welcome_message"                => "Welkom bij WBPOS, klik op een module hieronder om te beginnen.",
     "yes"                            => "",
     "you_are_using_ospos"            => "",
     "zip"                            => "Postcode",

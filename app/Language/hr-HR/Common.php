@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Pogledaj nedavne prodaje",
     "website"                        => "web stranicu",
     "welcome"                        => "Dobrodošli",
-    "welcome_message"                => "Dobrodošli u blagajnu otvorenog koda(OSPOS)",
+    "welcome_message"                => "Dobrodošli u blagajnu otvorenog koda(WBPOS)",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Koristite blagajnu otvorenog koda (Open Source Point Of Sale) verziju",
+    "you_are_using_ospos"            => "Koristite blagajnu otvorenog koda (Web-Based POS) verziju",
     "zip"                            => "Broj pošte",
 ];

@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Преглед на последните продажби",
     "website"                        => "Уебсайт",
     "welcome"                        => "Добре дошли",
-    "welcome_message"                => "Добре дошли в OSPOS, кликнете върху модул по-долу, за да започнете.",
+    "welcome_message"                => "Добре дошли в WBPOS, кликнете върху модул по-долу, за да започнете.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Вие използвате Open Source Point Оf Sale версия",
+    "you_are_using_ospos"            => "Вие използвате Web-Based POS версия",
     "zip"                            => "Пощенски код",
 ];

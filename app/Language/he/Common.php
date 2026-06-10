@@ -82,7 +82,7 @@ return [
     "view_recent_sales"              => "הצג מכירות אחרונות",
     "website"                        => "אתר",
     "welcome"                        => "ברוך הבא",
-    "welcome_message"                => "ברוכים הבאים אל OSPOS, לחץ על מודול למטה כדי להתחיל.",
+    "welcome_message"                => "ברוכים הבאים אל WBPOS, לחץ על מודול למטה כדי להתחיל.",
     "yes"                            => "",
     "you_are_using_ospos"            => "אתה משתמש בגירסת קוד פתוח של נקודת מכירה",
     "zip"                            => "מיקוד",

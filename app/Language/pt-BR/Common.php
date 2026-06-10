@@ -73,7 +73,7 @@ return [
     'search' => "Pesquisar",
     'search_options' => "Opções de pesquisa",
     'searched_for' => "Pesquisar por",
-    'software_short' => "ospos",
+    'software_short' => "WBPOS",
     'software_title' => "Ponto de Venda de Código Aberto",
     'state' => "Estado",
     'submit' => "Enviar",
@@ -84,6 +84,6 @@ return [
     'welcome' => "Bem-vindo",
     'welcome_message' => "Bem-vindo.",
     'yes' => "sim",
-    'you_are_using_ospos' => "Você está usando Open Source Point Of Sale Versão",
+    'you_are_using_ospos' => "Você está usando Web-Based POS Versão",
     'zip' => "CEP",
 ];

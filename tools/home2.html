@@ -1,0 +1,1123 @@
+
+
+
+
+<!doctype html>
+<html lang="ar-EG">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <base href="http://localhost/opensourcepos/public/">
+    <title>Open Source Point of Sale | Powered by OSPOS 3.4.2</title>
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="resources/bootswatch/flatly/bootstrap.min.css">
+
+            <!--inject:prod:css -->
+        <!-- endinject -->
+        <link rel="stylesheet" href="css/dashboard.css?v=2">
+        <link rel="stylesheet" href="css/forms.css">
+
+        <!-- Tweaks to the UI for a particular theme should drop here  -->
+                <!-- inject:prod:js -->
+        <!-- endinject -->
+    
+            <script src="resources/jquery-2c872dbe60.min.js"></script>
+            <script src="resources/opensourcepos-887816d5a6.min.js"></script>
+    
+    
+<script type="text/javascript">
+    // Live clock
+    var clock_tick = function clock_tick() {
+        setInterval('update_clock();', 1000);
+    }
+
+    // Start the clock immediately
+    clock_tick();
+
+    var update_clock = function update_clock() {
+        document.getElementById('liveclock').innerHTML = moment().format("MM/DD/YYYY HH:mm:ss");
+    }
+
+    const notify = $.notify;
+
+    $.notify = function(content, options) {
+        const message = typeof content === "object" ? content.message : content;
+        const sanitizedMessage = DOMPurify.sanitize(message);
+        return notify(sanitizedMessage, options);
+    };
+
+    $.notifyDefaults({
+        placement: {
+            align: "center",
+            from: "bottom"
+        }
+    });
+
+    var csrf_token = function() {
+        return "88b4893c4ff92f29d072c9535ef34d40";
+    };
+
+    var csrf_form_base = function() {
+        return {
+            csrf_ospos_v4: function() {
+                return csrf_token()
+            }
+        }
+    };
+
+    var setup_csrf_token = function() {
+        $('input[name="csrf_ospos_v4"]').val(csrf_token());
+    };
+
+    var ajax = $.ajax;
+
+    $.ajax = function() {
+        var args = arguments[0];
+        if (args['type'] && args['type'].toLowerCase() == 'post' && csrf_token()) {
+            if (typeof args['data'] === 'string') {
+                args['data'] += '&' + $.param(csrf_form_base());
+            } else {
+                args['data'] = $.extend(args['data'], csrf_form_base());
+            }
+        }
+
+        return ajax.apply(this, arguments);
+    };
+
+    $(document).ajaxComplete(setup_csrf_token);
+
+    var submit = $.fn.submit;
+
+    $.fn.submit = function() {
+        setup_csrf_token();
+        submit.apply(this, arguments);
+    };
+</script>
+    <script type="text/javascript">
+    (function(lang, $) {
+
+        var lines = {
+            'common_submit': "Submit",
+            'common_close': "Close"
+        };
+
+        $.extend(lang, {
+            line: function(key) {
+                return lines[key];
+            }
+        });
+
+    })(window.lang = window.lang || {}, jQuery);
+</script>
+
+    <style>
+        html {
+            overflow: auto;
+        }
+    </style>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+            const isCollapsed = localStorage.getItem(key) === '1';
+            if (window.innerWidth > 992 && isCollapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+
+            const syncForViewport = function() {
+                if (window.innerWidth <= 992) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem(key) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('neo_sidebar_toggle');
+                const mobileToggle = document.getElementById('neo_mobile_sidebar_toggle');
+                const mobileBackdrop = document.getElementById('neo_sidebar_backdrop');
+                if (!toggle) {
+                    return;
+                }
+
+                const setExpandedState = function() {
+                    toggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+                };
+
+                toggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        return;
+                    }
+
+                    document.documentElement.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(key, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                    setExpandedState();
+                });
+
+                const closeMobileSidebar = function() {
+                    document.documentElement.classList.remove('mobile-sidebar-open');
+                };
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function() {
+                        if (window.innerWidth > 992) {
+                            return;
+                        }
+                        document.documentElement.classList.toggle('mobile-sidebar-open');
+                    });
+                }
+
+                if (mobileBackdrop) {
+                    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+
+                window.addEventListener('resize', function() {
+                    syncForViewport();
+                    setExpandedState();
+                    if (window.innerWidth > 992) {
+                        document.documentElement.classList.remove('mobile-sidebar-open');
+                    }
+                });
+
+                syncForViewport();
+                setExpandedState();
+            });
+        })();
+    </script>
+    <div class="wrapper">
+        <div class="neo-layout">
+            <aside class="neo-global-sidebar">
+                <div class="neo-global-brand-row">
+                    <a class="neo-global-brand" href="http://localhost/opensourcepos/public/">
+                        <span class="neo-global-brand-full">OSPOS</span>
+                        <span class="neo-global-brand-mini">O</span>
+                    </a>
+                    <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </button>
+                </div>
+                <div class="neo-global-sidebar-body">
+                    <nav class="neo-global-menu">
+                                                                            <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/customers" title="Customers">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/customers.svg" alt="Customers">
+                                </span>
+                                <span>Customers</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/items" title="Items">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/items.svg" alt="Items">
+                                </span>
+                                <span>Items</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/item_kits" title="Item Kits">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/item_kits.svg" alt="Item Kits">
+                                </span>
+                                <span>Item Kits</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/suppliers" title="Suppliers">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/suppliers.svg" alt="Suppliers">
+                                </span>
+                                <span>Suppliers</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/reports" title="Reports">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/reports.svg" alt="Reports">
+                                </span>
+                                <span>Reports</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/receivings" title="Receivings">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/receivings.svg" alt="Receivings">
+                                </span>
+                                <span>Receivings</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/sales" title="Sales">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/sales.svg" alt="Sales">
+                                </span>
+                                <span>Sales</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/expenses" title="Expenses">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/expenses.svg" alt="Expenses">
+                                </span>
+                                <span>Expenses</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/cashups" title="Cashups">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/cashups.svg" alt="Cashups">
+                                </span>
+                                <span>Cashups</span>
+                            </a>
+                                                    <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/office" title="Office">
+                                <span class="neo-global-menu-icon">
+                                    <img src="http://localhost/opensourcepos/public/images/menubar/office.svg" alt="Office">
+                                </span>
+                                <span>Office</span>
+                            </a>
+                                            </nav>
+                </div>
+            </aside>
+            <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
+
+            <main class="neo-global-content">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
+                            <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock">06/10/2026 04:09:22</div>
+                        </div>
+
+                        <div class="navbar-center pos-topbar-company">
+                            <strong>Open Source Point of Sale</strong>
+                        </div>
+
+                        <div class="navbar-right pos-topbar-user">
+                            <a href="http://localhost/opensourcepos/public/home/changePassword/1" class="modal-dlg pos-user-link" data-btn-submit="Submit" title="Change Password">John Doe</a>                            <a href="http://localhost/opensourcepos/public/home/logout" class="pos-logout-link">Logout</a>                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+
+
+
+<script type="text/javascript">
+
+    dialog_support.init("a.modal-dlg");
+
+</script>
+
+
+
+<section class="neo-home">
+
+    <div class="neo-main">
+
+        <header class="neo-dash-header">
+
+            <div>
+
+                <h2 class="neo-dash-header__title">Business Dashboard</h2>
+
+                <p class="neo-dash-header__subtitle">05/12/2026 to 06/10/2026</p>
+
+            </div>
+
+        </header>
+
+
+
+        
+            <div class="neo-kpi-grid">
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Revenue</span>
+
+                        <strong class="neo-kpi-value">$138.50</strong>
+
+                        
+                            <span class="neo-kpi-hint">Last 30 days</span>
+
+                        
+                    </div>
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Profit</span>
+
+                        <strong class="neo-kpi-value">$88.40</strong>
+
+                        
+                            <span class="neo-kpi-hint">Last 30 days</span>
+
+                        
+                    </div>
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Today&#039;s Sales</span>
+
+                        <strong class="neo-kpi-value">$0.00</strong>
+
+                        
+                            <span class="neo-kpi-hint">06/10/2026</span>
+
+                        
+                    </div>
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Expenses</span>
+
+                        <strong class="neo-kpi-value">$865.00</strong>
+
+                        
+                            <span class="neo-kpi-hint">Last 30 days</span>
+
+                        
+                    </div>
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Inventory Value</span>
+
+                        <strong class="neo-kpi-value">$655.00</strong>
+
+                        
+                            <span class="neo-kpi-hint">All locations</span>
+
+                        
+                    </div>
+
+                
+                    <div class="neo-kpi-card">
+
+                        <span class="neo-kpi-label">Low Stock Items</span>
+
+                        <strong class="neo-kpi-value">2</strong>
+
+                        
+                            <span class="neo-kpi-hint">Items at or below reorder level</span>
+
+                        
+                    </div>
+
+                
+            </div>
+
+        
+
+
+        
+            <h3 class="neo-section-title">Reports Overview</h3>
+
+            <div class="neo-chart-grid">
+
+                
+                    
+                    <article class="neo-chart-card neo-chart-card--line">
+
+                        <div class="neo-chart-card__header">
+
+                            <div class="neo-chart-card__heading">
+
+                                <h4 class="neo-chart-card__title">Sales Trend</h4>
+
+                                
+                                    <div class="neo-chart-card__chips">
+
+                                        
+                                            
+                                                <span class="neo-chart-chip">
+
+                                                    Total
+                                                    <strong>$138.50</strong>
+
+                                                </span>
+
+                                            
+                                        
+                                            
+                                                <span class="neo-chart-chip">
+
+                                                    Profit
+                                                    <strong>$88.40</strong>
+
+                                                </span>
+
+                                            
+                                        
+                                    </div>
+
+                                
+                            </div>
+
+                            
+                                <a class="neo-chart-card__link" href="http://localhost/opensourcepos/public/reports/graphical_summary_sales/2026-05-12/2026-06-10/complete/all">Full report</a>
+
+                            
+                        </div>
+
+
+
+                        
+                            <div class="neo-chart-card__body">
+
+                                <div class="neo-chart-card__canvas ct-chart" id="home_sales_chart"></div>
+
+                            </div>
+
+
+
+                            
+
+
+                            
+<script type="text/javascript">
+    (function () {
+        var data = {
+            labels: ["May 12","May 17","May 22","May 28","Jun 5"],
+            series: [{
+                data: [{"meta":"05\/12\/2026","value":"12.00"},{"meta":"05\/17\/2026","value":"17.00"},{"meta":"05\/22\/2026","value":"46.50"},{"meta":"05\/28\/2026","value":"40.00"},{"meta":"06\/05\/2026","value":"23.00"}]            }]
+        };
+
+        var labelCount = data.labels.length;
+
+        var options = {
+            width: '100%',
+            height: '100%',
+            showPoint: labelCount <= 12,
+            showArea: true,
+            lineSmooth: true,
+            fullWidth: true,
+            chartPadding: {
+                top: 12,
+                right: 12,
+                bottom: 4,
+                left: 4
+            },
+            axisX: {
+                offset: 28,
+                showGrid: false,
+                labelOffset: {
+                    x: 0,
+                    y: 8
+                },
+                labelInterpolationFnc: function (value, index) {
+                    if (labelCount <= 8) {
+                        return value;
+                    }
+
+                    return index % 2 === 0 ? value : null;
+                }
+            },
+            axisY: {
+                offset: 42,
+                showGrid: true,
+                labelInterpolationFnc: function (value) {
+                                            return '\x24' + value;
+                                    }
+            },
+            plugins: [
+                Chartist.plugins.tooltip({
+                    pointClass: 'ct-tooltip-point',
+                    transformTooltipTextFnc: function (value) {
+                                                    return '\x24' + value;
+                                            }
+                })
+            ]
+        };
+
+        var homeSalesChart = new Chartist.Line('#home_sales_chart', data, options);
+
+        homeSalesChart.on('draw', function (ctx) {
+            if (ctx.type === 'line') {
+                ctx.element.attr({
+                    style: 'stroke: #4f46e5; stroke-width: 2.5px;'
+                });
+            }
+
+            if (ctx.type === 'point') {
+                ctx.element.attr({
+                    style: 'stroke: #4f46e5; stroke-width: 8px; fill: #ffffff;'
+                });
+            }
+
+            if (ctx.type === 'area') {
+                ctx.element.attr({
+                    style: 'fill: url(#home_sales_chart-gradient);'
+                });
+            }
+        });
+    })();
+</script>
+<svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="home_sales_chart-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(79, 70, 229, 0.28)"></stop>
+            <stop offset="100%" stop-color="rgba(79, 70, 229, 0.02)"></stop>
+        </linearGradient>
+    </defs>
+</svg>
+
+                        
+                    </article>
+
+                
+                    
+                    <article class="neo-chart-card neo-chart-card--pie">
+
+                        <div class="neo-chart-card__header">
+
+                            <div class="neo-chart-card__heading">
+
+                                <h4 class="neo-chart-card__title">Payment Methods</h4>
+
+                                
+                                    <div class="neo-chart-card__chips">
+
+                                        
+                                            
+                                                <span class="neo-chart-chip">
+
+                                                    Total
+                                                    <strong>$138.50</strong>
+
+                                                </span>
+
+                                            
+                                        
+                                    </div>
+
+                                
+                            </div>
+
+                            
+                                <a class="neo-chart-card__link" href="http://localhost/opensourcepos/public/reports/graphical_summary_payments/2026-05-12/2026-06-10/complete/all">Full report</a>
+
+                            
+                        </div>
+
+
+
+                        
+                            <div class="neo-chart-card__body">
+
+                                <div class="neo-chart-card__canvas ct-chart" id="home_payments_chart"></div>
+
+                            </div>
+
+
+
+                            
+                                <div class="neo-chart-legend">
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #4f46e5"></span>
+
+                                            <span class="neo-chart-legend__label">Cash</span>
+
+                                            <span class="neo-chart-legend__value">$109.50</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #0ea5e9"></span>
+
+                                            <span class="neo-chart-legend__label">Credit</span>
+
+                                            <span class="neo-chart-legend__value">$17.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #10b981"></span>
+
+                                            <span class="neo-chart-legend__label">Debit</span>
+
+                                            <span class="neo-chart-legend__value">$12.00</span>
+
+                                        </span>
+
+                                    
+                                </div>
+
+                            
+
+
+                            
+<script type="text/javascript">
+    (function () {
+        var palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'];
+
+        var data = {
+            labels: ["Cash","Credit","Debit"],
+            series: [{"meta":"Cash 79.06%","value":"109.50"},{"meta":"Credit 12.27%","value":"17.00"},{"meta":"Debit 8.66%","value":"12.00"}]        };
+
+        var options = {
+            width: '100%',
+            height: '100%',
+            donut: true,
+            donutWidth: 44,
+            chartPadding: 4,
+            labelPosition: 'outside',
+            labelInterpolationFnc: function () {
+                return '';
+            },
+            plugins: [
+                Chartist.plugins.tooltip({
+                    transformTooltipTextFnc: function (value) {
+                                                    return '\x24' + value;
+                                            }
+                })
+            ]
+        };
+
+        var homePaymentsChart = new Chartist.Pie('#home_payments_chart', data, options);
+
+        homePaymentsChart.on('draw', function (ctx) {
+            if (ctx.type === 'slice') {
+                ctx.element.attr({
+                    style: 'fill: ' + palette[ctx.index % palette.length] + '; stroke: #ffffff; stroke-width: 2px;'
+                });
+            }
+        });
+    })();
+</script>
+
+                        
+                    </article>
+
+                
+                    
+                    <article class="neo-chart-card neo-chart-card--pie">
+
+                        <div class="neo-chart-card__header">
+
+                            <div class="neo-chart-card__heading">
+
+                                <h4 class="neo-chart-card__title">Sales by Category</h4>
+
+                                
+                                    <div class="neo-chart-card__chips">
+
+                                        
+                                            
+                                                <span class="neo-chart-chip">
+
+                                                    Total
+                                                    <strong>$138.50</strong>
+
+                                                </span>
+
+                                            
+                                        
+                                    </div>
+
+                                
+                            </div>
+
+                            
+                                <a class="neo-chart-card__link" href="http://localhost/opensourcepos/public/reports/graphical_summary_categories/2026-05-12/2026-06-10/complete/all">Full report</a>
+
+                            
+                        </div>
+
+
+
+                        
+                            <div class="neo-chart-card__body">
+
+                                <div class="neo-chart-card__canvas ct-chart" id="home_categories_chart"></div>
+
+                            </div>
+
+
+
+                            
+                                <div class="neo-chart-legend">
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #4f46e5"></span>
+
+                                            <span class="neo-chart-legend__label">Bakery</span>
+
+                                            <span class="neo-chart-legend__value">$32.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #0ea5e9"></span>
+
+                                            <span class="neo-chart-legend__label">Beverages</span>
+
+                                            <span class="neo-chart-legend__value">$20.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #10b981"></span>
+
+                                            <span class="neo-chart-legend__label">Dairy</span>
+
+                                            <span class="neo-chart-legend__value">$22.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #f59e0b"></span>
+
+                                            <span class="neo-chart-legend__label">Electronics</span>
+
+                                            <span class="neo-chart-legend__value">$36.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #ef4444"></span>
+
+                                            <span class="neo-chart-legend__label">Grocery</span>
+
+                                            <span class="neo-chart-legend__value">$6.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #8b5cf6"></span>
+
+                                            <span class="neo-chart-legend__label">Household</span>
+
+                                            <span class="neo-chart-legend__value">$22.50</span>
+
+                                        </span>
+
+                                    
+                                </div>
+
+                            
+
+
+                            
+<script type="text/javascript">
+    (function () {
+        var palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'];
+
+        var data = {
+            labels: ["Bakery","Beverages","Dairy","Electronics","Grocery","Household"],
+            series: [{"meta":"Bakery 23.1%","value":"32.00"},{"meta":"Beverages 14.44%","value":"20.00"},{"meta":"Dairy 15.88%","value":"22.00"},{"meta":"Electronics 25.99%","value":"36.00"},{"meta":"Grocery 4.33%","value":"6.00"},{"meta":"Household 16.25%","value":"22.50"}]        };
+
+        var options = {
+            width: '100%',
+            height: '100%',
+            donut: true,
+            donutWidth: 44,
+            chartPadding: 4,
+            labelPosition: 'outside',
+            labelInterpolationFnc: function () {
+                return '';
+            },
+            plugins: [
+                Chartist.plugins.tooltip({
+                    transformTooltipTextFnc: function (value) {
+                                                    return '\x24' + value;
+                                            }
+                })
+            ]
+        };
+
+        var homeCategoriesChart = new Chartist.Pie('#home_categories_chart', data, options);
+
+        homeCategoriesChart.on('draw', function (ctx) {
+            if (ctx.type === 'slice') {
+                ctx.element.attr({
+                    style: 'fill: ' + palette[ctx.index % palette.length] + '; stroke: #ffffff; stroke-width: 2px;'
+                });
+            }
+        });
+    })();
+</script>
+
+                        
+                    </article>
+
+                
+                    
+                    <article class="neo-chart-card neo-chart-card--pie">
+
+                        <div class="neo-chart-card__header">
+
+                            <div class="neo-chart-card__heading">
+
+                                <h4 class="neo-chart-card__title">Expenses by Category</h4>
+
+                                
+                                    <div class="neo-chart-card__chips">
+
+                                        
+                                            
+                                                <span class="neo-chart-chip">
+
+                                                    Total Amount
+                                                    <strong>$865.00</strong>
+
+                                                </span>
+
+                                            
+                                        
+                                    </div>
+
+                                
+                            </div>
+
+                            
+                                <a class="neo-chart-card__link" href="http://localhost/opensourcepos/public/reports/graphical_summary_expenses_categories/2026-05-12/2026-06-10/complete">Full report</a>
+
+                            
+                        </div>
+
+
+
+                        
+                            <div class="neo-chart-card__body">
+
+                                <div class="neo-chart-card__canvas ct-chart" id="home_expenses_chart"></div>
+
+                            </div>
+
+
+
+                            
+                                <div class="neo-chart-legend">
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #4f46e5"></span>
+
+                                            <span class="neo-chart-legend__label">Maintenance</span>
+
+                                            <span class="neo-chart-legend__value">$420.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #0ea5e9"></span>
+
+                                            <span class="neo-chart-legend__label">Marketing</span>
+
+                                            <span class="neo-chart-legend__value">$350.00</span>
+
+                                        </span>
+
+                                    
+                                        
+                                        <span class="neo-chart-legend__item">
+
+                                            <span class="neo-chart-legend__dot" style="background-color: #10b981"></span>
+
+                                            <span class="neo-chart-legend__label">Supplies</span>
+
+                                            <span class="neo-chart-legend__value">$95.00</span>
+
+                                        </span>
+
+                                    
+                                </div>
+
+                            
+
+
+                            
+<script type="text/javascript">
+    (function () {
+        var palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'];
+
+        var data = {
+            labels: ["Maintenance","Marketing","Supplies"],
+            series: [{"meta":"Maintenance 48.55%","value":"420.00"},{"meta":"Marketing 40.46%","value":"350.00"},{"meta":"Supplies 10.98%","value":"95.00"}]        };
+
+        var options = {
+            width: '100%',
+            height: '100%',
+            donut: true,
+            donutWidth: 44,
+            chartPadding: 4,
+            labelPosition: 'outside',
+            labelInterpolationFnc: function () {
+                return '';
+            },
+            plugins: [
+                Chartist.plugins.tooltip({
+                    transformTooltipTextFnc: function (value) {
+                                                    return '\x24' + value;
+                                            }
+                })
+            ]
+        };
+
+        var homeExpensesChart = new Chartist.Pie('#home_expenses_chart', data, options);
+
+        homeExpensesChart.on('draw', function (ctx) {
+            if (ctx.type === 'slice') {
+                ctx.element.attr({
+                    style: 'fill: ' + palette[ctx.index % palette.length] + '; stroke: #ffffff; stroke-width: 2px;'
+                });
+            }
+        });
+    })();
+</script>
+
+                        
+                    </article>
+
+                
+            </div>
+
+        
+    </div>
+
+</section>
+
+
+
+
+        </div>
+    </div>
+</main>
+</div>
+
+    <div id="footer" class="pos-footer-wrap">
+        <div class="jumbotron push-spaces pos-footer">
+            <strong class="pos-footer-text">
+                © 2010 - 2026                <span class="pos-footer-separator">·</span>
+                <a href="https://opensourcepos.org" target="_blank">opensourcepos.org</a>
+                <span class="pos-footer-separator">·</span>
+                3.4.2 -
+                <a target="_blank" href="https://github.com/opensourcepos/opensourcepos/commit/dev">
+                    dev                </a>
+            </strong>
+        </div>
+    </div>
+    </div>
+
+<div id="pos-logout-confirm" class="pos-modal-overlay" aria-hidden="true">
+    <div class="pos-modal" role="dialog" aria-modal="true" aria-labelledby="pos-logout-confirm-title">
+        <div class="pos-modal__head" id="pos-logout-confirm-title">Confirm logout</div>
+        <div class="pos-modal__body">Are you sure you want to logout?</div>
+        <div class="pos-modal__actions">
+            <button type="button" class="pos-modal-btn pos-modal-btn--ghost" id="pos-logout-confirm-cancel">Cancel</button>
+            <button type="button" class="pos-modal-btn pos-modal-btn--danger-solid" id="pos-logout-confirm-continue">Logout</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var logoutOverlay = document.getElementById('pos-logout-confirm');
+    var logoutCancelBtn = document.getElementById('pos-logout-confirm-cancel');
+    var logoutContinueBtn = document.getElementById('pos-logout-confirm-continue');
+    var pendingLogoutHref = null;
+
+    if (!logoutOverlay) {
+        return;
+    }
+
+    var closeLogoutModal = function() {
+        logoutOverlay.classList.remove('is-open');
+        logoutOverlay.setAttribute('aria-hidden', 'true');
+        pendingLogoutHref = null;
+    };
+
+    var openLogoutModal = function(href) {
+        pendingLogoutHref = href;
+        logoutOverlay.classList.add('is-open');
+        logoutOverlay.setAttribute('aria-hidden', 'false');
+    };
+
+    document.addEventListener('click', function(event) {
+        var link = event.target.closest('.pos-logout-link');
+        if (!link) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openLogoutModal(link.getAttribute('href'));
+    }, true);
+
+    if (logoutContinueBtn) {
+        logoutContinueBtn.addEventListener('click', function() {
+            if (!pendingLogoutHref) {
+                closeLogoutModal();
+                return;
+            }
+            window.location.href = pendingLogoutHref;
+        });
+    }
+
+    if (logoutCancelBtn) {
+        logoutCancelBtn.addEventListener('click', closeLogoutModal);
+    }
+
+    logoutOverlay.addEventListener('click', function(event) {
+        if (event.target === logoutOverlay) {
+            closeLogoutModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && logoutOverlay.classList.contains('is-open')) {
+            closeLogoutModal();
+        }
+    });
+})();
+</script>
+</body>
+
+</html>
+
+

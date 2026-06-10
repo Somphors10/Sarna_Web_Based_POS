@@ -15,7 +15,7 @@
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title><?= esc($config['company']) . ' | Login' ?></title>
+    <title><?= esc(lang('Common.software_title')) . ' | Login' ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
@@ -25,7 +25,7 @@
 
 <body class="login-page">
     <header class="login-topbar">
-        <a class="login-topbar__brand" href="<?= site_url() ?>"><?= esc($config['company']) ?></a>
+        <a class="login-topbar__brand" href="<?= site_url() ?>"><?= esc(lang('Common.software_title')) ?></a>
         <a class="login-topbar__link" href="<?= site_url() ?>">View our services</a>
     </header>
 

@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\Reports\Inventory_low;
 use App\Models\Reports\Inventory_summary;
-use App\Models\Reports\Summary_categories;
 use App\Models\Reports\Summary_expenses_categories;
 use App\Models\Reports\Summary_payments;
 use App\Models\Reports\Summary_sales;
@@ -84,9 +83,10 @@ class Home extends Secure_Controller
 
             $charts[] = [
                 'title'         => 'Sales Trend',
+                'subtitle'      => 'Daily revenue over the last 30 days',
                 'chart_id'      => 'home_sales_chart',
                 'chart_var'     => 'homeSalesChart',
-                'chart_type'    => 'home/charts/line',
+                'chart_type'    => 'home/charts/area',
                 'labels_1'      => $sales_labels,
                 'series_data_1' => $sales_series,
                 'show_currency' => true,
@@ -117,9 +117,10 @@ class Home extends Secure_Controller
             if (!empty($payment_series)) {
                 $charts[] = [
                     'title'         => 'Payment Methods',
+                    'subtitle'      => 'How customers paid during this period',
                     'chart_id'      => 'home_payments_chart',
                     'chart_var'     => 'homePaymentsChart',
-                    'chart_type'    => 'home/charts/pie',
+                    'chart_type'    => 'home/charts/hbar',
                     'labels_1'      => $payment_labels,
                     'series_data_1' => $payment_series,
                     'show_currency' => true,
@@ -127,38 +128,6 @@ class Home extends Secure_Controller
                     'summary'       => $payment_summary,
                     'summary_keys'  => ['total'],
                     'report_url'    => site_url("reports/graphical_summary_payments/$start_date/$end_date/complete/all"),
-                ];
-            }
-        }
-
-        if ($this->employee->has_grant('reports_categories', $person_id)) {
-            $summary_categories = model(Summary_categories::class);
-            $category_rows = $summary_categories->getData($sale_inputs);
-            $category_summary = $summary_categories->getSummaryData($sale_inputs);
-
-            $category_labels = [];
-            $category_series = [];
-            foreach ($category_rows as $row) {
-                $category_labels[] = $row['category'];
-                $category_series[] = [
-                    'meta'  => $row['category'] . ' ' . round($row['total'] / max($category_summary['total'], 1) * 100, 2) . '%',
-                    'value' => $row['total'],
-                ];
-            }
-
-            if (!empty($category_series)) {
-                $charts[] = [
-                    'title'         => 'Sales by Category',
-                    'chart_id'      => 'home_categories_chart',
-                    'chart_var'     => 'homeCategoriesChart',
-                    'chart_type'    => 'home/charts/pie',
-                    'labels_1'      => $category_labels,
-                    'series_data_1' => $category_series,
-                    'show_currency' => true,
-                    'has_data'      => true,
-                    'summary'       => $category_summary,
-                    'summary_keys'  => ['total'],
-                    'report_url'    => site_url("reports/graphical_summary_categories/$start_date/$end_date/complete/all"),
                 ];
             }
         }
@@ -178,33 +147,6 @@ class Home extends Secure_Controller
                 'value' => to_currency($expense_summary['expenses_total_amount'] ?? 0),
                 'hint'  => lang('Common.dashboard_last_30_days'),
             ];
-
-            $expense_rows = $summary_expenses->getData($expense_inputs);
-            $expense_labels = [];
-            $expense_series = [];
-            foreach ($expense_rows as $row) {
-                $expense_labels[] = $row['category_name'];
-                $expense_series[] = [
-                    'meta'  => $row['category_name'] . ' ' . round($row['total_amount'] / max($expense_summary['expenses_total_amount'], 1) * 100, 2) . '%',
-                    'value' => $row['total_amount'],
-                ];
-            }
-
-            if (!empty($expense_series)) {
-                $charts[] = [
-                    'title'         => 'Expenses by Category',
-                    'chart_id'      => 'home_expenses_chart',
-                    'chart_var'     => 'homeExpensesChart',
-                    'chart_type'    => 'home/charts/pie',
-                    'labels_1'      => $expense_labels,
-                    'series_data_1' => $expense_series,
-                    'show_currency' => true,
-                    'has_data'      => true,
-                    'summary'       => $expense_summary,
-                    'summary_keys'  => ['expenses_total_amount'],
-                    'report_url'    => site_url("reports/graphical_summary_expenses_categories/$start_date/$end_date/complete"),
-                ];
-            }
         }
 
         if ($this->employee->has_grant('reports_inventory', $person_id)) {

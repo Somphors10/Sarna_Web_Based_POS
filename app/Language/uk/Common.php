@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Переглянути нещодавні продажі",
     "website"                        => "Веб-сайт",
     "welcome"                        => "Ласкаво просимо",
-    "welcome_message"                => "Ласкаво просимо в OSPOS, натисніть нижче щоб розпочати.",
+    "welcome_message"                => "Ласкаво просимо в WBPOS, натисніть нижче щоб розпочати.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Ви використовуєте Open Source Point Of Sale",
+    "you_are_using_ospos"            => "Ви використовуєте Web-Based POS",
     "zip"                            => "Поштовий індекс",
 ];

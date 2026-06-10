@@ -225,7 +225,7 @@ return [
     "number_locale_required"                    => "Locale-Nummer ist ein Pflichtfeld.",
     "number_locale_tooltip"                     => "Finden Sie eine korrekte Lokale über diesen Link.",
     "os_timezone"                               => "",
-    "ospos_info"                                => "OSPOS Installations Information",
+    "ospos_info"                                => "WBPOS Installations Information",
     "payment_options_order"                     => "Zahlungsarten Reihenfolge",
     "perm_risk"                                 => "Permissions higher than 750 leaves this software at risk.",
     "phone"                                     => "Telefon",

@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Se seneste salg",
     "website"                        => "Hjemmeside",
     "welcome"                        => "Velkommen",
-    "welcome_message"                => "Velkommen til OSPOS. Klik på et modul forneden for at komme i gang.",
+    "welcome_message"                => "Velkommen til WBPOS. Klik på et modul forneden for at komme i gang.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "You are using Open Source Point Of Sale version",
+    "you_are_using_ospos"            => "You are using Web-Based POS version",
     "zip"                            => "Postnummer",
 ];

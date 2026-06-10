@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "View Recent Sales",
     "website"                        => "Website",
     "welcome"                        => "Welcome",
-    "welcome_message"                => "Welcome to OSPOS, click a module below to get started.",
+    "welcome_message"                => "Welcome to WBPOS, click a module below to get started.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "You are using Open Source Point Of Sale version",
+    "you_are_using_ospos"            => "You are using Web-Based POS version",
     "zip"                            => "Postal Code",
 ];

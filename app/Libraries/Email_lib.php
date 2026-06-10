@@ -42,7 +42,7 @@ class Email_lib
 
         $email_config = [
             'mailType'    => 'html',
-            'userAgent'   => 'OSPOS',
+            'userAgent'   => 'WBPOS',
             'validate'    => true,
             'protocol'    => $this->config['protocol'],
             'mailPath'    => $this->config['mailpath'],

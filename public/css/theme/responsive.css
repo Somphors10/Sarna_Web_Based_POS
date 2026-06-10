@@ -83,14 +83,10 @@
         font-size: 14px;
     }
 
-    .neo-global-menu-icon {
-        width: 20px;
-        height: 20px;
-    }
-
-    .neo-global-menu-item img {
-        width: 12px;
-        height: 12px;
+    .neo-nav__icon {
+        width: 1.7rem;
+        height: 1.7rem;
+        flex-shrink: 0;
     }
 
     .neo-mobile-menu-toggle {

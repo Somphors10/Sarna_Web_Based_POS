@@ -64,21 +64,11 @@
     };
 
     $(document).ajaxComplete(setup_csrf_token);
-    $(document).ready(function() {
-        $("#logout").click(function(event) {
-            event.preventDefault();
-            $.ajax({
-                url: "<?= site_url('home/logout'); ?>",
-                data: {
-                    "<?= esc(config('Security')->tokenName, 'js'); ?>": csrf_token()
-                },
-                success: function() {
-                    window.location.href = '<?= site_url(); ?>';
-                },
-                method: "POST"
-            });
-        });
-    });
+
+    // Stub until footer logout modal script loads; allows logout without blocking the click.
+    window.osposConfirmLogout = function() {
+        return true;
+    };
 
     var submit = $.fn.submit;
 

@@ -18,19 +18,21 @@ $request = Services::request();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <base href="<?= base_url() ?>">
-    <title><?= esc($config['company']) . ' | ' . lang('Common.powered_by') . ' OSPOS ' . esc(config('App')->application_version) ?></title>
+    <title><?= esc($config['company']) . ' | ' . lang('Common.powered_by') . ' ' . lang('Common.software_short') . ' ' . esc(config('App')->application_version) ?></title>
     <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="stylesheet" href="<?= 'resources/bootswatch/' . (empty($config['theme']) ? 'flatly' : esc($config['theme'])) . '/bootstrap.min.css' ?>">
 
     <?php if (ENVIRONMENT == 'development' || get_cookie('debug') == 'true' || $request->getGet('debug') == 'true') : ?>
         <!-- inject:debug:css -->
         <!-- endinject -->
+        <link rel="stylesheet" href="css/dashboard.css?v=11">
+        <link rel="stylesheet" href="css/forms.css">
         <!-- inject:debug:js -->
         <!-- endinject -->
     <?php else : ?>
         <!--inject:prod:css -->
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css">
+        <link rel="stylesheet" href="css/dashboard.css?v=11">
         <link rel="stylesheet" href="css/forms.css">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
@@ -154,9 +156,9 @@ $request = Services::request();
         <div class="neo-layout">
             <aside class="neo-global-sidebar">
                 <div class="neo-global-brand-row">
-                    <a class="neo-global-brand" href="<?= site_url() ?>">
-                        <span class="neo-global-brand-full">OSPOS</span>
-                        <span class="neo-global-brand-mini">O</span>
+                    <a class="neo-global-brand" href="<?= site_url('home') ?>">
+                        <span class="neo-global-brand-full"><?= lang('Common.software_short') ?></span>
+                        <span class="neo-global-brand-mini">W</span>
                     </a>
                     <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
                         <span class="glyphicon glyphicon-chevron-left"></span>
@@ -170,10 +172,14 @@ $request = Services::request();
                             $sidebar_modules = array_values(array_filter($allowed_modules, static fn($module) => !in_array($module->module_id, $hidden_sidebar_modules, true)));
                         ?>
                         <?php foreach ($sidebar_modules as $module): ?>
+                            <?php
+                                $nav_icon_file = 'images/nav/' . $module->module_id . '.svg';
+                                $nav_icon_url = is_file(FCPATH . $nav_icon_file)
+                                    ? base_url($nav_icon_file)
+                                    : base_url('images/menubar/' . $module->module_id . '.svg');
+                            ?>
                             <a class="neo-global-menu-item <?= $module->module_id == $request->getUri()->getSegment(1) ? 'is-active' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>">
-                                <span class="neo-global-menu-icon">
-                                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
-                                </span>
+                                <img class="neo-nav__icon" src="<?= $nav_icon_url ?>" alt="">
                                 <span><?= lang('Module.' . $module->module_id) ?></span>
                             </a>
                         <?php endforeach; ?>
@@ -198,7 +204,11 @@ $request = Services::request();
 
                         <div class="navbar-right pos-topbar-user">
                             <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                            <?= anchor('home/logout', lang('Login.logout'), ['class' => 'pos-logout-link']) ?>
+                            <?= anchor('home/logout', lang('Login.logout'), [
+                                'class' => 'pos-logout-link',
+                                'data-logout-url' => site_url('home/logout'),
+                                'onclick' => 'return typeof window.osposConfirmLogout === "function" ? window.osposConfirmLogout(this) : true;',
+                            ]) ?>
                         </div>
                     </div>
                 </div>

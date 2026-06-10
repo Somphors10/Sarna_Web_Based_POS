@@ -18,7 +18,7 @@ if (empty($series_data_1)) {
 
 <script type="text/javascript">
     (function () {
-        var palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#64748b'];
+        var palette = ['#6366f1', '#22d3ee', '#34d399', '#fbbf24', '#fb7185', '#a78bfa', '#38bdf8', '#94a3b8'];
 
         var data = {
             labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
@@ -29,22 +29,26 @@ if (empty($series_data_1)) {
             width: '100%',
             height: '100%',
             donut: true,
-            donutWidth: 44,
-            chartPadding: 4,
+            donutWidth: 52,
+            startAngle: 270,
+            chartPadding: 8,
             labelPosition: 'outside',
             labelInterpolationFnc: function () {
                 return '';
             },
             plugins: [
                 Chartist.plugins.tooltip({
-                    transformTooltipTextFnc: function (value) {
+                    transformTooltipTextFnc: function (value, label, meta) {
+                        var formatted;
                         <?php if ($show_currency && is_right_side_currency_symbol()): ?>
-                            return value + '<?= esc($config['currency_symbol'], 'js') ?>';
+                            formatted = value + '<?= esc($config['currency_symbol'], 'js') ?>';
                         <?php elseif ($show_currency): ?>
-                            return '<?= esc($config['currency_symbol'], 'js') ?>' + value;
+                            formatted = '<?= esc($config['currency_symbol'], 'js') ?>' + value;
                         <?php else: ?>
-                            return value;
+                            formatted = value;
                         <?php endif; ?>
+
+                        return meta ? meta + ' · ' + formatted : formatted;
                     }
                 })
             ]
@@ -54,8 +58,19 @@ if (empty($series_data_1)) {
 
         <?= esc($chart_var, 'js') ?>.on('draw', function (ctx) {
             if (ctx.type === 'slice') {
+                var color = palette[ctx.index % palette.length];
+
                 ctx.element.attr({
-                    style: 'fill: ' + palette[ctx.index % palette.length] + '; stroke: #ffffff; stroke-width: 2px;'
+                    style: 'fill: ' + color + '; stroke: #ffffff; stroke-width: 3px;'
+                });
+
+                ctx.element.animate({
+                    opacity: {
+                        begin: ctx.index * 80 + 150,
+                        dur: 500,
+                        from: 0,
+                        to: 1
+                    }
                 });
             }
         });

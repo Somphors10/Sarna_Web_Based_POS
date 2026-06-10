@@ -80,12 +80,12 @@ class Config extends Secure_Controller
         $npmDev = false;
         $license = [];
 
-        $license[$i]['title'] = 'Open Source Point Of Sale ' . config('App')->application_version;
+        $license[$i]['title'] = 'WBPOS ' . config('App')->application_version;
 
         if (file_exists('license/LICENSE')) {
             $license[$i]['text'] = file_get_contents('license/LICENSE', false, null, 0, 3000);
         } else {
-            $license[$i]['text'] = 'LICENSE file must be in OSPOS license directory. You are not allowed to use OSPOS application until the distribution copy of LICENSE file is present.';
+            $license[$i]['text'] = 'LICENSE file must be in WBPOS license directory. You are not allowed to use WBPOS application until the distribution copy of LICENSE file is present.';
         }
 
         $dir = new DirectoryIterator('license');    // Read all the files in the dir license

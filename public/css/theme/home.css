@@ -1,104 +1,135 @@
 .neo-home {
     margin-top: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 .neo-main {
-    background: #f4f6fb;
-    border: 1px solid #dce3ef;
-    border-radius: 12px;
-    padding: 16px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
 }
 
 .neo-dash-header {
-    margin-bottom: 14px;
-    padding: 14px 16px;
-    border-radius: 10px;
+    margin-bottom: 18px;
+    padding: 18px 20px;
+    border-radius: 14px;
     background: #ffffff;
-    border: 1px solid #e1e7f2;
+    border: 1px solid #e8edf4;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .neo-dash-header__title {
     margin: 0;
-    color: #111827;
-    font-size: 22px;
+    color: #0f172a;
+    font-size: 24px;
     font-weight: 700;
     line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
 .neo-dash-header__subtitle {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     color: #64748b;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .neo-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
 }
 
 .neo-kpi-card {
-    border-radius: 10px;
-    border: 1px solid #e1e7f2;
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid #e8edf4;
     background: #ffffff;
-    padding: 12px 14px;
+    padding: 16px 16px 16px 18px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.neo-kpi-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: linear-gradient(180deg, #6366f1 0%, #22d3ee 100%);
 }
 
 .neo-kpi-label {
     display: block;
     color: #64748b;
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .neo-kpi-value {
-    color: #111827;
-    font-size: 24px;
+    color: #0f172a;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
 }
 
 .neo-kpi-hint {
     display: block;
-    margin-top: 4px;
+    margin-top: 6px;
     color: #94a3b8;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .neo-section-title {
-    margin: 0 0 10px;
-    color: #111827;
-    font-size: 15px;
+    margin: 0 0 14px;
+    color: #0f172a;
+    font-size: 16px;
     font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .neo-chart-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 16px;
 }
 
 .neo-chart-card {
     display: flex;
     flex-direction: column;
-    border-radius: 12px;
-    border: 1px solid #e1e7f2;
+    flex: 1 1 50%;
+    min-width: 0;
+    max-width: calc(50% - 8px);
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
     background: #ffffff;
-    padding: 14px 16px 16px;
-    min-height: 0;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    padding: 16px 18px 18px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .neo-chart-card__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.neo-chart-card__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
 }
 
 .neo-chart-card__heading {
@@ -108,143 +139,163 @@
 
 .neo-chart-card__title {
     margin: 0;
-    color: #111827;
-    font-size: 14px;
+    color: #0f172a;
+    font-size: 15px;
     font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.neo-chart-card__subtitle {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.neo-chart-card__total {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.neo-chart-card__total strong {
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .neo-chart-card__chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 8px;
 }
 
 .neo-chart-chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
+    gap: 6px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background: #f1f5f9;
+    background: #f8fafc;
     border: 1px solid #e2e8f0;
     color: #64748b;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .neo-chart-chip strong {
-    color: #111827;
-    font-size: 11px;
+    color: #0f172a;
+    font-size: 12px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .neo-chart-card__link {
-    color: #0d9488;
+    color: #6366f1;
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
     flex-shrink: 0;
-    padding-top: 2px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    transition: background 0.15s ease;
 }
 
 .neo-chart-card__link:hover {
-    text-decoration: underline;
+    background: #e0e7ff;
+    text-decoration: none;
 }
 
 .neo-chart-card__body {
-    flex: 1;
-    min-height: 0;
-    background: #f8fafc;
-    border: 1px solid #edf2f7;
-    border-radius: 10px;
-    padding: 8px;
+    position: relative;
+    width: 100%;
+    height: 185px;
+    flex: 0 0 185px;
     overflow: hidden;
 }
 
-.neo-chart-card--line .neo-chart-card__body {
-    height: 240px;
+.neo-chart-card--area .neo-chart-card__body {
+    height: 185px;
+    flex: 0 0 185px;
 }
 
-.neo-chart-card--pie .neo-chart-card__body {
-    height: 200px;
+.neo-chart-card--bar .neo-chart-card__body {
+    height: 150px;
+    flex: 0 0 150px;
 }
 
-.neo-chart-card__canvas {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+.neo-chart-canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
 }
 
-.neo-chart-card .ct-grid {
-    stroke: #e2e8f0;
-    stroke-dasharray: 3px;
-}
-
-.neo-chart-card .ct-label {
-    color: #64748b;
-    font-size: 10px;
-    fill: #64748b;
-}
-
-.neo-chart-card .ct-series-a .ct-line {
-    stroke: #4f46e5 !important;
-    stroke-width: 2.5px;
-}
-
-.neo-chart-card .ct-series-a .ct-point {
-    stroke: #4f46e5 !important;
-    stroke-width: 8px;
-}
-
-.neo-chart-card .ct-series-a .ct-area {
-    fill: rgba(79, 70, 229, 0.14) !important;
-}
-
-.neo-chart-legend {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px 10px;
+/* Readable breakdown table under bar charts */
+.neo-data-table {
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid #edf2f7;
+    border-top: 1px solid #f1f5f9;
 }
 
-.neo-chart-legend__item {
-    display: flex;
+.neo-data-table__row {
+    display: grid;
+    grid-template-columns: 8px 1fr auto auto;
     align-items: center;
-    gap: 6px;
-    min-width: 0;
-    font-size: 11px;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #f8fafc;
 }
 
-.neo-chart-legend__dot {
-    width: 8px;
-    height: 8px;
+.neo-data-table__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.neo-data-table__dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
-.neo-chart-legend__label {
-    color: #475569;
+.neo-data-table__name {
+    color: #334155;
+    font-size: 13px;
     font-weight: 500;
-    white-space: nowrap;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.neo-chart-legend__value {
-    margin-left: auto;
-    color: #111827;
+.neo-data-table__amount {
+    color: #0f172a;
+    font-size: 13px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+.neo-data-table__pct {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 42px;
+    text-align: right;
 }
 
 .neo-chart-empty {
@@ -252,63 +303,77 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 200px;
-    padding: 20px;
+    min-height: 220px;
+    padding: 24px;
     text-align: center;
-    background: #f8fafc;
-    border: 1px dashed #d5deea;
-    border-radius: 10px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
 }
 
 .neo-chart-empty p {
     margin: 0;
     color: #475569;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
 }
 
 .neo-chart-empty span {
     margin-top: 6px;
     color: #94a3b8;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .neo-dashboard-empty {
-    border-radius: 10px;
-    border: 1px dashed #d5deea;
+    border-radius: 14px;
+    border: 1px dashed #cbd5e1;
     background: #ffffff;
     color: #64748b;
-    padding: 28px 16px;
+    padding: 32px 16px;
     text-align: center;
     font-size: 14px;
 }
 
 @media (max-width: 1100px) {
     .neo-main {
-        padding: 12px;
+        padding: 14px;
     }
 }
 
 @media (max-width: 900px) {
     .neo-chart-grid {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
 
-    .neo-chart-legend {
-        grid-template-columns: 1fr;
+    .neo-chart-card {
+        flex: 1 1 auto;
+        max-width: 100%;
     }
 }
 
 @media (max-width: 780px) {
     .neo-kpi-value {
-        font-size: 20px;
+        font-size: 22px;
     }
 
-    .neo-chart-card--line .neo-chart-card__body {
-        height: 220px;
+    .neo-chart-card--area .neo-chart-card__body {
+        height: 170px;
+        flex: 0 0 170px;
     }
 
-    .neo-chart-card--pie .neo-chart-card__body {
-        height: 190px;
+    .neo-chart-card--bar .neo-chart-card__body {
+        height: 140px;
+        flex: 0 0 140px;
+    }
+
+    .neo-data-table__row {
+        grid-template-columns: 10px 1fr auto;
+    }
+
+    .neo-data-table__pct {
+        grid-column: 3;
+        grid-row: 1;
+        font-size: 11px;
+        min-width: 36px;
     }
 }

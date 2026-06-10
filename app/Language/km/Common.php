@@ -82,7 +82,7 @@ return [
     "view_recent_sales"              => "មើលការលក់ថ្មីៗ",
     "website"                        => "opensourcepos.org",
     "welcome"                        => "សូមស្វាគមន៍",
-    "welcome_message"                => "សូមស្វាគមន៍មកកាន់ OSPOS, សូមចុចលើម៉ូឌុលខាងក្រោមដើម្បីចាប់ផ្តើម",
+    "welcome_message"                => "សូមស្វាគមន៍មកកាន់ WBPOS, សូមចុចលើម៉ូឌុលខាងក្រោមដើម្បីចាប់ផ្តើម",
     "yes"                            => "",
     "you_are_using_ospos"            => "",
     "zip"                            => "កូដប្រៃសណីយ៍",

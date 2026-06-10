@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "ເບິ່ງການຂາຍລ່າສຸດ",
     "website"                        => "ເວັບໄຊ",
     "welcome"                        => "ຍິນດີຕ້ອນຮັບ",
-    "welcome_message"                => "ຍິນດີຕ້ອນຮັບສູ່ OSPOS, ກົດໂມເດວດ້ານລຸ່ມເພື່ອເລີ່ມ.",
+    "welcome_message"                => "ຍິນດີຕ້ອນຮັບສູ່ WBPOS, ກົດໂມເດວດ້ານລຸ່ມເພື່ອເລີ່ມ.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "ທ່ານກຳລັງໃຊ້ Open Source Point Of Sale ເວີຊັ່ນ",
+    "you_are_using_ospos"            => "ທ່ານກຳລັງໃຊ້ Web-Based POS ເວີຊັ່ນ",
     "zip"                            => "ລະຫັດໄປສະນີ",
 ];

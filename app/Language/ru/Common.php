@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Посмотреть недавние продажи",
     "website"                        => "opensourcepos.org",
     "welcome"                        => "Добро пожаловать",
-    "welcome_message"                => "Добро пожаловать в OSPOS, нажмите на модули ниже, чтобы начать.",
+    "welcome_message"                => "Добро пожаловать в WBPOS, нажмите на модули ниже, чтобы начать.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Вы использоваете Open Source Point Of Sale Версия",
+    "you_are_using_ospos"            => "Вы использоваете Web-Based POS Версия",
     "zip"                            => "Почтовый индекс",
 ];

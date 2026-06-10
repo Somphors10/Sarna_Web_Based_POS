@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Zobrazit nedávné prodeje",
     "website"                        => "www-stránky",
     "welcome"                        => "Vítejte",
-    "welcome_message"                => "Vítejte v OSPOS, vyberte si z modulů dole pro pokračování.",
+    "welcome_message"                => "Vítejte v WBPOS, vyberte si z modulů dole pro pokračování.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Používáte Open Source Point Of Sale verze",
+    "you_are_using_ospos"            => "Používáte Web-Based POS verze",
     "zip"                            => "PSČ",
 ];

@@ -82,8 +82,8 @@ return [
     "view_recent_sales"              => "Εμφάνιση Πρόσφατων Πωλήσεων",
     "website"                        => "Ιστοσελίδα",
     "welcome"                        => "Καλωσήρθατε",
-    "welcome_message"                => "Καλωσορίσατε στο OSPOS, επιλέξτε μια από τις παρακάτω ενότητες για να ξεκινήσετε.",
+    "welcome_message"                => "Καλωσορίσατε στο WBPOS, επιλέξτε μια από τις παρακάτω ενότητες για να ξεκινήσετε.",
     "yes"                            => "",
-    "you_are_using_ospos"            => "Χρησιμοποιείτε την Open Source Point Of Sale έκδοση",
+    "you_are_using_ospos"            => "Χρησιμοποιείτε την Web-Based POS έκδοση",
     "zip"                            => "Ταχ.Κωδικας",
 ];

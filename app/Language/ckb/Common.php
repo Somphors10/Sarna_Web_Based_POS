@@ -61,7 +61,7 @@ return [
     "search"                   => "گەڕان",
     "search_options"           => "هەڵبژاردەکانی گەڕان",
     "searched_for"             => "گەڕان بەدوای",
-    "software_short"           => "OSPOS",
+    "software_short"           => "WBPOS",
     "software_title"           => "ئۆپن سۆڕس پۆینت ئۆف سەیڵ",
     "state"                    => "دۆخ",
     "submit"                   => "ناردن",
@@ -70,7 +70,7 @@ return [
     "view_recent_sales"        => "بینینی فرۆشتنی ئەم دواییە",
     "website"                  => "opensourcepos.org",
     "welcome"                  => "بەخێربێن",
-    "welcome_message"          => "بەخێربێن بۆ OSPOS، کلیک لە مۆدیولێکی خوارەوە بکە بۆ دەستپێکردن.",
+    "welcome_message"          => "بەخێربێن بۆ WBPOS، کلیک لە مۆدیولێکی خوارەوە بکە بۆ دەستپێکردن.",
     "yes"                      => "بەڵێ",
     "zip"                      => "کۆدی پۆستی",
 ];

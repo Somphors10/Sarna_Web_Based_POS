@@ -57,7 +57,7 @@ INSERT INTO `ospos_app_config` (`key`, `value`) VALUES
 ('cash_decimals', '2'),
 ('cash_rounding_code', '0'),
 ('category_dropdown', ''),
-('company', 'Open Source Point of Sale'),
+('company', 'Web-Based POS'),
 ('company_logo', ''),
 ('country_codes', 'us'),
 ('currency_code', ''),

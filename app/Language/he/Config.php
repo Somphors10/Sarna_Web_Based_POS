@@ -225,7 +225,7 @@ return [
     "number_locale_required"                    => "מספר אזור הינו שדה חובה.",
     "number_locale_tooltip"                     => "מצא אזור תואם באמצעות קישור זה.",
     "os_timezone"                               => "",
-    "ospos_info"                                => "OSPOS פרטי התקנה",
+    "ospos_info"                                => "WBPOS פרטי התקנה",
     "payment_options_order"                     => "סידור אפשרויות תשלום",
     "perm_risk"                                 => "Permissions higher than 750 leaves this software at risk.",
     "phone"                                     => "טלפון חברה",
