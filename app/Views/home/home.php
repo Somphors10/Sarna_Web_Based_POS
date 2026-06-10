@@ -98,10 +98,6 @@ $summary_labels = [
                                     </div>
                                 <?php endif; ?>
                             </div>
-
-                            <?php if (!empty($chart['report_url'])): ?>
-                                <a class="neo-chart-card__link" href="<?= esc($chart['report_url']) ?>">Full report</a>
-                            <?php endif; ?>
                         </div>
 
                         <?php if (!empty($chart['has_data'])): ?>
@@ -112,20 +108,25 @@ $summary_labels = [
                             <?php if (!$is_area && !empty($chart['labels_1'])): ?>
                                 <?php
                                     $legend_total = max($chart_total, 1);
+                                    $palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#64748b'];
                                 ?>
-                                <div class="neo-data-table" role="table" aria-label="<?= esc($chart['title']) ?> breakdown">
+                                <div class="neo-pay-list" role="list" aria-label="<?= esc($chart['title']) ?> breakdown">
                                     <?php foreach ($chart['labels_1'] as $index => $label): ?>
                                         <?php
                                             $slice_value = (float) ($chart['series_data_1'][$index]['value'] ?? 0);
                                             $pct = round($slice_value / $legend_total * 100, 1);
-                                            $palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#64748b'];
                                             $color = $palette[$index % count($palette)];
                                         ?>
-                                        <div class="neo-data-table__row" role="row">
-                                            <span class="neo-data-table__dot" style="background-color: <?= esc($color) ?>"></span>
-                                            <span class="neo-data-table__name" role="cell"><?= esc($label) ?></span>
-                                            <span class="neo-data-table__amount" role="cell"><?= to_currency($slice_value) ?></span>
-                                            <span class="neo-data-table__pct" role="cell"><?= esc($pct) ?>%</span>
+                                        <div class="neo-pay-item" role="listitem">
+                                            <div class="neo-pay-item__top">
+                                                <span class="neo-pay-item__dot" style="background-color: <?= esc($color) ?>"></span>
+                                                <span class="neo-pay-item__name"><?= esc($label) ?></span>
+                                                <span class="neo-pay-item__amount"><?= to_currency($slice_value) ?></span>
+                                                <span class="neo-pay-item__pct"><?= esc($pct) ?>%</span>
+                                            </div>
+                                            <div class="neo-pay-item__bar" aria-hidden="true">
+                                                <span class="neo-pay-item__fill" style="width: <?= esc($pct) ?>%; background-color: <?= esc($color) ?>"></span>
+                                            </div>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>

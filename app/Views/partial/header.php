@@ -25,14 +25,14 @@ $request = Services::request();
     <?php if (ENVIRONMENT == 'development' || get_cookie('debug') == 'true' || $request->getGet('debug') == 'true') : ?>
         <!-- inject:debug:css -->
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=11">
+        <link rel="stylesheet" href="css/dashboard.css?v=13">
         <link rel="stylesheet" href="css/forms.css">
         <!-- inject:debug:js -->
         <!-- endinject -->
     <?php else : ?>
         <!--inject:prod:css -->
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=11">
+        <link rel="stylesheet" href="css/dashboard.css?v=13">
         <link rel="stylesheet" href="css/forms.css">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->

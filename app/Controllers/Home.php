@@ -2,8 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Models\Reports\Inventory_low;
-use App\Models\Reports\Inventory_summary;
 use App\Models\Reports\Summary_expenses_categories;
 use App\Models\Reports\Summary_payments;
 use App\Models\Reports\Summary_sales;
@@ -146,30 +144,6 @@ class Home extends Secure_Controller
                 'label' => lang('Common.dashboard_expenses'),
                 'value' => to_currency($expense_summary['expenses_total_amount'] ?? 0),
                 'hint'  => lang('Common.dashboard_last_30_days'),
-            ];
-        }
-
-        if ($this->employee->has_grant('reports_inventory', $person_id)) {
-            $inventory_inputs = [
-                'location_id' => 'all',
-                'item_count'  => 'all',
-            ];
-
-            $inventory_summary = model(Inventory_summary::class);
-            $inventory_rows = $inventory_summary->getData($inventory_inputs);
-            $inventory_totals = $inventory_summary->getSummaryData($inventory_rows);
-
-            $kpis[] = [
-                'label' => lang('Common.dashboard_inventory_value'),
-                'value' => to_currency($inventory_totals['total_inventory_value'] ?? 0),
-                'hint'  => lang('Common.dashboard_all_locations'),
-            ];
-
-            $low_stock_rows = model(Inventory_low::class)->getData([]);
-            $kpis[] = [
-                'label' => lang('Common.dashboard_low_stock'),
-                'value' => (string)count($low_stock_rows),
-                'hint'  => lang('Common.dashboard_items_to_reorder'),
             ];
         }
 

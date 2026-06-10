@@ -50,11 +50,12 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
 
         var labels = <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         var values = <?= json_encode($values, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        var peak = Math.max.apply(null, values.concat([0]));
 
         var ctx = canvas.getContext('2d');
-        var gradient = ctx.createLinearGradient(0, 0, 0, 185);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.22)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.02)');
+        var gradient = ctx.createLinearGradient(0, 0, 0, 168);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.01)');
 
         window.<?= esc($chart_var, 'js') ?> = new Chart(ctx, {
             type: 'line',
@@ -78,6 +79,14 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 4,
+                        bottom: 0,
+                        left: 0,
+                        right: 4
+                    }
+                },
                 interaction: {
                     mode: 'index',
                     intersect: false
@@ -123,8 +132,10 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                     },
                     y: {
                         beginAtZero: true,
+                        suggestedMax: peak > 0 ? peak * 1.15 : undefined,
                         grid: {
-                            color: '#eef2f7'
+                            color: 'rgba(148, 163, 184, 0.15)',
+                            drawTicks: false
                         },
                         border: {
                             display: false
@@ -132,8 +143,9 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                         ticks: {
                             color: '#94a3b8',
                             font: {
-                                size: 11
+                                size: 10
                             },
+                            padding: 6,
                             callback: function (value) {
                                 return formatMoney(value);
                             },

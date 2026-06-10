@@ -68,10 +68,10 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                 datasets: [{
                     data: values,
                     backgroundColor: colors,
-                    borderRadius: 6,
+                    borderRadius: 5,
                     borderSkipped: false,
-                    barThickness: 18,
-                    maxBarThickness: 22
+                    barThickness: 16,
+                    maxBarThickness: 20
                 }]
             },
             options: {
@@ -80,7 +80,9 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
-                        right: 12
+                        top: 2,
+                        bottom: 2,
+                        right: 8
                     }
                 },
                 plugins: {
