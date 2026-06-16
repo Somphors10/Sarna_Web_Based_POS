@@ -351,6 +351,17 @@ body.login-page::before {
     box-shadow: 0 0 0 3px var(--pos-accent-soft);
 }
 
+/* Hide browser-native password reveal (Chrome/Edge) — we provide our own toggle */
+.login-field__input[type="password"]::-ms-reveal,
+.login-field__input[type="password"]::-ms-clear {
+    display: none;
+}
+
+.login-field__input[type="password"]::-webkit-credentials-auto-fill-button,
+.login-field__input[type="password"]::-webkit-textfield-decoration-container {
+    display: none;
+}
+
 .login-field__toggle {
     position: absolute;
     top: 0;

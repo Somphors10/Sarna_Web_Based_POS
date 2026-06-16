@@ -242,9 +242,11 @@ function get_people_manage_table_headers(): string
 function get_person_data_row(object $person): array
 {
     $controller = get_controller();
-    $display_person_id = isset($person->tenant_person_seq)
-        ? (int)$person->tenant_person_seq
-        : (int)$person->person_id;
+    $display_person_id = isset($person->tenant_employee_seq)
+        ? (int)$person->tenant_employee_seq
+        : (isset($person->tenant_person_seq)
+            ? (int)$person->tenant_person_seq
+            : (int)$person->person_id);
 
     return [
         'people.person_id' => $display_person_id,

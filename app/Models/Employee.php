@@ -88,8 +88,8 @@ class Employee extends Person
         $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->where('employees.deleted', 0);
         $builder->join('people AS people', 'employees.person_id = people.person_id');
-        if ($this->db->fieldExists('tenant_id', 'people')) {
-            $builder->select('employees.*, people.*, ' . $this->tenantSequenceSql('people', 'person_id', 'tenant_person_seq', 'people'), false);
+        if ($this->db->fieldExists('tenant_id', 'employees')) {
+            $builder->select('employees.*, people.*, ' . $this->employeeSequenceSql(), false);
         }
         $builder->orderBy('last_name', 'asc');
         $builder->limit($limit);
@@ -376,8 +376,8 @@ class Employee extends Person
             return $builder->get()->getRow()->count;
         }
 
-        if ($this->db->fieldExists('tenant_id', 'people')) {
-            $builder->select('employees.*, people.*, ' . $this->tenantSequenceSql('people', 'person_id', 'tenant_person_seq', 'people'), false);
+        if ($this->db->fieldExists('tenant_id', 'employees')) {
+            $builder->select('employees.*, people.*, ' . $this->employeeSequenceSql(), false);
         }
 
         $builder->orderBy($sort, $order);
@@ -612,5 +612,19 @@ class Employee extends Person
             // is temporarily unavailable during migration setup.
             return true;
         }
+    }
+
+    /**
+     * Per-company employee display ID (1, 2, 3...) — employees only, not all people.
+     */
+    protected function employeeSequenceSql(): string
+    {
+        return $this->tenantSequenceSql(
+            'employees',
+            'person_id',
+            'tenant_employee_seq',
+            'employees',
+            'AND tenant_seq_inner.deleted = 0'
+        );
     }
 }

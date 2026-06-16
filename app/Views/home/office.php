@@ -19,18 +19,6 @@
             </div>
         </header>
 
-        <div class="neo-info-grid">
-            <?php foreach(array_slice($allowed_modules, 0, 4) as $module) { ?>
-                <a class="neo-info-card" href="<?= base_url($module->module_id) ?>">
-                    <img src="<?= base_url("images/menubar/$module->module_id.svg") ?>" alt="<?= lang("Module.$module->module_id") ?>">
-                    <div>
-                        <strong><?= lang("Module.$module->module_id") ?></strong>
-                        <p><?= lang("Module.$module->module_id" . '_desc') ?></p>
-                    </div>
-                </a>
-            <?php } ?>
-        </div>
-
         <div class="neo-module-grid">
             <?php foreach($allowed_modules as $module) { ?>
                 <a class="neo-module-card" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id" . '_desc') ?>">

@@ -1,0 +1,845 @@
+
+
+<!doctype html>
+<html lang="ar-EG">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <base href="http://localhost/opensourcepos/public/">
+    <title>WBPOS Demo Store | Powered by WBPOS 3.4.2</title>
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="resources/bootswatch/flatly/bootstrap.min.css">
+
+            <!--inject:prod:css -->
+        <!-- endinject -->
+        <link rel="stylesheet" href="css/dashboard.css?v=14">
+        <link rel="stylesheet" href="css/forms.css">
+
+        <!-- Tweaks to the UI for a particular theme should drop here  -->
+                <!-- inject:prod:js -->
+        <!-- endinject -->
+    
+            <script src="resources/jquery-2c872dbe60.min.js"></script>
+            <script src="resources/opensourcepos-887816d5a6.min.js"></script>
+    
+    
+<script type="text/javascript">
+    // Live clock
+    var clock_tick = function clock_tick() {
+        setInterval('update_clock();', 1000);
+    }
+
+    // Start the clock immediately
+    clock_tick();
+
+    var update_clock = function update_clock() {
+        document.getElementById('liveclock').innerHTML = moment().format("MM/DD/YYYY HH:mm:ss");
+    }
+
+    const notify = $.notify;
+
+    $.notify = function(content, options) {
+        const message = typeof content === "object" ? content.message : content;
+        const sanitizedMessage = DOMPurify.sanitize(message);
+        return notify(sanitizedMessage, options);
+    };
+
+    $.notifyDefaults({
+        placement: {
+            align: "center",
+            from: "bottom"
+        }
+    });
+
+    var csrf_token = function() {
+        return "342c5a59038e63a7e78bac92634a4b43";
+    };
+
+    var csrf_form_base = function() {
+        return {
+            csrf_ospos_v4: function() {
+                return csrf_token()
+            }
+        }
+    };
+
+    var setup_csrf_token = function() {
+        $('input[name="csrf_ospos_v4"]').val(csrf_token());
+    };
+
+    var ajax = $.ajax;
+
+    $.ajax = function() {
+        var args = arguments[0];
+        if (args['type'] && args['type'].toLowerCase() == 'post' && csrf_token()) {
+            if (typeof args['data'] === 'string') {
+                args['data'] += '&' + $.param(csrf_form_base());
+            } else {
+                args['data'] = $.extend(args['data'], csrf_form_base());
+            }
+        }
+
+        return ajax.apply(this, arguments);
+    };
+
+    $(document).ajaxComplete(setup_csrf_token);
+
+    // Stub until footer logout modal script loads; allows logout without blocking the click.
+    window.osposConfirmLogout = function() {
+        return true;
+    };
+
+    var submit = $.fn.submit;
+
+    $.fn.submit = function() {
+        setup_csrf_token();
+        submit.apply(this, arguments);
+    };
+</script>
+    <script type="text/javascript">
+    (function(lang, $) {
+
+        var lines = {
+            'common_submit': "Submit",
+            'common_close': "Close"
+        };
+
+        $.extend(lang, {
+            line: function(key) {
+                return lines[key];
+            }
+        });
+
+    })(window.lang = window.lang || {}, jQuery);
+</script>
+
+    <style>
+        html {
+            overflow: auto;
+        }
+    </style>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+            const isCollapsed = localStorage.getItem(key) === '1';
+            if (window.innerWidth > 992 && isCollapsed) {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <script>
+        (function() {
+            const key = 'ospos_sidebar_collapsed';
+
+            const syncForViewport = function() {
+                if (window.innerWidth <= 992) {
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else if (localStorage.getItem(key) === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggle = document.getElementById('neo_sidebar_toggle');
+                const mobileToggle = document.getElementById('neo_mobile_sidebar_toggle');
+                const mobileBackdrop = document.getElementById('neo_sidebar_backdrop');
+                if (!toggle) {
+                    return;
+                }
+
+                const setExpandedState = function() {
+                    toggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+                };
+
+                toggle.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        return;
+                    }
+
+                    document.documentElement.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem(key, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                    setExpandedState();
+                });
+
+                const closeMobileSidebar = function() {
+                    document.documentElement.classList.remove('mobile-sidebar-open');
+                };
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function() {
+                        if (window.innerWidth > 992) {
+                            return;
+                        }
+                        document.documentElement.classList.toggle('mobile-sidebar-open');
+                    });
+                }
+
+                if (mobileBackdrop) {
+                    mobileBackdrop.addEventListener('click', closeMobileSidebar);
+                }
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && window.innerWidth <= 992) {
+                        closeMobileSidebar();
+                    }
+                });
+
+                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) {
+                            closeMobileSidebar();
+                        }
+                    });
+                });
+
+                window.addEventListener('resize', function() {
+                    syncForViewport();
+                    setExpandedState();
+                    if (window.innerWidth > 992) {
+                        document.documentElement.classList.remove('mobile-sidebar-open');
+                    }
+                });
+
+                syncForViewport();
+                setExpandedState();
+            });
+        })();
+    </script>
+    <div class="wrapper">
+        <div class="neo-layout">
+            <aside class="neo-global-sidebar">
+                <div class="neo-global-brand-row">
+                    <a class="neo-global-brand" href="http://localhost/opensourcepos/public/home">
+                        <span class="neo-global-brand-full">WBPOS</span>
+                        <span class="neo-global-brand-mini">W</span>
+                    </a>
+                    <button id="neo_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                        <span class="glyphicon glyphicon-chevron-left"></span>
+                    </button>
+                </div>
+                <div class="neo-global-sidebar-body">
+                    <nav class="neo-global-menu">
+                                                                                                        <a class="neo-global-menu-item is-active" href="http://localhost/opensourcepos/public/home" title="Home">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/home.svg" alt="">
+                                <span>Home</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/customers" title="Customers">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/customers.svg" alt="">
+                                <span>Customers</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/items" title="Items">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/items.svg" alt="">
+                                <span>Items</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/item_kits" title="Item Kits">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/item_kits.svg" alt="">
+                                <span>Item Kits</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/suppliers" title="Suppliers">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/suppliers.svg" alt="">
+                                <span>Suppliers</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/reports" title="Reports">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/reports.svg" alt="">
+                                <span>Reports</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/receivings" title="Receivings">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/receivings.svg" alt="">
+                                <span>Receivings</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/sales" title="Sales">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/sales.svg" alt="">
+                                <span>Sales</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/expenses" title="Expenses">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/expenses.svg" alt="">
+                                <span>Expenses</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/cashups" title="Cashups">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/cashups.svg" alt="">
+                                <span>Cashups</span>
+                            </a>
+                                                                                <a class="neo-global-menu-item " href="http://localhost/opensourcepos/public/office" title="Office">
+                                <img class="neo-nav__icon" src="http://localhost/opensourcepos/public/images/nav/office.svg" alt="">
+                                <span>Office</span>
+                            </a>
+                                            </nav>
+                </div>
+            </aside>
+            <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
+
+            <main class="neo-global-content">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
+                            <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                        </button>
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock">06/16/2026 05:03:08</div>
+                        </div>
+
+                        <div class="navbar-center pos-topbar-company">
+                            <strong>WBPOS Demo Store</strong>
+                        </div>
+
+                        <div class="navbar-right pos-topbar-user">
+                            <a href="http://localhost/opensourcepos/public/home/changePassword/1" class="modal-dlg pos-user-link" data-btn-submit="Submit" title="Change Password">Admin User</a>                            <a href="http://localhost/opensourcepos/public/home/logout" class="pos-logout-link" data-logout-url="http://localhost/opensourcepos/public/home/logout" onclick="return typeof window.osposConfirmLogout === &quot;function&quot; ? window.osposConfirmLogout(this) : true;">Logout</a>                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+
+<script src="js/chart.umd.min.js"></script>
+
+<script type="text/javascript">
+    dialog_support.init("a.modal-dlg");
+</script>
+
+<section class="neo-home">
+    <div class="neo-main">
+        <header class="neo-dash-header">
+            <div>
+                <h2 class="neo-dash-header__title">Business Dashboard</h2>
+                <p class="neo-dash-header__subtitle">05/18/2026 to 06/16/2026</p>
+            </div>
+        </header>
+
+                    <div class="neo-kpi-grid">
+                                    <div class="neo-kpi-card">
+                        <span class="neo-kpi-label">Revenue</span>
+                        <strong class="neo-kpi-value">$109.50</strong>
+                                                    <span class="neo-kpi-hint">Last 30 days</span>
+                                            </div>
+                                    <div class="neo-kpi-card">
+                        <span class="neo-kpi-label">Profit</span>
+                        <strong class="neo-kpi-value">$71.00</strong>
+                                                    <span class="neo-kpi-hint">Last 30 days</span>
+                                            </div>
+                                    <div class="neo-kpi-card">
+                        <span class="neo-kpi-label">Today&#039;s Sales</span>
+                        <strong class="neo-kpi-value">$0.00</strong>
+                                                    <span class="neo-kpi-hint">06/16/2026</span>
+                                            </div>
+                                    <div class="neo-kpi-card">
+                        <span class="neo-kpi-label">Expenses</span>
+                        <strong class="neo-kpi-value">$515.00</strong>
+                                                    <span class="neo-kpi-hint">Last 30 days</span>
+                                            </div>
+                            </div>
+        
+                    <h3 class="neo-section-title">Reports Overview</h3>
+
+            <div class="neo-chart-grid">
+                                    
+                    <article class="neo-chart-card neo-chart-card--area">
+                        <div class="neo-chart-card__header">
+                            <div class="neo-chart-card__heading">
+                                <div class="neo-chart-card__title-row">
+                                    <h4 class="neo-chart-card__title">Sales Trend</h4>
+                                                                            <div class="neo-chart-card__total">
+                                            <span>Total</span>
+                                            <strong>$109.50</strong>
+                                        </div>
+                                                                    </div>
+                                                                    <p class="neo-chart-card__subtitle">Daily revenue over the last 30 days</p>
+                                
+                                                            </div>
+                        </div>
+
+                                                    <div class="neo-chart-card__body">
+                                <canvas id="home_sales_chart" class="neo-chart-canvas" aria-label="Sales Trend"></canvas>
+                            </div>
+
+                            
+                            
+<script type="text/javascript">
+    (function () {
+        if (typeof Chart === 'undefined') {
+            return;
+        }
+
+        var canvas = document.getElementById('home_sales_chart');
+        if (!canvas) {
+            return;
+        }
+
+        var currencySymbol = "$";
+        var currencySide = "left";
+        var showCurrency = true;
+
+        function formatMoney(value) {
+            var amount = Number(value || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            if (!showCurrency) {
+                return amount;
+            }
+
+            return currencySide === 'right' ? amount + currencySymbol : currencySymbol + amount;
+        }
+
+        var labels = ["May 22","May 28","Jun 5"];
+        var values = [46.5,40,23];
+        var peak = Math.max.apply(null, values.concat([0]));
+
+        var ctx = canvas.getContext('2d');
+        var gradient = ctx.createLinearGradient(0, 0, 0, 168);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.01)');
+
+        window.homeSalesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: values,
+                    borderColor: '#6366f1',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#6366f1',
+                    pointBorderWidth: 2,
+                    pointRadius: labels.length <= 14 ? 3 : 0,
+                    pointHoverRadius: 5,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 4,
+                        bottom: 0,
+                        left: 0,
+                        right: 4
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleColor: '#94a3b8',
+                        bodyColor: '#ffffff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function (items) {
+                                return items.length ? items[0].label : '';
+                            },
+                            label: function (item) {
+                                return 'Revenue: ' + formatMoney(item.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 11
+                            },
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 6
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: peak > 0 ? peak * 1.15 : undefined,
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.15)',
+                            drawTicks: false
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 10
+                            },
+                            padding: 6,
+                            callback: function (value) {
+                                return formatMoney(value);
+                            },
+                            maxTicksLimit: 4
+                        }
+                    }
+                }
+            }
+        });
+    })();
+</script>
+                                            </article>
+                                    
+                    <article class="neo-chart-card neo-chart-card--bar">
+                        <div class="neo-chart-card__header">
+                            <div class="neo-chart-card__heading">
+                                <div class="neo-chart-card__title-row">
+                                    <h4 class="neo-chart-card__title">Payment Methods</h4>
+                                                                            <div class="neo-chart-card__total">
+                                            <span>Total</span>
+                                            <strong>$109.50</strong>
+                                        </div>
+                                                                    </div>
+                                                                    <p class="neo-chart-card__subtitle">How customers paid during this period</p>
+                                
+                                                            </div>
+                        </div>
+
+                                                    <div class="neo-chart-card__body">
+                                <canvas id="home_payments_chart" class="neo-chart-canvas" aria-label="Payment Methods"></canvas>
+                            </div>
+
+                                                                                            <div class="neo-pay-list" role="list" aria-label="Payment Methods breakdown">
+                                                                                                                    <div class="neo-pay-item" role="listitem">
+                                            <div class="neo-pay-item__top">
+                                                <span class="neo-pay-item__dot" style="background-color: #6366f1"></span>
+                                                <span class="neo-pay-item__name">Cash</span>
+                                                <span class="neo-pay-item__amount">$109.50</span>
+                                                <span class="neo-pay-item__pct">100%</span>
+                                            </div>
+                                            <div class="neo-pay-item__bar" aria-hidden="true">
+                                                <span class="neo-pay-item__fill" style="width: 100%; background-color: #6366f1"></span>
+                                            </div>
+                                        </div>
+                                                                    </div>
+                            
+                            
+<script type="text/javascript">
+    (function () {
+        if (typeof Chart === 'undefined') {
+            return;
+        }
+
+        var canvas = document.getElementById('home_payments_chart');
+        if (!canvas) {
+            return;
+        }
+
+        var currencySymbol = "$";
+        var currencySide = "left";
+        var showCurrency = true;
+        var total = 109.5;
+
+        function formatMoney(value) {
+            var amount = Number(value || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            if (!showCurrency) {
+                return amount;
+            }
+
+            return currencySide === 'right' ? amount + currencySymbol : currencySymbol + amount;
+        }
+
+        var labels = ["Cash"];
+        var values = [109.5];
+        var colors = ["#6366f1"];
+
+        window.homePaymentsChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 16,
+                    maxBarThickness: 20
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 2,
+                        bottom: 2,
+                        right: 8
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleColor: '#ffffff',
+                        bodyColor: '#cbd5e1',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function (item) {
+                                var pct = total > 0 ? ((item.raw / total) * 100).toFixed(1) : '0.0';
+
+                                return formatMoney(item.raw) + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#eef2f7'
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: {
+                                size: 11
+                            },
+                            callback: function (value) {
+                                return formatMoney(value);
+                            },
+                            maxTicksLimit: 5
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#334155',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            autoSkip: false
+                        }
+                    }
+                }
+            }
+        });
+    })();
+</script>
+                                            </article>
+                            </div>
+            </div>
+</section>
+
+        </div>
+    </div>
+</main>
+</div>
+    </div>
+
+<style>
+#pos-logout-confirm.pos-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 1rem;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+#pos-logout-confirm.pos-modal-overlay.is-open {
+    display: flex !important;
+}
+
+#pos-logout-confirm .pos-modal {
+    width: min(420px, 100%);
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+#pos-logout-confirm .pos-modal__head {
+    padding: 1.1rem 1.25rem 0.45rem;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+#pos-logout-confirm .pos-modal__body {
+    padding: 0.35rem 1.25rem 1.1rem;
+    font-size: 15px;
+    font-weight: 400;
+    color: #475569;
+    line-height: 1.5;
+}
+
+#pos-logout-confirm .pos-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.9rem 1.25rem 1.05rem;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+}
+
+#pos-logout-confirm .pos-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 78px;
+    height: 38px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease, background 0.15s ease;
+}
+
+#pos-logout-confirm .pos-modal-btn:active {
+    transform: translateY(1px);
+}
+
+#pos-logout-confirm .pos-modal-btn--ghost {
+    background: #fff;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+#pos-logout-confirm .pos-modal-btn--ghost:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+#pos-logout-confirm .pos-modal-btn--danger-solid {
+    background: #dc2626;
+    color: #fff;
+}
+
+#pos-logout-confirm .pos-modal-btn--danger-solid:hover {
+    filter: brightness(1.05);
+}
+</style>
+
+<div id="pos-logout-confirm" class="pos-modal-overlay" aria-hidden="true">
+    <div class="pos-modal" role="dialog" aria-modal="true" aria-labelledby="pos-logout-confirm-title">
+        <div class="pos-modal__head" id="pos-logout-confirm-title">Confirm logout</div>
+        <div class="pos-modal__body">Are you sure you want to logout?</div>
+        <div class="pos-modal__actions">
+            <button type="button" class="pos-modal-btn pos-modal-btn--ghost" id="pos-logout-confirm-cancel">Cancel</button>
+            <button type="button" class="pos-modal-btn pos-modal-btn--danger-solid" id="pos-logout-confirm-continue">Logout</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var logoutOverlay = document.getElementById('pos-logout-confirm');
+    if (!logoutOverlay) {
+        return;
+    }
+
+    if (logoutOverlay.parentNode !== document.body) {
+        document.body.appendChild(logoutOverlay);
+    }
+
+    var logoutCancelBtn = document.getElementById('pos-logout-confirm-cancel');
+    var logoutContinueBtn = document.getElementById('pos-logout-confirm-continue');
+    var pendingLogoutHref = null;
+
+    var closeLogoutModal = function() {
+        logoutOverlay.classList.remove('is-open');
+        logoutOverlay.setAttribute('aria-hidden', 'true');
+        pendingLogoutHref = null;
+    };
+
+    var openLogoutModal = function(href) {
+        if (!href) {
+            return false;
+        }
+        pendingLogoutHref = href;
+        logoutOverlay.classList.add('is-open');
+        logoutOverlay.setAttribute('aria-hidden', 'false');
+        return false;
+    };
+
+    window.osposConfirmLogout = function(link) {
+        var href = link.getAttribute('data-logout-url') || link.getAttribute('href');
+        return openLogoutModal(href);
+    };
+
+    document.querySelectorAll('.pos-logout-link').forEach(function(link) {
+        if (link.getAttribute('onclick')) {
+            return;
+        }
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            openLogoutModal(link.getAttribute('data-logout-url') || link.getAttribute('href'));
+        });
+    });
+
+    if (logoutContinueBtn) {
+        logoutContinueBtn.addEventListener('click', function() {
+            if (!pendingLogoutHref) {
+                closeLogoutModal();
+                return;
+            }
+            window.location.assign(pendingLogoutHref);
+        });
+    }
+
+    if (logoutCancelBtn) {
+        logoutCancelBtn.addEventListener('click', closeLogoutModal);
+    }
+
+    logoutOverlay.addEventListener('click', function(event) {
+        if (event.target === logoutOverlay) {
+            closeLogoutModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && logoutOverlay.classList.contains('is-open')) {
+            closeLogoutModal();
+        }
+    });
+})();
+</script>
+</body>
+
+</html>
