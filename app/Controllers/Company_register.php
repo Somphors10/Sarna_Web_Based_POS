@@ -35,7 +35,7 @@ class Company_register extends BaseController
             'first_name' => 'required|min_length[2]|max_length[100]',
             'last_name' => 'required|min_length[2]|max_length[100]',
             'username' => 'required|min_length[4]|max_length[50]',
-            'password' => 'required|min_length[8]|max_length[255]',
+            'password' => 'required|strong_password|max_length[255]',
             'email' => 'permit_empty|valid_email'
         ];
 

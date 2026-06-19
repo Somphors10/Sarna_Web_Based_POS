@@ -60,7 +60,8 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="password">Owner Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <input type="password" class="form-control" id="password" name="password" minlength="8" pattern="<?= esc(strong_password_js_pattern(), 'attr') ?>" required>
+                    <div class="form-text"><?= lang('Common.password_strong_hint') ?></div>
                 </div>
 
                 <div class="col-12">

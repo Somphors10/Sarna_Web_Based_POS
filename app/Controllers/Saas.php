@@ -59,7 +59,7 @@ class Saas extends BaseController
             'owner_email' => 'required|valid_email',
             'owner_phone' => 'permit_empty|max_length[255]',
             'owner_username' => 'required|min_length[4]|max_length[50]',
-            'owner_password' => 'required|min_length[8]|max_length[255]',
+            'owner_password' => 'required|strong_password|max_length[255]',
             'plan_id' => 'required|integer',
             'payment_reference' => 'required|min_length[3]|max_length[100]'
         ];

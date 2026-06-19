@@ -17,6 +17,28 @@ class OSPOSRules
     private array $config;
 
     /**
+     * Requires uppercase, lowercase, digit, special character, min 8 chars.
+     *
+     * @noinspection PhpUnused
+     */
+    public function strong_password(?string $str, ?string $fields, array $data, ?string &$error = null): bool
+    {
+        helper('password');
+
+        if ($str === null || $str === '') {
+            return true;
+        }
+
+        if (is_strong_password($str)) {
+            return true;
+        }
+
+        $error = lang('Common.password_strong');
+
+        return false;
+    }
+
+    /**
      * Validates the username and password sent to the login view. User is logged in on successful validation.
      *
      * @param string $username Username to check against.

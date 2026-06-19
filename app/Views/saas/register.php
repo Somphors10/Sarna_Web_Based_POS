@@ -110,8 +110,8 @@ $company = $brand_name;
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_password">POS password</label>
-                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" required>
-                        <span class="lp-field-hint">Minimum 8 characters</span>
+                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" pattern="<?= esc(strong_password_js_pattern(), 'attr') ?>" required>
+                        <span class="lp-field-hint"><?= lang('Common.password_strong_hint') ?></span>
                     </div>
                 </div>
             </section>

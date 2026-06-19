@@ -55,6 +55,7 @@
                                 'class' => 'form-control input-sm'
                             ]) ?>
                         </div>
+                        <p class="help-block" style="margin-top:6px;margin-bottom:0;"><?= lang('Common.password_strong_hint') ?></p>
                     </div>
                 </div>
 
@@ -77,6 +78,10 @@
     </div>
 <?= form_close() ?>
 
+<script type="text/javascript">
+    window.WBPOS_STRONG_PASSWORD_MESSAGE = <?= json_encode(lang('Employees.password_strong')) ?>;
+</script>
+<script src="<?= base_url('js/strong_password.js') ?>"></script>
 <script type="text/javascript">
     // Validation and submit handling
     $(document).ready(function() {
@@ -109,6 +114,7 @@
                 password: {
                     required: true,
                     minlength: 8,
+                    strongPassword: true,
                     notEqualTo: "#current_password"
                 },
                 repeat_password: {
@@ -119,7 +125,8 @@
             messages: {
                 password: {
                     required: "<?= lang('Employees.password_required') ?>",
-                    minlength: "<?= lang('Employees.password_minlength') ?>"
+                    minlength: "<?= lang('Employees.password_minlength') ?>",
+                    strongPassword: "<?= lang('Employees.password_strong') ?>"
                 },
                 repeat_password: {
                     equalTo: "<?= lang('Employees.password_must_match') ?>"

@@ -26,6 +26,8 @@ return [
     "dashboard_period"               => "{0} to {1}",
     "dashboard_today_sales"          => "Today's Sales",
     "dashboard_view_report"          => "View full report",
+    "password_strong"                => "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.",
+    "password_strong_hint"           => "Min 8 characters with uppercase, lowercase, number, and symbol (e.g. Wbpos@Shop2026).",
     "date"                           => "Date",
     "delete"                         => "Delete",
     "det"                            => "details",

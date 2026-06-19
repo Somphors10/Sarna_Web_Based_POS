@@ -192,13 +192,24 @@ class Home extends Secure_Controller
     {
         if (!empty($this->request->getPost('current_password')) && $employee_id != -1) {
             if ($this->employee->check_password($this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS), $this->request->getPost('current_password'))) {
+                $plain_password = (string)$this->request->getPost('password');
+                if (!is_strong_password($plain_password)) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => lang('Employees.password_strong'),
+                        'id'      => -1
+                    ]);
+
+                    return;
+                }
+
                 $employee_data = [
                     'username'     => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-                    'password'     => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+                    'password'     => password_hash($plain_password, PASSWORD_DEFAULT),
                     'hash_version' => 2
                 ];
 
-                if ($this->employee->change_password($employee_data, $employee_id) && strlen($employee_data['password']) >= 8) {
+                if ($this->employee->change_password($employee_data, $employee_id)) {
                     echo json_encode([
                         'success' => true,
                         'message' => lang('Employees.successful_change_password'),

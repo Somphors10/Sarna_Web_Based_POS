@@ -154,10 +154,21 @@ class Employees extends Persons
 
         // Password has been changed OR first time password set
         if (!empty($this->request->getPost('password')) && ENVIRONMENT != 'testing') {
+            $plain_password = (string)$this->request->getPost('password');
+            if (!is_strong_password($plain_password)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => lang('Employees.password_strong'),
+                    'id'      => $employee_id
+                ]);
+
+                return;
+            }
+
             $exploded = explode(":", $this->request->getPost('language', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
             $employee_data = [
                 'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-                'password'      => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+                'password'      => password_hash($plain_password, PASSWORD_DEFAULT),
                 'hash_version'  => 2,
                 'language_code' => $exploded[0],
                 'language'      => $exploded[1]
