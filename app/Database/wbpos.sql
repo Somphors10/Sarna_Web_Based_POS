@@ -1,21 +1,16 @@
--- ============================================================
--- WBPOS Database (generated from ospos.sql)
--- Database name : wbpos
--- Table prefix  : wbpos_
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
 --
--- FRESH INSTALL (XAMPP):
---   1. Double-click app/Database/import_wbpos.bat
---   OR run manually:
---   2. mysql -u root < app/Database/wbpos.sql
---   3. mysql -u root wbpos < app/Database/wbpos_clean_install.sql
---   4. mysql -u root wbpos < app/Database/wbpos_demo_data.sql
---
--- Then set .env database to wbpos and DBPrefix to wbpos_
--- ============================================================
+-- Host: 127.0.0.1
+-- Generation Time: Jun 19, 2026 at 02:11 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
-DROP DATABASE IF EXISTS `wbpos`;
-CREATE DATABASE `wbpos` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `wbpos`;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -43,7 +38,7 @@ CREATE TABLE `wbpos_app_config` (
 
 INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('account_number', ''),
-('address', '123 Nowhere street'),
+('address', '100 Main Street'),
 ('allow_duplicate_barcodes', '0'),
 ('barcode_content', 'id'),
 ('barcode_first_row', 'category'),
@@ -62,7 +57,7 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('cash_decimals', '2'),
 ('cash_rounding_code', '0'),
 ('category_dropdown', ''),
-('company', 'WBPOS'),
+('company', 'WBPOS Demo Store'),
 ('company_logo', ''),
 ('country_codes', 'us'),
 ('currency_code', ''),
@@ -76,8 +71,8 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('default_register_mode', 'sale'),
 ('default_sales_discount', '0'),
 ('default_sales_discount_type', '0'),
-('default_tax_1_name', ''),
-('default_tax_1_rate', ''),
+('default_tax_1_name', 'Sales Tax'),
+('default_tax_1_rate', '8'),
 ('default_tax_2_name', ''),
 ('default_tax_2_rate', ''),
 ('default_tax_category', 'Standard'),
@@ -86,7 +81,7 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('default_tax_rate', '8'),
 ('derive_sale_quantity', '0'),
 ('dinner_table_enable', '0'),
-('email', 'changeme@example.com'),
+('email', 'admin@wbpos.demo'),
 ('email_receipt_check_behaviour', 'last'),
 ('enforce_privacy', '0'),
 ('fax', ''),
@@ -96,11 +91,11 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('gcaptcha_site_key', ''),
 ('giftcard_number', 'series'),
 ('image_allowed_types', 'gif,jpg,png'),
-('image_max_height', '480'),
-('image_max_size', '128'),
-('image_max_width', '640'),
+('image_max_height', '1280'),
+('image_max_size', '2048'),
+('image_max_width', '1280'),
 ('include_hsn', '0'),
-('invoice_default_comments', 'This is a default comment'),
+('invoice_default_comments', 'Thank you for your business.'),
 ('invoice_email_message', 'Dear {CU}, In attachment the receipt for sale {ISEQ}'),
 ('invoice_enable', '1'),
 ('invoice_type', 'invoice'),
@@ -123,7 +118,7 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('number_locale', 'en_US'),
 ('payment_message', ''),
 ('payment_options_order', 'cashdebitcredit'),
-('phone', '555-555-5555'),
+('phone', '555-555-0100'),
 ('print_bottom_margin', '0'),
 ('print_delay_autoreturn', '0'),
 ('print_footer', '0'),
@@ -146,9 +141,10 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('receipt_template', 'receipt_default'),
 ('receiving_calculate_average_price', ''),
 ('recv_invoice_format', '{CO}'),
-('return_policy', 'Test'),
+('return_policy', 'Returns within 30 days with receipt.'),
 ('sales_invoice_format', '{CO}'),
 ('sales_quote_format', 'Q%y{QSEQ:6}'),
+('show_office_group', '1'),
 ('smtp_crypto', 'ssl'),
 ('smtp_host', ''),
 ('smtp_pass', ''),
@@ -187,14 +183,6 @@ CREATE TABLE `wbpos_attribute_definitions` (
   `deleted` tinyint(1) NOT NULL DEFAULT 0,
   `tenant_id` bigint(20) UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-
---
--- Dumping data for table `wbpos_attribute_definitions`
---
-
-INSERT INTO `wbpos_attribute_definitions` (`definition_id`, `definition_name`, `definition_type`, `definition_unit`, `definition_flags`, `definition_fk`, `deleted`, `tenant_id`) VALUES
-(1, 'add', 'CHECKBOX', NULL, 7, NULL, 0, 1),
-(2, 'ok', 'GROUP', NULL, 7, NULL, 0, 3);
 
 -- --------------------------------------------------------
 
@@ -254,11 +242,12 @@ CREATE TABLE `wbpos_cash_up` (
 --
 
 INSERT INTO `wbpos_cash_up` (`cashup_id`, `open_date`, `close_date`, `open_amount_cash`, `transfer_amount_cash`, `note`, `closed_amount_cash`, `closed_amount_card`, `closed_amount_check`, `closed_amount_total`, `description`, `open_employee_id`, `close_employee_id`, `deleted`, `closed_amount_due`, `tenant_id`) VALUES
-(4, '2026-04-29 16:09:20', '2026-04-29 16:09:20', 0.00, 0.00, 0, 0.00, 0.00, 0.00, 0.00, '', 12, 12, 0, 0.00, 3),
-(5, '2026-04-29 16:09:38', '2026-04-29 16:09:38', 0.00, 0.00, 0, 0.00, 0.00, 0.00, 0.00, '', 1, 1, 0, 0.00, 1),
-(6, '2026-04-29 17:30:29', '2026-04-29 17:36:07', 10.00, 0.00, 1, 0.00, 0.00, 0.00, -10.00, '', 20, 20, 0, 0.00, 4),
-(7, '2026-04-29 17:46:29', '2026-04-29 17:46:29', 0.00, 0.00, 0, 0.00, 0.00, 0.00, 0.00, '', 1, 1, 0, 0.00, 1),
-(8, '2026-05-29 17:10:18', '2026-05-29 17:10:18', 0.00, 0.00, 0, 0.00, 0.00, 0.00, 0.00, '', 12, 12, 0, 0.00, 3);
+(1001, '2026-05-07 01:00:00', '2026-05-07 13:00:00', 100.00, 0.00, 0, 180.00, 0.00, 0.00, 180.00, 'Day 1 close', 1, 1, 0, 0.00, 1),
+(1002, '2026-05-12 01:00:00', '2026-05-12 13:00:00', 100.00, 0.00, 0, 50.00, 12.00, 0.00, 62.00, 'Day 2 close', 1, 1, 0, 0.00, 1),
+(1003, '2026-05-17 01:00:00', '2026-05-17 13:00:00', 100.00, 0.00, 0, 0.00, 17.00, 0.00, 17.00, 'Day 3 close', 1, 1, 0, 0.00, 1),
+(1004, '2026-05-22 01:00:00', '2026-05-22 13:00:00', 100.00, 0.00, 0, 146.50, 0.00, 0.00, 146.50, 'Day 4 close', 1, 1, 0, 0.00, 1),
+(1005, '2026-05-28 01:00:00', '2026-05-28 13:00:00', 100.00, 0.00, 0, 240.00, 0.00, 0.00, 240.00, 'Day 5 close', 1, 1, 0, 0.00, 1),
+(1006, '2026-06-05 01:00:00', '2026-06-05 13:00:00', 100.00, 0.00, 0, 123.00, 0.00, 0.00, 123.00, 'Today close', 1, 1, 0, 0.00, 1);
 
 -- --------------------------------------------------------
 
@@ -289,10 +278,13 @@ CREATE TABLE `wbpos_customers` (
 --
 
 INSERT INTO `wbpos_customers` (`person_id`, `company_name`, `account_number`, `taxable`, `tax_id`, `sales_tax_code_id`, `package_id`, `points`, `deleted`, `discount`, `discount_type`, `date`, `employee_id`, `consent`, `tenant_id`) VALUES
-(10, 'Trust', NULL, 0, '', NULL, NULL, NULL, 0, 0.00, 0, '2026-04-27 15:14:41', 1, 1, 1),
-(13, NULL, NULL, 0, '', NULL, NULL, NULL, 0, 0.00, 0, '2026-04-27 20:27:16', 12, 1, 3),
-(14, 'My Company Retail', 'CUST-00001', 1, '', NULL, NULL, NULL, 0, 0.00, 0, '2026-04-27 21:53:57', 12, 1, 3),
-(21, NULL, 'CUST-00001', 1, '', NULL, NULL, NULL, 0, 0.00, 0, '2026-04-29 17:25:04', 20, 1, 4);
+(1011, NULL, 'CUST-001', 1, '', NULL, 2, 120, 0, 0.00, 0, '2026-05-01 02:00:00', 1, 1, 1),
+(1012, 'Hall Trading', 'CUST-002', 1, '', NULL, 3, 80, 0, 5.00, 0, '2026-05-02 02:00:00', 1, 1, 1),
+(1013, NULL, 'CUST-003', 1, '', NULL, 2, 45, 0, 0.00, 0, '2026-05-03 02:00:00', 1, 1, 1),
+(1014, 'Young Corp', 'CUST-004', 1, '', NULL, 4, 200, 0, 10.00, 1, '2026-05-04 02:00:00', 1, 1, 1),
+(1015, NULL, 'CUST-005', 1, '', NULL, 1, 15, 0, 0.00, 0, '2026-05-05 02:00:00', 1, 1, 1),
+(1016, 'Scott Retail', 'CUST-006', 1, '', NULL, 5, 300, 0, 0.00, 0, '2026-05-06 02:00:00', 1, 1, 1),
+(1027, NULL, 'CUST-00001', 1, '', NULL, NULL, NULL, 0, 0.00, 0, '2026-06-16 04:08:57', 1026, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -313,10 +305,8 @@ CREATE TABLE `wbpos_customers_packages` (
 
 INSERT INTO `wbpos_customers_packages` (`package_id`, `package_name`, `points_percent`, `deleted`) VALUES
 (1, 'Default', 0, 0),
-(2, 'Bronze', 10, 0),
-(3, 'Silver', 20, 0),
-(4, 'Gold', 30, 0),
-(5, 'Premium', 50, 0);
+(2, 'Silver', 5, 0),
+(3, 'Gold', 10, 0);
 
 -- --------------------------------------------------------
 
@@ -350,8 +340,12 @@ CREATE TABLE `wbpos_dinner_tables` (
 --
 
 INSERT INTO `wbpos_dinner_tables` (`dinner_table_id`, `name`, `status`, `deleted`) VALUES
-(1, 'Delivery', 0, 0),
-(2, 'Take Away', 0, 0);
+(1001, 'Table 1', 0, 0),
+(1002, 'Table 2', 0, 0),
+(1003, 'Table 3', 0, 0),
+(1004, 'Take Away', 0, 0),
+(1005, 'Delivery', 0, 0),
+(1006, 'VIP Room', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -375,13 +369,13 @@ CREATE TABLE `wbpos_employees` (
 --
 
 INSERT INTO `wbpos_employees` (`username`, `password`, `person_id`, `deleted`, `hash_version`, `language`, `language_code`, `tenant_id`) VALUES
-('admin', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1, 0, 2, NULL, NULL, 1),
-('somphors', '$2y$10$MIMQndyE3U38UtZPQ/55JuYmOff09FV.er7vOnAgymof4Gp5FT2xi', 11, 0, 2, NULL, NULL, 2),
-('myco_owner', '$2y$10$p/V7.0bW8JBORu9mv46cFO09mWnEpoPrW3HvnvjozRxGzjCHIUUH.', 12, 0, 2, NULL, NULL, 3),
-('anhkeonho', '$2y$10$aeJE1LX6XZj27CU5xRNiJ..pz5thkeyc517RGHaXpKngt8JxWo62S', 20, 0, 2, NULL, NULL, 4),
-('jungkook', '$2y$10$AO4m0K.ZCfKqQUuop/7rG.Ijoe6RkZK2jY4paLpMw0Ka1crbT5HCa', 22, 0, 2, '', '', 3),
-('wonhee', '$2y$10$omd04u7F7DLwzFWYeF4gCOHw6tgAsRqxzAreqlu7dPbjeHZnp8BPu', 24, 0, 2, '', '', 3),
-('sokunthea', '$2y$10$jw5rOWB5zseZTJziLALmCueShz1O1lO3isIfOMOwE3PfTdRkysee6', 25, 0, 2, NULL, NULL, 5);
+('admin', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1, 0, 2, 'english', 'en', 1),
+('maria', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1021, 0, 2, 'english', 'en', 1),
+('tom', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1022, 0, 2, 'english', 'en', 1),
+('nina', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1023, 0, 2, 'english', 'en', 1),
+('paul', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1024, 0, 2, 'english', 'en', 1),
+('rita', '$2y$10$vJBSMlD02EC7ENSrKfVQXuvq9tNRHMtcOA8MSK2NYS748HHWm.gcG', 1025, 0, 2, 'english', 'en', 1),
+('maria_blue', '$2y$10$3TmH69FAwUINRA7sKHkhrOrmOPFlbCfiT3rluA.me/Nog3mu.A1EC', 1026, 0, 2, NULL, NULL, 2);
 
 -- --------------------------------------------------------
 
@@ -409,11 +403,14 @@ CREATE TABLE `wbpos_expenses` (
 --
 
 INSERT INTO `wbpos_expenses` (`expense_id`, `date`, `amount`, `payment_type`, `expense_category_id`, `description`, `employee_id`, `deleted`, `supplier_tax_code`, `tax_amount`, `supplier_id`, `tenant_id`) VALUES
-(2, '2026-04-27 16:47:17', 5.00, 'Cash', 1, '', 1, 0, '', 0.00, NULL, 1),
-(4, '2026-04-28 17:49:55', 10.00, 'Cash', 4, '', 12, 0, '', 0.00, NULL, 3),
-(5, '2026-04-28 17:50:19', 120.00, 'Cash', 3, '', 1, 0, '', 0.00, NULL, 1),
-(7, '2026-04-28 17:52:19', 0.00, 'Cash', 4, '', 12, 0, '', 0.00, NULL, 3),
-(8, '2026-04-28 17:53:34', 0.00, 'Cash', 3, '', 1, 0, '', 0.00, NULL, 1);
+(4, '2026-04-28 10:49:55', 10.00, 'Cash', 4, '', 12, 0, '', 0.00, NULL, 3),
+(7, '2026-04-28 10:52:19', 0.00, 'Cash', 4, '', 12, 0, '', 0.00, NULL, 3),
+(1001, '2026-05-01 01:00:00', 1200.00, 'Cash', 1001, 'May store rent', 1, 0, '', 0.00, NULL, 1),
+(1002, '2026-05-05 02:00:00', 180.00, 'Cash', 1002, 'Electricity bill', 1, 0, '', 0.00, NULL, 1),
+(1003, '2026-05-10 02:00:00', 2500.00, 'Check', 1003, 'Staff payroll', 1, 0, '', 0.00, NULL, 1),
+(1004, '2026-05-15 03:00:00', 350.00, 'Cash', 1004, 'Facebook ads', 1, 0, '', 0.00, NULL, 1),
+(1005, '2026-05-20 03:30:00', 95.00, 'Cash', 1005, 'Receipt paper', 1, 0, '', 0.00, NULL, 1),
+(1006, '2026-05-25 04:00:00', 420.00, 'Credit', 1006, 'AC repair', 1, 0, '', 0.00, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -434,12 +431,16 @@ CREATE TABLE `wbpos_expense_categories` (
 --
 
 INSERT INTO `wbpos_expense_categories` (`expense_category_id`, `category_name`, `category_description`, `deleted`, `tenant_id`) VALUES
-(1, 'Snack', 'nham mix k ban', 0, 1),
-(3, 'Drink', 'Use for drink', 0, 1),
 (4, 'Bag', '', 0, 3),
-(5, 'test', '', 0, 1),
 (7, 'ad', '', 0, 3),
-(10, 'Snack', '', 0, 3);
+(10, 'Snack', '', 0, 3),
+(1001, 'Rent', 'Store rent payments', 0, 1),
+(1002, 'Utilities', 'Electricity, water, internet', 0, 1),
+(1003, 'Salaries', 'Staff payroll', 0, 1),
+(1004, 'Marketing', 'Ads and promotions', 0, 1),
+(1005, 'Supplies', 'Office and store supplies', 0, 1),
+(1006, 'Maintenance', 'Repairs and upkeep', 0, 1),
+(1007, 'Drink', 'Drink', 0, 2);
 
 -- --------------------------------------------------------
 
@@ -462,8 +463,12 @@ CREATE TABLE `wbpos_giftcards` (
 --
 
 INSERT INTO `wbpos_giftcards` (`record_time`, `giftcard_id`, `giftcard_number`, `value`, `deleted`, `person_id`, `tenant_id`) VALUES
-('2026-04-28 18:04:03', 7, '1', 0.00, 0, 13, 3),
-('2026-04-29 17:48:26', 11, '1', 0.00, 0, 10, 1);
+('2026-05-01 03:00:00', 1001, 'GC-10001', 25.00, 0, 1011, 1),
+('2026-05-05 03:00:00', 1002, 'GC-10002', 50.00, 0, 1012, 1),
+('2026-05-10 03:00:00', 1003, 'GC-10003', 100.00, 0, 1013, 1),
+('2026-05-15 03:00:00', 1004, 'GC-10004', 75.00, 0, 1014, 1),
+('2026-05-20 03:00:00', 1005, 'GC-10005', 30.00, 0, 1015, 1),
+('2026-05-25 03:00:00', 1006, 'GC-10006', 150.00, 0, 1016, 1);
 
 -- --------------------------------------------------------
 
@@ -483,201 +488,135 @@ CREATE TABLE `wbpos_grants` (
 
 INSERT INTO `wbpos_grants` (`permission_id`, `person_id`, `menu_group`) VALUES
 ('attributes', 1, 'office'),
-('attributes', 11, 'office'),
-('attributes', 12, 'office'),
-('attributes', 20, 'office'),
-('attributes', 24, 'home'),
-('attributes', 25, 'office'),
+('attributes', 1026, 'office'),
 ('cashups', 1, 'home'),
-('cashups', 11, 'home'),
-('cashups', 12, 'home'),
-('cashups', 20, 'home'),
-('cashups', 25, 'home'),
+('cashups', 1021, 'home'),
+('cashups', 1022, 'home'),
+('cashups', 1023, 'home'),
+('cashups', 1025, 'home'),
+('cashups', 1026, 'home'),
 ('config', 1, 'office'),
-('config', 11, 'office'),
-('config', 12, 'office'),
-('config', 20, 'office'),
-('config', 25, 'office'),
+('config', 1026, 'office'),
 ('customers', 1, 'home'),
-('customers', 11, 'home'),
-('customers', 12, 'home'),
-('customers', 20, 'home'),
-('customers', 25, 'home'),
+('customers', 1021, 'home'),
+('customers', 1022, 'home'),
+('customers', 1023, 'home'),
+('customers', 1026, 'home'),
 ('employees', 1, 'office'),
-('employees', 11, 'office'),
-('employees', 12, 'office'),
-('employees', 20, 'office'),
-('employees', 24, 'home'),
-('employees', 25, 'office'),
+('employees', 1026, 'office'),
 ('expenses', 1, 'home'),
-('expenses', 11, 'home'),
-('expenses', 12, 'home'),
-('expenses', 20, 'home'),
-('expenses', 24, 'home'),
-('expenses', 25, 'home'),
+('expenses', 1022, 'home'),
+('expenses', 1025, 'home'),
+('expenses', 1026, 'home'),
 ('expenses_categories', 1, 'office'),
-('expenses_categories', 11, 'office'),
-('expenses_categories', 12, 'office'),
-('expenses_categories', 20, 'office'),
-('expenses_categories', 24, 'home'),
-('expenses_categories', 25, 'office'),
+('expenses_categories', 1022, 'office'),
+('expenses_categories', 1025, 'office'),
+('expenses_categories', 1026, 'office'),
 ('giftcards', 1, 'home'),
-('giftcards', 11, 'home'),
-('giftcards', 12, 'home'),
-('giftcards', 20, 'home'),
-('giftcards', 24, 'home'),
-('giftcards', 25, 'home'),
-('home', 1, 'office'),
-('home', 11, 'office'),
-('home', 12, 'office'),
-('home', 20, 'office'),
-('home', 22, 'home'),
-('home', 25, 'office'),
+('giftcards', 1022, 'home'),
+('giftcards', 1023, 'home'),
+('giftcards', 1026, 'home'),
+('home', 1, 'home'),
+('home', 1021, 'home'),
+('home', 1022, 'home'),
+('home', 1023, 'home'),
+('home', 1024, 'home'),
+('home', 1025, 'home'),
+('home', 1026, 'home'),
 ('items', 1, 'home'),
-('items', 11, 'home'),
-('items', 12, 'home'),
-('items', 20, 'home'),
-('items', 24, 'home'),
-('items', 25, 'home'),
+('items', 1022, 'home'),
+('items', 1024, 'home'),
+('items', 1026, 'home'),
 ('items_stock', 1, 'home'),
-('items_stock', 11, 'home'),
-('items_stock', 12, 'home'),
-('items_stock', 20, 'home'),
-('items_stock', 24, '--'),
-('items_stock', 25, 'home'),
+('items_stock', 1022, 'home'),
+('items_stock', 1024, 'home'),
+('items_stock', 1026, 'home'),
 ('item_kits', 1, 'home'),
-('item_kits', 11, 'home'),
-('item_kits', 12, 'home'),
-('item_kits', 20, 'home'),
-('item_kits', 25, 'home'),
+('item_kits', 1022, 'home'),
+('item_kits', 1026, 'home'),
 ('messages', 1, 'home'),
-('messages', 11, 'home'),
-('messages', 12, 'home'),
-('messages', 20, 'home'),
-('messages', 24, 'home'),
-('messages', 25, 'home'),
+('messages', 1026, 'home'),
 ('office', 1, 'home'),
-('office', 11, 'home'),
-('office', 12, 'home'),
-('office', 20, 'home'),
-('office', 25, 'home'),
+('office', 1026, 'home'),
 ('receivings', 1, 'home'),
-('receivings', 11, 'home'),
-('receivings', 12, 'home'),
-('receivings', 20, 'home'),
-('receivings', 25, 'home'),
+('receivings', 1022, 'home'),
+('receivings', 1024, 'home'),
+('receivings', 1026, 'home'),
 ('receivings_stock', 1, 'home'),
-('receivings_stock', 11, 'home'),
-('receivings_stock', 12, 'home'),
-('receivings_stock', 20, 'home'),
-('receivings_stock', 25, 'home'),
+('receivings_stock', 1022, 'home'),
+('receivings_stock', 1024, 'home'),
+('receivings_stock', 1026, 'home'),
 ('reports', 1, 'home'),
-('reports', 11, 'home'),
-('reports', 12, 'home'),
-('reports', 20, 'home'),
-('reports', 22, 'home'),
-('reports', 24, 'home'),
-('reports', 25, 'home'),
+('reports', 1022, 'home'),
+('reports', 1024, 'home'),
+('reports', 1025, 'home'),
+('reports', 1026, 'home'),
 ('reports_categories', 1, 'home'),
-('reports_categories', 11, 'home'),
-('reports_categories', 12, 'home'),
-('reports_categories', 20, 'home'),
-('reports_categories', 22, '--'),
-('reports_categories', 24, '--'),
-('reports_categories', 25, 'home'),
+('reports_categories', 1022, 'home'),
+('reports_categories', 1026, 'home'),
 ('reports_customers', 1, 'home'),
-('reports_customers', 11, 'home'),
-('reports_customers', 12, 'home'),
-('reports_customers', 20, 'home'),
-('reports_customers', 22, '--'),
-('reports_customers', 24, '--'),
-('reports_customers', 25, 'home'),
+('reports_customers', 1022, 'home'),
+('reports_customers', 1026, 'home'),
 ('reports_discounts', 1, 'home'),
-('reports_discounts', 11, 'home'),
-('reports_discounts', 12, 'home'),
-('reports_discounts', 20, 'home'),
-('reports_discounts', 24, '--'),
-('reports_discounts', 25, 'home'),
+('reports_discounts', 1022, 'home'),
+('reports_discounts', 1026, 'home'),
 ('reports_employees', 1, 'home'),
-('reports_employees', 11, 'home'),
-('reports_employees', 12, 'home'),
-('reports_employees', 20, 'home'),
-('reports_employees', 22, '--'),
-('reports_employees', 25, 'home'),
+('reports_employees', 1026, 'home'),
 ('reports_expenses_categories', 1, 'home'),
-('reports_expenses_categories', 11, 'home'),
-('reports_expenses_categories', 12, 'home'),
-('reports_expenses_categories', 20, 'home'),
-('reports_expenses_categories', 22, '--'),
-('reports_expenses_categories', 24, '--'),
-('reports_expenses_categories', 25, 'home'),
+('reports_expenses_categories', 1025, 'home'),
+('reports_expenses_categories', 1026, 'home'),
 ('reports_inventory', 1, 'home'),
-('reports_inventory', 11, 'home'),
-('reports_inventory', 12, 'home'),
-('reports_inventory', 20, 'home'),
-('reports_inventory', 24, '--'),
-('reports_inventory', 25, 'home'),
+('reports_inventory', 1022, 'home'),
+('reports_inventory', 1024, 'home'),
+('reports_inventory', 1026, 'home'),
 ('reports_items', 1, 'home'),
-('reports_items', 11, 'home'),
-('reports_items', 12, 'home'),
-('reports_items', 20, 'home'),
-('reports_items', 25, 'home'),
+('reports_items', 1022, 'home'),
+('reports_items', 1024, 'home'),
+('reports_items', 1026, 'home'),
 ('reports_payments', 1, 'home'),
-('reports_payments', 11, 'home'),
-('reports_payments', 12, 'home'),
-('reports_payments', 20, 'home'),
-('reports_payments', 25, 'home'),
+('reports_payments', 1022, 'home'),
+('reports_payments', 1025, 'home'),
+('reports_payments', 1026, 'home'),
 ('reports_receivings', 1, 'home'),
-('reports_receivings', 11, 'home'),
-('reports_receivings', 12, 'home'),
-('reports_receivings', 20, 'home'),
-('reports_receivings', 25, 'home'),
+('reports_receivings', 1022, 'home'),
+('reports_receivings', 1024, 'home'),
+('reports_receivings', 1026, 'home'),
 ('reports_sales', 1, 'home'),
-('reports_sales', 11, 'home'),
-('reports_sales', 12, 'home'),
-('reports_sales', 20, 'home'),
-('reports_sales', 25, 'home'),
+('reports_sales', 1022, 'home'),
+('reports_sales', 1025, 'home'),
+('reports_sales', 1026, 'home'),
 ('reports_sales_taxes', 1, 'home'),
-('reports_sales_taxes', 11, 'home'),
-('reports_sales_taxes', 12, 'home'),
-('reports_sales_taxes', 20, 'home'),
-('reports_sales_taxes', 25, 'home'),
+('reports_sales_taxes', 1026, 'home'),
 ('reports_suppliers', 1, 'home'),
-('reports_suppliers', 11, 'home'),
-('reports_suppliers', 12, 'home'),
-('reports_suppliers', 20, 'home'),
-('reports_suppliers', 25, 'home'),
+('reports_suppliers', 1022, 'home'),
+('reports_suppliers', 1024, 'home'),
+('reports_suppliers', 1026, 'home'),
 ('reports_taxes', 1, 'home'),
-('reports_taxes', 11, 'home'),
-('reports_taxes', 12, 'home'),
-('reports_taxes', 20, 'home'),
-('reports_taxes', 25, 'home'),
+('reports_taxes', 1025, 'home'),
+('reports_taxes', 1026, 'home'),
 ('sales', 1, 'home'),
-('sales', 11, 'home'),
-('sales', 12, 'home'),
-('sales', 20, 'home'),
-('sales', 25, 'home'),
+('sales', 1021, 'home'),
+('sales', 1022, 'home'),
+('sales', 1023, 'home'),
+('sales', 1026, 'home'),
 ('sales_change_price', 1, '--'),
-('sales_change_price', 11, '--'),
-('sales_change_price', 12, '--'),
-('sales_change_price', 20, '--'),
-('sales_change_price', 25, '--'),
+('sales_change_price', 1022, '--'),
+('sales_change_price', 1023, '--'),
+('sales_change_price', 1026, '--'),
 ('sales_delete', 1, '--'),
-('sales_delete', 11, '--'),
-('sales_delete', 12, '--'),
-('sales_delete', 20, '--'),
-('sales_delete', 25, '--'),
+('sales_delete', 1022, '--'),
+('sales_delete', 1026, '--'),
 ('sales_stock', 1, 'home'),
-('sales_stock', 11, 'home'),
-('sales_stock', 12, 'home'),
-('sales_stock', 20, 'home'),
-('sales_stock', 25, 'home'),
+('sales_stock', 1021, '--'),
+('sales_stock', 1022, 'home'),
+('sales_stock', 1023, 'home'),
+('sales_stock', 1026, 'home'),
 ('suppliers', 1, 'home'),
-('suppliers', 11, 'home'),
-('suppliers', 12, 'home'),
-('suppliers', 20, 'home'),
-('suppliers', 25, 'home'),
-('taxes', 24, 'home');
+('suppliers', 1022, 'home'),
+('suppliers', 1024, 'home'),
+('suppliers', 1026, 'home'),
+('taxes', 1, 'office'),
+('taxes', 1026, 'office');
 
 -- --------------------------------------------------------
 
@@ -701,8 +640,18 @@ CREATE TABLE `wbpos_inventory` (
 --
 
 INSERT INTO `wbpos_inventory` (`trans_id`, `trans_items`, `trans_user`, `trans_date`, `trans_comment`, `trans_location`, `trans_inventory`, `tenant_id`) VALUES
-(1, 1, 1, '2026-04-27 16:21:28', 'Manual Edit of Quantity', 1, 0.000, 1),
-(2, 2, 12, '2026-04-27 21:50:07', 'Manual Edit of Quantity', 1, 0.000, 3);
+(1001, 1001, 1, '2026-05-01 00:30:00', 'Opening stock count', 1, 120.000, 1),
+(1002, 1002, 1, '2026-05-05 00:30:00', 'Bread restock', 1, 45.000, 1),
+(1003, 1003, 1, '2026-05-10 00:30:00', 'Milk restock', 1, 80.000, 1),
+(1004, 1004, 1, '2026-05-15 00:30:00', 'Eggs restock', 1, 25.000, 1),
+(1005, 1005, 1, '2026-05-20 00:30:00', 'Soap restock', 1, 60.000, 1),
+(1006, 1006, 1, '2026-05-25 00:30:00', 'Cable restock', 1, 35.000, 1),
+(1007, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1007, 0.000, 2),
+(1008, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1008, 0.000, 2),
+(1009, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1009, 0.000, 2),
+(1010, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1010, 0.000, 2),
+(1011, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1011, 0.000, 2),
+(1012, 1007, 1026, '2026-06-16 04:12:17', 'Manual Edit of Quantity', 1012, 0.000, 2);
 
 -- --------------------------------------------------------
 
@@ -778,8 +727,13 @@ CREATE TABLE `wbpos_items` (
 --
 
 INSERT INTO `wbpos_items` (`name`, `category`, `supplier_id`, `item_number`, `description`, `cost_price`, `unit_price`, `reorder_level`, `receiving_quantity`, `item_id`, `pic_filename`, `allow_alt_description`, `is_serialized`, `deleted`, `stock_type`, `item_type`, `tax_category_id`, `qty_per_pack`, `pack_name`, `low_sell_item_id`, `hsn_code`, `tenant_id`) VALUES
-('Bread', 'Snack', NULL, '001', '', 10.00, 8.00, 1.000, 1.000, 1, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 1, '', 1),
-('Coffee', 'drink', NULL, '003', '', 0.00, 0.00, 1.000, 1.000, 2, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 2, '', 3);
+('Coca Cola 330ml', 'Beverages', 1001, 'SKU-1001', 'Soft drink can', 0.80, 2.00, 20.000, 1.000, 1001, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('White Bread Loaf', 'Bakery', 1002, 'SKU-1002', 'Fresh white bread', 1.20, 4.00, 50.000, 1.000, 1002, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('Fresh Milk 1L', 'Dairy', 1003, 'SKU-1003', 'Whole milk carton', 2.50, 5.50, 30.000, 1.000, 1003, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('Large Eggs 12pk', 'Grocery', 1004, 'SKU-1004', 'Grade A eggs', 3.00, 6.00, 30.000, 1.000, 1004, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('Dish Soap 500ml', 'Household', 1005, 'SKU-1005', 'Liquid dish soap', 1.50, 4.50, 25.000, 1.000, 1005, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('USB Cable Type-C', 'Electronics', 1006, 'SKU-1006', 'Charging cable', 4.00, 12.00, 15.000, 1.000, 1006, NULL, 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 0, '', 1),
+('Orange', 'Drink', NULL, NULL, '', 0.00, 0.00, 1.000, 1.000, 1007, 'photo_2025-08-19_13-20-47.jpg', 0, 0, 0, 0, 0, NULL, 1.000, 'Each', 1007, '', 2);
 
 -- --------------------------------------------------------
 
@@ -799,7 +753,13 @@ CREATE TABLE `wbpos_items_taxes` (
 --
 
 INSERT INTO `wbpos_items_taxes` (`item_id`, `name`, `percent`, `tenant_id`) VALUES
-(1, '1', 0.010, 1);
+(1001, 'Sales Tax', 8.000, 1),
+(1002, 'Sales Tax', 8.000, 1),
+(1003, 'Sales Tax', 8.000, 1),
+(1004, 'Sales Tax', 8.000, 1),
+(1005, 'Sales Tax', 8.000, 1),
+(1006, 'Sales Tax', 8.000, 1),
+(1007, 'Sales Tax', 8.000, 2);
 
 -- --------------------------------------------------------
 
@@ -825,10 +785,12 @@ CREATE TABLE `wbpos_item_kits` (
 --
 
 INSERT INTO `wbpos_item_kits` (`item_kit_id`, `item_kit_number`, `name`, `description`, `item_id`, `kit_discount`, `kit_discount_type`, `price_option`, `print_option`, `tenant_id`) VALUES
-(2, '01', 'top-manager', '', 0, 0.00, 0, 0, 0, 1),
-(3, '', 'Buket', '', 0, 0.00, 0, 0, 0, 3),
-(4, '', 'sdf', '', 0, 0.00, 0, 0, 0, 1),
-(5, '', 'top-manager', '', 0, 0.00, 0, 0, 0, 3);
+(1001, 'KIT-001', 'Breakfast Pack', 'Bread and milk combo', 0, 0.00, 0, 0, 0, 1),
+(1002, 'KIT-002', 'Drink Bundle', 'Six cola cans', 0, 1.00, 0, 0, 0, 1),
+(1003, 'KIT-003', 'Cleaning Kit', 'Dish soap pack', 0, 0.00, 0, 0, 0, 1),
+(1004, 'KIT-004', 'Tech Starter', 'USB cable bundle', 0, 2.00, 0, 0, 0, 1),
+(1005, 'KIT-005', 'Grocery Essentials', 'Eggs and milk', 0, 0.50, 0, 0, 0, 1),
+(1006, 'KIT-006', 'Party Pack', 'Cola and bread', 0, 0.00, 0, 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -843,6 +805,21 @@ CREATE TABLE `wbpos_item_kit_items` (
   `kit_sequence` int(3) NOT NULL DEFAULT 0,
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `wbpos_item_kit_items`
+--
+
+INSERT INTO `wbpos_item_kit_items` (`item_kit_id`, `item_id`, `quantity`, `kit_sequence`, `tenant_id`) VALUES
+(1001, 1002, 1.000, 1, 1),
+(1001, 1003, 1.000, 2, 1),
+(1002, 1001, 6.000, 1, 1),
+(1003, 1005, 2.000, 1, 1),
+(1004, 1006, 2.000, 1, 1),
+(1005, 1003, 1.000, 1, 1),
+(1005, 1004, 1.000, 2, 1),
+(1006, 1001, 4.000, 1, 1),
+(1006, 1002, 2.000, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -862,8 +839,18 @@ CREATE TABLE `wbpos_item_quantities` (
 --
 
 INSERT INTO `wbpos_item_quantities` (`item_id`, `location_id`, `quantity`, `tenant_id`) VALUES
-(1, 1, 0.000, 1),
-(2, 1, 0.000, 3);
+(1001, 1, 120.000, 1),
+(1002, 1, 45.000, 1),
+(1003, 1, 80.000, 1),
+(1004, 1, 25.000, 1),
+(1005, 1, 60.000, 1),
+(1006, 1, 35.000, 1),
+(1007, 1007, 0.000, 2),
+(1007, 1008, 0.000, 2),
+(1007, 1009, 0.000, 2),
+(1007, 1010, 0.000, 2),
+(1007, 1011, 0.000, 2),
+(1007, 1012, 0.000, 2);
 
 -- --------------------------------------------------------
 
@@ -994,29 +981,26 @@ CREATE TABLE `wbpos_people` (
 --
 
 INSERT INTO `wbpos_people` (`first_name`, `last_name`, `gender`, `phone_number`, `email`, `address_1`, `address_2`, `city`, `state`, `zip`, `country`, `comments`, `person_id`, `tenant_id`) VALUES
-('John', 'Doe', NULL, '555-555-5555', 'changeme@example.com', 'Address 1', '', '', '', '', '', '', 1, 1),
-('Srorn', 'Chansomphors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 2, 1),
-('Srorn', 'Chansomphors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 3, 1),
-('Srorn', 'Chansomphors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 4, 1),
-('Srorn', 'Chansomphors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 5, 1),
-('Som', 'Phors', NULL, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 6, 1),
-('Som', 'Phors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 7, 1),
-('Srorn', 'Chansomphors', NULL, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 8, 1),
-('Srorn', 'Chansomphors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 9, 1),
-('Som', 'Phors', 0, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 10, 1),
-('Srorn', 'Chansomphors', NULL, '', 'srornchansomphors@gmail.com', '', '', '', '', '', '', '', 11, 2),
-('Srorn', 'Chansomphors', NULL, '085371346', 'srornchansomphors@gmail.com', '', '', '', '', '', '', '', 12, 3),
-('Srorn', 'Chansomphors', NULL, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 13, 3),
-('Chan', 'Tii', 0, '0812071309', 'chantii@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 14, 3),
-('Srorn', 'Chansomphors', NULL, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 17, 3),
-('Som', 'Phors', NULL, '', 'somphorstae9@gmail.com', '', '', '', '', '', '', '', 18, 1),
-('Delete', 'Supplier', 0, '', 'delete.supplier.test@example.com', '', '', '', '', '', '', '', 19, 1),
-('Anh', 'Keonho', NULL, '085371346', 'anhkeonho@gmail.com', '', '', '', '', '', '', '', 20, 4),
-('Srorn', 'Chansomphors', NULL, '085371346', 'srornchansomphors@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', '', 'Cambodia', '', 21, 4),
-('Jeon', 'Jungkook', 1, '085371346', 'jungkook@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 22, 3),
-('Kim', 'Juhoon', 1, '085371346', 'juhoon@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 23, 3),
-('Lee', 'Wonhee', 0, '085371346', 'wonhee@gmail.com', 'Chroy Changva', '', 'Phnom Penh', '', 'CHROY CHANGVA', 'Cambodia', '', 24, 3),
-('Sok', 'sokunthea', NULL, '012345678', 'sokunthea@gmail.com', '', '', '', '', '', '', '', 25, 5);
+('Admin', 'User', NULL, '555-555-0100', 'admin@wbpos.demo', '100 Main Street', '', 'Springfield', 'IL', '62701', 'USA', 'System administrator', 1, 1),
+('James', 'Miller', 1, '555-1001', 'james@freshfoods.com', '100 Supply Road', '', 'Springfield', 'IL', '62701', 'USA', 'Beverage supplier', 1001, 1),
+('Sarah', 'Johnson', 0, '555-1002', 'sarah@bakeryco.com', '200 Baker St', '', 'Springfield', 'IL', '62702', 'USA', 'Bakery supplier', 1002, 1),
+('David', 'Brown', 1, '555-1003', 'david@dairyfarm.com', '300 Farm Lane', '', 'Springfield', 'IL', '62703', 'USA', 'Dairy supplier', 1003, 1),
+('Emily', 'Davis', 0, '555-1004', 'emily@groceryhub.com', '400 Market Ave', '', 'Springfield', 'IL', '62704', 'USA', 'Grocery supplier', 1004, 1),
+('Robert', 'Wilson', 1, '555-1005', 'robert@homegoods.com', '500 Trade Blvd', '', 'Springfield', 'IL', '62705', 'USA', 'Household supplier', 1005, 1),
+('Lisa', 'Taylor', 0, '555-1006', 'lisa@techparts.com', '600 Tech Park', '', 'Springfield', 'IL', '62706', 'USA', 'Electronics supplier', 1006, 1),
+('Alice', 'Walker', 0, '555-2001', 'alice@email.com', '10 Oak Street', '', 'Springfield', 'IL', '62710', 'USA', 'Regular customer', 1011, 1),
+('Brian', 'Hall', 1, '555-2002', 'brian@email.com', '20 Pine Road', '', 'Springfield', 'IL', '62711', 'USA', 'Regular customer', 1012, 1),
+('Carol', 'Allen', 0, '555-2003', 'carol@email.com', '30 Maple Ave', '', 'Springfield', 'IL', '62712', 'USA', 'Regular customer', 1013, 1),
+('Daniel', 'Young', 1, '555-2004', 'daniel@email.com', '40 Cedar Lane', '', 'Springfield', 'IL', '62713', 'USA', 'Regular customer', 1014, 1),
+('Eva', 'King', 0, '555-2005', 'eva@email.com', '50 Birch Way', '', 'Springfield', 'IL', '62714', 'USA', 'Regular customer', 1015, 1),
+('Frank', 'Scott', 1, '555-2006', 'frank@email.com', '60 Elm Court', '', 'Springfield', 'IL', '62715', 'USA', 'Regular customer', 1016, 1),
+('Maria', 'Cashier', 0, '555-3001', 'maria@store.com', '1 Staff Lane', '', 'Springfield', 'IL', '62720', 'USA', 'Cashier', 1021, 1),
+('Tom', 'Manager', 1, '555-3002', 'tom@store.com', '2 Staff Lane', '', 'Springfield', 'IL', '62721', 'USA', 'Manager', 1022, 1),
+('Nina', 'Sales', 0, '555-3003', 'nina@store.com', '3 Staff Lane', '', 'Springfield', 'IL', '62722', 'USA', 'Sales staff', 1023, 1),
+('Paul', 'Stock', 1, '555-3004', 'paul@store.com', '4 Staff Lane', '', 'Springfield', 'IL', '62723', 'USA', 'Stock clerk', 1024, 1),
+('Rita', 'Supervisor', 0, '555-3005', 'rita@store.com', '5 Staff Lane', '', 'Springfield', 'IL', '62724', 'USA', 'Supervisor', 1025, 1),
+('Maria', 'Lopez', NULL, '098-777-1234', 'maria@blueocean.cafe', '', '', '', '', '', '', '', 1026, 2),
+('Wonhee', 'Lee', NULL, '', '', '', '', '', '', '', '', '', 1027, 2);
 
 -- --------------------------------------------------------
 
@@ -1095,8 +1079,8 @@ CREATE TABLE `wbpos_plans` (
 --
 
 INSERT INTO `wbpos_plans` (`plan_id`, `plan_code`, `plan_name`, `price_monthly`, `max_users`, `max_locations`, `max_items`, `is_active`, `created_at`) VALUES
-(1, 'starter', 'Starter', 0.00, 5, 1, 5000, 1, '2026-04-28 04:23:16'),
-(2, 'basic', 'Basic', 19.00, 5, 1, 5000, 1, '2026-04-28 06:56:40');
+(1, 'starter', 'Starter', 0.00, 5, 1, 5000, 1, '2026-04-27 21:23:16'),
+(2, 'basic', 'Basic', 19.00, 5, 1, 5000, 1, '2026-04-27 23:56:40');
 
 -- --------------------------------------------------------
 
@@ -1119,7 +1103,7 @@ CREATE TABLE `wbpos_platform_admins` (
 --
 
 INSERT INTO `wbpos_platform_admins` (`admin_id`, `username`, `password_hash`, `full_name`, `email`, `status`, `created_at`) VALUES
-(1, 'superadmin', '$2y$12$N8lJSGcJNcJ8SmXHm2IeheIe3QAzLmrmt1q0opbjhlXj2uQHZu3nO', 'Platform Super Admin', NULL, 'active', '2026-04-28 04:41:57');
+(1, 'superadmin', '$2y$12$N8lJSGcJNcJ8SmXHm2IeheIe3QAzLmrmt1q0opbjhlXj2uQHZu3nO', 'Platform Super Admin', NULL, 'active', '2026-04-27 21:41:57');
 
 -- --------------------------------------------------------
 
@@ -1137,6 +1121,18 @@ CREATE TABLE `wbpos_receivings` (
   `reference` varchar(32) DEFAULT NULL,
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `wbpos_receivings`
+--
+
+INSERT INTO `wbpos_receivings` (`receiving_time`, `supplier_id`, `employee_id`, `comment`, `receiving_id`, `payment_type`, `reference`, `tenant_id`) VALUES
+('2026-05-01 01:00:00', 1001, 1, 'Monthly beverage stock', 1001, 'Cash', 'PO-001', 1),
+('2026-05-05 01:30:00', 1002, 1, 'Bakery delivery', 1002, 'Cash', 'PO-002', 1),
+('2026-05-10 02:00:00', 1003, 1, 'Dairy restock', 1003, 'Check', 'PO-003', 1),
+('2026-05-15 02:30:00', 1004, 1, 'Grocery order', 1004, 'Cash', 'PO-004', 1),
+('2026-05-20 03:00:00', 1005, 1, 'Household supplies', 1005, 'Cash', 'PO-005', 1),
+('2026-05-25 03:30:00', 1006, 1, 'Electronics order', 1006, 'Credit', 'PO-006', 1);
 
 -- --------------------------------------------------------
 
@@ -1160,6 +1156,18 @@ CREATE TABLE `wbpos_receivings_items` (
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
+--
+-- Dumping data for table `wbpos_receivings_items`
+--
+
+INSERT INTO `wbpos_receivings_items` (`receiving_id`, `item_id`, `description`, `serialnumber`, `line`, `quantity_purchased`, `item_cost_price`, `item_unit_price`, `discount`, `discount_type`, `item_location`, `receiving_quantity`, `tenant_id`) VALUES
+(1001, 1001, NULL, NULL, 1, 100.000, 0.80, 2.00, 0.00, 0, 1, 1.000, 1),
+(1002, 1002, NULL, NULL, 1, 50.000, 1.20, 4.00, 0.00, 0, 1, 1.000, 1),
+(1003, 1003, NULL, NULL, 1, 60.000, 2.50, 5.50, 0.00, 0, 1, 1.000, 1),
+(1004, 1004, NULL, NULL, 1, 40.000, 3.00, 6.00, 0.00, 0, 1, 1.000, 1),
+(1005, 1005, NULL, NULL, 1, 30.000, 1.50, 4.50, 0.00, 0, 1, 1.000, 1),
+(1006, 1006, NULL, NULL, 1, 20.000, 4.00, 12.00, 0.00, 0, 1, 1.000, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -1180,6 +1188,18 @@ CREATE TABLE `wbpos_sales` (
   `sale_type` tinyint(1) NOT NULL DEFAULT 0,
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `wbpos_sales`
+--
+
+INSERT INTO `wbpos_sales` (`sale_time`, `customer_id`, `employee_id`, `comment`, `invoice_number`, `dinner_table_id`, `sale_id`, `quote_number`, `sale_status`, `work_order_number`, `sale_type`, `tenant_id`) VALUES
+('2026-05-07 03:15:00', 1011, 1, 'Morning sale', NULL, 1001, 1001, NULL, 0, NULL, 0, 1),
+('2026-05-12 04:30:00', 1012, 1, 'Lunch rush', NULL, 1002, 1002, NULL, 0, NULL, 0, 1),
+('2026-05-17 07:00:00', 1013, 1, 'Afternoon order', NULL, 1003, 1003, NULL, 0, NULL, 0, 1),
+('2026-05-22 09:45:00', 1014, 1, 'Corporate purchase', NULL, 1004, 1004, NULL, 0, NULL, 0, 1),
+('2026-05-28 11:20:00', 1015, 1, 'Evening sale', NULL, 1005, 1005, NULL, 0, NULL, 0, 1),
+('2026-06-05 05:00:00', 1016, 1, 'Today sale', NULL, 1006, 1006, NULL, 0, NULL, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1202,6 +1222,22 @@ CREATE TABLE `wbpos_sales_items` (
   `print_option` tinyint(1) NOT NULL DEFAULT 0,
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `wbpos_sales_items`
+--
+
+INSERT INTO `wbpos_sales_items` (`sale_id`, `item_id`, `description`, `serialnumber`, `line`, `quantity_purchased`, `item_cost_price`, `item_unit_price`, `discount`, `discount_type`, `item_location`, `print_option`, `tenant_id`) VALUES
+(1001, 1001, NULL, NULL, 1, 4.000, 0.80, 2.00, 0.00, 0, 1, 0, 1),
+(1002, 1002, NULL, NULL, 1, 3.000, 1.20, 4.00, 0.00, 0, 1, 0, 1),
+(1003, 1003, NULL, NULL, 1, 2.000, 2.50, 5.50, 0.00, 0, 1, 0, 1),
+(1003, 1004, NULL, NULL, 2, 1.000, 3.00, 6.00, 0.00, 0, 1, 0, 1),
+(1004, 1005, NULL, NULL, 1, 5.000, 1.50, 4.50, 0.00, 0, 1, 0, 1),
+(1004, 1006, NULL, NULL, 2, 2.000, 4.00, 12.00, 0.00, 0, 1, 0, 1),
+(1005, 1001, NULL, NULL, 1, 10.000, 0.80, 2.00, 0.00, 0, 1, 0, 1),
+(1005, 1002, NULL, NULL, 2, 5.000, 1.20, 4.00, 0.00, 0, 1, 0, 1),
+(1006, 1003, NULL, NULL, 1, 2.000, 2.50, 5.50, 0.00, 0, 1, 0, 1),
+(1006, 1006, NULL, NULL, 2, 1.000, 4.00, 12.00, 0.00, 0, 1, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1243,6 +1279,18 @@ CREATE TABLE `wbpos_sales_payments` (
   `reference_code` varchar(40) NOT NULL DEFAULT '',
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- Dumping data for table `wbpos_sales_payments`
+--
+
+INSERT INTO `wbpos_sales_payments` (`payment_id`, `sale_id`, `payment_type`, `payment_amount`, `cash_refund`, `cash_adjustment`, `employee_id`, `payment_time`, `reference_code`, `tenant_id`) VALUES
+(1001, 1001, 'Cash', 8.00, 0.00, 0, 1, '2026-05-07 03:15:00', '', 1),
+(1002, 1002, 'Debit', 12.00, 0.00, 0, 1, '2026-05-12 04:30:00', '', 1),
+(1003, 1003, 'Credit', 17.00, 0.00, 0, 1, '2026-05-17 07:00:00', '', 1),
+(1004, 1004, 'Cash', 46.50, 0.00, 0, 1, '2026-05-22 09:45:00', '', 1),
+(1005, 1005, 'Cash', 40.00, 0.00, 0, 1, '2026-05-28 11:20:00', '', 1),
+(1006, 1006, 'Cash', 23.00, 0.00, 0, 1, '2026-06-05 05:00:00', '', 1);
 
 -- --------------------------------------------------------
 
@@ -1298,66 +1346,23 @@ CREATE TABLE `wbpos_sessions` (
 --
 
 INSERT INTO `wbpos_sessions` (`id`, `ip_address`, `timestamp`, `data`) VALUES
-('wbpos_session:01c97455726a029313a721228565555d', '127.0.0.1', '2026-05-06 09:16:36', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383035383939363b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
-('wbpos_session:0476edb10d856e793d4e447b7472ad0f', '::1', '2026-05-20 09:15:51', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737393236383532303b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6e6f5f6163636573732f686f6d652f223b706572736f6e5f69647c733a323a223234223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223461396332643265316633316465323663336130323534303537396131356237223b),
-('wbpos_session:05620402556e0ab0df51d930e0a4e41d', '::1', '2026-04-30 02:45:26', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373132333b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223833633331663764303461363964383331363235313132616432363365656134223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:0a8191b9d6d2d2ce56df71fe1cd890b0', '::1', '2026-05-04 04:16:45', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373836383139393b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6e6f5f6163636573732f686f6d652f223b706572736f6e5f69647c733a323a223233223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a226562303034623065333365363835343866333636666263623337393733333930223b),
-('wbpos_session:10f7a7737b98af92db94d4bf524d1c3d', '::1', '2026-04-29 06:08:33', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434323931323b5f63695f70726576696f75735f75726c7c733a35353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f736176652f2d31223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226136643063396131633766656432323139333937376263633762656132336536223b),
-('wbpos_session:1284f22afaa0569e6d41b4eb7a7f8dc1', '::1', '2026-04-30 07:21:32', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373533333638373b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f676966746361726473223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223738353732366530393939326363303765323161363031373063343136656134223b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a313b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d726563765f636172747c613a303a7b7d726563765f6d6f64657c733a373a2272656365697665223b726563765f737570706c6965727c693a2d313b),
-('wbpos_session:1f4210abe30e46ab86e5078e0f42c80a', '::1', '2026-04-29 06:10:05', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434323935393b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223231363535343163313534373239613362653963373539373131356132313439223b),
-('wbpos_session:2b17afee3543a69a60b3a6c9854248e7', '::1', '2026-05-04 04:15:13', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373836383131323b637372665f6f73706f735f76347c733a33323a223139366461323733323633393937663662613337306436616334616632346437223b5f63695f70726576696f75735f75726c7c733a33383a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f223b),
-('wbpos_session:2c147f3b91754502b7f0f9e1b9bf1dce', '::1', '2026-04-29 06:36:40', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343539363b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223131363761306666633365343938393365323162626530666666313763363464223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:3d714b31e20d08ec5b533e9c2daeb13f', '127.0.0.1', '2026-05-07 09:58:36', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383134373931353b637372665f6f73706f735f76347c733a33323a223131623139613262346131663834313066663666616566643162393865363834223b),
-('wbpos_session:3fd67ccdf03886a44b08b01c1fa83b6c', '::1', '2026-04-29 06:49:38', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434353337363b5f63695f70726576696f75735f75726c7c733a3134373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f657870656e7365732f7365617263683f6c696d69743d3130266f66667365743d30267365617263683d26736f72743d657870656e73655f6964266f726465723d6173632673746172745f646174653d323032362d30342d323926656e645f646174653d323032362d30342d3239223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226233366433653738363632333930346433666430626164313339383932363537223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:40a93f44516ecf52819e655de71060d8', '::1', '2026-04-30 02:48:37', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373331343b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223030343533626233636163616332666163383438656530346634316464363734223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:4595cca869e14bdf90a0ac5f9932a9a6', '::1', '2026-04-30 02:43:43', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373032303b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226562343263323634623036363361623730616531323262653134623466313738223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:47e3f6985ebeb4f12c04cc11bd3e7184', '::1', '2026-04-30 02:44:32', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373037303b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223864346262613664333835336436313265633463383637616630613335323461223b),
-('wbpos_session:4a553278a23a83d359efeb39752506c4', '::1', '2026-04-30 02:40:45', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531363834323b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223964376661643665383130646531376538323831363831303234323037396163223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:4c06bbcc7de07d6716cb73f6da680fff', '::1', '2026-05-04 04:21:22', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373836383438313b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6e6f5f6163636573732f686f6d652f223b706572736f6e5f69647c733a323a223233223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a226136316634626261626639333536313664383331386262643634623734316130223b),
-('wbpos_session:4c8ea8c79b4417086400bd17c29e685a', '::1', '2026-05-16 12:46:49', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383933353538383b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f637573746f6d657273223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223433373231386264323261663732333837323161613638626139633234323638223b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a313b6974656d5f6c6f636174696f6e7c733a313a2231223b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d),
-('wbpos_session:4ee108a1e30a114ee98c884363951797', '::1', '2026-05-04 06:33:56', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373837363433353b637372665f6f73706f735f76347c733a33323a223130653762613135396130373362316432633236373338353531336430613635223b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f637573746f6d657273223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:4fd5a3927f3cad7372be42366cfe7402', '::1', '2026-04-30 02:41:12', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531363837303b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226535393439363361386630376331646466666538313934313465306136653734223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:5216635106aabfda244533a9c8dc5261', '127.0.0.1', '2026-05-07 09:58:39', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383134373931363b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
-('wbpos_session:587421d17a2b8ad89b9e8e4c042c7434', '::1', '2026-04-30 03:08:06', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531383438343b5f63695f70726576696f75735f75726c7c733a3134353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f636173687570732f7365617263683f6c696d69743d3530266f66667365743d30267365617263683d26736f72743d6361736875705f6964266f726465723d6173632673746172745f646174653d323032362d30342d303126656e645f646174653d323032362d30342d3330223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223531663335303838636365326332356231653632646164643238623362383961223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:5add555564c251a6f3666bc94664021b', '::1', '2026-04-30 03:12:25', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531383734313b5f63695f70726576696f75735f75726c7c733a35323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f636173687570732f766965772f31223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226139663863323731373762376363643735393939623436623464636261386663223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:5db9205a2b6fe75bf6be9e64492573ed', '::1', '2026-04-29 07:01:43', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434363039333b637372665f6f73706f735f76347c733a33323a223734393431613032663137353166666338643263663431383437613539653533223b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f737570706c69657273223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a303b6974656d5f6c6f636174696f6e7c733a313a2231223b),
-('wbpos_session:60654b336db831000e101530e555c627', '::1', '2026-04-29 07:01:31', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434363039303b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f737570706c69657273223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223532306339356261393538643862316164393863383361306638646261373830223b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a303b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d6974656d5f6c6f636174696f6e7c733a313a2231223b),
-('wbpos_session:69f26c057c22cc061c338ede832871f4', '::1', '2026-04-30 03:43:49', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373532303632393b637372665f6f73706f735f76347c733a33323a223339393461356565316265313261366665623139323962336432333635346564223b),
-('wbpos_session:6d1b5d274e7d6a1dfba8bea75e3c7985', '::1', '2026-05-20 03:01:07', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737393234363036303b5f63695f70726576696f75735f75726c7c733a35353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f73757065722d61646d696e2f6c6f67696e223b637372665f6f73706f735f76347c733a33323a226132663030656431386336633837666365623761313934653833313539633331223b),
-('wbpos_session:6d57d6fde5b423cdafda43a4ecfb3a28', '127.0.0.1', '2026-05-06 09:16:36', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383035383939363b637372665f6f73706f735f76347c733a33323a226233343033386634323439303330663362383866633164363330653262626133223b),
-('wbpos_session:6fb02a90d87b4f336a7b6f154dfe429a', '127.0.0.1', '2026-05-16 10:01:53', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383932353638353b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f73616173223b637372665f6f73706f735f76347c733a33323a223738623361656339663866383835316262363236373564376137643636353335223b),
-('wbpos_session:722639b0251a3addaad112c98d8cc7ed', '::1', '2026-04-30 03:17:12', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531393033303b5f63695f70726576696f75735f75726c7c733a3131323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f656d706c6f796565732f7365617263683f6c696d69743d3530266f66667365743d30267365617263683d26736f72743d70656f706c652e706572736f6e5f6964266f726465723d617363223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223134383464333939623966663462373238333736316462633963396632643239223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:7518e13b4e2567802fbb43c1b1d91697', '::1', '2026-04-30 06:15:10', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373532393638303b637372665f6f73706f735f76347c733a33323a223038326365613338623137313864376439633766373862343161633733353962223b5f63695f70726576696f75735f75726c7c733a34353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f63617368757073223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a303b6974656d5f6c6f636174696f6e7c733a313a2231223b),
-('wbpos_session:7b5f0cc32c6f05a8829deecf9e91995c', '::1', '2026-04-30 04:31:55', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373532333531343b637372665f6f73706f735f76347c733a33323a223739313531623061613861336632353531326431353261323130396535306531223b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
-('wbpos_session:7f5b46ff7898534b724747a584097557', '::1', '2026-04-30 02:49:32', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373336393b5f63695f70726576696f75735f75726c7c733a35353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6974656d5f6b6974732f766965772f2d31223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223631333336656433376233643138343466326335623063396639343665326466223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:814b4475ff4d443e6d2adb1cd17c30eb', '::1', '2026-04-29 06:57:24', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434353834323b5f63695f70726576696f75735f75726c7c733a3131313a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f737570706c696572732f7365617263683f6c696d69743d35266f66667365743d30267365617263683d26736f72743d70656f706c652e706572736f6e5f6964266f726465723d617363223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226234353434633261643136306237323437636561613637353136306534333637223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:836a4d3a09bb4556732607b2a844b17d', '::1', '2026-05-20 09:45:28', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737393237303236383b637372665f6f73706f735f76347c733a33323a226466313033623536653132353833343935323438663132643239393561303763223b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f73616c6573223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a313b6974656d5f6c6f636174696f6e7c733a313a2231223b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d),
-('wbpos_session:84aa1e2499dab1454e481745ff4e513f', '127.0.0.1', '2026-05-06 09:11:46', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383035383730313b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
-('wbpos_session:8bc4669c24c0cf5b0b0854b87f4fb2d6', '::1', '2026-06-05 07:38:11', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738303634343933353b5f63695f70726576696f75735f75726c7c733a34343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6f6666696365223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223166643764373262313761646335613463616533653739396262626661396463223b6d656e755f67726f75707c733a363a226f6666696365223b616c6c6f775f74656d705f6974656d737c693a313b6974656d5f6c6f636174696f6e7c733a313a2231223b726563765f636172747c613a303a7b7d726563765f6d6f64657c733a373a2272656365697665223b726563765f737570706c6965727c693a2d313b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d),
-('wbpos_session:8e235525903f5a60452752671e077ef3', '::1', '2026-04-29 04:58:00', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373433383638303b637372665f6f73706f735f76347c733a33323a226262383366313436623966356630336430373164656235303734643063383834223b),
-('wbpos_session:91efc222a5a4d5d3d32e79a23596475d', '::1', '2026-04-30 02:49:02', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373333393b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223964333730396437333530336438343132323761306435346533626539636166223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:93013adc57d864cbe15792be501348ee', '::1', '2026-05-04 04:15:29', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373836383132393b637372665f6f73706f735f76347c733a33323a223136663138346465666466636464663334326466626338633236323139646531223b),
-('wbpos_session:930495c70879e41dcf4e23249e11254f', '::1', '2026-04-29 06:15:07', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434333132313b5f63695f70726576696f75735f75726c7c733a35353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f766965772f2d31223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226534306538323534623334373938383166363465653334396530656165643730223b),
-('wbpos_session:971b029158337253e8e4365e209ba06d', '127.0.0.1', '2026-05-16 10:06:23', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383932353938333b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
-('wbpos_session:9bdfad6274095ea76a5f0cd2d3987bc5', '::1', '2026-04-29 06:33:48', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343432353b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226663376462613735653562373462623839663138333037633139386263303233223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:a68cf9e58b5dde2c16c4f0bf92ecc3aa', '::1', '2026-04-30 03:06:39', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531383339373b5f63695f70726576696f75735f75726c7c733a3134353a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f636173687570732f7365617263683f6c696d69743d3230266f66667365743d30267365617263683d26736f72743d6361736875705f6964266f726465723d6173632673746172745f646174653d323032362d30342d303126656e645f646174653d323032362d30342d3330223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226162613062643635313737626264303363613666346232623137636430666463223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:aeb9a5cc1c8a66ae8f0ad59a82856dee', '::1', '2026-04-30 03:25:07', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531393530343b5f63695f70726576696f75735f75726c7c733a3131303a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f617474726962757465732f7365617263683f6c696d69743d3230266f66667365743d30267365617263683d26736f72743d646566696e6974696f6e5f6964266f726465723d617363223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226361303336646538363362653962643633346166356234646232613332396464223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:af099a8519d15a3032bdcccc8d259638', '::1', '2026-04-29 06:35:19', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343531363b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223039613662363266626566663863306630353439613236653465306262633736223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:b0d1427a725b74dceb90c88271f99fc4', '::1', '2026-05-04 06:28:07', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373837363031393b637372665f6f73706f735f76347c733a33323a226366666464353237386438613961343363313437613862366633393033653931223b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6e6f5f6163636573732f686f6d652f223b706572736f6e5f69647c733a323a223234223b74656e616e745f69647c693a333b),
-('wbpos_session:b8bdd0a0b4bf57fd57f0f61203ccf253', '::1', '2026-04-30 02:56:58', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373831353b5f63695f70726576696f75735f75726c7c733a3134373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f657870656e7365732f7365617263683f6c696d69743d3230266f66667365743d30267365617263683d26736f72743d657870656e73655f6964266f726465723d6173632673746172745f646174653d323032362d30342d323926656e645f646174653d323032362d30342d3330223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223236343131303162313432386430396266626538343438393164623638343737223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:c3d77cd34f7b58fcf91e2f6904f63b69', '::1', '2026-04-30 02:56:16', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373737333b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f657870656e7365732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226561633836663638306663663963623830323334316539346334613263636165223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:c7bee3614aba046bc01dcd8f157eefeb', '::1', '2026-04-29 04:57:50', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373433383637303b637372665f6f73706f735f76347c733a33323a223562663331616164343265393232633938636432353330326332613663306434223b),
-('wbpos_session:d6612df00d499f26969f14b64862e76d', '::1', '2026-04-29 06:43:00', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343937373b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f657870656e7365732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223630396565643931323136666437313736623238633838616165396337666361223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:d9f39ccd16ef59f5b00830960ae804cc', '::1', '2026-04-29 06:56:48', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434353830353b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f737570706c696572732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223330653262343963333663323330636164626530333964373430363063653266223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:e19c40f7e44a62ba60ede5e37bb7ce77', '::1', '2026-05-30 04:12:56', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738303131343337353b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f637573746f6d657273223b637372665f6f73706f735f76347c733a33323a226439343662613666613764306232333164306433323865616238343266306665223b706572736f6e5f69647c733a323a223132223b74656e616e745f69647c693a333b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a303b6974656d5f6c6f636174696f6e7c733a313a2231223b),
-('wbpos_session:e5a16daf435c142f131d55c0e53a7dc5', '::1', '2026-05-04 04:21:12', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373836383432373b5f63695f70726576696f75735f75726c7c733a35333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6e6f5f6163636573732f686f6d652f223b706572736f6e5f69647c733a323a223234223b74656e616e745f69647c693a333b637372665f6f73706f735f76347c733a33323a223332663730376132363137653130333630633361353233396239663130346534223b),
-('wbpos_session:effda2603d0be0c0301aff80532982a1', '::1', '2026-04-30 03:27:42', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531393635393b5f63695f70726576696f75735f75726c7c733a3131303a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f617474726962757465732f7365617263683f6c696d69743d3230266f66667365743d30267365617263683d26736f72743d646566696e6974696f6e5f6964266f726465723d617363223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223334666634643431363931653334346466393265653336313939316131666230223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:f33d7ea75bf91fe4e0b9ee9352bce74f', '::1', '2026-04-29 06:37:45', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343636313b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223033356264303765616437643436356334383834343964303832376132316133223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:f47c887a30e0c03c268d9d945918dca1', '::1', '2026-05-30 04:12:50', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738303131343234333b637372665f6f73706f735f76347c733a33323a226535376430653235666361626135616166336561656236353761306333303332223b5f63695f70726576696f75735f75726c7c733a34373a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f637573746f6d657273223b706572736f6e5f69647c733a323a223235223b74656e616e745f69647c693a353b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:f7cdf5f87aef1d83ad6a038ec928e550', '::1', '2026-04-30 02:43:45', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373531373032333b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a223966343037353231316531316634333435373237633562663631336531316430223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:f8cd83183fa17c83c941868ac59133e3', '127.0.0.1', '2026-05-06 09:11:41', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737383035383639393b637372665f6f73706f735f76347c733a33323a226265336337626439623630386162353632326632323763613665353433383937223b),
-('wbpos_session:fb22fcc455c682e483f9081d89a9a455', '::1', '2026-04-29 06:38:59', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434343733353b5f63695f70726576696f75735f75726c7c733a35343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6769667463617264732f64656c657465223b706572736f6e5f69647c733a313a2231223b74656e616e745f69647c693a313b637372665f6f73706f735f76347c733a33323a226561623665383965313030653766363866613135346536363963306339326330223b6d656e755f67726f75707c733a343a22686f6d65223b),
-('wbpos_session:fdf45437fd07a5aa8d654d20e31479fb', '::1', '2026-04-29 06:08:54', 0x5f5f63695f6c6173745f726567656e65726174657c693a313737373434323933343b637372665f6f73706f735f76347c733a33323a223837363235643262623732303865353433313731656136326132653330636332223b);
+('ospos_session:273d3a3b6dc4bd90a2a0dad56d1c5638', '::1', '2026-06-16 08:37:30', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393035303b637372665f6f73706f735f76347c733a33323a226564363765643039343264336438633439666537633531633130343835323034223b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a33383a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f223b),
+('ospos_session:2a1be80e1171fc14d60c2e00a6373c57', '::1', '2026-06-16 12:49:55', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313631343139343b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6974656d73223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a223365353538366663626136656433316231626630636335383562663734366533223b6d656e755f67726f75707c733a343a22686f6d65223b616c6c6f775f74656d705f6974656d737c693a303b6974656d5f6c6f636174696f6e7c733a313a2231223b),
+('ospos_session:392b9d08f41bf8f45dcae76e6c03e2dd', '::1', '2026-06-16 09:58:51', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313630333738333b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34343a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f636f6e666967223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a226264633761353331643533333066326466326233316536333963336432656261223b6d656e755f67726f75707c733a363a226f6666696365223b616c6c6f775f74656d705f6974656d737c693a313b6974656d5f6c6f636174696f6e7c733a313a2231223b726563765f636172747c613a303a7b7d726563765f6d6f64657c733a373a2272656365697665223b726563765f73746f636b5f736f757263657c693a313030323b726563765f73746f636b5f64657374696e6174696f6e7c733a313a2231223b726563765f737570706c6965727c693a2d313b73616c655f69647c693a2d313b636173685f726f756e64696e677c693a303b636173685f6d6f64657c693a303b73616c65735f636172747c613a303a7b7d73616c65735f637573746f6d65727c693a2d313b73616c65735f6d6f64657c733a343a2273616c65223b73616c65735f6c6f636174696f6e7c693a313b73616c65735f7061796d656e74737c613a303a7b7d),
+('ospos_session:413c77910eeee0fb8eb83dfd4912b359', '::1', '2026-06-16 09:03:09', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313630303538363b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a223334326335613539303338653633613765373862616339323633346134623433223b6d656e755f67726f75707c733a343a22686f6d65223b),
+('ospos_session:64fd25cf93c816d90f741d05bb4ace44', '::1', '2026-06-16 08:56:19', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313630303137333b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a223262373832653330656165616536386137343331616565646365366434303335223b6d656e755f67726f75707c733a343a22686f6d65223b),
+('ospos_session:6c0a842c5cc08c3abbf265a8325e781b', '::1', '2026-06-16 08:43:54', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393433333b637372665f6f73706f735f76347c733a33323a223931663263396438323536306565333533636461373564396562353261353866223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b),
+('ospos_session:7652fd5933365d773e9bf552ed0615f3', '::1', '2026-06-16 08:43:36', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393431363b637372665f6f73706f735f76347c733a33323a223938333234336539656165363733323466633435333061366435666237386630223b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a33383a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f223b),
+('ospos_session:78c54d645fe6b7c11ec843d7e0c55ed5', '::1', '2026-06-16 08:31:44', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539383730343b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
+('ospos_session:7c9bdfcb868737c28044f343b353b77e', '::1', '2026-06-16 08:43:53', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393433333b637372665f6f73706f735f76347c733a33323a223261633634643439646430636335303134333061613766633963336163383561223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b),
+('ospos_session:8180b2a044cc317a01fb94231026478a', '::1', '2026-06-16 08:43:37', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393431373b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
+('ospos_session:84d561cbf01f1fede7ae4bf80ba94df3', '::1', '2026-06-16 08:27:42', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539383235363b637372665f6f73706f735f76347c733a33323a223864363833613161613966663530666461343238383734326266396163303765223b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a33383a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b6d656e755f67726f75707c733a343a22686f6d65223b),
+('ospos_session:88ff2fcecc579e15ba965ee759c32b5a', '::1', '2026-06-16 08:43:37', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393431373b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
+('ospos_session:89cc80017a8aa627c4d32810af6da40b', '::1', '2026-06-19 11:18:05', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313836373838323b637372665f6f73706f735f76347c733a33323a223961313963313537363865656238346632323864303239623336653039626261223b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b),
+('ospos_session:9702c5c6fa970f137033e0275f749929', '::1', '2026-06-16 08:51:10', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539393836393b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34333a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f6c6f67696e223b706572736f6e5f69647c733a313a2231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a223666353261623230616237366663626663396337393761313363336236323239223b6d656e755f67726f75707c733a343a22686f6d65223b),
+('ospos_session:9b484eacafe2aae8b886186b85964cff', '::1', '2026-06-19 12:10:55', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313837313034313b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a36303a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f73757065722d61646d696e2f627573696e6573736573223b637372665f6f73706f735f76347c733a33323a223462376265343366386162393930306539333035656530323034303961326161223b706c6174666f726d5f61646d696e5f69647c693a313b),
+('ospos_session:9f736188bad056ba8b4b1793829e51b9', '::1', '2026-06-16 08:31:45', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313539383730353b637372665f6f73706f735f76347c733a33323a223066643164376161636163613636353164373166363335366131643539353231223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b),
+('ospos_session:c84049a64d4472b994bf18b88a61c2be', '::1', '2026-06-16 09:34:53', 0x5f5f63695f6c6173745f726567656e65726174657c693a313738313630323439313b74656e616e745f69647c693a313b5f63695f70726576696f75735f75726c7c733a34323a22687474703a2f2f6c6f63616c686f73742f6f70656e736f75726365706f732f7075626c69632f686f6d65223b706572736f6e5f69647c733a343a2231303233223b74656e616e745f64625f686f73746e616d657c733a393a226c6f63616c686f7374223b74656e616e745f64625f706f72747c693a333330363b74656e616e745f64625f6e616d657c733a353a227762706f73223b74656e616e745f64625f757365726e616d657c733a303a22223b74656e616e745f64625f70617373776f72647c733a303a22223b74656e616e745f64625f7072656669787c733a363a227762706f735f223b637372665f6f73706f735f76347c733a33323a223932383462613566386464623533326366326137363734323630313563386363223b6d656e755f67726f75707c733a343a22686f6d65223b);
 
 -- --------------------------------------------------------
 
@@ -1377,7 +1382,18 @@ CREATE TABLE `wbpos_stock_locations` (
 --
 
 INSERT INTO `wbpos_stock_locations` (`location_id`, `location_name`, `deleted`, `tenant_id`) VALUES
-(1, 'stock', 0, 1);
+(1, 'Main Store', 0, 1),
+(1002, 'Warehouse A', 0, 1),
+(1003, 'Warehouse B', 0, 1),
+(1004, 'Front Counter', 0, 1),
+(1005, 'Back Room', 0, 1),
+(1006, 'Online Stock', 0, 1),
+(1007, 'Main Store', 0, 2),
+(1008, 'Warehouse A', 0, 2),
+(1009, 'Warehouse B', 0, 2),
+(1010, 'Front Counter', 0, 2),
+(1011, 'Back Room', 0, 2),
+(1012, 'Online Stock', 0, 2);
 
 -- --------------------------------------------------------
 
@@ -1403,10 +1419,8 @@ CREATE TABLE `wbpos_subscriptions` (
 --
 
 INSERT INTO `wbpos_subscriptions` (`subscription_id`, `tenant_id`, `plan_id`, `status`, `trial_ends_at`, `period_start`, `period_end`, `cancel_at_period_end`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 'active', NULL, '2026-04-28 11:23:17', '2026-05-28 11:23:17', 0, '2026-04-28 04:23:17', NULL),
-(2, 3, 1, 'active', NULL, '2026-04-28 03:02:13', '2026-05-28 03:02:13', 0, '2026-04-28 07:02:13', NULL),
-(3, 4, 2, 'active', NULL, '2026-04-30 00:24:13', '2026-05-30 00:24:13', 0, '2026-04-30 04:24:13', NULL),
-(4, 5, 1, 'active', NULL, '2026-05-16 06:55:17', '2026-06-16 06:55:17', 0, '2026-05-16 10:55:17', NULL);
+(1, 1, 1, 'active', NULL, '2026-06-16 15:07:20', '2027-06-16 15:07:20', 0, '2026-06-16 08:07:20', NULL),
+(2, 2, 2, 'active', NULL, '2026-06-16 07:08:22', '2026-07-16 07:08:22', 0, '2026-06-16 11:08:22', NULL);
 
 -- --------------------------------------------------------
 
@@ -1438,9 +1452,7 @@ CREATE TABLE `wbpos_subscription_requests` (
 --
 
 INSERT INTO `wbpos_subscription_requests` (`request_id`, `company_name`, `tenant_code`, `owner_first_name`, `owner_last_name`, `owner_email`, `owner_phone`, `owner_username`, `owner_password_hash`, `plan_id`, `payment_reference`, `status`, `notes`, `reviewed_by_admin_id`, `created_at`, `reviewed_at`) VALUES
-(1, 'My Company Retail', 'myco-retail', 'Srorn', 'Chansomphors', 'srornchansomphors@gmail.com', '085371346', 'myco_owner', '$2y$10$p/V7.0bW8JBORu9mv46cFO09mWnEpoPrW3HvnvjozRxGzjCHIUUH.', 1, 'KH-TRX-20260428-1001', 'approved', 'Submitted from website signup flow', 1, '2026-04-28 07:00:51', '2026-04-28 03:02:13'),
-(2, 'Anh Keonho', 'trust', 'Anh', 'Keonho', 'anhkeonho@gmail.com', '085371346', 'anhkeonho', '$2y$10$aeJE1LX6XZj27CU5xRNiJ..pz5thkeyc517RGHaXpKngt8JxWo62S', 2, 'KH-TRX-20260428-1001', 'approved', 'Submitted from website signup flow', 1, '2026-04-30 04:22:48', '2026-04-30 00:24:13'),
-(3, 'Sok sokunthea', 'sokunthea', 'Sok', 'sokunthea', 'sokunthea@gmail.com', '012345678', 'sokunthea', '$2y$10$jw5rOWB5zseZTJziLALmCueShz1O1lO3isIfOMOwE3PfTdRkysee6', 1, 'KH-TRX-20260428-1002', 'approved', 'Submitted from website signup flow', 1, '2026-05-16 10:54:46', '2026-05-16 06:55:17');
+(1, 'Acme Retail Shop', 'blue-ocean', 'Maria', 'Lopez', 'maria@blueocean.cafe', '098-777-1234', 'maria_blue', '$2y$10$3TmH69FAwUINRA7sKHkhrOrmOPFlbCfiT3rluA.me/Nog3mu.A1EC', 2, 'PAY-778899', 'approved', 'Submitted from website signup flow', 1, '2026-06-16 11:07:15', '2026-06-16 07:08:22');
 
 -- --------------------------------------------------------
 
@@ -1464,7 +1476,12 @@ CREATE TABLE `wbpos_suppliers` (
 --
 
 INSERT INTO `wbpos_suppliers` (`person_id`, `company_name`, `agency_name`, `account_number`, `tax_id`, `deleted`, `category`, `tenant_id`) VALUES
-(17, 'My Company Retail', '', NULL, '', 0, 0, 3);
+(1001, 'Fresh Foods Ltd', 'Fresh Foods', 'SUP-001', '', 0, 0, 1),
+(1002, 'Bakery Co', 'Bakery Co', 'SUP-002', '', 0, 0, 1),
+(1003, 'Dairy Farm Inc', 'Dairy Farm', 'SUP-003', '', 0, 0, 1),
+(1004, 'Grocery Hub', 'Grocery Hub', 'SUP-004', '', 0, 0, 1),
+(1005, 'Home Goods Supply', 'Home Goods', 'SUP-005', '', 0, 0, 1),
+(1006, 'Tech Parts LLC', 'Tech Parts', 'SUP-006', '', 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1554,11 +1571,8 @@ CREATE TABLE `wbpos_tenants` (
 --
 
 INSERT INTO `wbpos_tenants` (`tenant_id`, `tenant_code`, `company_name`, `status`, `timezone`, `currency_code`, `db_hostname`, `db_port`, `db_name`, `db_username`, `db_password`, `db_prefix`, `created_at`, `updated_at`) VALUES
-(1, 'default', 'WBPOS Demo Store', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-28 04:23:17', NULL),
-(2, '001', 'My company', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-28 04:44:29', NULL),
-(3, 'myco-retail', 'My Company Retail', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-28 07:02:13', '2026-05-30 03:04:23'),
-(4, 'trust', 'Anh Keonho', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-30 04:24:13', NULL),
-(5, 'sokunthea', 'Sok sokunthea', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-16 10:55:17', NULL);
+(1, 'default', 'WBPOS Demo Store', 'active', 'America/New_York', 'USD', NULL, NULL, 'wbpos', NULL, NULL, 'wbpos_', '2026-06-16 08:07:20', NULL),
+(2, 'blue-ocean', 'Acme Retail Shop', 'active', 'UTC', 'USD', NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-16 11:08:22', NULL);
 
 -- --------------------------------------------------------
 
@@ -1577,18 +1591,26 @@ CREATE TABLE `wbpos_tenant_config` (
 --
 
 INSERT INTO `wbpos_tenant_config` (`tenant_id`, `config_key`, `config_value`) VALUES
-(2, 'company', 'My company'),
+(1, 'address', '100 Main Street'),
+(1, 'company', 'WBPOS Demo Store'),
+(1, 'company_logo', 'photo_2025-08-19_13-20-47.jpg'),
+(1, 'currency_code', 'USD'),
+(1, 'email', 'admin@wbpos.demo'),
+(1, 'fax', ''),
+(1, 'phone', '555-555-0100'),
+(1, 'return_policy', 'Returns within 30 days with receipt.'),
+(1, 'timezone', 'America/New_York'),
+(1, 'website', ''),
+(2, 'address', '100 Main Street'),
+(2, 'company', 'Acme Retail Shop'),
+(2, 'company_logo', 'photo_2025-08-19_13-20-47.jpg'),
 (2, 'currency_code', 'USD'),
+(2, 'email', 'admin@wbpos.demo'),
+(2, 'fax', ''),
+(2, 'phone', '555-555-0100'),
+(2, 'return_policy', 'Returns within 30 days with receipt.'),
 (2, 'timezone', 'UTC'),
-(3, 'company', 'My Company Retail'),
-(3, 'currency_code', 'USD'),
-(3, 'timezone', 'UTC'),
-(4, 'company', 'Anh Keonho'),
-(4, 'currency_code', 'USD'),
-(4, 'timezone', 'UTC'),
-(5, 'company', 'Sok sokunthea'),
-(5, 'currency_code', 'USD'),
-(5, 'timezone', 'UTC');
+(2, 'website', '');
 
 -- --------------------------------------------------------
 
@@ -1623,10 +1645,8 @@ CREATE TABLE `wbpos_tenant_users` (
 --
 
 INSERT INTO `wbpos_tenant_users` (`tenant_id`, `person_id`, `tenant_role`, `is_active`, `created_at`) VALUES
-(2, 11, 'owner', 1, '2026-04-28 04:44:29'),
-(3, 12, 'owner', 1, '2026-04-28 07:02:13'),
-(4, 20, 'owner', 1, '2026-04-30 04:24:13'),
-(5, 25, 'owner', 1, '2026-05-16 10:55:17');
+(1, 1, 'owner', 1, '2026-06-16 08:07:20'),
+(2, 1026, 'owner', 1, '2026-06-16 11:08:22');
 
 --
 -- Indexes for dumped tables
@@ -2063,7 +2083,7 @@ ALTER TABLE `wbpos_tenant_users`
 -- AUTO_INCREMENT for table `wbpos_attribute_definitions`
 --
 ALTER TABLE `wbpos_attribute_definitions`
-  MODIFY `definition_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `definition_id` int(10) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `wbpos_attribute_values`
@@ -2075,13 +2095,13 @@ ALTER TABLE `wbpos_attribute_values`
 -- AUTO_INCREMENT for table `wbpos_cash_up`
 --
 ALTER TABLE `wbpos_cash_up`
-  MODIFY `cashup_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `cashup_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_customers_packages`
 --
 ALTER TABLE `wbpos_customers_packages`
-  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `package_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `wbpos_customers_points`
@@ -2093,31 +2113,31 @@ ALTER TABLE `wbpos_customers_points`
 -- AUTO_INCREMENT for table `wbpos_dinner_tables`
 --
 ALTER TABLE `wbpos_dinner_tables`
-  MODIFY `dinner_table_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `dinner_table_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_expenses`
 --
 ALTER TABLE `wbpos_expenses`
-  MODIFY `expense_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `expense_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_expense_categories`
 --
 ALTER TABLE `wbpos_expense_categories`
-  MODIFY `expense_category_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `expense_category_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1008;
 
 --
 -- AUTO_INCREMENT for table `wbpos_giftcards`
 --
 ALTER TABLE `wbpos_giftcards`
-  MODIFY `giftcard_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `giftcard_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_inventory`
 --
 ALTER TABLE `wbpos_inventory`
-  MODIFY `trans_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `trans_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1013;
 
 --
 -- AUTO_INCREMENT for table `wbpos_invoices`
@@ -2135,13 +2155,13 @@ ALTER TABLE `wbpos_invoice_payments`
 -- AUTO_INCREMENT for table `wbpos_items`
 --
 ALTER TABLE `wbpos_items`
-  MODIFY `item_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `item_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1008;
 
 --
 -- AUTO_INCREMENT for table `wbpos_item_kits`
 --
 ALTER TABLE `wbpos_item_kits`
-  MODIFY `item_kit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `item_kit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_migrations`
@@ -2153,7 +2173,7 @@ ALTER TABLE `wbpos_migrations`
 -- AUTO_INCREMENT for table `wbpos_people`
 --
 ALTER TABLE `wbpos_people`
-  MODIFY `person_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `person_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1028;
 
 --
 -- AUTO_INCREMENT for table `wbpos_plans`
@@ -2171,19 +2191,19 @@ ALTER TABLE `wbpos_platform_admins`
 -- AUTO_INCREMENT for table `wbpos_receivings`
 --
 ALTER TABLE `wbpos_receivings`
-  MODIFY `receiving_id` int(10) NOT NULL AUTO_INCREMENT;
+  MODIFY `receiving_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_sales`
 --
 ALTER TABLE `wbpos_sales`
-  MODIFY `sale_id` int(10) NOT NULL AUTO_INCREMENT;
+  MODIFY `sale_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_sales_payments`
 --
 ALTER TABLE `wbpos_sales_payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1007;
 
 --
 -- AUTO_INCREMENT for table `wbpos_sales_reward_points`
@@ -2201,19 +2221,19 @@ ALTER TABLE `wbpos_sales_taxes`
 -- AUTO_INCREMENT for table `wbpos_stock_locations`
 --
 ALTER TABLE `wbpos_stock_locations`
-  MODIFY `location_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `location_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1013;
 
 --
 -- AUTO_INCREMENT for table `wbpos_subscriptions`
 --
 ALTER TABLE `wbpos_subscriptions`
-  MODIFY `subscription_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `subscription_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `wbpos_subscription_requests`
 --
 ALTER TABLE `wbpos_subscription_requests`
-  MODIFY `request_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `request_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `wbpos_tax_categories`
@@ -2243,7 +2263,7 @@ ALTER TABLE `wbpos_tax_rates`
 -- AUTO_INCREMENT for table `wbpos_tenants`
 --
 ALTER TABLE `wbpos_tenants`
-  MODIFY `tenant_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `tenant_id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `wbpos_tenant_domains`
@@ -2495,14 +2515,6 @@ ALTER TABLE `wbpos_tenant_domains`
 ALTER TABLE `wbpos_tenant_users`
   ADD CONSTRAINT `fk_tenant_users_person` FOREIGN KEY (`person_id`) REFERENCES `wbpos_people` (`person_id`),
   ADD CONSTRAINT `fk_tenant_users_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `wbpos_tenants` (`tenant_id`);
-
--- ============================================================
--- FRESH INSTALL ONLY. For existing DB use wbpos_demo_data.sql after wbpos_clean_install.sql
--- Import: app/Database/wbpos_demo_data.sql
--- Or double-click: app/Database/import_wbpos.bat
--- See wbpos_demo_data.sql header for all demo logins
--- ============================================================
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

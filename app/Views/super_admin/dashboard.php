@@ -16,7 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=3') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=4') ?>">
 </head>
 <body class="sa-dashboard">
 <?php
@@ -113,8 +113,15 @@
             </a>
         </nav>
     </aside>
+    <div id="sa_sidebar_backdrop" class="sa-sidebar-backdrop" aria-hidden="true"></div>
 
     <div class="sa-main">
+        <header class="sa-mobile-topbar">
+            <button id="sa_mobile_sidebar_toggle" class="sa-mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span class="sa-hamburger-icon" aria-hidden="true"></span>
+            </button>
+            <span class="sa-mobile-topbar__title"><?= esc($current_meta['title']) ?></span>
+        </header>
         <header class="sa-hero">
             <p class="sa-hero__eyebrow">Platform Console</p>
             <h1 class="sa-hero__title"><?= esc($current_meta['title']) ?></h1>
@@ -383,6 +390,61 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const mobileToggle = document.getElementById('sa_mobile_sidebar_toggle');
+        const mobileBackdrop = document.getElementById('sa_sidebar_backdrop');
+
+        const closeMobileSidebar = function() {
+            document.documentElement.classList.remove('sa-mobile-sidebar-open');
+            if (mobileToggle) {
+                mobileToggle.setAttribute('aria-expanded', 'false');
+            }
+        };
+
+        const openMobileSidebar = function() {
+            document.documentElement.classList.add('sa-mobile-sidebar-open');
+            if (mobileToggle) {
+                mobileToggle.setAttribute('aria-expanded', 'true');
+            }
+        };
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', function() {
+                if (window.innerWidth > 992) {
+                    return;
+                }
+
+                if (document.documentElement.classList.contains('sa-mobile-sidebar-open')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            });
+        }
+
+        if (mobileBackdrop) {
+            mobileBackdrop.addEventListener('click', closeMobileSidebar);
+        }
+
+        document.querySelectorAll('.sa-nav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileSidebar();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && window.innerWidth <= 992 && document.documentElement.classList.contains('sa-mobile-sidebar-open')) {
+                closeMobileSidebar();
+            }
+        });
+
         const overlay = document.getElementById('tenant-status-confirm');
         const messageEl = document.getElementById('tenant-confirm-message');
         const cancelBtn = document.getElementById('tenant-confirm-cancel');
