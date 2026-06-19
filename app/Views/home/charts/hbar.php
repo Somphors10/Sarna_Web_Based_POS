@@ -60,6 +60,7 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
         var labels = <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         var values = <?= json_encode($values, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         var colors = <?= json_encode($colors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        var barThickness = labels.length <= 2 ? 26 : (labels.length <= 4 ? 20 : 16);
 
         window.<?= esc($chart_var, 'js') ?> = new Chart(canvas.getContext('2d'), {
             type: 'bar',
@@ -70,8 +71,8 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                     backgroundColor: colors,
                     borderRadius: 5,
                     borderSkipped: false,
-                    barThickness: 16,
-                    maxBarThickness: 20
+                    barThickness: barThickness,
+                    maxBarThickness: Math.max(barThickness + 4, 24)
                 }]
             },
             options: {

@@ -52,12 +52,14 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
         var values = <?= json_encode($values, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         var peak = Math.max.apply(null, values.concat([0]));
 
-        var ctx = canvas.getContext('2d');
-        var gradient = ctx.createLinearGradient(0, 0, 0, 168);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.01)');
+        function buildChart() {
+            var chartBody = canvas.closest('.neo-chart-card__body');
+            var bodyHeight = chartBody ? chartBody.clientHeight : 168;
+            var gradient = ctx.createLinearGradient(0, 0, 0, bodyHeight);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.01)');
 
-        window.<?= esc($chart_var, 'js') ?> = new Chart(ctx, {
+            window.<?= esc($chart_var, 'js') ?> = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -154,6 +156,12 @@ $currency_side = ($show_currency && function_exists('is_right_side_currency_symb
                     }
                 }
             }
+        });
+        }
+
+        var ctx = canvas.getContext('2d');
+        requestAnimationFrame(function () {
+            requestAnimationFrame(buildChart);
         });
     })();
 </script>

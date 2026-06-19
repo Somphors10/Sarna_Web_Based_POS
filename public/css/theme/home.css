@@ -1,6 +1,8 @@
 .neo-home {
     margin-top: 0;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --neo-chart-area-min-h: 168px;
+    --neo-chart-bar-min-h: 130px;
 }
 
 .neo-main {
@@ -307,13 +309,15 @@
 }
 
 .neo-chart-card--area .neo-chart-card__body {
-    height: 168px;
-    flex: 0 0 168px;
+    flex: 1 1 auto;
+    min-height: var(--neo-chart-area-min-h);
+    height: auto;
 }
 
 .neo-chart-card--bar .neo-chart-card__body {
-    height: 130px;
-    flex: 0 0 130px;
+    flex: 1 1 auto;
+    min-height: var(--neo-chart-bar-min-h);
+    height: auto;
 }
 
 .neo-chart-canvas {
@@ -561,6 +565,110 @@
     line-height: 1.25;
 }
 
+@media (min-width: 901px) {
+    .neo-home {
+        --neo-chart-area-min-h: clamp(240px, 34vh, 420px);
+        --neo-chart-bar-min-h: clamp(200px, 26vh, 340px);
+        min-height: calc(100vh - 64px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .neo-home .neo-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding-bottom: 1.25rem;
+    }
+
+    .neo-home .neo-kpi-grid {
+        flex-shrink: 0;
+    }
+
+    .neo-home .neo-section-title {
+        flex-shrink: 0;
+    }
+
+    .neo-home .neo-chart-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 1fr;
+        align-items: stretch;
+        gap: 16px;
+        min-height: clamp(360px, calc(100vh - 280px), 720px);
+        margin-bottom: 0;
+    }
+
+    .neo-home .neo-chart-card {
+        flex: none;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .neo-home .neo-chart-card__body {
+        margin-bottom: 0;
+    }
+
+    .neo-home .neo-pay-list {
+        flex-shrink: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    .neo-home {
+        --neo-chart-area-min-h: clamp(280px, 38vh, 480px);
+        --neo-chart-bar-min-h: clamp(220px, 30vh, 380px);
+    }
+
+    .neo-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .neo-kpi-card {
+        flex: none;
+        min-width: 0;
+        padding: 18px 16px;
+    }
+
+    .neo-kpi-value {
+        font-size: 28px;
+    }
+
+    .neo-dash-header__title {
+        font-size: 24px;
+    }
+
+    .neo-home .neo-chart-grid {
+        gap: 18px;
+        min-height: clamp(400px, calc(100vh - 260px), 780px);
+    }
+
+    .neo-chart-card__header {
+        padding: 18px 20px 0;
+    }
+
+    .neo-chart-card__body {
+        margin: 14px 16px 0;
+        padding: 8px 8px 4px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .neo-home {
+        --neo-chart-area-min-h: clamp(320px, 42vh, 540px);
+        --neo-chart-bar-min-h: clamp(260px, 34vh, 420px);
+    }
+
+    .neo-home .neo-chart-grid {
+        min-height: clamp(460px, calc(100vh - 240px), 860px);
+    }
+}
+
 @media (max-width: 1100px) {
     .neo-main {
         padding: 0;
@@ -588,12 +696,10 @@
     }
 
     .neo-chart-card--area .neo-chart-card__body {
-        height: 155px;
-        flex: 0 0 155px;
+        min-height: 155px;
     }
 
     .neo-chart-card--bar .neo-chart-card__body {
-        height: 120px;
-        flex: 0 0 120px;
+        min-height: 120px;
     }
 }
