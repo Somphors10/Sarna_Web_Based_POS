@@ -40,7 +40,7 @@
         table_support.init({
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
-            pageSize: <?= $config['lines_per_page'] ?>,
+            pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'sale_id',
             onLoadSuccess: function(response) {
                 if ($("#table tbody tr").length > 1) {

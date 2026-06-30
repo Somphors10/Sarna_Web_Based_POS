@@ -402,9 +402,14 @@ class Taxes extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $tax_codes_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT);
+        $tax_codes_to_delete = normalize_post_ids($this->request->getPost('ids'));
 
-        if ($this->tax->delete_list($tax_codes_to_delete)) {    // TODO: this needs to be replaced with ternary notation
+        if (empty($tax_codes_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Taxes.tax_code_cannot_be_deleted')]);
+            return;
+        }
+
+        if ($this->tax->delete_list($tax_codes_to_delete)) {
             echo json_encode(['success' => true, 'message' => lang('Taxes.tax_code_successful_deleted')]);
         } else {
             echo json_encode(['success' => false, 'message' => lang('Taxes.tax_code_cannot_be_deleted')]);

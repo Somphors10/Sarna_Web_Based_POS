@@ -110,9 +110,14 @@ class Expenses_categories extends Secure_Controller    // TODO: Is this class ev
      */
     public function postDelete(): void
     {
-        $expense_category_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $expense_category_to_delete = normalize_post_ids($this->request->getPost('ids'));
 
-        if ($this->expense_category->delete_list($expense_category_to_delete)) {    // TODO: Convert to ternary notation.
+        if (empty($expense_category_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Expenses_categories.cannot_be_deleted')]);
+            return;
+        }
+
+        if ($this->expense_category->delete_list($expense_category_to_delete)) {
             echo json_encode([
                 'success' => true,
                 'message' => lang('Expenses_categories.successful_deleted') . ' ' . count($expense_category_to_delete) . ' ' . lang('Expenses_categories.one_or_multiple')

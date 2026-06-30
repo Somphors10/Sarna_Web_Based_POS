@@ -58,19 +58,29 @@
                 stickyHeader: true,
                 stickyHeaderOffsetLeft: $('#table').offset().left + 'px',
                 stickyHeaderOffsetRight: $('#table').offset().right + 'px',
-                pageSize: <?= $config['lines_per_page'] ?>,
+                pageSize: <?= table_page_size($config['lines_per_page']) ?>,
+                pageList: <?= json_encode(table_page_list()) ?>,
                 sortable: true,
                 showExport: true,
                 exportDataType: 'all',
                 exportTypes: ['json', 'xml', 'csv', 'txt', 'sql', 'excel', 'pdf'],
                 pagination: true,
+                smartDisplay: false,
+                paginationParts: ['pageInfo', 'pageSize', 'pageList'],
+                paginationHAlign: 'right',
+                paginationDetailHAlign: 'left',
                 showColumns: true,
                 data: <?= json_encode($data) ?>,
                 iconSize: 'sm',
                 paginationVAlign: 'bottom',
                 escape: true,
-                search: true
+                search: true,
+                onPostBody: function() {
+                    table_support.fix_toolbar_dropdowns($('#table'));
+                }
             });
+
+        table_support.fix_toolbar_dropdowns($('#table'));
     });
 </script>
 

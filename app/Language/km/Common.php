@@ -24,6 +24,8 @@ return [
     "edit"                           => "កែប្រែ",
     "email"                          => "អ៊ីមែល",
     "email_invalid_format"           => "អ៊ីមែលនេះគឺខុសទម្រង់",
+    "email_no_recipients"            => "សូមជ្រើសរើសកំណត់ត្រាដែលមានអ៊ីមែល។",
+    "email_send"                     => "ផ្ញើអ៊ីមែល",
     "export_csv"                     => "នាំចេញ CSV",
     "export_csv_no"                  => "ទេ",
     "export_csv_yes"                 => "បាទ",

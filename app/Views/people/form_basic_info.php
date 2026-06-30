@@ -65,9 +65,41 @@
                 'class' => 'form-control input-sm',
                 'value' => $person_info->email
             ]) ?>
+            <span class="input-group-btn">
+                <a id="person_email_send_btn" class="btn btn-default btn-sm" href="#" title="<?= esc(lang('Common.email_send')) ?>" aria-label="<?= esc(lang('Common.email_send')) ?>">
+                    <span class="glyphicon glyphicon-send"></span>
+                </a>
+            </span>
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var $emailField = $('#email');
+        var $emailSendBtn = $('#person_email_send_btn');
+
+        if ($emailField.length === 0 || $emailSendBtn.length === 0) {
+            return;
+        }
+
+        var syncEmailSendButton = function() {
+            var address = ($emailField.val() || '').trim();
+            if (address === '') {
+                $emailSendBtn.attr('href', '#').addClass('disabled').attr('aria-disabled', 'true');
+                return;
+            }
+
+            $emailSendBtn
+                .attr('href', 'mailto:' + encodeURIComponent(address))
+                .removeClass('disabled')
+                .attr('aria-disabled', 'false');
+        };
+
+        $emailField.on('input change blur', syncEmailSendButton);
+        syncEmailSendButton();
+    });
+</script>
 
 <div class="form-group form-group-sm">
     <?= form_label(lang('Common.phone_number'), 'phone_number', ['class' => 'control-label col-xs-3']) ?>

@@ -227,7 +227,12 @@ class Item_kits extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $item_kits_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $item_kits_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($item_kits_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Item_kits.cannot_be_deleted')]);
+            return;
+        }
 
         if ($this->item_kit->delete_list($item_kits_to_delete)) {
             echo json_encode([

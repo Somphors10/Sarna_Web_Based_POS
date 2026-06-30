@@ -159,6 +159,7 @@ class Employee extends Person
                 $success = $builder->insert($employee_data);
             } else {
                 $builder->where('person_id', $employee_id);
+                $this->scopeTenant($builder, 'employees.tenant_id');
                 $success = $builder->update($employee_data);
             }
 

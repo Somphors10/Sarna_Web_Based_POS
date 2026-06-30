@@ -31,7 +31,7 @@
         table_support.init({
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
-            pageSize: <?= $config['lines_per_page'] ?>,
+            pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'cashup_id_key',
             queryParams: function() {
                 return $.extend(arguments[0], {

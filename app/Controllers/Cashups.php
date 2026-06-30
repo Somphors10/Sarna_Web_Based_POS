@@ -241,7 +241,12 @@ class Cashups extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $cash_ups_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $cash_ups_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($cash_ups_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Cashups.cannot_be_deleted'), 'ids' => []]);
+            return;
+        }
 
         if ($this->cashup->delete_list($cash_ups_to_delete)) {
             echo json_encode(['success' => true, 'message' => lang('Cashups.successful_deleted') . ' ' . count($cash_ups_to_delete) . ' ' . lang('Cashups.one_or_multiple'), 'ids' => $cash_ups_to_delete]);

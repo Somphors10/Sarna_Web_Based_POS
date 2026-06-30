@@ -117,7 +117,12 @@ class Tax_categories extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $tax_categories_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT);
+        $tax_categories_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($tax_categories_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Tax_categories.cannot_be_deleted')]);
+            return;
+        }
 
         if ($this->tax_category->delete_list($tax_categories_to_delete)) {
             echo json_encode([

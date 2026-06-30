@@ -83,6 +83,56 @@
 .neo-global-content .bootstrap-table .fixed-table-container {
     border-color: #e2e8f0;
     border-radius: 10px;
+    overflow-x: auto;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar {
+    position: relative;
+    z-index: 110;
+    overflow: visible;
+    pointer-events: auto;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .btn,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .dropdown-toggle {
+    pointer-events: auto;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .dropdown-menu,
+.neo-global-content .bootstrap-table .fixed-table-pagination .dropdown-menu {
+    z-index: 120;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .btn-group.open > .dropdown-menu,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .keep-open.open > .dropdown-menu,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .export.open > .dropdown-menu,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .btn-group.open > .dropdown-menu {
+    display: block;
+}
+
+.neo-global-content .bootstrap-table .fix-sticky {
+    z-index: 90;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination {
+    padding: 8px 4px 4px;
+    overflow: visible;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 6px;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination-detail,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list,
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination {
+    margin: 6px 0;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .btn-group {
+    vertical-align: middle;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-toggle {
+    min-width: 56px;
 }
 
 .neo-global-content .bootstrap-table .table thead > tr > th {

@@ -221,9 +221,14 @@ class Attributes extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $attributes_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $attributes_to_delete = normalize_post_ids($this->request->getPost('ids'));
 
-        if($this->attribute->deleteDefinitionList($attributes_to_delete)) {
+        if (empty($attributes_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Attributes.definition_cannot_be_deleted')]);
+            return;
+        }
+
+        if ($this->attribute->deleteDefinitionList($attributes_to_delete)) {
             $message = lang('Attributes.definition_successful_deleted') . ' ' . count($attributes_to_delete) . ' ' . lang('Attributes.definition_one_or_multiple');
             echo json_encode(['success' => true, 'message' => $message]);
         } else {

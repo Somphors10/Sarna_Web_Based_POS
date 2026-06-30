@@ -108,6 +108,49 @@
 
 (function(table_support, $) {
 
+    var toolbar_dropdown_namespace = '.osposTableDropdown';
+
+    // OSPOS uses Bootstrap 3; bootstrap-table 1.23 may render BS5 dropdown toggles.
+    var fix_toolbar_dropdowns = function($table) {
+        var $root = ($table && $table.length) ? $table.closest('.bootstrap-table') : $('.bootstrap-table');
+
+        $root.find('[data-bs-toggle="dropdown"]').each(function() {
+            $(this).attr('data-toggle', 'dropdown').removeAttr('data-bs-toggle');
+        });
+
+        $root.find('.fixed-table-toolbar .keep-open, .fixed-table-toolbar .export, .fixed-table-pagination .page-list .btn-group').each(function() {
+            var $group = $(this);
+            if (!$group.hasClass('btn-group')) {
+                $group.addClass('btn-group');
+            }
+        });
+
+        $root.find('.fixed-table-toolbar .dropdown-toggle, .fixed-table-pagination .page-list .dropdown-toggle')
+            .off('click' + toolbar_dropdown_namespace)
+            .on('click' + toolbar_dropdown_namespace, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var $group = $(this).closest('.keep-open, .export, .page-list .btn-group, .btn-group');
+                var isOpen = $group.hasClass('open');
+
+                $root.find('.keep-open.open, .export.open, .page-list .btn-group.open').removeClass('open');
+
+                if (!isOpen) {
+                    $group.addClass('open');
+                }
+            });
+    };
+
+    if (!$(document).data('ospos-table-dropdown-close')) {
+        $(document).data('ospos-table-dropdown-close', true);
+        $(document).on('click' + toolbar_dropdown_namespace, function(e) {
+            if (!$(e.target).closest('.keep-open, .export, .page-list .btn-group, .fixed-table-toolbar .btn-group').length) {
+                $('.bootstrap-table .keep-open.open, .bootstrap-table .export.open, .bootstrap-table .page-list .btn-group.open').removeClass('open');
+            }
+        });
+    }
+
     var enable_actions = function(callback) {
         return function() {
             var selection_empty = selected_rows().length == 0;
@@ -224,6 +267,13 @@
         enable_actions = enable_actions(options.enableActions);
         load_success = load_success(options.onLoadSuccess);
         const export_suffix = new Date().toISOString().slice(0, 16).replace(/(-|\s*|T|:)*/g,"");
+        var pageList = options.pageList || [10, 50, 100, 'all'];
+        var pageSize = options.pageSize || pageList[0];
+
+        if (pageList.indexOf(pageSize) === -1) {
+            pageSize = 10;
+        }
+
         $('#table')
             .addClass("table-striped")
             .addClass("table-bordered")
@@ -233,8 +283,13 @@
             url: options.resource + '/search',
             sidePagination: 'server',
             selectItemName: 'btSelectItem',
-            pageSize: options.pageSize,
+            pageSize: pageSize,
+            pageList: pageList,
             pagination: true,
+            smartDisplay: false,
+            paginationParts: ['pageInfo', 'pageSize', 'pageList'],
+            paginationHAlign: 'right',
+            paginationDetailHAlign: 'left',
             search: options.resource || false,
             showColumns: true,
             clickToSelect: true,
@@ -247,6 +302,7 @@
             onPageChange: function(response) {
                 load_success(response);
                 enable_actions();
+                fix_toolbar_dropdowns($('#table'));
             },
             toolbar: '#toolbar',
             uniqueId: options.uniqueId || 'id',
@@ -258,6 +314,10 @@
             onLoadSuccess: function(response) {
                 load_success(response);
                 enable_actions();
+                fix_toolbar_dropdowns($('#table'));
+            },
+            onPostBody: function() {
+                fix_toolbar_dropdowns($('#table'));
             },
             onColumnSwitch : function(field, checked) {
                 if (has_employee_storage()) {
@@ -279,6 +339,7 @@
         init_delete();
         init_restore();
         toggle_column_visibility();
+        fix_toolbar_dropdowns($('#table'));
         dialog_support.init("button.modal-dlg");
     };
 
@@ -339,6 +400,7 @@
         },
         handle_submit: handle_submit,
         init: init,
+        fix_toolbar_dropdowns: fix_toolbar_dropdowns,
         do_delete: do_action("delete"),
         do_restore: do_action("restore"),
         refresh : refresh,

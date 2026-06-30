@@ -347,7 +347,13 @@ class Customers extends Persons
      */
     public function postDelete(): void
     {
-        $customers_to_delete = $this->request->getPost('ids');
+        $customers_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($customers_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Customers.cannot_be_deleted')]);
+            return;
+        }
+
         $customers_info = $this->customer->get_multiple_info($customers_to_delete);
 
         $count = 0;

@@ -144,15 +144,12 @@
             <div class="form-group form-group-sm">
                 <?= form_label(lang('Config.lines_per_page'), 'lines_per_page', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-xs-2">
-                    <?= form_input([
-                        'name'  => 'lines_per_page',
-                        'id'    => 'lines_per_page',
-                        'class' => 'form-control input-sm required',
-                        'type'  => 'number',
-                        'min'   => 10,
-                        'max'   => 1000,
-                        'value' => $config['lines_per_page']
-                    ]) ?>
+                    <?= form_dropdown(
+                        'lines_per_page',
+                        array_combine([10, 50, 100], [10, 50, 100]),
+                        table_page_size($config['lines_per_page']),
+                        'class="form-control input-sm" id="lines_per_page"'
+                    ) ?>
                 </div>
             </div>
 
@@ -488,8 +485,7 @@
 
             rules: {
                 lines_per_page: {
-                    required: true,
-                    remote: "<?= "$controller_name/checkNumeric" ?>"
+                    required: true
                 },
                 default_sales_discount: {
                     required: true,
@@ -509,8 +505,7 @@
                     number: "<?= lang('Config.default_sales_discount_number') ?>"
                 },
                 lines_per_page: {
-                    required: "<?= lang('Config.lines_per_page_required') ?>",
-                    number: "<?= lang('Config.lines_per_page_number') ?>"
+                    required: "<?= lang('Config.lines_per_page_required') ?>"
                 },
                 gcaptcha_site_key: {
                     required: "<?= lang('Config.gcaptcha_site_key_required') ?>"

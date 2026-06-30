@@ -1307,7 +1307,12 @@ class Sales extends Secure_Controller
         if (!$has_grant) {
             echo json_encode(['success' => false, 'message' => lang('Sales.not_authorized')]);
         } else {
-            $sale_ids = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
+            $sale_ids = $sale_id == NEW_ENTRY ? normalize_post_ids($this->request->getPost('ids')) : [$sale_id];
+
+            if (empty($sale_ids)) {
+                echo json_encode(['success' => false, 'message' => lang('Sales.unsuccessfully_deleted')]);
+                return;
+            }
 
             if ($this->sale->delete_list($sale_ids, $employee_id, $update_inventory)) {
                 echo json_encode([
@@ -1334,7 +1339,12 @@ class Sales extends Secure_Controller
         if (!$has_grant) {
             echo json_encode(['success' => false, 'message' => lang('Sales.not_authorized')]);
         } else {
-            $sale_ids = $sale_id == NEW_ENTRY ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$sale_id];
+            $sale_ids = $sale_id == NEW_ENTRY ? normalize_post_ids($this->request->getPost('ids')) : [$sale_id];
+
+            if (empty($sale_ids)) {
+                echo json_encode(['success' => false, 'message' => lang('Sales.unsuccessfully_deleted')]);
+                return;
+            }
 
             if ($this->sale->restore_list($sale_ids, $employee_id, $update_inventory)) {
                 echo json_encode([

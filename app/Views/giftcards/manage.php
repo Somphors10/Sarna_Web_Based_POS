@@ -14,7 +14,7 @@
         table_support.init({
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
-            pageSize: <?= $config['lines_per_page'] ?>,
+            pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'giftcard_id_key'
         });
     });

@@ -176,10 +176,7 @@ class Suppliers extends Persons
      */
     public function postDelete(): void
     {
-        $suppliers_to_delete = array_map(
-            static fn($id): int => (int)$id,
-            array_filter((array)$this->request->getPost('ids'), static fn($id): bool => ctype_digit((string)$id))
-        );
+        $suppliers_to_delete = normalize_post_ids($this->request->getPost('ids'));
 
         if (empty($suppliers_to_delete)) {
             echo json_encode(['success' => false, 'message' => lang('Suppliers.cannot_be_deleted')]);

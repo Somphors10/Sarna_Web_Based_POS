@@ -901,7 +901,12 @@ class Items extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $items_to_delete = $this->request->getPost('ids');
+        $items_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($items_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Items.cannot_be_deleted')]);
+            return;
+        }
 
         if ($this->item->delete_list($items_to_delete)) {
             $message = lang('Items.successful_deleted') . ' ' . count($items_to_delete) . ' ' . lang('Items.one_or_multiple');

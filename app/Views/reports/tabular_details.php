@@ -60,8 +60,13 @@
                 stickyHeader: true,
                 stickyHeaderOffsetLeft: $('#table').offset().left + 'px',
                 stickyHeaderOffsetRight: $('#table').offset().right + 'px',
-                pageSize: <?= $config['lines_per_page'] ?>,
+                pageSize: <?= table_page_size($config['lines_per_page']) ?>,
+                pageList: <?= json_encode(table_page_list()) ?>,
                 pagination: true,
+                smartDisplay: false,
+                paginationParts: ['pageInfo', 'pageSize', 'pageList'],
+                paginationHAlign: 'right',
+                paginationDetailHAlign: 'left',
                 sortable: true,
                 showColumns: true,
                 uniqueId: 'id',
@@ -77,6 +82,7 @@
                 onPageChange: init_dialog,
                 onPostBody: function () {
                     dialog_support.init("a.modal-dlg");
+                    table_support.fix_toolbar_dropdowns($('#table'));
                 },
                 onExpandRow: function (index, row, $detail) {
                     $detail.html('<table></table>').find("table").bootstrapTable({
@@ -96,6 +102,7 @@
             });
 
         init_dialog();
+        table_support.fix_toolbar_dropdowns($('#table'));
     });
 </script>
 

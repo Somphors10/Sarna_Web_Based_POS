@@ -277,9 +277,14 @@ class Receivings extends Secure_Controller
     public function postDelete(int $receiving_id = -1, bool $update_inventory = true): void
     {
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-        $receiving_ids = $receiving_id == -1 ? $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT) : [$receiving_id];    // TODO: Replace -1 with constant
+        $receiving_ids = $receiving_id == -1 ? normalize_post_ids($this->request->getPost('ids')) : [$receiving_id];
 
-        if ($this->receiving->delete_list($receiving_ids, $employee_id, $update_inventory)) {    // TODO: Likely need to surround this block of code in a try-catch to catch the ReflectionException
+        if (empty($receiving_ids)) {
+            echo json_encode(['success' => false, 'message' => lang('Receivings.cannot_be_deleted')]);
+            return;
+        }
+
+        if ($this->receiving->delete_list($receiving_ids, $employee_id, $update_inventory)) {
             echo json_encode([
                 'success' => true,
                 'message' => lang('Receivings.successfully_deleted') . ' ' . count($receiving_ids) . ' ' . lang('Receivings.one_or_multiple'),

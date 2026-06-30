@@ -12,7 +12,7 @@
         table_support.init({
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $tax_rate_table_headers ?>,
-            pageSize: <?= $config['lines_per_page'] ?>,
+            pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'tax_rate_id'
         });
     });

@@ -206,6 +206,7 @@ class Autoload extends AutoloadConfig
         'tabular',
         'locale',
         'security',
-        'password'
+        'password',
+        'crud'
     ];
 }

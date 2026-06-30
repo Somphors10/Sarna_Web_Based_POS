@@ -65,7 +65,7 @@ use App\Models\Employee;
             employee_id: <?= $employee->get_logged_in_employee_info()->person_id ?>,
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
-            pageSize: <?= $config['lines_per_page'] ?>,
+            pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'items.item_id',
             queryParams: function() {
                 return $.extend(arguments[0], {

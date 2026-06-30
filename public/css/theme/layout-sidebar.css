@@ -251,7 +251,6 @@ html.sidebar-collapsed .neo-sidebar-toggle {
 
 .neo-global-content {
     min-width: 0;
-    overflow-x: hidden;
 }
 
 .neo-sidebar-backdrop {

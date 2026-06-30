@@ -13,8 +13,6 @@ use Config\Services;
  */
 class Employees extends Persons
 {
-    private const HIDDEN_PERMISSION_MODULES = ['messages', 'migrate', 'giftcards'];
-
     public function __construct()
     {
         parent::__construct('employees');
@@ -84,7 +82,7 @@ class Employees extends Persons
 
         $modules = [];
         foreach ($this->module->get_all_modules()->getResult() as $module) {
-            if (in_array($module->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+            if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
                 continue;
             }
             $module->grant = $this->employee->has_grant($module->module_id, $person_info->person_id);
@@ -96,7 +94,7 @@ class Employees extends Persons
 
         $permissions = [];
         foreach ($this->module->get_all_subpermissions()->getResult() as $permission) {    // TODO: subpermissions does not follow naming standards.
-            if (in_array($permission->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+            if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
                 continue;
             }
             $permission->permission_id = str_replace(' ', '_', $permission->permission_id);
@@ -139,7 +137,7 @@ class Employees extends Persons
 
         $grants_array = [];
         foreach ($this->module->get_all_permissions()->getResult() as $permission) {
-            if (in_array($permission->module_id, self::HIDDEN_PERMISSION_MODULES, true)) {
+            if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
                 continue;
             }
             $grants = [];
@@ -211,9 +209,14 @@ class Employees extends Persons
      */
     public function postDelete(): void
     {
-        $employees_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $employees_to_delete = normalize_post_ids($this->request->getPost('ids'));
 
-        if ($this->employee->delete_list($employees_to_delete)) {    // TODO: this is passing a string, but delete_list expects an array
+        if (empty($employees_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Employees.cannot_be_deleted')]);
+            return;
+        }
+
+        if ($this->employee->delete_list($employees_to_delete)) {
             echo json_encode([
                 'success' => true,
                 'message' => lang('Employees.successful_deleted') . ' ' . count($employees_to_delete) . ' ' . lang('Employees.one_or_multiple')

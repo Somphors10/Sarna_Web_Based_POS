@@ -99,6 +99,10 @@ class Secure_Controller extends BaseController
 
         $this->global_view_data = [];
         foreach ($allowed_modules->getResult() as $module) {
+            if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
+                continue;
+            }
+
             $this->global_view_data['allowed_modules'][] = $module;
         }
 

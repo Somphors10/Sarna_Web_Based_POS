@@ -1,17 +1,31 @@
 <?php
 
 use App\Models\Attribute;
-use App\Models\Employee;
 use App\Models\Item_taxes;
 use App\Models\Tax_category;
 use CodeIgniter\Database\ResultInterface;
-use CodeIgniter\Session\Session;
 use Config\OSPOS;
 use Config\Services;
 
 /**
  * Tabular views helper
  */
+
+/**
+ * Modules hidden from navigation and messaging UI.
+ */
+function hidden_ui_module_ids(): array
+{
+    return ['messages', 'migrate', 'giftcards'];
+}
+
+/**
+ * Whether SMS / send-message UI should be shown.
+ */
+function messaging_ui_enabled(): bool
+{
+    return !in_array('messages', hidden_ui_module_ids(), true);
+}
 
 /**
  * Basic tabular headers function
@@ -226,13 +240,6 @@ function get_people_manage_table_headers(): string
 {
     $headers = person_headers();
 
-    $employee = model(Employee::class);
-    $session = session();
-
-    if ($employee->has_grant('messages', $session->get('person_id'))) {
-        $headers[] = ['messages' => '', 'sortable' => false];
-    }
-
     return transform_headers($headers);
 }
 
@@ -254,17 +261,6 @@ function get_person_data_row(object $person): array
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
         'phone_number'     => $person->phone_number,
-        'messages'         => empty($person->phone_number)
-            ? ''
-            : anchor(
-                "Messages/view/$person->person_id",
-                '<span class="glyphicon glyphicon-phone"></span>',
-                [
-                    'class'           => 'modal-dlg',
-                    'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
-            ),
         'edit'             => anchor(
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -300,13 +296,6 @@ function get_customer_manage_table_headers(): string
 {
     $headers = customer_headers();
 
-    $employee = model(Employee::class);
-    $session = session();
-
-    if ($employee->has_grant('messages', $session->get('person_id'))) {
-        $headers[] = ['messages' => '', 'sortable' => false];
-    }
-
     return transform_headers($headers);
 }
 
@@ -332,17 +321,6 @@ function get_customer_data_row(object $person, object $stats): array
         'tax_id'           => $person->tax_id,
         'date'             => empty($person->date) ? '' : date('Y-m-d H:i', strtotime($person->date)),
         'total'            => to_currency($stats->total),
-        'messages'         => empty($person->phone_number)
-            ? ''
-            : anchor(
-                "Messages/view/$person->person_id",
-                '<span class="glyphicon glyphicon-phone"></span>',
-                [
-                    'class'           => 'modal-dlg',
-                    'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
-            ),
         'edit'             => anchor(
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -376,13 +354,6 @@ function get_suppliers_manage_table_headers(): string
 {
     $headers = supplier_headers();
 
-    $employee = model(Employee::class);
-    $session = session();
-
-    if ($employee->has_grant('messages', $session->get('person_id'))) {
-        $headers[] = ['messages' => ''];
-    }
-
     return transform_headers($headers);
 }
 
@@ -406,17 +377,6 @@ function get_supplier_data_row(object $supplier): array
         'first_name'       => $supplier->first_name,
         'email'            => empty($supplier->email) ? '' : mailto($supplier->email, $supplier->email),
         'phone_number'     => $supplier->phone_number,
-        'messages'         => empty($supplier->phone_number)
-            ? ''
-            : anchor(
-                "Messages/view/$supplier->person_id",
-                '<span class="glyphicon glyphicon-phone"></span>',
-                [
-                    'class'           => "modal-dlg",
-                    'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Messages.sms_send')
-                ]
-            ),
         'edit'             => anchor(
             "$controller/view/$supplier->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',

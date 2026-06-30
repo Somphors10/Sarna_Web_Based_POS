@@ -14,6 +14,11 @@ class Messages extends Secure_Controller
     {
         parent::__construct('messages');
 
+        if (!messaging_ui_enabled()) {
+            header('Location:' . base_url('home'));
+            exit();
+        }
+
         $this->sms_lib = new Sms_lib();
     }
 

@@ -181,7 +181,12 @@ class Expenses extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $expenses_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $expenses_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($expenses_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Expenses.cannot_be_deleted'), 'ids' => []]);
+            return;
+        }
 
         if ($this->expense->delete_list($expenses_to_delete)) {
             echo json_encode(['success' => true, 'message' => lang('Expenses.successful_deleted') . ' ' . count($expenses_to_delete) . ' ' . lang('Expenses.one_or_multiple'), 'ids' => $expenses_to_delete]);

@@ -122,7 +122,7 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('last_used_invoice_number', '0'),
 ('last_used_quote_number', '0'),
 ('last_used_work_order_number', '0'),
-('lines_per_page', '25'),
+('lines_per_page', '10'),
 ('line_sequence', '0'),
 ('login_form', ''),
 ('mailpath', '/usr/sbin/sendmail'),

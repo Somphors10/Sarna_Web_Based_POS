@@ -118,7 +118,12 @@ class Tax_jurisdictions extends Secure_Controller
      */
     public function postDelete(): void
     {
-        $tax_jurisdictions_to_delete = $this->request->getPost('ids', FILTER_SANITIZE_NUMBER_INT);
+        $tax_jurisdictions_to_delete = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($tax_jurisdictions_to_delete)) {
+            echo json_encode(['success' => false, 'message' => lang('Tax_jurisdictions.cannot_be_deleted')]);
+            return;
+        }
 
         if ($this->tax_jurisdiction->delete_list($tax_jurisdictions_to_delete)) {
             echo json_encode([
