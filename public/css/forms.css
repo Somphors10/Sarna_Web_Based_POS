@@ -12,6 +12,30 @@
     font-size: 12px;
 }
 
+#required_fields_message {
+    color: #64748b;
+}
+
+label.required,
+label.control-label.required,
+label.required.control-label {
+    color: #334155;
+}
+
+label.required::after,
+label.control-label.required::after,
+label.required.control-label::after {
+    content: " *";
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.neo-global-content label.required,
+.neo-global-content label.control-label.required {
+    color: #334155;
+    font-weight: 600;
+}
+
 .pos-modern-form {
     background: #ffffff;
     border: 1px solid #dbe4ee;
@@ -42,8 +66,8 @@
 }
 
 .pos-modern-form .form-control:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+    border-color: var(--wbpos-primary-light);
+    box-shadow: 0 0 0 3px var(--wbpos-primary-ring);
 }
 
 .pos-modern-form .input-group-addon {
@@ -69,7 +93,7 @@
 .pos-form-tabs > li.active > a:focus {
     background: #ffffff !important;
     color: #0f172a !important;
-    border-bottom: 2px solid #3b82f6 !important;
+    border-bottom: 2px solid var(--wbpos-primary) !important;
 }
 
 .pos-modern-form .radio-inline {
@@ -82,11 +106,14 @@
     resize: vertical;
 }
 
-.pos-modern-form .required {
-    color: #1e293b;
+.pos-modern-form label.required,
+.pos-modern-form label.control-label.required {
+    color: #334155;
 }
 
-.pos-modern-form .required::after {
+.pos-modern-form label.required::after,
+.pos-modern-form label.control-label.required::after {
     content: " *";
     color: #dc2626;
+    font-weight: 600;
 }

@@ -1,3 +1,31 @@
+.wrapper .btn,
+.wrapper button.btn,
+.wrapper a.btn,
+.neo-global-content .btn,
+.neo-global-content button.btn,
+.neo-global-content a.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    line-height: 1.25;
+    vertical-align: middle;
+}
+
+.wrapper .btn .glyphicon,
+.neo-global-content .btn .glyphicon {
+    position: relative;
+    top: 0;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.wrapper .btn.btn-block,
+.neo-global-content .btn.btn-block {
+    display: flex;
+    width: 100%;
+}
+
 .neo-global-content .btn {
     border-radius: 8px;
     font-weight: 500;
@@ -23,13 +51,23 @@
     background: #eef2f7;
 }
 
-.neo-global-content .btn-primary {
-    background: #2563eb;
-    border-color: #1d4ed8;
+.neo-global-content .btn-primary,
+.wrapper .btn-primary {
+    background: var(--wbpos-primary);
+    border-color: var(--wbpos-primary-dark);
 }
 
-.neo-global-content .btn-primary:hover {
-    background: #1d4ed8;
+.neo-global-content .btn-primary:hover,
+.wrapper .btn-primary:hover,
+.neo-global-content .btn-primary:focus,
+.wrapper .btn-primary:focus {
+    background: var(--wbpos-primary-dark);
+    border-color: var(--wbpos-primary-darker);
+}
+
+.neo-global-content .form-control:focus {
+    border-color: var(--wbpos-primary-light);
+    box-shadow: 0 0 0 3px var(--wbpos-primary-ring);
 }
 
 .neo-global-content .panel,
@@ -43,11 +81,6 @@
     border-radius: 8px;
     border-color: #d5dee8;
     box-shadow: none;
-}
-
-.neo-global-content .form-control:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
 }
 
 .neo-global-content .input-group-addon {
@@ -72,7 +105,7 @@
 .neo-global-content .nav-tabs > li.active > a:focus {
     color: #0f172a;
     border: none;
-    border-bottom: 2px solid #3b82f6;
+    border-bottom: 2px solid var(--wbpos-primary);
     background: #fff;
 }
 
@@ -144,8 +177,8 @@
 
 .neo-global-content .pagination > .active > a,
 .neo-global-content .pagination > .active > span {
-    background-color: #2563eb;
-    border-color: #2563eb;
+    background-color: var(--wbpos-primary);
+    border-color: var(--wbpos-primary);
 }
 
 /* Hide Bootstrap Table loading overlay/text in module pages */

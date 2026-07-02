@@ -1,10 +1,17 @@
 :root {
+    --wbpos-primary: #7c3aed;
+    --wbpos-primary-dark: #6d28d9;
+    --wbpos-primary-darker: #5b21b6;
+    --wbpos-primary-light: #8b5cf6;
+    --wbpos-primary-soft: #ede9fe;
+    --wbpos-primary-ring: rgba(124, 58, 237, 0.16);
+    --wbpos-primary-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a855f7 100%);
     --saas-bg: #fafafa;
     --saas-card: #ffffff;
     --saas-text: #0f172a;
     --saas-muted: #64748b;
-    --saas-primary: #4f46e5;
-    --saas-primary-dark: #4338ca;
+    --saas-primary: var(--wbpos-primary);
+    --saas-primary-dark: var(--wbpos-primary-dark);
     --saas-border: #e2e8f0;
     --saas-shadow: 0 20px 44px rgba(15, 23, 42, 0.08);
     --lp-nav-h: 72px;
@@ -27,7 +34,7 @@ body.saas-landing-body {
 }
 
 .saas-topbar {
-    background: linear-gradient(135deg, #312e81 0%, #4f46e5 58%, #0284c7 100%);
+    background: var(--wbpos-primary-gradient);
     border: 1px solid rgba(255, 255, 255, 0.28);
     border-radius: 18px;
     padding: 20px 22px;
@@ -103,7 +110,7 @@ body.saas-landing-body {
 }
 
 .saas-hero {
-    background: linear-gradient(135deg, #4f46e5, #2563eb 58%, #0891b2);
+    background: linear-gradient(135deg, var(--wbpos-primary), var(--wbpos-primary-light) 58%, #c084fc);
     color: #fff;
     border-radius: 18px;
     padding: 30px;
@@ -176,7 +183,7 @@ body.saas-landing-body {
     width: 56px;
     height: 56px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+    background: linear-gradient(135deg, var(--wbpos-primary), var(--wbpos-primary-light));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -355,7 +362,7 @@ body.saas-landing-body {
 
 .saas-status-owner {
     background: rgba(79, 70, 229, 0.14);
-    color: #4338ca;
+    color: var(--wbpos-primary-dark);
 }
 
 .saas-btn-save {
@@ -400,7 +407,7 @@ body.saas-landing-body {
 }
 
 .saas-auth-hero {
-    background: linear-gradient(150deg, #312e81 0%, #4f46e5 48%, #0ea5e9 100%);
+    background: linear-gradient(150deg, var(--wbpos-primary-darker) 0%, var(--wbpos-primary) 48%, var(--wbpos-primary-light) 100%);
     border-radius: 22px;
     color: #fff;
     padding: 34px;
@@ -485,6 +492,9 @@ body.saas-landing-body {
 .saas-login-content .btn {
     min-height: 54px;
     font-size: 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .saas-site-nav-wrap {
@@ -534,7 +544,7 @@ body.saas-landing-body {
 }
 
 .saas-landing-hero {
-    background: linear-gradient(135deg, #312e81 0%, #4f46e5 52%, #0284c7 100%);
+    background: linear-gradient(135deg, var(--wbpos-primary-darker) 0%, var(--wbpos-primary) 52%, var(--wbpos-primary-light) 100%);
     border-radius: 22px;
     color: #fff;
     padding: 28px;
@@ -686,7 +696,7 @@ body.saas-landing-body {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: #4f46e5;
+    background: var(--wbpos-primary);
     color: #ffffff;
     font-size: 12px;
     font-weight: 700;
@@ -715,7 +725,7 @@ body.saas-landing-body {
 }
 
 .saas-plan-featured {
-    border-color: #818cf8;
+    border-color: #c4b5fd;
     box-shadow: 0 16px 34px rgba(79, 70, 229, 0.2);
 }
 
@@ -932,7 +942,7 @@ body.saas-landing-body {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    background: linear-gradient(135deg, var(--wbpos-primary), var(--wbpos-primary-light));
     color: #fff;
     font-size: 16px;
     font-weight: 800;
@@ -1129,7 +1139,7 @@ body.saas-landing-body {
 }
 
 .lp-gradient-text {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #0ea5e9 100%);
+    background: linear-gradient(135deg, var(--wbpos-primary) 0%, var(--wbpos-primary-light) 50%, #c084fc 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1175,7 +1185,7 @@ body.saas-landing-body {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #4f46e5;
+    background: var(--wbpos-primary);
 }
 
 .lp-hero__visual {
@@ -1277,7 +1287,7 @@ body.saas-landing-body {
 
 .lp-mockup__chart div {
     flex: 1;
-    background: linear-gradient(180deg, #818cf8, #4f46e5);
+    background: linear-gradient(180deg, #c4b5fd, var(--wbpos-primary));
     border-radius: 6px 6px 2px 2px;
     opacity: 0.85;
 }
@@ -1327,6 +1337,86 @@ body.saas-landing-body {
     margin: 0 auto;
 }
 
+.lp-highlights {
+    padding: 0 24px 72px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.lp-highlights__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.lp-highlight-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e8edf5;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.lp-highlight-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.lp-highlight-card__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lp-highlight-card__icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.lp-highlight-card__icon--sales {
+    background: #eef2ff;
+    color: var(--wbpos-primary);
+}
+
+.lp-highlight-card__icon--inventory {
+    background: #ecfeff;
+    color: #0891b2;
+}
+
+.lp-highlight-card__icon--customers {
+    background: #fdf4ff;
+    color: #a855f7;
+}
+
+.lp-highlight-card__icon--reports {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.lp-highlight-card h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--saas-text);
+    letter-spacing: -0.01em;
+}
+
+.lp-highlight-card p {
+    margin: 3px 0 0;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
 .lp-logos__grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1354,7 +1444,7 @@ body.saas-landing-body {
     height: 44px;
     border-radius: 12px;
     background: #f1f5f9;
-    color: #4f46e5;
+    color: var(--wbpos-primary);
     font-size: 18px;
     font-weight: 700;
     display: inline-flex;
@@ -1430,6 +1520,82 @@ body.saas-landing-body {
     font-size: 17px;
     color: var(--saas-muted);
     line-height: 1.6;
+}
+
+.lp-section--features {
+    padding-top: 24px;
+}
+
+.lp-features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.lp-feature-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 20px;
+    padding: 28px 26px 26px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    overflow: hidden;
+}
+
+.lp-feature-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #c4b5fd, var(--wbpos-primary));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.lp-feature-card:hover {
+    transform: translateY(-3px);
+    border-color: #cbd5e1;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+}
+
+.lp-feature-card:hover::before {
+    opacity: 1;
+}
+
+.lp-feature-card__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 18px;
+}
+
+.lp-feature-card__icon--violet { background: #eef2ff; }
+.lp-feature-card__icon--blue { background: #e0f2fe; }
+.lp-feature-card__icon--emerald { background: #d1fae5; }
+.lp-feature-card__icon--amber { background: #fef3c7; }
+.lp-feature-card__icon--rose { background: #ffe4e6; }
+.lp-feature-card__icon--indigo { background: #e0e7ff; }
+
+.lp-feature-card h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--saas-text);
+}
+
+.lp-feature-card p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.65;
+    color: #64748b;
 }
 
 .lp-bento {
@@ -1524,67 +1690,74 @@ body.saas-landing-body {
     justify-content: center;
 }
 
+.lp-section--pricing {
+    padding-bottom: 72px;
+}
+
 .lp-pricing__card {
     width: 100%;
-    max-width: 420px;
+    max-width: 340px;
+    padding: 24px 24px 22px;
     background: #fff;
-    border: 1px solid var(--saas-border);
-    border-radius: 24px;
-    padding: 36px 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
     text-align: center;
-    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .lp-pricing__badge {
     display: inline-block;
-    padding: 5px 12px;
+    padding: 4px 10px;
+    margin-bottom: 12px;
     background: #eef2ff;
-    color: var(--saas-primary);
-    font-size: 11px;
+    color: var(--wbpos-primary);
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     border-radius: 999px;
-    margin-bottom: 16px;
 }
 
 .lp-pricing__card h3 {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
+    letter-spacing: -0.02em;
     color: var(--saas-text);
 }
 
 .lp-pricing__price {
-    margin-bottom: 24px;
-}
-
-.lp-pricing__amount {
-    font-size: 56px;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    color: var(--saas-text);
+    margin-bottom: 18px;
     line-height: 1;
 }
 
-.lp-pricing__period {
-    font-size: 16px;
-    color: #64748b;
+.lp-pricing__price strong {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--saas-text);
+}
+
+.lp-pricing__price span {
+    margin-left: 4px;
+    font-size: 14px;
     font-weight: 500;
+    color: #64748b;
 }
 
 .lp-pricing__list {
     list-style: none;
     padding: 0;
-    margin: 0 0 28px;
+    margin: 0 0 20px;
     text-align: left;
 }
 
 .lp-pricing__list li {
     position: relative;
-    padding: 10px 0 10px 28px;
-    font-size: 15px;
-    color: #334155;
+    padding: 7px 0 7px 22px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #475569;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -1596,76 +1769,168 @@ body.saas-landing-body {
     content: "✓";
     position: absolute;
     left: 0;
-    color: #22c55e;
+    top: 7px;
+    font-size: 12px;
     font-weight: 700;
+    color: #22c55e;
 }
 
-.lp-pricing__note {
-    margin: 20px 0 0;
+.lp-pricing__cta {
+    display: block;
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 10px;
+    background: var(--wbpos-primary);
+    color: #fff !important;
     font-size: 14px;
-    color: #64748b;
-}
-
-.lp-pricing__note a {
-    color: var(--saas-primary);
     font-weight: 600;
     text-decoration: none;
+    transition: background 0.15s ease;
 }
 
-.lp-pricing__note a:hover {
-    text-decoration: underline;
+.lp-pricing__cta:hover {
+    background: var(--wbpos-primary-dark);
+    color: #fff !important;
 }
 
 .lp-cta {
-    padding: 0 24px 80px;
+    padding: 0 24px 88px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .lp-cta__inner {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 32px;
-    padding: 48px 56px;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border-radius: 24px;
+    padding: 52px 56px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    border-radius: 28px;
     color: #fff;
-    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 28px 56px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+}
+
+.lp-cta__glow {
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.35) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.lp-cta__content {
+    position: relative;
+    z-index: 1;
+    max-width: 520px;
+}
+
+.lp-label--light {
+    color: rgba(199, 210, 254, 0.95);
+}
+
+.lp-cta__btn {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .lp-cta__inner h2 {
-    margin: 0 0 8px;
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    margin: 0 0 10px;
+    font-size: clamp(1.5rem, 2.5vw, 2.125rem);
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
 }
 
 .lp-cta__inner p {
     margin: 0;
     font-size: 16px;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.55;
 }
 
 .lp-footer {
-    border-top: 1px solid var(--saas-border);
-    background: #fff;
-    padding: 32px 0;
+    border-top: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    padding: 48px 0 32px;
 }
 
 .lp-footer__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 0 24px;
+}
+
+.lp-footer__top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
     flex-wrap: wrap;
-    padding: 0 24px;
+}
+
+.lp-footer__nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+}
+
+.lp-footer__nav a {
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.lp-footer__nav a:hover {
+    color: var(--saas-text);
+}
+
+.lp-footer__cta {
+    padding: 10px 18px;
+    background: var(--saas-primary, var(--wbpos-primary));
+    color: #fff !important;
+    border-radius: 999px;
+    font-weight: 600 !important;
+}
+
+.lp-footer__cta:hover {
+    background: var(--wbpos-primary-dark);
+    color: #fff !important;
+}
+
+.lp-footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
 }
 
 .lp-footer__copy {
     margin: 0;
     font-size: 14px;
     color: #64748b;
+}
+
+.lp-footer__tagline {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
 }
 
 .lp-footer__links {
@@ -1682,6 +1947,27 @@ body.saas-landing-body {
 
 .lp-footer__links a:hover {
     color: var(--saas-text);
+}
+
+.lp-footer--simple {
+    padding: 32px 0;
+}
+
+.lp-footer--simple .lp-footer__inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    flex-wrap: wrap;
+}
+
+.lp-footer--simple .lp-footer__copy {
+    flex: 1;
+    text-align: center;
+}
+
+.lp-footer--simple .lp-footer__tagline {
+    white-space: nowrap;
 }
 
 /* ============================================================
@@ -1898,6 +2184,16 @@ body.saas-landing-body {
     border-radius: 16px;
 }
 
+.lp-reg__qr-frame--code-only {
+    padding: 16px;
+    background: #fff;
+}
+
+.lp-reg__qr-frame--code-only img {
+    max-width: 220px;
+    margin: 0 auto;
+}
+
 .lp-reg__qr-frame img {
     display: block;
     width: 100%;
@@ -1991,7 +2287,12 @@ body.saas-landing-body {
     .lp-float-card--1 { right: 0; }
     .lp-float-card--2 { left: 0; }
 
-    .lp-logos__grid {
+    .lp-logos__grid,
+    .lp-highlights__grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .lp-features {
         grid-template-columns: 1fr 1fr;
     }
 
@@ -2011,6 +2312,31 @@ body.saas-landing-body {
         flex-direction: column;
         align-items: flex-start;
         padding: 36px 28px;
+    }
+
+    .lp-cta__btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .lp-footer__top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lp-footer__bottom {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lp-footer--simple .lp-footer__inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .lp-footer--simple .lp-footer__copy {
+        flex: none;
     }
 
     .lp-reg__layout {
@@ -2039,7 +2365,12 @@ body.saas-landing-body {
 }
 
 @media (max-width: 576px) {
-    .lp-logos__grid {
+    .lp-logos__grid,
+    .lp-highlights__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lp-features {
         grid-template-columns: 1fr;
     }
 

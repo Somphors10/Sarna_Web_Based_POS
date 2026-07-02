@@ -63,7 +63,7 @@
     right: 0;
     top: 0;
     height: 3px;
-    background: linear-gradient(90deg, #6366f1, #22d3ee);
+    background: linear-gradient(90deg, var(--wbpos-primary), var(--wbpos-primary-light));
 }
 
 .neo-kpi-card:nth-child(2)::before {
@@ -163,7 +163,7 @@
 }
 
 .neo-chart-card--area::before {
-    background: linear-gradient(90deg, #6366f1, #818cf8);
+    background: linear-gradient(90deg, var(--wbpos-primary), #c4b5fd);
 }
 
 .neo-chart-card--bar::before {
@@ -212,7 +212,7 @@
 }
 
 .neo-chart-card--area .neo-chart-card__title::before {
-    background: #6366f1;
+    background: var(--wbpos-primary);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
 }
 
@@ -293,7 +293,7 @@
 .neo-chart-card__link:hover {
     background: #eef2ff;
     border-color: #c7d2fe;
-    color: #4338ca;
+    color: var(--wbpos-primary-dark);
     text-decoration: none;
 }
 

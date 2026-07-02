@@ -43,13 +43,13 @@
 
 .pos-user-link,
 .pos-logout-link {
-    color: #4f46e5 !important;
+    color: var(--wbpos-primary) !important;
     text-decoration: none !important;
 }
 
 .pos-user-link:hover,
 .pos-logout-link:hover {
-    color: #3730a3 !important;
+    color: var(--wbpos-primary-dark) !important;
 }
 
 .pos-footer-wrap {

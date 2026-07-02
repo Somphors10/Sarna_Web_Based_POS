@@ -19,7 +19,7 @@ $company = $brand_name;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=4">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=11">
 </head>
 <body class="saas-modern saas-landing-body">
 
@@ -33,6 +33,7 @@ $company = $brand_name;
         <nav class="lp-nav__links" id="lp-nav-links" aria-label="Main">
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
+            <a href="#pricing">Pricing</a>
         </nav>
 
         <div class="lp-nav__actions">
@@ -115,58 +116,83 @@ $company = $brand_name;
         </div>
     </section>
 
-    <section class="lp-logos saas-shell">
-        <div class="lp-logos__grid">
-            <div class="lp-logo-item">
-                <span class="lp-logo-item__icon">$</span>
-                <div><strong>Sales</strong><span>Quick billing & receipts</span></div>
-            </div>
-            <div class="lp-logo-item">
-                <span class="lp-logo-item__icon">▦</span>
-                <div><strong>Inventory</strong><span>Live stock tracking</span></div>
-            </div>
-            <div class="lp-logo-item">
-                <span class="lp-logo-item__icon">◎</span>
-                <div><strong>Customers</strong><span>History & insights</span></div>
-            </div>
-            <div class="lp-logo-item">
-                <span class="lp-logo-item__icon">↗</span>
-                <div><strong>Reports</strong><span>Daily performance</span></div>
-            </div>
+    <section class="lp-highlights saas-shell" aria-label="Product highlights">
+        <div class="lp-highlights__grid">
+            <article class="lp-highlight-card">
+                <span class="lp-highlight-card__icon lp-highlight-card__icon--sales" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </span>
+                <div>
+                    <h3>Sales</h3>
+                    <p>Quick billing & receipts</p>
+                </div>
+            </article>
+            <article class="lp-highlight-card">
+                <span class="lp-highlight-card__icon lp-highlight-card__icon--inventory" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                </span>
+                <div>
+                    <h3>Inventory</h3>
+                    <p>Live stock tracking</p>
+                </div>
+            </article>
+            <article class="lp-highlight-card">
+                <span class="lp-highlight-card__icon lp-highlight-card__icon--customers" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </span>
+                <div>
+                    <h3>Customers</h3>
+                    <p>History & insights</p>
+                </div>
+            </article>
+            <article class="lp-highlight-card">
+                <span class="lp-highlight-card__icon lp-highlight-card__icon--reports" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg>
+                </span>
+                <div>
+                    <h3>Reports</h3>
+                    <p>Daily performance</p>
+                </div>
+            </article>
         </div>
     </section>
 
-    <section id="features" class="lp-section saas-shell">
-        <div class="lp-section__head">
+    <section id="features" class="lp-section lp-section--features saas-shell">
+        <div class="lp-section__head lp-section__head--center">
             <p class="lp-label">Features</p>
             <h2>Everything your business needs, nothing you don't.</h2>
             <p class="lp-section__sub">Powerful tools with a simple interface your team can learn in one shift.</p>
         </div>
-        <div class="lp-bento">
-            <article class="lp-bento__item lp-bento__item--wide">
-                <div class="lp-bento__icon">⚡</div>
+        <div class="lp-features">
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--violet" aria-hidden="true">⚡</span>
                 <h3>Smart Sales Screen</h3>
                 <p>Fast checkout, discounts, taxes, split payments, and instant printable receipts.</p>
             </article>
-            <article class="lp-bento__item">
-                <div class="lp-bento__icon">▦</div>
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--blue" aria-hidden="true">▦</span>
                 <h3>Inventory Control</h3>
                 <p>Track stock, low-level alerts, adjustments, and receiving.</p>
             </article>
-            <article class="lp-bento__item">
-                <div class="lp-bento__icon">👥</div>
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--emerald" aria-hidden="true">👥</span>
                 <h3>Staff Permissions</h3>
                 <p>Owner, manager, and cashier roles with secure access.</p>
             </article>
-            <article class="lp-bento__item">
-                <div class="lp-bento__icon">◎</div>
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--amber" aria-hidden="true">◎</span>
                 <h3>Customer CRM</h3>
                 <p>Store details, purchase history, and buying behavior.</p>
             </article>
-            <article class="lp-bento__item lp-bento__item--wide">
-                <div class="lp-bento__icon">📊</div>
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--rose" aria-hidden="true">📊</span>
                 <h3>Business Reports</h3>
                 <p>Product performance, payment breakdown, and revenue trends — updated in real time.</p>
+            </article>
+            <article class="lp-feature-card">
+                <span class="lp-feature-card__icon lp-feature-card__icon--indigo" aria-hidden="true">☁</span>
+                <h3>Cloud Anywhere</h3>
+                <p>Run your store from any browser — no install, updates included.</p>
             </article>
         </div>
     </section>
@@ -195,57 +221,41 @@ $company = $brand_name;
         </div>
     </section>
 
-    <section id="pricing" class="lp-section saas-shell">
+    <section id="pricing" class="lp-section lp-section--pricing saas-shell">
         <div class="lp-section__head lp-section__head--center">
             <p class="lp-label">Pricing</p>
             <h2>One plan. Full access.</h2>
             <p class="lp-section__sub">No free tier, no hidden fees — just $<?= number_format($monthly_price, 0) ?> per month.</p>
         </div>
         <div class="lp-pricing">
-            <div class="lp-pricing__card">
+            <article class="lp-pricing__card">
                 <span class="lp-pricing__badge">Most popular</span>
                 <h3>POS Subscription</h3>
                 <div class="lp-pricing__price">
-                    <span class="lp-pricing__amount">$<?= number_format($monthly_price, 0) ?></span>
-                    <span class="lp-pricing__period">/ month</span>
+                    <strong>$<?= number_format($monthly_price, 0) ?></strong>
+                    <span>/ month</span>
                 </div>
                 <ul class="lp-pricing__list">
-                    <li>Sales, inventory & customer management</li>
+                    <li>Sales, inventory & customers</li>
                     <li>Staff roles & permissions</li>
-                    <li>Business reports & dashboard</li>
-                    <li>Cloud access from any device</li>
-                    <li>Pay via ABA KHQR — scan & go</li>
+                    <li>Reports & dashboard</li>
+                    <li>Cloud · any device</li>
+                    <li>ABA KHQR payment</li>
                 </ul>
-                <a class="lp-btn lp-btn--primary lp-btn--lg lp-btn--block" href="<?= site_url('saas/register') ?>">
-                    Subscribe now
-                </a>
-                <p class="lp-pricing__note">Already subscribed? <a href="<?= site_url('login') ?>">Log in here</a></p>
-            </div>
-        </div>
-    </section>
-
-    <section class="lp-cta saas-shell">
-        <div class="lp-cta__inner">
-            <div>
-                <h2>Ready to modernize your store?</h2>
-                <p>Join businesses using <?= $company ?> to sell smarter every day.</p>
-            </div>
-            <a class="lp-btn lp-btn--white lp-btn--lg" href="<?= site_url('saas/register') ?>">Get started — $<?= number_format($monthly_price, 0) ?>/mo</a>
+                <a class="lp-pricing__cta" href="<?= site_url('saas/register') ?>">Subscribe now</a>
+            </article>
         </div>
     </section>
 </main>
 
-<footer class="lp-footer">
+<footer class="lp-footer lp-footer--simple">
     <div class="lp-footer__inner saas-shell">
         <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
             <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>
-        <div class="lp-footer__links">
-            <a href="<?= site_url('login') ?>">Log in</a>
-            <a href="<?= site_url('saas/register') ?>">Subscribe</a>
-        </div>
+        <p class="lp-footer__tagline">Cloud POS · $<?= number_format($monthly_price, 0) ?>/month</p>
     </div>
 </footer>
 

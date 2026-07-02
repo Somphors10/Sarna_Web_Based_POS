@@ -29,6 +29,7 @@
 
 .neo-module-actions {
     display: flex;
+    align-items: center;
     gap: var(--neo-gap-xs);
 }
 
@@ -59,10 +60,33 @@
 
 .neo-global-content [id="title_bar"] {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
     gap: var(--neo-gap-xs);
     margin: var(--neo-gap-sm) 0 var(--neo-gap-sm);
     padding: 0;
+    height: auto;
+    min-height: 0;
+}
+
+.neo-global-content .btn-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: 0;
+}
+
+.neo-global-content .btn-toolbar::before,
+.neo-global-content .btn-toolbar::after {
+    display: none;
+}
+
+.neo-global-content .btn-toolbar > .btn,
+.neo-global-content .btn-toolbar > .btn-group,
+.neo-global-content .btn-toolbar > .input-group {
+    float: none;
+    margin-left: 0;
 }
 
 .neo-global-content [id="toolbar"] {
@@ -72,6 +96,7 @@
 .neo-global-content [id="toolbar"] .btn-toolbar {
     display: flex;
     gap: var(--neo-gap-xs);
+    align-items: center;
 }
 
 .neo-global-content #toolbar .form-inline {
@@ -85,6 +110,9 @@
 .neo-global-content #toolbar .form-inline .btn-group > .btn {
     height: 34px;
     border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .neo-global-content #toolbar .form-inline .form-control {

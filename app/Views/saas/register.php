@@ -21,7 +21,7 @@ $company = $brand_name;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=5">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=11">
 </head>
 <body class="saas-modern saas-landing-body">
 
@@ -145,10 +145,10 @@ $company = $brand_name;
                     <span class="lp-reg__qr-badge">Scan to pay</span>
                     <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                 </div>
-                <div class="lp-reg__qr-frame">
+                <div class="lp-reg__qr-frame lp-reg__qr-frame--code-only">
                     <img
-                        src="<?= base_url('images/payment/aba-khqr.png') ?>"
-                        alt="Scan QR code to pay $10 per month"
+                        src="<?= base_url('images/payment/aba-khqr-code.png') ?>"
+                        alt="Scan QR code to pay $<?= number_format($monthly_price, 0) ?> per month"
                     >
                 </div>
                 <p class="lp-reg__qr-hint">Open ABA or any KHQR app and scan</p>
@@ -164,17 +164,14 @@ $company = $brand_name;
     </div>
 </main>
 
-<footer class="lp-footer">
+<footer class="lp-footer lp-footer--simple">
     <div class="lp-footer__inner saas-shell">
         <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
             <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>
-        <div class="lp-footer__links">
-            <a href="<?= site_url('login') ?>">Log in</a>
-            <a href="<?= site_url() ?>">Home</a>
-        </div>
+        <p class="lp-footer__tagline">Cloud POS · $<?= number_format($monthly_price, 0) ?>/month</p>
     </div>
 </footer>
 

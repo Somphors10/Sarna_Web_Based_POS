@@ -4,16 +4,16 @@
     --sa-text: #0f172a;
     --sa-muted: #64748b;
     --sa-border: #e2e8f0;
-    --sa-primary: #4f46e5;
-    --sa-primary-dark: #4338ca;
-    --sa-accent: #0284c7;
+    --sa-primary: #7c3aed;
+    --sa-primary-dark: #6d28d9;
+    --sa-accent: #8b5cf6;
     --sa-success: #059669;
     --sa-warning: #d97706;
     --sa-danger: #dc2626;
     --sa-sidebar-w: 240px;
     --sa-radius: 14px;
     --sa-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    --sa-hero: linear-gradient(135deg, #312e81 0%, #4f46e5 55%, #0284c7 100%);
+    --sa-hero: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a855f7 100%);
 }
 
 *,
@@ -475,7 +475,7 @@ body.sa-dashboard {
 
 .sa-status--owner {
     background: rgba(79, 70, 229, 0.12);
-    color: #4338ca;
+    color: var(--wbpos-primary-dark);
 }
 
 .sa-row-actions {

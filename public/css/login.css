@@ -10,11 +10,17 @@ html {
 }
 
 :root {
+    --wbpos-primary: #7c3aed;
+    --wbpos-primary-dark: #6d28d9;
+    --wbpos-primary-darker: #5b21b6;
+    --wbpos-primary-light: #8b5cf6;
+    --wbpos-primary-soft: #ede9fe;
+    --wbpos-primary-ring: rgba(124, 58, 237, 0.16);
     --pos-bg: #eef2f7;
     --pos-surface: #ffffff;
     --pos-border: #dce3ef;
-    --pos-accent: #4f46e5;
-    --pos-accent-soft: rgba(79, 70, 229, 0.12);
+    --pos-accent: var(--wbpos-primary);
+    --pos-accent-soft: rgba(124, 58, 237, 0.12);
     --pos-teal: #18bc9c;
     --pos-text: #1e293b;
     --pos-muted: #64748b;
@@ -417,7 +423,7 @@ body.login-page::before {
     height: 2.85rem;
     border: none;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--pos-accent) 0%, #6366f1 100%);
+    background: linear-gradient(135deg, var(--wbpos-primary) 0%, var(--wbpos-primary-light) 100%);
     color: #fff;
     font-size: 1rem;
     font-weight: 600;
@@ -466,7 +472,7 @@ body.login-page::before {
 
 .login-alert--info {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: var(--wbpos-primary-dark);
     border: 1px solid #bfdbfe;
 }
 

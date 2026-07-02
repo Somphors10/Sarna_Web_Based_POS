@@ -25,7 +25,7 @@ return [
     "export_csv"                     => "CSV Export",
     "export_csv_no"                  => "No",
     "export_csv_yes"                 => "Yes",
-    "fields_required_message"        => "Fields in red are required",
+    "fields_required_message"        => "Fields marked with * are required",
     "fields_required_message_unique" => "",
     "first_name"                     => "First Name",
     "first_name_required"            => "First Name is a required field.",

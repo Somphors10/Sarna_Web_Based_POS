@@ -40,14 +40,14 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/bootstrap-292fc0ad3b.autocomplete.css">
         <link rel="stylesheet" href="resources/css/invoice-1eae5e39b9.css">
         <link rel="stylesheet" href="resources/css/ospos_print-2ba645b044.css">
-        <link rel="stylesheet" href="resources/css/ospos-b70a42bf24.css">
+        <link rel="stylesheet" href="resources/css/ospos-73edad0b33.css">
         <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
         <link rel="stylesheet" href="resources/css/receipt-a171207d8e.css">
         <link rel="stylesheet" href="resources/css/register-58be93b261.css">
         <link rel="stylesheet" href="resources/css/reports-407b727797.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=19">
-        <link rel="stylesheet" href="css/forms.css">
+        <link rel="stylesheet" href="css/dashboard.css?v=22">
+        <link rel="stylesheet" href="css/forms.css?v=3">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -87,10 +87,10 @@ $request = Services::request();
         <?php $assets_injected = true; ?>
     <?php else : ?>
         <!--inject:prod:css -->
-        <link rel="stylesheet" href="resources/opensourcepos-5f093a9a3a.min.css">
+        <link rel="stylesheet" href="resources/opensourcepos-126f260aef.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=19">
-        <link rel="stylesheet" href="css/forms.css">
+        <link rel="stylesheet" href="css/dashboard.css?v=22">
+        <link rel="stylesheet" href="css/forms.css?v=3">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
@@ -193,7 +193,7 @@ $request = Services::request();
                     }
                 });
 
-                document.querySelectorAll('.neo-global-menu-item').forEach(function(link) {
+                document.querySelectorAll('.neo-global-menu-item, .neo-sidebar-logout').forEach(function(link) {
                     link.addEventListener('click', function() {
                         if (window.innerWidth <= 992) {
                             closeMobileSidebar();
@@ -246,6 +246,18 @@ $request = Services::request();
                             </a>
                         <?php endforeach; ?>
                     </nav>
+                    <div class="neo-sidebar-footer">
+                        <a
+                            class="neo-sidebar-logout pos-logout-link"
+                            href="<?= site_url('home/logout') ?>"
+                            data-logout-url="<?= site_url('home/logout') ?>"
+                            title="<?= lang('Login.logout') ?>"
+                            onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"
+                        >
+                            <img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
+                            <span><?= lang('Login.logout') ?></span>
+                        </a>
+                    </div>
                 </div>
             </aside>
             <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
@@ -266,11 +278,6 @@ $request = Services::request();
 
                         <div class="navbar-right pos-topbar-user">
                             <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
-                            <?= anchor('home/logout', lang('Login.logout'), [
-                                'class' => 'pos-logout-link',
-                                'data-logout-url' => site_url('home/logout'),
-                                'onclick' => 'return typeof window.osposConfirmLogout === "function" ? window.osposConfirmLogout(this) : true;',
-                            ]) ?>
                         </div>
                     </div>
                 </div>

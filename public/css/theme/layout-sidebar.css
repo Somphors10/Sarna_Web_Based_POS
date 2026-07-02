@@ -44,7 +44,7 @@
 .neo-global-brand {
     display: block;
     margin: 0;
-    color: #2563eb;
+    color: var(--wbpos-primary);
     font-weight: 700;
     font-size: 36px;
     letter-spacing: -0.02em;
@@ -84,7 +84,7 @@
 
 .neo-sidebar-toggle:hover {
     background: #f8fbff;
-    color: #1d4ed8;
+    color: var(--wbpos-primary-dark);
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
 }
 
@@ -97,7 +97,7 @@
 .neo-global-brand:focus,
 .neo-global-brand:active,
 .neo-global-brand:visited {
-    color: #2563eb;
+    color: var(--wbpos-primary);
     text-decoration: none;
 }
 
@@ -150,9 +150,9 @@
 }
 
 .neo-global-menu-item.is-active {
-    background: #f2f6fd;
-    border-color: #deebff;
-    color: #1d4ed8;
+    background: var(--wbpos-primary-soft);
+    border-color: #ddd6fe;
+    color: var(--wbpos-primary-dark);
     font-weight: 600;
     box-shadow: none;
 }
@@ -176,6 +176,50 @@
 .neo-global-menu-item span {
     font-size: 14px;
     line-height: 1.2;
+}
+
+.neo-sidebar-footer {
+    margin-top: auto;
+    padding: 8px 10px 4px;
+    border-top: 1px solid #eef2f7;
+}
+
+.neo-sidebar-logout {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 34px;
+    padding: 5px 8px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #64748b !important;
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.neo-sidebar-logout:hover,
+.neo-sidebar-logout:focus {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626 !important;
+    text-decoration: none !important;
+}
+
+html.sidebar-collapsed .neo-sidebar-footer {
+    padding: 8px 0 4px;
+}
+
+html.sidebar-collapsed .neo-sidebar-logout {
+    justify-content: center;
+    padding: 8px 0;
+}
+
+html.sidebar-collapsed .neo-sidebar-logout span {
+    display: none;
 }
 
 html.sidebar-collapsed .neo-layout {
@@ -227,7 +271,7 @@ html.sidebar-collapsed .neo-global-menu-item.is-active::before {
 }
 
 html.sidebar-collapsed .neo-global-menu-item.is-active {
-    background: #edf3fd;
+    background: var(--wbpos-primary-soft);
     box-shadow: none;
     border-color: transparent;
 }
