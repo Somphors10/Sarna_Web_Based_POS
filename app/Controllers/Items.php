@@ -463,9 +463,43 @@ class Items extends Secure_Controller
      */
     public function getGenerateBarcodes(string $item_ids): void    // TODO: Passing these through as a string instead of an array limits the contents of the item_ids. Perhaps a better approach would to serialize as JSON in an array and pass through post variables?
     {
-        $item_ids = explode(':', $item_ids);
-        $result = $this->item->get_multiple_info($item_ids, $this->item_lib->get_item_location())->getResultArray();
+        $item_ids = array_values(array_filter(array_map('intval', explode(':', $item_ids))));
+        if ($item_ids === []) {
+            echo view('errors/html/error_general', [
+                'heading' => lang('Items.generate_barcodes'),
+                'message' => lang('Items.no_items_to_display'),
+            ]);
+
+            return;
+        }
+
+        $location_id = (int)$this->item_lib->get_item_location();
+        $result = $this->item->get_multiple_info($item_ids, $location_id)->getResultArray();
+
+        if ($result === []) {
+            $result = $this->item->get_multiple_info_by_tenant_seq($item_ids, $location_id)->getResultArray();
+        }
+
+        if ($result === []) {
+            echo view('errors/html/error_general', [
+                'heading' => lang('Items.generate_barcodes'),
+                'message' => lang('Items.no_items_to_display'),
+            ]);
+
+            return;
+        }
+
         $data['barcode_config'] = $this->barcode_lib->get_barcode_config();
+        if (!in_array($data['barcode_config']['barcode_type'], ['C39', 'C128'], true)) {
+            $legacy_map = [
+                'Code39'  => 'C39',
+                'Code128' => 'C128',
+                'Ean13'   => 'EAN13',
+                'Ean8'    => 'EAN8',
+            ];
+            $data['barcode_config']['barcode_type'] = $legacy_map[$data['barcode_config']['barcode_type']]
+                ?? 'C128';
+        }
 
         foreach ($result as &$item) {
             if (isset($item['item_number']) && empty($item['item_number']) && $this->config['barcode_generate_if_empty']) {
@@ -475,6 +509,7 @@ class Items extends Secure_Controller
                 }
             }
         }
+        unset($item);
         $data['items'] = $result;
 
         echo view('barcodes/barcode_sheet', $data);

@@ -487,6 +487,7 @@ function get_item_data_row(object $item): array
     $definition_names = $attribute->get_definitions_by_flags($attribute::SHOW_IN_ITEMS);
 
     $columns = [
+        'item_id'       => (int)$item->item_id,
         'items.item_id' => $tenant_item_seq,
         'item_number'   => $item->item_number,
         'name'          => $item->name,

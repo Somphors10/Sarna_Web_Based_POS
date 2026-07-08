@@ -315,7 +315,7 @@ class Item extends Model
      */
     public function get_info(int $item_id): object
     {
-        $builder = $this->db->table('items');
+        $builder = $this->db->table('items AS items');
         $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('items.*');
         $builder->select('GROUP_CONCAT(attribute_value SEPARATOR \'|\') AS attribute_values');
@@ -427,7 +427,7 @@ class Item extends Model
     {
         $format = $this->db->escape(dateformat_mysql());
 
-        $builder = $this->db->table('items');
+        $builder = $this->db->table('items AS items');
         $this->scopeTenant($builder, 'items.tenant_id');
         $builder->select('items.*');
         $builder->select('(
@@ -449,6 +449,47 @@ class Item extends Model
 
         $builder->where('item_quantities.location_id', $location_id);
         $builder->whereIn('items.item_id', $item_ids);
+
+        $builder->groupBy('items.item_id');
+
+        return $builder->get();
+    }
+
+    /**
+     * Lookup items by per-tenant display sequence (shown in the ID column).
+     */
+    public function get_multiple_info_by_tenant_seq(array $tenant_seq_ids, int $location_id): ResultInterface
+    {
+        $tenant_seq_ids = array_values(array_filter(array_map('intval', $tenant_seq_ids)));
+        if ($tenant_seq_ids === []) {
+            return $this->db->table('items')->limit(0)->get();
+        }
+
+        $format = $this->db->escape(dateformat_mysql());
+        $seq_expr = '(
+                SELECT COUNT(*)
+                FROM ' . $this->db->prefixTable('items') . ' AS i2
+                WHERE i2.tenant_id = items.tenant_id
+                  AND i2.item_id <= items.item_id
+            )';
+
+        $builder = $this->db->table('items AS items');
+        $this->scopeTenant($builder, 'items.tenant_id');
+        $builder->select('items.*');
+        $builder->select($seq_expr . ' AS tenant_item_seq', false);
+        $builder->select('MAX(company_name) AS company_name');
+        $builder->select('GROUP_CONCAT(DISTINCT CONCAT_WS(\'_\', definition_id, attribute_value) ORDER BY definition_id SEPARATOR \'|\') AS attribute_values');
+        $builder->select("GROUP_CONCAT(DISTINCT CONCAT_WS('_', definition_id, DATE_FORMAT(attribute_date, $format)) ORDER BY definition_id SEPARATOR '|') AS attribute_dtvalues");
+        $builder->select('GROUP_CONCAT(DISTINCT CONCAT_WS(\'_\', definition_id, attribute_decimal) ORDER BY definition_id SEPARATOR \'|\') AS attribute_dvalues');
+        $builder->select('MAX(quantity) as quantity');
+
+        $builder->join('suppliers', 'suppliers.person_id = items.supplier_id', 'left');
+        $builder->join('item_quantities', 'item_quantities.item_id = items.item_id', 'left');
+        $builder->join('attribute_links', 'attribute_links.item_id = items.item_id AND sale_id IS NULL AND receiving_id IS NULL', 'left');
+        $builder->join('attribute_values', 'attribute_links.attribute_id = attribute_values.attribute_id', 'left');
+
+        $builder->where('item_quantities.location_id', $location_id);
+        $builder->whereIn($seq_expr, $tenant_seq_ids, false);
 
         $builder->groupBy('items.item_id');
 

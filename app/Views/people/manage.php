@@ -72,11 +72,6 @@ $show_email_button = !in_array($controller_name, ['customers', 'employees', 'sup
             <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions">
-            <?php if ($controller_name === 'customers') { ?>
-                <a id="csv_import_btn" class="btn btn-default btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" href="<?= "$controller_name/csvImport" ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang(ucfirst($controller_name) . '.import_items_csv') ?>">
-                    <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>
-                </a>
-            <?php } ?>
             <a id="new_customer_btn" class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" href="<?= "$controller_name/view" ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </a>

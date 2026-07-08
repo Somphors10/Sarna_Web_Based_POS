@@ -221,6 +221,10 @@ class Barcode_lib
      */
     public function get_font_name(string $font_file_name): string
     {
-        return substr($font_file_name, 0, -4);
+        if (str_ends_with(strtolower($font_file_name), '.ttf')) {
+            return substr($font_file_name, 0, -4);
+        }
+
+        return $font_file_name;
     }
 }

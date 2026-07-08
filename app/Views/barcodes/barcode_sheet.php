@@ -86,7 +86,7 @@ $barcode_lib = new Barcode_lib();
     </style>
 </head>
 
-<body class=<?= 'font_' . $barcode_lib->get_font_name($barcode_config['barcode_font']) ?> style="font-size: <?= $barcode_config['barcode_font_size'] ?>px;">
+<body class="<?= 'font_' . esc($barcode_lib->get_font_name($barcode_config['barcode_font'])) ?>" style="font-size: <?= esc($barcode_config['barcode_font_size']) ?>px;">
     <div class="barcode-sheet">
         <table>
             <tr>

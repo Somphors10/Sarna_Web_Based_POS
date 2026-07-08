@@ -66,7 +66,7 @@ use App\Models\Employee;
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
             pageSize: <?= table_page_size($config['lines_per_page']) ?>,
-            uniqueId: 'items.item_id',
+            uniqueId: 'item_id',
             queryParams: function() {
                 return $.extend(arguments[0], {
                     "start_date": start_date,
@@ -97,9 +97,6 @@ use App\Models\Employee;
             <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
-            <button class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/csvImport" ?>" title="<?= lang('Items.import_items_csv') ?>">
-                <span class="glyphicon glyphicon-import">&nbsp;</span><?= lang('Common.import_csv') ?>
-            </button>
             <button class="btn btn-primary btn-sm modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </button>
