@@ -67,7 +67,6 @@
 
 .neo-global-content .form-control:focus {
     border-color: var(--wbpos-primary-light);
-    box-shadow: 0 0 0 3px var(--wbpos-primary-ring);
 }
 
 .neo-global-content .panel,

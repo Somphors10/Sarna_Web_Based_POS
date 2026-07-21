@@ -7,3 +7,18 @@
     --wbpos-primary-ring: rgba(124, 58, 237, 0.16);
     --wbpos-primary-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a855f7 100%);
 }
+
+/* Form fields: border-only focus — no outer glow/shadow ring */
+.login-field__input:focus,
+.lp-field-input:focus,
+.sa-input:focus,
+.sa-select:focus,
+.form-control:focus,
+.form-select:focus,
+.neo-global-content .form-control:focus,
+.pos-modern-form .form-control:focus,
+.saas-modern .form-control:focus,
+.saas-modern .form-select:focus {
+    box-shadow: none !important;
+    outline: none;
+}

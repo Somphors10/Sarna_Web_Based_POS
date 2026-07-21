@@ -191,7 +191,7 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     font-family: inherit;
     font-size: 0.875rem;
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .sa-search-wrap .sa-input {
@@ -202,7 +202,6 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
 .sa-select:focus {
     border-color: rgba(124, 58, 237, 0.45);
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
 }
 
 /* ── Alerts ── */

@@ -10,6 +10,9 @@ $routes->setDefaultController('Saas');
 $routes->get('/', 'Saas::index');
 $routes->get('login', 'Login::index');
 $routes->post('login', 'Login::index');
+$routes->get('login/forgot-password', 'Login::forgotPassword');
+$routes->post('login/forgot-password', 'Login::forgotPassword');
+$routes->get('login/forgot-success', 'Login::forgotPasswordSuccess');
 $routes->get('saas', 'Saas::index');
 $routes->get('saas/register', 'Saas::register');
 $routes->post('saas/register', 'Saas::postRegister');
@@ -27,6 +30,8 @@ $routes->get('super-admin/logout', 'Super_admin::logout');
 $routes->post('super-admin/toggle-status/(:num)', 'Super_admin::postToggleStatus/$1');
 $routes->post('super-admin/approve-request/(:num)', 'Super_admin::postApproveRequest/$1');
 $routes->post('super-admin/reject-request/(:num)', 'Super_admin::postRejectRequest/$1');
+$routes->post('super-admin/approve-password-reset/(:num)', 'Super_admin::postApprovePasswordReset/$1');
+$routes->post('super-admin/reject-password-reset/(:num)', 'Super_admin::postRejectPasswordReset/$1');
 
 $routes->add('no_access/index/(:segment)', 'No_access::index/$1');
 $routes->add('no_access/index/(:segment)/(:segment)', 'No_access::index/$1/$2');

@@ -46,8 +46,9 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/register-63342285b6.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=24">
-        <link rel="stylesheet" href="css/forms.css?v=4">
+        <link rel="stylesheet" href="css/dashboard.css?v=25">
+        <link rel="stylesheet" href="css/forms.css?v=5">
+        <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -82,6 +83,7 @@ $request = Services::request();
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
         <script src="resources/js/manage_tables-70efc473d8.js"></script>
+        <script src="js/password_toggle.js?v=1"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -89,8 +91,9 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-558897b1f2.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=24">
-        <link rel="stylesheet" href="css/forms.css?v=4">
+        <link rel="stylesheet" href="css/dashboard.css?v=25">
+        <link rel="stylesheet" href="css/forms.css?v=5">
+        <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
@@ -99,6 +102,7 @@ $request = Services::request();
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
         <script src="resources/opensourcepos-d58256b84d.min.js"></script>
+        <script src="js/password_toggle.js?v=1"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>

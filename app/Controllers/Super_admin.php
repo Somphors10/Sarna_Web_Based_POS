@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\TenantContext;
 use App\Libraries\TenantSeeder;
+use App\Models\Password_reset_request;
 use App\Models\Platform_admin;
 use App\Models\Subscription_request;
 use App\Models\Tenant;
@@ -68,11 +69,15 @@ class Super_admin extends BaseController
 
         $tenant_model = model(Tenant::class);
         $request_model = model(Subscription_request::class);
+        $password_reset_model = model(Password_reset_request::class);
         $data = [
             'tenants' => $tenant_model->get_with_owner_summary(),
             'platform_admins' => $platform_admin->get_all_admins(),
             'is_owner' => $platform_admin->is_owner(),
             'subscription_requests' => $request_model->get_pending_with_plan(),
+            'password_reset_requests' => $password_reset_model->db->tableExists('password_reset_requests')
+                ? $password_reset_model->get_pending()
+                : [],
             'active_page' => $page
         ];
 
@@ -250,5 +255,74 @@ class Super_admin extends BaseController
             ]);
 
         return redirect()->to('super-admin/requests?request_rejected=1');
+    }
+
+    public function postApprovePasswordReset(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $reset_model = model(Password_reset_request::class);
+        if (!$reset_model->db->tableExists('password_reset_requests')) {
+            return redirect()->to('super-admin/requests?error=password_reset_unavailable');
+        }
+
+        $request = $reset_model->get_info_for_review($request_id);
+        if ($request === null || $request->status !== 'pending') {
+            return redirect()->to('super-admin/requests?error=password_reset_not_found');
+        }
+
+        $db = db_connect();
+        $db->transStart();
+
+        $db->table('employees')
+            ->where('person_id', (int)$request->person_id)
+            ->where('tenant_id', (int)$request->tenant_id)
+            ->update([
+                'password' => $request->new_password_hash,
+                'hash_version' => 2,
+            ]);
+
+        $db->table('password_reset_requests')
+            ->where('request_id', $request_id)
+            ->update([
+                'status' => 'approved',
+                'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
+                'reviewed_at' => date('Y-m-d H:i:s'),
+            ]);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            return redirect()->to('super-admin/requests?error=password_reset_failed');
+        }
+
+        return redirect()->to('super-admin/requests?password_reset_approved=1');
+    }
+
+    public function postRejectPasswordReset(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $reset_model = model(Password_reset_request::class);
+        if (!$reset_model->db->tableExists('password_reset_requests')) {
+            return redirect()->to('super-admin/requests?error=password_reset_unavailable');
+        }
+
+        db_connect()->table('password_reset_requests')
+            ->where('request_id', $request_id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
+                'reviewed_at' => date('Y-m-d H:i:s'),
+            ]);
+
+        return redirect()->to('super-admin/requests?password_reset_rejected=1');
     }
 }

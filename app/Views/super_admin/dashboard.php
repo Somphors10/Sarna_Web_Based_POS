@@ -4,6 +4,7 @@
  * @var array $platform_admins
  * @var bool $is_owner
  * @var array $subscription_requests
+ * @var array $password_reset_requests
  * @var string $active_page
  */
 ?>
@@ -19,7 +20,7 @@
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=10') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=11') ?>">
 </head>
 <body class="sa-dashboard">
 <script>
@@ -32,7 +33,7 @@
 </script>
 <?php
     $total_tenants = count($tenants);
-    $pending_count = count($subscription_requests);
+    $pending_count = count($subscription_requests) + count($password_reset_requests ?? []);
     $admins_count = count($platform_admins);
     $active_page = $active_page ?? 'overview';
 
@@ -65,7 +66,7 @@
         ],
         'requests' => [
             'title' => 'Pending Requests',
-            'subtitle' => 'Review website registrations and approve new POS accounts.',
+            'subtitle' => 'Review website registrations and password reset requests.',
         ],
     ];
     $current_meta = $page_meta[$active_page] ?? $page_meta['overview'];
@@ -77,6 +78,12 @@
     if (service('request')->getGet('request_rejected') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'Registration request rejected.'];
     }
+    if (service('request')->getGet('password_reset_approved') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Password reset approved. The user can sign in with the new password.'];
+    }
+    if (service('request')->getGet('password_reset_rejected') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Password reset request rejected.'];
+    }
     if (service('request')->getGet('company_created') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'New company created successfully.'];
     }
@@ -87,6 +94,9 @@
         'tenant_or_user_exists' => 'Tenant code or owner username already exists.',
         'approve_failed' => 'Could not approve the request. Please try again.',
         'admin_creation_disabled' => 'Creating platform admins from this screen is disabled.',
+        'password_reset_not_found' => 'Password reset request not found or already processed.',
+        'password_reset_failed' => 'Could not approve the password reset. Please try again.',
+        'password_reset_unavailable' => 'Password reset table is not installed yet.',
     ];
     if ($error_code !== '' && isset($error_messages[$error_code])) {
         $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
@@ -424,6 +434,54 @@
                                     <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-request/' . (int)$request['request_id']) ?>
+                                    <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
+                                    <?= form_close() ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="sa-panel" style="margin-top: 24px;">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Pending Password Resets</h2>
+                <p class="sa-panel__subtitle">Approve reset requests submitted from the POS login page.</p>
+            </div>
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company Code</th>
+                        <th>Username</th>
+                        <th>Tenant</th>
+                        <th>Requested</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($password_reset_requests)): ?>
+                        <tr><td colspan="6" class="sa-empty">No pending password resets.</td></tr>
+                    <?php else: ?>
+                    <?php foreach ($password_reset_requests as $reset): ?>
+                        <tr class="js-searchable-row"
+                            data-group="password-reset"
+                            data-search="<?= esc(strtolower(trim(($reset['tenant_code'] ?? '') . ' ' . ($reset['username'] ?? '') . ' ' . ($reset['tenant_id'] ?? '')))) ?>">
+                            <td><?= esc($reset['request_id']) ?></td>
+                            <td><?= esc($reset['tenant_code']) ?></td>
+                            <td><?= esc($reset['username']) ?></td>
+                            <td>#<?= esc($reset['tenant_id'] ?? '') ?></td>
+                            <td><?= esc($reset['created_at'] ?? '') ?></td>
+                            <td>
+                                <div class="sa-row-actions">
+                                    <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id']) ?>
+                                    <button class="sa-btn sa-btn--success" type="submit">Approve</button>
+                                    <?= form_close() ?>
+                                    <?= form_open('super-admin/reject-password-reset/' . (int)$reset['request_id']) ?>
                                     <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
                                     <?= form_close() ?>
                                 </div>

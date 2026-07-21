@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Libraries\TenantContext;
 use App\Libraries\MY_Migration;
 use App\Models\Employee;
+use App\Models\Password_reset_request;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -75,5 +76,74 @@ class Login extends BaseController
         }
 
         return redirect()->to('home');
+    }
+
+    /**
+     * Forgot password — submit reset request for platform admin approval.
+     */
+    public function forgotPassword(): string|RedirectResponse
+    {
+        (new TenantContext())->clearTenantDatabaseSession();
+
+        $validation = Services::validation();
+        $data = [
+            'has_errors' => false,
+            'validation' => $validation,
+        ];
+
+        if ($this->request->getMethod() !== 'POST') {
+            return view('login/forgot_password', $data);
+        }
+
+        $rules = [
+            'tenant_code'      => 'required|alpha_dash|min_length[2]|max_length[64]',
+            'username'         => 'required|min_length[2]|max_length[50]',
+            'password'         => 'required|strong_password|max_length[255]',
+            'password_confirm' => 'required|matches[password]',
+        ];
+
+        if (!$this->validate($rules)) {
+            $data['has_errors'] = true;
+
+            return view('login/forgot_password', $data);
+        }
+
+        helper('password');
+
+        $tenant_code = strtolower(trim((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
+        $username = trim((string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $plain_password = (string)$this->request->getPost('password');
+
+        $reset_model = model(Password_reset_request::class);
+
+        if (!$reset_model->db->tableExists('password_reset_requests')) {
+            $validation->setError('username', 'Password reset is not available yet. Please contact platform support.');
+            $data['has_errors'] = true;
+
+            return view('login/forgot_password', $data);
+        }
+
+        $employee = $reset_model->resolve_employee($tenant_code, $username);
+
+        if ($employee !== null && !$reset_model->has_pending($tenant_code, $username)) {
+            $reset_model->insert([
+                'tenant_code'       => $tenant_code,
+                'username'          => $username,
+                'person_id'         => (int)$employee->person_id,
+                'tenant_id'         => (int)$employee->tenant_id,
+                'new_password_hash' => password_hash($plain_password, PASSWORD_DEFAULT),
+                'status'            => 'pending',
+            ]);
+        }
+
+        // Always show success — do not reveal whether the account exists.
+        return redirect()->to('login/forgot-success');
+    }
+
+    public function forgotPasswordSuccess(): string
+    {
+        (new TenantContext())->clearTenantDatabaseSession();
+
+        return view('login/forgot_password_success');
     }
 }

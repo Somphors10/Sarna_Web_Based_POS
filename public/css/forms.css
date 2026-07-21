@@ -62,12 +62,11 @@ label.required.control-label::after {
     border-color: #d5dee8;
     border-radius: 8px;
     box-shadow: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
 .pos-modern-form .form-control:focus {
     border-color: var(--wbpos-primary-light);
-    box-shadow: 0 0 0 3px var(--wbpos-primary-ring);
 }
 
 .pos-modern-form .input-group-addon {

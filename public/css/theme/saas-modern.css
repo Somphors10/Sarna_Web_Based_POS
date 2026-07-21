@@ -166,7 +166,6 @@ body.saas-landing-body {
 .saas-modern .form-control:focus,
 .saas-modern .form-select:focus {
     border-color: #a5b4fc;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
 }
 
 .saas-modern .table > :not(caption) > * > * {
@@ -2104,7 +2103,7 @@ body.saas-landing-body {
     background: #fff;
     border: 1px solid var(--saas-border);
     border-radius: 10px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
 .lp-field-input::placeholder {
@@ -2114,7 +2113,6 @@ body.saas-landing-body {
 .lp-field-input:focus {
     outline: none;
     border-color: #a5b4fc;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
 .lp-field-hint {
@@ -2239,7 +2237,7 @@ body.saas-landing-body {
 
 .lp-success {
     position: relative;
-    padding: calc(var(--lp-nav-h) + 48px) 24px 64px;
+    padding: 48px 24px 64px;
     min-height: calc(100vh - 120px);
     overflow: hidden;
 }

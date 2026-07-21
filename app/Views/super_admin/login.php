@@ -16,7 +16,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/login.css?v=10') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=15') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=1') ?>">
     <meta name="theme-color" content="#4f46e5">
 </head>
 
@@ -121,9 +122,7 @@
     <script>
         (function () {
             const usernameInput = document.getElementById('input-username');
-            const passwordInput = document.getElementById('input-password');
             const rememberCheckbox = document.getElementById('remember-me');
-            const toggleButton = document.getElementById('toggle-password');
             const loginForm = document.getElementById('super-admin-login-form');
             const storageKey = 'ospos_super_admin_username';
 
@@ -132,15 +131,6 @@
                 if (rememberCheckbox) {
                     rememberCheckbox.checked = true;
                 }
-            }
-
-            if (toggleButton && passwordInput) {
-                toggleButton.addEventListener('click', function () {
-                    const isHidden = passwordInput.type === 'password';
-                    passwordInput.type = isHidden ? 'text' : 'password';
-                    toggleButton.querySelector('.icon-eye').classList.toggle('is-hidden', !isHidden);
-                    toggleButton.querySelector('.icon-eye-off').classList.toggle('is-hidden', isHidden);
-                });
             }
 
             if (loginForm && usernameInput && rememberCheckbox) {
@@ -154,6 +144,7 @@
             }
         })();
     </script>
+    <script src="<?= base_url('js/password_toggle.js?v=1') ?>"></script>
 </body>
 
 </html>
