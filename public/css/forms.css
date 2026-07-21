@@ -76,6 +76,10 @@ label.required.control-label::after {
     color: #64748b;
 }
 
+.pos-modern-form .neo-form-submit {
+    margin: 4px 14px 14px;
+}
+
 .pos-form-tabs {
     background: #f8fafc;
     border-bottom: 1px solid #dbe4ee;

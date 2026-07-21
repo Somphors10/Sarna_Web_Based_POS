@@ -3,41 +3,43 @@
 }
 
 #report_summary {
-    margin: 2em 0 auto;
+    margin: 1em 0 auto;
     text-align: center;
 }
-
-#report_summary .summary_row {}
 
 #chart_report_summary {
     text-align: center;
-    margin-top: -100px;
+    margin-top: 12px;
 }
 
-#chart_report_summary .summary_row {}
+.neo-report-summary .summary_row,
+#report_summary .summary_row,
+#chart_report_summary .summary_row {
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.5;
+}
 
 .ct-chart {}
 
-/* Style chart X axis labels to be rotated of 60 degrees */
 .ct-label.ct-horizontal {
-    -webkit-transform: rotate(-60deg);
-    -moz-transform: rotate(-60deg);
-    -ms-transform: rotate(-60deg);
-    -o-transform: rotate(-60deg);
-    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    -o-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+    transform-origin: left center;
 }
 
-/* Set all labels to be black with font size 1.2rem */
 .ct-label {
-    fill: rgba(0, 0, 0, 1);
-    color: rgba(0, 0, 0, 1);
-    font-size: 1.2rem;
+    fill: rgba(51, 65, 85, 0.95);
+    color: rgba(51, 65, 85, 0.95);
+    font-size: 11px;
 }
 
 .ct-tooltip-point {
     fill-opacity: 1 !important;
-    stroke-width: 0px;
-    stroke: red;
+    stroke-width: 0;
     transition: all 0.2s linear;
 }
 

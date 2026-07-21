@@ -13,22 +13,22 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<div class="neo-report-head">
-    <div class="neo-report-breadcrumb" aria-label="breadcrumb">
-        <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
-        <span class="neo-report-breadcrumb-sep">/</span>
-        <span class="neo-report-breadcrumb-current"><?= lang('Reports.report_input') ?></span>
+<section class="neo-module-page">
+    <div class="neo-report-head">
+        <div class="neo-report-breadcrumb" aria-label="breadcrumb">
+            <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
+            <span class="neo-report-breadcrumb-sep">/</span>
+            <span class="neo-report-breadcrumb-current"><?= lang('Reports.report_input') ?></span>
+        </div>
+        <h3 class="neo-module-title"><?= lang('Reports.report_input') ?></h3>
     </div>
-    <div id="page_title"><?= lang('Reports.report_input') ?></div>
-</div>
 
-<?php
-if (isset($error)) {
-    echo '<div class="alert alert-dismissible alert-danger">' . esc($error) . '</div>';
-}
-?>
+    <?php if (isset($error)): ?>
+        <div class="alert alert-dismissible alert-danger"><?= esc($error) ?></div>
+    <?php endif; ?>
 
-<?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal']) ?>
+    <div class="pos-form-shell">
+        <?= form_open('#', ['id' => 'item_form', 'enctype' => 'multipart/form-data', 'class' => 'form-horizontal pos-modern-form']) ?>
 
     <div class="form-group form-group-sm">
         <?= form_label(lang('Reports.date_range'), 'report_date_range_label', ['class' => 'control-label col-xs-2 required']) ?>
@@ -63,10 +63,12 @@ if (isset($error)) {
         'name'    => 'generate_report',
         'id'      => 'generate_report',
         'content' => lang('Common.submit'),
-        'class'   => 'btn btn-primary btn-sm'
+        'class'   => 'btn btn-primary btn-sm neo-form-submit'
     ]);    ?>
 
-<?= form_close() ?>
+        <?= form_close() ?>
+    </div>
+</section>
 
 <?= view('partial/footer') ?>
 

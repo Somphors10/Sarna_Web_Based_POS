@@ -15,23 +15,34 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<div id="page_title"><?= esc($title) ?></div>
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <div class="neo-report-breadcrumb" aria-label="breadcrumb">
+                <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
+                <span class="neo-report-breadcrumb-sep">/</span>
+                <span class="neo-report-breadcrumb-current"><?= esc($title) ?></span>
+            </div>
+            <h3 class="neo-module-title"><?= esc($title) ?></h3>
+            <?php if (!empty($subtitle)): ?>
+                <p class="neo-module-subtitle"><?= esc($subtitle) ?></p>
+            <?php endif; ?>
+        </div>
+    </header>
 
-<div id="page_subtitle"><?= esc($subtitle) ?></div>
-
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
-            <?php echo lang('Reports.toggle_cost_and_profit'); ?>
-        </button>
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
+                <?= lang('Reports.toggle_cost_and_profit') ?>
+            </button>
+        </div>
     </div>
-</div>
 
-<div id="table_holder">
-    <table id="table"></table>
-</div>
+    <div id="table_holder" class="neo-table-holder">
+        <table id="table"></table>
+    </div>
 
-<div id="report_summary">
+    <div id="report_summary" class="neo-report-summary">
     <?php
     foreach ($summary_data as $name => $value) {
         if ($name == "total_quantity") {
@@ -43,7 +54,8 @@
         }
     }
     ?>
-</div>
+    </div>
+</section>
 
 <script type="text/javascript">
     $(document).ready(function () {

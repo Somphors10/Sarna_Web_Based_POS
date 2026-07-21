@@ -6,10 +6,11 @@
  */
 ?>
 
-<div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
+<div class="pos-form-shell">
+<div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
 <ul id="error_message_box" class="error_message_box"></ul>
 
-<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'supplier_form', 'class' => 'form-horizontal']) ?>
+<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'supplier_form', 'class' => 'form-horizontal pos-modern-form']) ?>
     <fieldset id="supplier_basic_info">
 
         <div class="form-group form-group-sm">
@@ -71,6 +72,7 @@
 
     </fieldset>
 <?= form_close() ?>
+</div>
 
 <script type="text/javascript">
     // Validation and submit handling

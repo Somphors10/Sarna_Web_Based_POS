@@ -43,11 +43,11 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/ospos-73edad0b33.css">
         <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
         <link rel="stylesheet" href="resources/css/receipt-a171207d8e.css">
-        <link rel="stylesheet" href="resources/css/register-58be93b261.css">
-        <link rel="stylesheet" href="resources/css/reports-407b727797.css">
+        <link rel="stylesheet" href="resources/css/register-63342285b6.css">
+        <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=22">
-        <link rel="stylesheet" href="css/forms.css?v=3">
+        <link rel="stylesheet" href="css/dashboard.css?v=23">
+        <link rel="stylesheet" href="css/forms.css?v=4">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -87,10 +87,10 @@ $request = Services::request();
         <?php $assets_injected = true; ?>
     <?php else : ?>
         <!--inject:prod:css -->
-        <link rel="stylesheet" href="resources/opensourcepos-126f260aef.min.css">
+        <link rel="stylesheet" href="resources/opensourcepos-558897b1f2.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=22">
-        <link rel="stylesheet" href="css/forms.css?v=3">
+        <link rel="stylesheet" href="css/dashboard.css?v=23">
+        <link rel="stylesheet" href="css/forms.css?v=4">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>

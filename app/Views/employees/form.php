@@ -8,12 +8,13 @@
  */
 ?>
 
-<div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
+<div class="pos-form-shell">
+<div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
 <ul id="error_message_box" class="error_message_box"></ul>
 
-<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'employee_form', 'class' => 'form-horizontal']) ?>
+<?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'employee_form', 'class' => 'form-horizontal pos-modern-form']) ?>
 
-    <ul class="nav nav-tabs nav-justified" data-tabs="tabs">
+    <ul class="nav nav-tabs nav-justified pos-form-tabs" data-tabs="tabs">
         <li class="active" role="presentation">
             <a data-toggle="tab" href="#employee_basic_info"><?= lang('Employees.basic_information') ?></a>
         </li>
@@ -159,6 +160,7 @@
     </div>
 
 <?= form_close() ?>
+</div>
 
 <script type="text/javascript">
     window.WBPOS_STRONG_PASSWORD_MESSAGE = <?= json_encode(lang('Employees.password_strong')) ?>;

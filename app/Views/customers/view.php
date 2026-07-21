@@ -13,10 +13,15 @@
 
 <?= view('partial/header') ?>
 
-<div class="panel panel-default" style="margin: 16px 0;">
-    <div class="panel-body">
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <h3 class="neo-module-title"><?= lang('Customers.customer') ?></h3>
+            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+        </div>
+    </header>
+
     <?= view('customers/form') ?>
-    </div>
-</div>
+</section>
 
 <?= view('partial/footer') ?>

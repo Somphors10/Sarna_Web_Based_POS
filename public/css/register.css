@@ -1,7 +1,17 @@
-#register_wrapper {
-    float: left;
-    width: 70%;
+.neo-global-content .neo-register-layout #register_wrapper {
+    float: none;
+    width: auto;
     font-size: 13px;
+}
+
+.neo-global-content .neo-register-layout #overall_sale {
+    width: auto;
+    float: none;
+    margin: 0;
+    padding-bottom: 1em;
+    padding-top: 0;
+    font-size: 13px;
+    text-align: center;
 }
 
 #mode_form,
@@ -51,16 +61,6 @@
     text-align: center;
 }
 
-#overall_sale {
-    width: 29%;
-    float: left;
-    margin-left: 0.1em;
-    padding-bottom: 1em;
-    padding-top: 1em;
-    font-size: 13px;
-    text-align: center;
-}
-
 #overall_sale .panel-body {
     padding-top: 0;
     padding-bottom: 0;
@@ -87,7 +87,7 @@
 
 #sale_totals,
 #payment_totals {
-    border-top: 1px solid #000;
+    border-top: 1px solid #dbe4ee;
 }
 
 input#amount_tendered:disabled {
@@ -95,9 +95,9 @@ input#amount_tendered:disabled {
 }
 
 #payment_details {
-    float: left;
-    border-top: 1px solid #000;
-    margin-top: 0.2em;
+    float: none;
+    border-top: 1px solid #dbe4ee;
+    margin-top: 0.5em;
     padding: 0.5em;
     text-align: left;
     clear: both;
@@ -105,4 +105,13 @@ input#amount_tendered:disabled {
 
 .alert {
     margin-bottom: 5px;
+}
+
+@media (max-width: 1200px) {
+    #register_wrapper,
+    #overall_sale {
+        float: none;
+        width: 100%;
+        margin: 0 0 12px;
+    }
 }

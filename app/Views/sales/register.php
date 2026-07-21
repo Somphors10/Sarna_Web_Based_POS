@@ -69,6 +69,8 @@ helper('url');
         </div>
     </header>
 
+<div class="neo-register-layout">
+
 <div id="register_wrapper">
 
     <!-- Top register controls -->
@@ -570,6 +572,8 @@ helper('url');
         }
         ?>
     </div>
+</div>
+
 </div>
 </section>
 

@@ -13,28 +13,39 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<div id="page_title"><?= esc($title) ?></div>
+<section class="neo-module-page">
+    <header class="neo-module-header">
+        <div>
+            <div class="neo-report-breadcrumb" aria-label="breadcrumb">
+                <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
+                <span class="neo-report-breadcrumb-sep">/</span>
+                <span class="neo-report-breadcrumb-current"><?= esc($title) ?></span>
+            </div>
+            <h3 class="neo-module-title"><?= esc($title) ?></h3>
+            <?php if (!empty($subtitle)): ?>
+                <p class="neo-module-subtitle"><?= esc($subtitle) ?></p>
+            <?php endif; ?>
+        </div>
+    </header>
 
-<div id="page_subtitle"><?= esc($subtitle) ?></div>
+    <div class="ct-chart ct-golden-section neo-report-chart" id="chart1"></div>
 
-<div class="ct-chart ct-golden-section" id="chart1"></div>
-
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <!-- Toggle Button -->
-        <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
-            <?php echo lang('Reports.toggle_cost_and_profit'); ?>
-        </button>
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
+                <?= lang('Reports.toggle_cost_and_profit') ?>
+            </button>
+        </div>
     </div>
-</div>
 
-<?= view($chart_type) ?>
+    <?= view($chart_type) ?>
 
-<div id="chart_report_summary">
-    <?php foreach ($summary_data_1 as $name => $value) { ?>
-        <div class="summary_row"><?= lang("Reports.$name") . ': ' . to_currency($value) ?></div>
-    <?php } ?>
-</div>
+    <div id="chart_report_summary" class="neo-report-summary">
+        <?php foreach ($summary_data_1 as $name => $value) { ?>
+            <div class="summary_row"><?= lang("Reports.$name") . ': ' . to_currency($value) ?></div>
+        <?php } ?>
+    </div>
+</section>
 
 <script src="<?= base_url('js/hide_cost_profit.js') ?>"></script>
 
