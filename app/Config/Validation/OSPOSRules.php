@@ -21,7 +21,7 @@ class OSPOSRules
      *
      * @noinspection PhpUnused
      */
-    public function strong_password(?string $str, ?string $fields, array $data, ?string &$error = null): bool
+    public function strong_password(?string $str, ?string &$error = null): bool
     {
         helper('password');
 
@@ -48,7 +48,7 @@ class OSPOSRules
      * @return bool True if validation passes or false if there are errors.
      * @noinspection PhpUnused
      */
-    public function login_check(string $username, string $fields, array $data, ?string &$error = null): bool
+    public function login_check(string $username, string $fields, array $data, ?string &$error = null, ?string $field = null): bool
     {
         $employee = model(Employee::class);
         $this->request = Services::request();
