@@ -16,9 +16,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=5') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=10') ?>">
 </head>
 <body class="sa-dashboard">
+<script>
+    (function() {
+        const key = 'ospos_sidebar_collapsed';
+        if (window.innerWidth > 992 && localStorage.getItem(key) === '1') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    })();
+</script>
 <?php
     $total_tenants = count($tenants);
     $pending_count = count($subscription_requests);
@@ -81,55 +92,60 @@
         $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
     }
 ?>
-<div class="sa-layout">
-    <aside class="sa-sidebar">
-        <div class="sa-sidebar__head">
-            <a class="sa-brand" href="<?= site_url('super-admin/overview') ?>">WBPOS</a>
-            <span class="sa-brand__tag">Super Admin</span>
+<div class="neo-layout sa-layout">
+    <aside class="neo-global-sidebar">
+        <div class="neo-global-brand-row">
+            <a class="neo-global-brand" href="<?= site_url('super-admin/overview') ?>">
+                <span class="neo-global-brand-full">WBPOS</span>
+                <span class="neo-global-brand-mini">W</span>
+            </a>
+            <button id="sa_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                <svg class="neo-sidebar-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
         </div>
-        <nav class="sa-nav">
-            <a class="<?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt="">
-                <span>Overview</span>
-            </a>
-            <a class="<?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/businesses.svg') ?>" alt="">
-                <span>Businesses</span>
-            </a>
-            <a class="<?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt="">
-                <span>Platform Admins</span>
-            </a>
-            <a class="<?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/pending.svg') ?>" alt="">
-                <span>Pending Requests</span>
-                <?php if ($pending_count > 0): ?>
-                    <span class="sa-nav__badge"><?= $pending_count ?></span>
-                <?php endif; ?>
-            </a>
-            <a class="sa-nav__logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>">
-                <img class="sa-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
-                <span>Logout</span>
-            </a>
-        </nav>
+        <div class="neo-global-sidebar-body">
+            <nav class="neo-global-menu">
+                <a class="neo-global-menu-item <?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>" title="Overview">
+                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt="">
+                    <span>Overview</span>
+                </a>
+                <a class="neo-global-menu-item <?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>" title="Businesses">
+                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/businesses.svg') ?>" alt="">
+                    <span>Businesses</span>
+                </a>
+                <a class="neo-global-menu-item <?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>" title="Platform Admins">
+                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt="">
+                    <span>Platform Admins</span>
+                </a>
+                <a class="neo-global-menu-item <?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>" title="Pending Requests">
+                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/pending.svg') ?>" alt="">
+                    <span>Pending Requests</span>
+                </a>
+            </nav>
+            <div class="neo-sidebar-footer">
+                <a class="neo-sidebar-logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>" title="Logout">
+                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
     </aside>
-    <div id="sa_sidebar_backdrop" class="sa-sidebar-backdrop" aria-hidden="true"></div>
+    <div id="sa_sidebar_backdrop" class="neo-sidebar-backdrop" aria-hidden="true"></div>
 
-    <div class="sa-main">
+    <main class="neo-global-content sa-main">
         <header class="sa-mobile-topbar">
-            <button id="sa_mobile_sidebar_toggle" class="sa-mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
-                <span class="sa-hamburger-icon" aria-hidden="true"></span>
+            <button id="sa_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span class="neo-hamburger-icon" aria-hidden="true"></span>
             </button>
             <span class="sa-mobile-topbar__title"><?= esc($current_meta['title']) ?></span>
         </header>
-        <header class="sa-hero">
-            <p class="sa-hero__eyebrow">Platform Console</p>
-            <h1 class="sa-hero__title"><?= esc($current_meta['title']) ?></h1>
-            <p class="sa-hero__subtitle"><?= esc($current_meta['subtitle']) ?></p>
-            <div class="sa-hero__chips">
-                <span class="sa-chip">Businesses: <?= $total_tenants ?></span>
-                <span class="sa-chip">Pending: <?= $pending_count ?></span>
-                <span class="sa-chip">Admins: <?= $admins_count ?></span>
+        <header class="sa-page-header">
+            <div class="sa-page-header__content">
+                <p class="sa-page-header__eyebrow">Platform Console</p>
+                <h1 class="sa-page-header__title"><?= esc($current_meta['title']) ?></h1>
+                <p class="sa-page-header__subtitle"><?= esc($current_meta['subtitle']) ?></p>
             </div>
             <?php if (in_array($active_page, ['businesses', 'admins', 'requests'], true)): ?>
             <div class="sa-toolbar">
@@ -163,6 +179,36 @@
         <?php endforeach; ?>
 
         <?php if ($active_page === 'overview'): ?>
+        <section class="sa-stat-grid">
+            <article class="sa-stat-card sa-stat-card--purple">
+                <div class="sa-stat-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                </div>
+                <div class="sa-stat-card__body">
+                    <p class="sa-stat-card__label">Total Businesses</p>
+                    <p class="sa-stat-card__value"><?= $total_tenants ?></p>
+                </div>
+            </article>
+            <article class="sa-stat-card sa-stat-card--amber">
+                <div class="sa-stat-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/></svg>
+                </div>
+                <div class="sa-stat-card__body">
+                    <p class="sa-stat-card__label">Pending Requests</p>
+                    <p class="sa-stat-card__value"><?= $pending_count ?></p>
+                </div>
+            </article>
+            <article class="sa-stat-card sa-stat-card--blue">
+                <div class="sa-stat-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <div class="sa-stat-card__body">
+                    <p class="sa-stat-card__label">Platform Admins</p>
+                    <p class="sa-stat-card__value"><?= $admins_count ?></p>
+                </div>
+            </article>
+        </section>
+
         <section class="sa-panel">
             <div class="sa-panel__head">
                 <h2 class="sa-panel__title">Tenant Status Breakdown</h2>
@@ -170,18 +216,27 @@
             </div>
             <div class="sa-panel__body">
                 <div class="sa-metrics sa-metrics--status">
-                    <div class="sa-metric">
-                        <div class="sa-metric__label">Active</div>
+                    <div class="sa-metric sa-metric--active">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Active</span>
+                        </div>
                         <div class="sa-metric__value"><?= $active_tenants ?></div>
                         <div class="sa-metric__hint">Currently operating</div>
                     </div>
-                    <div class="sa-metric">
-                        <div class="sa-metric__label">Suspended</div>
+                    <div class="sa-metric sa-metric--suspended">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Suspended</span>
+                        </div>
                         <div class="sa-metric__value"><?= $suspended_tenants ?></div>
                         <div class="sa-metric__hint">Needs intervention</div>
                     </div>
-                    <div class="sa-metric">
-                        <div class="sa-metric__label">Cancelled</div>
+                    <div class="sa-metric sa-metric--cancelled">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Cancelled</span>
+                        </div>
                         <div class="sa-metric__value"><?= $cancelled_tenants ?></div>
                         <div class="sa-metric__hint">Closed accounts</div>
                     </div>
@@ -195,18 +250,36 @@
                 <p class="sa-panel__subtitle">Jump to the pages you use most often.</p>
             </div>
             <div class="sa-panel__body">
-                <div class="sa-checklist">
-                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/requests') ?>">
-                        <strong>Pending Registrations<?= $pending_count > 0 ? ' (' . $pending_count . ')' : '' ?></strong>
-                        <span>Review and approve incoming business signups.</span>
+                <div class="sa-actions">
+                    <a class="sa-action-card" href="<?= site_url('super-admin/requests') ?>">
+                        <span class="sa-action-card__icon sa-action-card__icon--amber" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/></svg>
+                        </span>
+                        <span class="sa-action-card__text">
+                            <strong>Pending Registrations<?= $pending_count > 0 ? ' (' . $pending_count . ')' : '' ?></strong>
+                            <span>Review and approve incoming business signups.</span>
+                        </span>
+                        <span class="sa-action-card__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/businesses') ?>">
-                        <strong>Manage Businesses<?= $suspended_tenants > 0 ? ' (' . $suspended_tenants . ' suspended)' : '' ?></strong>
-                        <span>Update tenant status and view owner accounts.</span>
+                    <a class="sa-action-card" href="<?= site_url('super-admin/businesses') ?>">
+                        <span class="sa-action-card__icon sa-action-card__icon--purple" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                        </span>
+                        <span class="sa-action-card__text">
+                            <strong>Manage Businesses<?= $suspended_tenants > 0 ? ' (' . $suspended_tenants . ' suspended)' : '' ?></strong>
+                            <span>Update tenant status and view owner accounts.</span>
+                        </span>
+                        <span class="sa-action-card__arrow" aria-hidden="true">→</span>
                     </a>
-                    <a class="sa-checklist__item sa-checklist__item--link" href="<?= site_url('super-admin/admins') ?>">
-                        <strong>Platform Admins (<?= $admins_count ?>)</strong>
-                        <span>View who can access this console.</span>
+                    <a class="sa-action-card" href="<?= site_url('super-admin/admins') ?>">
+                        <span class="sa-action-card__icon sa-action-card__icon--blue" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </span>
+                        <span class="sa-action-card__text">
+                            <strong>Platform Admins (<?= $admins_count ?>)</strong>
+                            <span>View who can access this console.</span>
+                        </span>
+                        <span class="sa-action-card__arrow" aria-hidden="true">→</span>
                     </a>
                 </div>
             </div>
@@ -363,7 +436,7 @@
             </div>
         </section>
         <?php endif; ?>
-    </div>
+    </main>
 </div>
 
 <div id="tenant-status-confirm" class="sa-modal-overlay" aria-hidden="true">
@@ -390,20 +463,41 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const sidebarKey = 'ospos_sidebar_collapsed';
+        const sidebarToggle = document.getElementById('sa_sidebar_toggle');
         const mobileToggle = document.getElementById('sa_mobile_sidebar_toggle');
         const mobileBackdrop = document.getElementById('sa_sidebar_backdrop');
 
-        const closeMobileSidebar = function() {
-            document.documentElement.classList.remove('sa-mobile-sidebar-open');
-            if (mobileToggle) {
-                mobileToggle.setAttribute('aria-expanded', 'false');
+        const syncForViewport = function() {
+            if (window.innerWidth <= 992) {
+                document.documentElement.classList.remove('sidebar-collapsed');
+            } else if (localStorage.getItem(sidebarKey) === '1') {
+                document.documentElement.classList.add('sidebar-collapsed');
             }
         };
 
-        const openMobileSidebar = function() {
-            document.documentElement.classList.add('sa-mobile-sidebar-open');
+        const setExpandedState = function() {
+            if (sidebarToggle) {
+                sidebarToggle.setAttribute('aria-expanded', (!document.documentElement.classList.contains('sidebar-collapsed')).toString());
+            }
+        };
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                if (window.innerWidth <= 992) {
+                    return;
+                }
+
+                document.documentElement.classList.toggle('sidebar-collapsed');
+                localStorage.setItem(sidebarKey, document.documentElement.classList.contains('sidebar-collapsed') ? '1' : '0');
+                setExpandedState();
+            });
+        }
+
+        const closeMobileSidebar = function() {
+            document.documentElement.classList.remove('mobile-sidebar-open');
             if (mobileToggle) {
-                mobileToggle.setAttribute('aria-expanded', 'true');
+                mobileToggle.setAttribute('aria-expanded', 'false');
             }
         };
 
@@ -413,11 +507,8 @@
                     return;
                 }
 
-                if (document.documentElement.classList.contains('sa-mobile-sidebar-open')) {
-                    closeMobileSidebar();
-                } else {
-                    openMobileSidebar();
-                }
+                const isOpen = document.documentElement.classList.toggle('mobile-sidebar-open');
+                mobileToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             });
         }
 
@@ -425,7 +516,7 @@
             mobileBackdrop.addEventListener('click', closeMobileSidebar);
         }
 
-        document.querySelectorAll('.sa-nav a').forEach(function(link) {
+        document.querySelectorAll('.neo-global-menu-item, .neo-sidebar-logout').forEach(function(link) {
             link.addEventListener('click', function() {
                 if (window.innerWidth <= 992) {
                     closeMobileSidebar();
@@ -434,16 +525,21 @@
         });
 
         window.addEventListener('resize', function() {
+            syncForViewport();
+            setExpandedState();
             if (window.innerWidth > 992) {
                 closeMobileSidebar();
             }
         });
 
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && window.innerWidth <= 992 && document.documentElement.classList.contains('sa-mobile-sidebar-open')) {
+            if (event.key === 'Escape' && window.innerWidth <= 992 && document.documentElement.classList.contains('mobile-sidebar-open')) {
                 closeMobileSidebar();
             }
         });
+
+        syncForViewport();
+        setExpandedState();
 
         const overlay = document.getElementById('tenant-status-confirm');
         const messageEl = document.getElementById('tenant-confirm-message');

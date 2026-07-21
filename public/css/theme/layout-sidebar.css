@@ -39,6 +39,16 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+    z-index: 20;
+}
+
+.neo-global-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 14px 14px;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .neo-global-brand {
@@ -49,14 +59,7 @@
     font-size: 36px;
     letter-spacing: -0.02em;
     text-decoration: none;
-}
-
-.neo-global-brand-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 6px 14px 14px;
-    gap: 8px;
+    line-height: 1;
 }
 
 .neo-global-brand-mini {
@@ -90,6 +93,12 @@
 
 .neo-sidebar-toggle .glyphicon {
     font-size: 13px;
+    transition: transform .18s ease;
+}
+
+.neo-sidebar-toggle__icon {
+    width: 13px;
+    height: 13px;
     transition: transform .18s ease;
 }
 
@@ -237,20 +246,34 @@ html.sidebar-collapsed .neo-global-brand-mini {
 html.sidebar-collapsed .neo-global-brand-row {
     justify-content: center;
     flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 8px 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+html.sidebar-collapsed .neo-global-brand {
+    font-size: 30px;
 }
 
 html.sidebar-collapsed .neo-sidebar-toggle .glyphicon {
     transform: rotate(180deg);
 }
 
+html.sidebar-collapsed .neo-sidebar-toggle__icon {
+    transform: rotate(180deg);
+}
+
 html.sidebar-collapsed .neo-global-menu {
-    padding: 0;
+    padding: 4px 0 0;
 }
 
 html.sidebar-collapsed .neo-global-menu-item {
     justify-content: center;
     min-height: 42px;
     padding: 8px 0;
+    margin: 0 6px;
     border-radius: 8px;
     border-left: 0;
     border-right: 0;
@@ -277,7 +300,11 @@ html.sidebar-collapsed .neo-global-menu-item.is-active {
 }
 
 html.sidebar-collapsed .neo-sidebar-toggle {
-    right: 8px;
+    position: static;
+    top: auto;
+    right: auto;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 @media (max-width: 992px) {
