@@ -77,6 +77,7 @@ use App\Models\Employee;
             },
             onLoadSuccess: function(response) {
                 $('a.rollover').imgPreview({
+                    srcAttr: 'data-image-src',
                     imgCSS: {
                         width: 200
                     },
@@ -84,7 +85,34 @@ use App\Models\Employee;
                         top: 10,
                         left: -210
                     }
-                })
+                });
+            }
+        });
+
+        const $lightbox = $('#item_image_lightbox');
+        const $lightboxImg = $lightbox.find('.neo-image-lightbox__img');
+
+        const closeItemImageLightbox = function() {
+            $lightbox.removeClass('is-open').attr('aria-hidden', 'true').attr('hidden', 'hidden');
+            $lightboxImg.attr('src', '');
+        };
+
+        $(document).on('click', '.js-item-image-lightbox', function(event) {
+            event.preventDefault();
+            const imageSrc = $(this).data('image-src');
+            if (!imageSrc) {
+                return;
+            }
+
+            $lightboxImg.attr('src', imageSrc);
+            $lightbox.removeAttr('hidden').addClass('is-open').attr('aria-hidden', 'false');
+        });
+
+        $lightbox.on('click', '.neo-image-lightbox__close, .neo-image-lightbox__backdrop', closeItemImageLightbox);
+
+        $(document).on('keydown', function(event) {
+            if (event.key === 'Escape' && $lightbox.hasClass('is-open')) {
+                closeItemImageLightbox();
             }
         });
     });
@@ -140,5 +168,13 @@ use App\Models\Employee;
         <table id="table"></table>
     </div>
 </section>
+
+<div id="item_image_lightbox" class="neo-image-lightbox" aria-hidden="true" hidden>
+    <div class="neo-image-lightbox__backdrop" aria-hidden="true"></div>
+    <div class="neo-image-lightbox__dialog" role="dialog" aria-modal="true" aria-label="<?= esc(lang('Items.image')) ?>">
+        <button type="button" class="neo-image-lightbox__close" aria-label="<?= esc(lang('Common.close')) ?>">&times;</button>
+        <img class="neo-image-lightbox__img" src="" alt="<?= esc(lang('Items.image')) ?>">
+    </div>
+</div>
 
 <?= view('partial/footer') ?>
