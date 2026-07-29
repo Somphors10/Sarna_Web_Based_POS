@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Telegram_lib;
 use App\Models\Subscription_request;
 use Config\OSPOS;
 
@@ -98,7 +99,7 @@ class Saas extends BaseController
         }
 
         $request_model = model(Subscription_request::class);
-        $request_model->insert([
+        $request_id = $request_model->insert([
             'company_name' => (string)$this->request->getPost('company_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
             'tenant_code' => $tenant_code,
             'owner_first_name' => (string)$this->request->getPost('owner_first_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
@@ -112,6 +113,23 @@ class Saas extends BaseController
             'status' => 'pending',
             'notes' => 'Submitted from website signup flow'
         ]);
+
+        if ($request_id !== false) {
+            (new Telegram_lib())->notify_new_subscription_request([
+                'request_id'        => $request_id,
+                'company_name'      => (string)$this->request->getPost('company_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'tenant_code'       => $tenant_code,
+                'owner_first_name'  => (string)$this->request->getPost('owner_first_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'owner_last_name'   => (string)$this->request->getPost('owner_last_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'owner_email'       => (string)$this->request->getPost('owner_email', FILTER_SANITIZE_EMAIL),
+                'owner_phone'       => (string)$this->request->getPost('owner_phone', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'owner_username'    => $owner_username,
+                'payment_reference' => (string)$this->request->getPost('payment_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'plan_name'         => (string)($plan['plan_name'] ?? $plan['name'] ?? 'POS Monthly'),
+                'plan_price'        => (float)($plan['price_monthly'] ?? 0),
+                'review_url'        => site_url('super-admin/requests'),
+            ]);
+        }
 
         return view('saas/register_success');
     }
