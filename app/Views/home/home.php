@@ -36,13 +36,17 @@ $summary_labels = [
         <?php if (!empty($kpis)): ?>
             <div class="neo-kpi-grid">
                 <?php foreach ($kpis as $kpi): ?>
-                    <div class="neo-kpi-card">
+                    <?php $kpi_tag = !empty($kpi['report_url']) ? 'a' : 'div'; ?>
+                    <<?= $kpi_tag ?> class="neo-kpi-card<?= !empty($kpi['report_url']) ? ' neo-kpi-card--link' : '' ?>"<?= !empty($kpi['report_url']) ? ' href="' . esc($kpi['report_url']) . '"' : '' ?>>
                         <span class="neo-kpi-label"><?= esc($kpi['label']) ?></span>
                         <strong class="neo-kpi-value"><?= esc($kpi['value']) ?></strong>
                         <?php if (!empty($kpi['hint'])): ?>
                             <span class="neo-kpi-hint"><?= esc($kpi['hint']) ?></span>
                         <?php endif; ?>
-                    </div>
+                        <?php if (!empty($kpi['report_url'])): ?>
+                            <span class="neo-kpi-link-hint"><?= esc(lang('Common.dashboard_view_report')) ?> →</span>
+                        <?php endif; ?>
+                    </<?= $kpi_tag ?>>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
@@ -54,7 +58,11 @@ $summary_labels = [
                 <?php foreach ($charts as $chart): ?>
                     <?php
                         $is_area = ($chart['chart_type'] ?? '') === 'home/charts/area';
+                        $is_payments = ($chart['chart_type'] ?? '') === 'home/charts/hbar';
                         $card_class = 'neo-chart-card' . ($is_area ? ' neo-chart-card--area' : ' neo-chart-card--bar');
+                        if ($is_payments) {
+                            $card_class .= ' neo-chart-card--payments';
+                        }
                         $chart_total = 0;
 
                         if (!empty($chart['series_data_1'])) {
@@ -69,7 +77,10 @@ $summary_labels = [
                         }
                     ?>
 
-                    <article class="<?= esc($card_class) ?>">
+                    <article class="<?= esc($card_class) ?><?= !empty($chart['report_url']) ? ' neo-chart-card--link' : '' ?>">
+                        <?php if (!empty($chart['report_url'])): ?>
+                            <a class="neo-chart-card__stretched-link" href="<?= esc($chart['report_url']) ?>" aria-label="<?= esc(lang('Common.dashboard_view_report') . ': ' . $chart['title']) ?>"></a>
+                        <?php endif; ?>
                         <div class="neo-chart-card__header">
                             <div class="neo-chart-card__heading">
                                 <div class="neo-chart-card__title-row">
@@ -101,9 +112,11 @@ $summary_labels = [
                         </div>
 
                         <?php if (!empty($chart['has_data'])): ?>
-                            <div class="neo-chart-card__body">
-                                <canvas id="<?= esc($chart['chart_id']) ?>" class="neo-chart-canvas" aria-label="<?= esc($chart['title']) ?>"></canvas>
-                            </div>
+                            <?php if ($is_area): ?>
+                                <div class="neo-chart-card__body">
+                                    <canvas id="<?= esc($chart['chart_id']) ?>" class="neo-chart-canvas" aria-label="<?= esc($chart['title']) ?>"></canvas>
+                                </div>
+                            <?php endif; ?>
 
                             <?php if (!$is_area && !empty($chart['labels_1'])): ?>
                                 <?php
@@ -133,20 +146,28 @@ $summary_labels = [
                             <?php endif; ?>
 
                             <?php
-                            echo view($chart['chart_type'], [
-                                'labels_1'      => $chart['labels_1'],
-                                'series_data_1' => $chart['series_data_1'],
-                                'show_currency' => $chart['show_currency'] ?? false,
-                                'config'        => $config,
-                                'chart_id'      => $chart['chart_id'],
-                                'chart_var'     => $chart['chart_var'],
-                            ]);
+                            if ($is_area) {
+                                echo view($chart['chart_type'], [
+                                    'labels_1'      => $chart['labels_1'],
+                                    'series_data_1' => $chart['series_data_1'],
+                                    'show_currency' => $chart['show_currency'] ?? false,
+                                    'config'        => $config,
+                                    'chart_id'      => $chart['chart_id'],
+                                    'chart_var'     => $chart['chart_var'],
+                                ]);
+                            }
                             ?>
                         <?php else: ?>
                             <div class="neo-chart-empty">
                                 <p>No data for this period.</p>
                                 <span>Charts appear after you record sales or transactions.</span>
                             </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($chart['report_url'])): ?>
+                            <footer class="neo-chart-card__footer">
+                                <span class="neo-chart-card__footer-link"><?= esc(lang('Common.dashboard_view_report')) ?> →</span>
+                            </footer>
                         <?php endif; ?>
                     </article>
                 <?php endforeach; ?>

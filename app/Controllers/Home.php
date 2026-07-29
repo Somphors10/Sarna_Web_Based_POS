@@ -53,19 +53,22 @@ class Home extends Secure_Controller
             $sales_rows = $summary_sales->getData($sale_inputs);
 
             $kpis[] = [
-                'label' => lang('Reports.revenue'),
-                'value' => to_currency($period_summary['total'] ?? 0),
-                'hint'  => lang('Common.dashboard_last_30_days'),
+                'label'      => lang('Reports.revenue'),
+                'value'      => to_currency($period_summary['total'] ?? 0),
+                'hint'       => lang('Common.dashboard_last_30_days'),
+                'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
             ];
             $kpis[] = [
-                'label' => lang('Reports.profit'),
-                'value' => to_currency($period_summary['profit'] ?? 0),
-                'hint'  => lang('Common.dashboard_last_30_days'),
+                'label'      => lang('Reports.profit'),
+                'value'      => to_currency($period_summary['profit'] ?? 0),
+                'hint'       => lang('Common.dashboard_last_30_days'),
+                'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
             ];
             $kpis[] = [
-                'label' => lang('Common.dashboard_today_sales'),
-                'value' => to_currency($today_summary['total'] ?? 0),
-                'hint'  => to_date(strtotime($today)),
+                'label'      => lang('Common.dashboard_today_sales'),
+                'value'      => to_currency($today_summary['total'] ?? 0),
+                'hint'       => to_date(strtotime($today)),
+                'report_url' => site_url("reports/detailed_sales/$today/$today/complete/all"),
             ];
 
             $sales_labels = [];
@@ -125,7 +128,7 @@ class Home extends Secure_Controller
                     'has_data'      => true,
                     'summary'       => $payment_summary,
                     'summary_keys'  => ['total'],
-                    'report_url'    => site_url("reports/graphical_summary_payments/$start_date/$end_date/complete/all"),
+                    'report_url'    => site_url("reports/summary_payments/$start_date/$end_date"),
                 ];
             }
         }
@@ -141,9 +144,10 @@ class Home extends Secure_Controller
             $expense_summary = $summary_expenses->getSummaryData($expense_inputs);
 
             $kpis[] = [
-                'label' => lang('Common.dashboard_expenses'),
-                'value' => to_currency($expense_summary['expenses_total_amount'] ?? 0),
-                'hint'  => lang('Common.dashboard_last_30_days'),
+                'label'      => lang('Common.dashboard_expenses'),
+                'value'      => to_currency($expense_summary['expenses_total_amount'] ?? 0),
+                'hint'       => lang('Common.dashboard_last_30_days'),
+                'report_url' => site_url("reports/summary_expenses_categories/$start_date/$end_date/complete"),
             ];
         }
 

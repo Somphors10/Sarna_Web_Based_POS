@@ -1194,13 +1194,14 @@ class Reports extends Secure_Controller
         }
 
         $data = [
-            'title'          => lang('Reports.payments_summary_report'),
-            'subtitle'       => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
-            'chart_type'     => 'reports/graphs/pie',
-            'labels_1'       => $labels,
-            'series_data_1'  => $series,
-            'summary_data_1' => $summary,
-            'show_currency'  => true
+            'title'              => lang('Reports.payments_summary_report'),
+            'subtitle'           => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
+            'chart_type'         => 'reports/graphs/payment_breakdown',
+            'hide_chart_container' => true,
+            'labels_1'           => $labels,
+            'series_data_1'      => $series,
+            'summary_data_1'     => $summary,
+            'show_currency'      => true
         ];
 
         echo view('reports/graphical', $data);

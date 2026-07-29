@@ -3,7 +3,7 @@
  * @var array $config
  * @var array|null $plan
  */
-$monthly_price = 10.00;
+$monthly_price = (float) ($plan['price_monthly'] ?? 20.00);
 $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;
 ?>
@@ -14,7 +14,7 @@ $company = $brand_name;
     <base href="<?= base_url() ?>">
     <title><?= $company ?> | Cloud POS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Modern cloud POS for sales, inventory, and team management. $10/month.">
+    <meta name="description" content="Modern cloud POS for sales, inventory, and team management. $<?= number_format($monthly_price, 0) ?>/month.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

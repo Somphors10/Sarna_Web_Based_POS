@@ -10,79 +10,68 @@
 
 $chart_id = $chart_id ?? 'chart1';
 $chart_var = $chart_var ?? 'chart';
+
+if (empty($series_data_1)) {
+    return;
+}
+
+$palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#64748b'];
 ?>
 
 <script type="text/javascript">
-    // Labels and data series
-    var data = {
-        labels: <?= json_encode(esc($labels_1, 'js')) ?>,
-        series: <?= json_encode(esc($series_data_1, 'js')) ?>
-    };
+    (function () {
+        var data = {
+            labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            series: <?= json_encode($series_data_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+        };
 
-    // We are setting a few options for our chart and override the defaults
-    var options = {
+        var palette = <?= json_encode($palette, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 
-        // Specify a fixed width for the chart as a string (i.e. '100px' or '50%')
-        width: '100%',
+        var options = {
+            width: '100%',
+            height: '280px',
+            donut: true,
+            donutWidth: 52,
+            startAngle: 270,
+            chartPadding: 24,
+            labelPosition: 'outside',
+            labelDirection: 'explode',
+            labelInterpolationFnc: function (value) {
+                return Math.round(value) + '%';
+            },
+            plugins: [
+                Chartist.plugins.tooltip({
+                    transformTooltipTextFnc: function (value) {
+                        <?php if ($show_currency): ?>
+                            <?php if (is_right_side_currency_symbol()): ?>
+                                return value + '<?= esc($config['currency_symbol'], 'js') ?>';
+                            <?php else: ?>
+                                return '<?= esc($config['currency_symbol'], 'js') ?>' + value;
+                            <?php endif; ?>
+                        <?php else: ?>
+                            return value;
+                        <?php endif; ?>
+                    }
+                })
+            ]
+        };
 
-        // Specify a fixed height for the chart as a string (i.e. '100px' or '50%')
-        height: '100%',
+        var chart = new Chartist.Pie('#<?= esc($chart_id, 'js') ?>', data, options);
 
-        // Padding of the chart drawing area to the container element and labels as a number or padding object {top: 5, right: 5, bottom: 5, left: 5}
-        chartPadding: 20,
+        chart.on('draw', function (ctx) {
+            if (ctx.type === 'slice') {
+                var color = palette[ctx.index % palette.length];
 
-        // This option can be set to 'inside', 'outside' or 'center'.
-        // Show the labels on the border with the pie chart
-        labelPosition: 'outside',
-        labelDirection: 'explode',
+                ctx.element.attr({
+                    style: 'fill: ' + color + '; stroke: #ffffff; stroke-width: 3px;'
+                });
+            }
 
-        plugins: [
-            Chartist.plugins.tooltip({
-                transformTooltipTextFnc: function(value) {
-                    <?php
-                    if ($show_currency) {
-                        if (is_right_side_currency_symbol()) {
-                    ?>
-                            return value + '<?= esc($config['currency_symbol'], 'js') ?>';
-                        <?php } else { ?>
-                            return '<?= esc($config['currency_symbol'], 'js') ?>' + value;
-                        <?php
-                        }
-                    } else {
-                        ?>
-                        return value;
-                    <?php } ?>
-                }
-            })
-        ]
-    };
-
-    var responsiveOptions = [
-        ['screen and (min-width: 640px)', {
-            height: '80%',
-            chartPadding: 20
-
-        }]
-        /* ,
-         * ['screen and (min-width: 1024px)', {
-         *     labelOffset: 80,
-         *     chartPadding: 20
-         * }]
-         */
-    ];
-
-    var <?= esc($chart_var, 'js') ?> = new Chartist.Pie('#<?= esc($chart_id, 'js') ?>', data, options, responsiveOptions);
-
-    // Generate random colours for the pie sliced because Chartist is currently limited to 15 colours
-    <?= esc($chart_var, 'js') ?>.on('draw', function(data) {
-        if (data.type === 'slice') {
-            var r = Math.floor(Math.random() * 256);
-            var g = Math.floor(Math.random() * 256);
-            var b = Math.floor(Math.random() * 256);
-
-            data.element.attr({
-                style: 'fill: #' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
-            });
-        }
-    });
+            if (ctx.type === 'label') {
+                ctx.element.attr({
+                    style: 'fill: #334155; font-size: 12px; font-weight: 600;'
+                });
+            }
+        });
+    })();
 </script>

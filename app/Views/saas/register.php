@@ -5,7 +5,7 @@
  * @var bool $has_errors
  * @var $validation
  */
-$monthly_price = 10.00;
+$monthly_price = (float) ($plan['price_monthly'] ?? 20.00);
 $plan_id = (int)($plan['plan_id'] ?? 0);
 $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;

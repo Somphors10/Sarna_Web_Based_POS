@@ -1080,7 +1080,8 @@ CREATE TABLE `wbpos_plans` (
 
 INSERT INTO `wbpos_plans` (`plan_id`, `plan_code`, `plan_name`, `price_monthly`, `max_users`, `max_locations`, `max_items`, `is_active`, `created_at`) VALUES
 (1, 'starter', 'Starter', 0.00, 5, 1, 5000, 1, '2026-04-27 21:23:16'),
-(2, 'basic', 'Basic', 19.00, 5, 1, 5000, 1, '2026-04-27 23:56:40');
+(2, 'basic', 'Basic', 20.00, 5, 1, 5000, 1, '2026-04-27 23:56:40'),
+(3, 'pos_monthly', 'POS Subscription', 20.00, 50, 5, 50000, 1, '2026-06-09 00:00:00');
 
 -- --------------------------------------------------------
 

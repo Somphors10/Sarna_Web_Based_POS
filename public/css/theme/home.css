@@ -83,6 +83,36 @@
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
+a.neo-kpi-card,
+a.neo-kpi-card:hover,
+a.neo-kpi-card:focus {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.neo-kpi-card:focus-visible {
+    outline: 2px solid var(--wbpos-primary);
+    outline-offset: 2px;
+}
+
+.neo-kpi-link-hint {
+    display: block;
+    margin-top: 8px;
+    color: var(--wbpos-primary);
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.neo-kpi-card--link:hover .neo-kpi-link-hint,
+.neo-kpi-card--link:focus-visible .neo-kpi-link-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .neo-kpi-label {
     display: block;
     color: #64748b;
@@ -168,6 +198,43 @@
 
 .neo-chart-card--bar::before {
     background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.neo-chart-card--link {
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.neo-chart-card--link:hover {
+    transform: translateY(-2px);
+    border-color: #ddd6fe;
+    box-shadow: 0 10px 28px rgba(124, 58, 237, 0.1);
+}
+
+.neo-chart-card__stretched-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+}
+
+.neo-chart-card__stretched-link:focus-visible {
+    outline: 2px solid var(--wbpos-primary);
+    outline-offset: 2px;
+}
+
+.neo-chart-card__footer {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    padding: 10px 18px 14px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.neo-chart-card__footer-link {
+    color: var(--wbpos-primary);
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .neo-chart-card__header {
@@ -390,6 +457,19 @@
     height: 100%;
     border-radius: 999px;
     transition: width 0.4s ease;
+}
+
+.neo-chart-card--payments .neo-pay-list {
+    margin-top: 4px;
+    padding-top: 0;
+    border-top: none;
+}
+
+.neo-chart-card--payments .neo-pay-item {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #e8edf4;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .neo-chart-empty {

@@ -4,6 +4,7 @@
  * @var string $subtitle
  * @var string $chart_type
  * @var array $summary_data_1
+ * @var bool $hide_chart_container
  */
 ?>
 
@@ -28,7 +29,9 @@
         </div>
     </header>
 
-    <div class="ct-chart ct-golden-section neo-report-chart" id="chart1"></div>
+    <?php if (empty($hide_chart_container)): ?>
+        <div class="ct-chart ct-golden-section neo-report-chart" id="chart1"></div>
+    <?php endif; ?>
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
