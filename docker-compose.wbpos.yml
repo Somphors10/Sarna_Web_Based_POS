@@ -1,0 +1,65 @@
+# WBPOS local Docker stack
+# Usage:
+#   copy .env.docker.example to .env.docker   (first time only)
+#   docker compose -f docker-compose.wbpos.yml up -d --build
+#   open http://localhost:8080
+
+volumes:
+  wbpos_mysql_data:
+    driver: local
+  wbpos_uploads:
+    driver: local
+  wbpos_logs:
+    driver: local
+
+networks:
+  wbpos_net:
+
+services:
+  mysql:
+    image: mariadb:10.5
+    container_name: wbpos-mysql
+    restart: unless-stopped
+    networks:
+      - wbpos_net
+    volumes:
+      - wbpos_mysql_data:/var/lib/mysql
+      - ./app/Database/wbpos.sql:/docker-entrypoint-initdb.d/01-wbpos.sql:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: wbpos_root
+      MYSQL_DATABASE: wbpos
+      MYSQL_USER: wbpos
+      MYSQL_PASSWORD: wbpos123
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uwbpos", "-pwbpos123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  wbpos:
+    build:
+      context: .
+      target: wbpos
+    image: wbpos:latest
+    container_name: wbpos
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    networks:
+      - wbpos_net
+    volumes:
+      - ./.env.docker:/app/.env:ro
+      - wbpos_uploads:/app/public/uploads
+      - wbpos_logs:/app/writable/logs
+      - ./writable/cache:/app/writable/cache
+    environment:
+      CI_ENVIRONMENT: development
+      MYSQL_HOST_NAME: mysql
+      MYSQL_USERNAME: wbpos
+      MYSQL_PASSWORD: wbpos123
+      MYSQL_DB_NAME: wbpos
+      PHP_TIMEZONE: Asia/Phnom_Penh

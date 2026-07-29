@@ -36,3 +36,13 @@ RUN yes | pecl install xdebug \
     && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
+
+FROM ospos AS wbpos
+LABEL org.opencontainers.image.title="WBPOS"
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN apt-get update && apt-get install -y git unzip libzip-dev \
+    && docker-php-ext-install zip \
+    && composer install -d/app --no-dev --optimize-autoloader \
+    && sed -i 's|RewriteBase /opensourcepos/public/|RewriteBase /|g' /app/public/.htaccess \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
