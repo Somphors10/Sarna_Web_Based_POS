@@ -430,10 +430,18 @@
                             <td><?= esc($request['payment_reference']) ?></td>
                             <td>
                                 <div class="sa-row-actions">
-                                    <?= form_open('super-admin/approve-request/' . (int)$request['request_id']) ?>
+                                    <?= form_open('super-admin/approve-request/' . (int)$request['request_id'], [
+                                        'class' => 'js-confirm-action-form',
+                                        'data-action' => 'approve',
+                                        'data-context' => 'registration',
+                                    ]) ?>
                                     <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
-                                    <?= form_open('super-admin/reject-request/' . (int)$request['request_id']) ?>
+                                    <?= form_open('super-admin/reject-request/' . (int)$request['request_id'], [
+                                        'class' => 'js-confirm-action-form',
+                                        'data-action' => 'reject',
+                                        'data-context' => 'registration',
+                                    ]) ?>
                                     <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
                                     <?= form_close() ?>
                                 </div>
@@ -478,10 +486,18 @@
                             <td><?= esc($reset['created_at'] ?? '') ?></td>
                             <td>
                                 <div class="sa-row-actions">
-                                    <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id']) ?>
+                                    <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id'], [
+                                        'class' => 'js-confirm-action-form',
+                                        'data-action' => 'approve',
+                                        'data-context' => 'password-reset',
+                                    ]) ?>
                                     <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
-                                    <?= form_open('super-admin/reject-password-reset/' . (int)$reset['request_id']) ?>
+                                    <?= form_open('super-admin/reject-password-reset/' . (int)$reset['request_id'], [
+                                        'class' => 'js-confirm-action-form',
+                                        'data-action' => 'reject',
+                                        'data-context' => 'password-reset',
+                                    ]) ?>
                                     <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
                                     <?= form_close() ?>
                                 </div>
@@ -495,6 +511,17 @@
         </section>
         <?php endif; ?>
     </main>
+</div>
+
+<div id="request-action-confirm" class="sa-modal-overlay" aria-hidden="true">
+    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="request-action-confirm-title">
+        <div class="sa-modal__head" id="request-action-confirm-title">Confirm action</div>
+        <div class="sa-modal__body" id="request-action-confirm-message">Are you sure?</div>
+        <div class="sa-modal__actions">
+            <button type="button" class="sa-btn sa-btn--ghost" id="request-action-confirm-cancel">Cancel</button>
+            <button type="button" class="sa-btn sa-btn--primary" id="request-action-confirm-continue">Confirm</button>
+        </div>
+    </div>
 </div>
 
 <div id="tenant-status-confirm" class="sa-modal-overlay" aria-hidden="true">
@@ -606,10 +633,16 @@
         const logoutOverlay = document.getElementById('super-admin-logout-confirm');
         const logoutCancelBtn = document.getElementById('logout-confirm-cancel');
         const logoutContinueBtn = document.getElementById('logout-confirm-continue');
+        const actionOverlay = document.getElementById('request-action-confirm');
+        const actionTitleEl = document.getElementById('request-action-confirm-title');
+        const actionMessageEl = document.getElementById('request-action-confirm-message');
+        const actionCancelBtn = document.getElementById('request-action-confirm-cancel');
+        const actionContinueBtn = document.getElementById('request-action-confirm-continue');
         const searchInput = document.getElementById('super_admin_search');
         const statusFilter = document.getElementById('super_admin_status_filter');
         let pendingForm = null;
         let pendingLogoutHref = null;
+        let pendingActionForm = null;
 
         const closeModal = function() {
             overlay.classList.remove('is-open');
@@ -641,6 +674,54 @@
             logoutOverlay.classList.add('is-open');
             logoutOverlay.setAttribute('aria-hidden', 'false');
         };
+
+        const closeActionModal = function() {
+            if (!actionOverlay) {
+                return;
+            }
+
+            actionOverlay.classList.remove('is-open');
+            actionOverlay.setAttribute('aria-hidden', 'true');
+            pendingActionForm = null;
+        };
+
+        const openActionModal = function(form) {
+            if (!actionOverlay || !actionMessageEl || !actionTitleEl || !actionContinueBtn) {
+                return;
+            }
+
+            const action = form.dataset.action || 'approve';
+            const context = form.dataset.context || 'registration';
+            const isApprove = action === 'approve';
+
+            actionTitleEl.textContent = isApprove ? 'Confirm approval' : 'Confirm rejection';
+
+            if (context === 'password-reset') {
+                actionMessageEl.textContent = isApprove
+                    ? 'Are you sure you want to approve this password reset?'
+                    : 'Are you sure you want to reject this password reset?';
+            } else {
+                actionMessageEl.textContent = isApprove
+                    ? 'Are you sure you want to approve this company registration?'
+                    : 'Are you sure you want to reject this company registration?';
+            }
+
+            actionContinueBtn.textContent = isApprove ? 'Approve' : 'Reject';
+            actionContinueBtn.className = isApprove
+                ? 'sa-btn sa-btn--success'
+                : 'sa-btn sa-btn--danger-solid';
+
+            pendingActionForm = form;
+            actionOverlay.classList.add('is-open');
+            actionOverlay.setAttribute('aria-hidden', 'false');
+        };
+
+        document.querySelectorAll('.js-confirm-action-form').forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                openActionModal(form);
+            });
+        });
 
         document.querySelectorAll('.js-tenant-status-form').forEach(function(form) {
             form.addEventListener('submit', function(event) {
@@ -701,6 +782,31 @@
             });
         }
 
+        if (actionContinueBtn) {
+            actionContinueBtn.addEventListener('click', function() {
+                if (!pendingActionForm) {
+                    closeActionModal();
+                    return;
+                }
+
+                const formToSubmit = pendingActionForm;
+                closeActionModal();
+                formToSubmit.submit();
+            });
+        }
+
+        if (actionCancelBtn) {
+            actionCancelBtn.addEventListener('click', closeActionModal);
+        }
+
+        if (actionOverlay) {
+            actionOverlay.addEventListener('click', function(event) {
+                if (event.target === actionOverlay) {
+                    closeActionModal();
+                }
+            });
+        }
+
         if (saveBtn) {
             saveBtn.addEventListener('click', function() {
                 if (!pendingForm) {
@@ -732,6 +838,9 @@
             }
             if (logoutOverlay && event.key === 'Escape' && logoutOverlay.classList.contains('is-open')) {
                 closeLogoutModal();
+            }
+            if (actionOverlay && event.key === 'Escape' && actionOverlay.classList.contains('is-open')) {
+                closeActionModal();
             }
         });
     });
