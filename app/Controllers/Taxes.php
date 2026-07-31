@@ -132,65 +132,17 @@ class Taxes extends Secure_Controller
     }
 
     /**
-     * @param int $tax_code
+     * @param int|string $tax_code
      * @return void
      */
-    public function getView_tax_codes(int $tax_code = NEW_ENTRY): void
+    public function getView_tax_codes(int|string $tax_code = NEW_ENTRY): void
     {
-        $tax_code_info = $this->tax->get_info($tax_code);
+        $tax_code_id = ($tax_code == NEW_ENTRY) ? NEW_ENTRY : ($this->tax->resolve_tax_code_id($tax_code) ?? NEW_ENTRY);
 
-        $default_tax_category_id = 1; // Tax category id is always the default tax category    // TODO: Replace 1 with constant
-        $default_tax_category = $this->tax->get_tax_category($default_tax_category_id);    // TODO: this variable is never used in the code.
-
-        $tax_rate_info = $this->tax->get_rate_info($tax_code, $default_tax_category_id);
-
-        if ($this->config['tax_included']) {
-            $data['default_tax_type'] = Tax_lib::TAX_TYPE_INCLUDED;
-        } else {
-            $data['default_tax_type'] = Tax_lib::TAX_TYPE_EXCLUDED;
-        }
-
-        $data['rounding_options'] = Rounding_mode::get_rounding_options();
-        $data['html_rounding_options'] = $this->get_html_rounding_options();
-
-        if ($tax_code == NEW_ENTRY) {   // TODO: Duplicated code
-            $data['tax_code'] = '';
-            $data['tax_code_name'] = '';
-            $data['tax_code_type'] = '0';
-            $data['city'] = '';
-            $data['state'] = '';
-            $data['tax_rate'] = '0.0000';
-            $data['rate_tax_code'] = '';
-            $data['rate_tax_category_id'] = 1;
-            $data['tax_category'] = '';
-            $data['add_tax_category'] = '';
-            $data['rounding_code'] = '0';
-        } else {
-            $data['tax_code'] = $tax_code;
-            $data['tax_code_name'] = $tax_code_info->tax_code_name;
-            $data['tax_code_type'] = $tax_code_info->tax_code_type;
-            $data['city'] = $tax_code_info->city;
-            $data['state'] = $tax_code_info->state;
-            $data['rate_tax_code'] = $tax_code_info->rate_tax_code;
-            $data['rate_tax_category_id'] = $tax_code_info->rate_tax_category_id;
-            $data['tax_category'] = $tax_code_info->tax_category;
-            $data['add_tax_category'] = '';
-            $data['tax_rate'] = $tax_rate_info->tax_rate;
-            $data['rounding_code'] = $tax_rate_info->rounding_code;
-        }
-
-        $tax_rates = [];
-        foreach ($this->tax->get_tax_code_rate_exceptions($tax_code) as $tax_code_rate) {    // TODO: get_tax_code_rate_exceptions doesn't exist.  This was deleted by @steveireland in https://github.com/opensourcepos/opensourcepos/commit/32204698379c230f2a6756655f40334308023de9#diff-e746bab6720cf5dbf855de6cda68f7aca9ecea7ddd5a39bb852e9b9047a7a838L435 but it's unclear if that was on purpose or accidental.
-            $tax_rate_row = [];
-            $tax_rate_row['rate_tax_category_id'] = $tax_code_rate['rate_tax_category_id'];
-            $tax_rate_row['tax_category'] = $tax_code_rate['tax_category'];
-            $tax_rate_row['tax_rate'] = $tax_code_rate['tax_rate'];
-            $tax_rate_row['rounding_code'] = $tax_code_rate['rounding_code'];
-
-            $tax_rates[] = $tax_rate_row;
-        }
-
-        $data['tax_rates'] = $tax_rates;
+        $data = [
+            'tax_code_info' => $this->tax_code->get_info($tax_code_id == NEW_ENTRY ? null : $tax_code_id),
+            'tax_rates'     => ($tax_code_id == NEW_ENTRY) ? [] : $this->tax->get_tax_code_rate_exceptions($tax_code_id),
+        ];
 
         echo view('taxes/tax_code_form', $data);
     }

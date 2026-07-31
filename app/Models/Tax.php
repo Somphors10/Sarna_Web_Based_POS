@@ -283,6 +283,76 @@ class Tax extends Model
     }
 
     /**
+     * Resolve a tax code identifier (numeric id or code string) to tax_code_id.
+     */
+    public function resolve_tax_code_id(string|int|null $tax_code): ?int
+    {
+        if ($tax_code === null || $tax_code === '' || $tax_code == NEW_ENTRY) {
+            return null;
+        }
+
+        $builder = $this->db->table('tax_codes');
+        $this->scopeModelTenant($builder, 'tax_codes');
+        $builder->select('tax_code_id');
+        $builder->where('deleted', 0);
+
+        if (is_numeric($tax_code)) {
+            $builder->groupStart();
+            $builder->where('tax_code_id', (int) $tax_code);
+            $builder->orWhere('tax_code', (string) $tax_code);
+            $builder->groupEnd();
+        } else {
+            $builder->where('tax_code', (string) $tax_code);
+        }
+
+        $row = $builder->get()->getRow();
+
+        return $row ? (int) $row->tax_code_id : null;
+    }
+
+    /**
+     * Tax rates for non-default categories assigned to a tax code (legacy tax code form support).
+     */
+    public function get_tax_code_rate_exceptions(string|int|null $tax_code): array
+    {
+        $tax_code_id = $this->resolve_tax_code_id($tax_code);
+        if ($tax_code_id === null) {
+            return [];
+        }
+
+        $builder = $this->db->table('tax_rates');
+        $this->scopeModelTenant($builder, 'tax_rates');
+        $builder->select('tax_rates.rate_tax_category_id');
+        $builder->select('tax_categories.tax_category');
+        $builder->select('tax_rates.tax_rate');
+        $builder->select('tax_rates.tax_rounding_code AS rounding_code');
+        $builder->join('tax_categories', 'tax_rates.rate_tax_category_id = tax_categories.tax_category_id');
+        $builder->where('tax_rates.rate_tax_code_id', $tax_code_id);
+        $builder->where('tax_rates.rate_tax_category_id !=', 1);
+        $builder->orderBy('tax_categories.tax_category', 'asc');
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * @return array<int, array{value: int, label: string}>
+     */
+    public function get_search_suggestions(string $search, int $limit = 25): array
+    {
+        $suggestions = [];
+        $result = $this->search($search, $limit, 0, 'tax_code_name', 'asc');
+
+        foreach ($result->getResult() as $row) {
+            $suggestions[] = [
+                'value' => (int) $row->tax_rate_id,
+                'label' => trim($row->tax_code . ' ' . $row->tax_code_name . ' ' . $row->tax_category),
+            ];
+        }
+
+        return $suggestions;
+    }
+
+    /**
      * @param string $tax_code_type
      * @return string
      */

@@ -34,9 +34,9 @@ function get_tax_code_data_row($tax_code_row): array
         'tax_code_type' => $tax_code_row->tax_code_type,
         'city'          => $tax_code_row->city,
         'state'         => $tax_code_row->state,
-        'view'          => view_record_anchor("$controller_name/view_tax_codes/$tax_code_row->tax_code", lang(ucfirst($controller_name) . ".update_tax_codes")),
+        'view'          => view_record_anchor("$controller_name/view/$tax_code_row->tax_code_id", lang(ucfirst($controller_name) . ".update_tax_codes")),
         'edit'          => anchor(
-            "$controller_name/view_tax_codes/$tax_code_row->tax_code",
+            "$controller_name/view/$tax_code_row->tax_code_id",
             '<span class="glyphicon glyphicon-edit"></span>',
             [
                 'class'           => 'modal-dlg',
