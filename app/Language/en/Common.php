@@ -31,6 +31,7 @@ return [
     "date"                           => "Date",
     "delete"                         => "Delete",
     "det"                            => "details",
+    "view_details"                   => "View details",
     "download_import_template"       => "Download Import CSV Template (CSV)",
     "edit"                           => "edit",
     "email"                          => "Email",

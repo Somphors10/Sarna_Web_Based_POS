@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=11') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=13') ?>">
 </head>
 <body class="sa-dashboard">
 <script>
@@ -334,6 +334,17 @@
                             <td>
                                 <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form']) ?>
                                 <div class="sa-row-actions">
+                                    <button type="button"
+                                            class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                            data-title="Business #<?= (int)$tenant['tenant_id'] ?>"
+                                            data-id="<?= esc((string)$tenant['tenant_id'], 'attr') ?>"
+                                            data-company="<?= esc($tenant['company_name'], 'attr') ?>"
+                                            data-code="<?= esc($tenant['tenant_code'], 'attr') ?>"
+                                            data-owner="<?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '')), 'attr') ?>"
+                                            data-username="<?= esc($tenant['username'] ?? '', 'attr') ?>"
+                                            data-status="<?= esc($tenant['status'], 'attr') ?>">
+                                        View
+                                    </button>
                                     <select class="sa-select--sm" name="status">
                                         <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>Active</option>
                                         <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
@@ -368,11 +379,12 @@
                         <th>Full Name</th>
                         <th>Email</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php if (empty($platform_admins)): ?>
-                        <tr><td colspan="5" class="sa-empty">No platform admins.</td></tr>
+                        <tr><td colspan="6" class="sa-empty">No platform admins.</td></tr>
                     <?php else: ?>
                     <?php foreach ($platform_admins as $admin): ?>
                         <?php $admin_status = strtolower((string)($admin['status'] ?? '')); ?>
@@ -384,6 +396,18 @@
                             <td><?= esc($admin['full_name']) ?></td>
                             <td><?= esc($admin['email'] ?? '') ?></td>
                             <td><span class="sa-status sa-status--<?= esc($admin_status) ?>"><?= esc($admin['status']) ?></span></td>
+                            <td>
+                                <button type="button"
+                                        class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                        data-title="Platform admin #<?= (int)$admin['admin_id'] ?>"
+                                        data-id="<?= esc((string)$admin['admin_id'], 'attr') ?>"
+                                        data-username="<?= esc($admin['username'], 'attr') ?>"
+                                        data-name="<?= esc($admin['full_name'], 'attr') ?>"
+                                        data-email="<?= esc($admin['email'] ?? '', 'attr') ?>"
+                                        data-status="<?= esc($admin['status'], 'attr') ?>">
+                                    View
+                                </button>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -430,6 +454,20 @@
                             <td><?= esc($request['payment_reference']) ?></td>
                             <td>
                                 <div class="sa-row-actions">
+                                    <button type="button"
+                                            class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                            data-title="Registration request #<?= (int)$request['request_id'] ?>"
+                                            data-company="<?= esc($request['company_name'], 'attr') ?>"
+                                            data-code="<?= esc($request['tenant_code'], 'attr') ?>"
+                                            data-owner="<?= esc(trim($request['owner_first_name'] . ' ' . $request['owner_last_name']), 'attr') ?>"
+                                            data-email="<?= esc($request['owner_email'], 'attr') ?>"
+                                            data-phone="<?= esc($request['owner_phone'] ?? '', 'attr') ?>"
+                                            data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
+                                            data-plan="<?= esc($request['plan_name'] ?? '', 'attr') ?>"
+                                            data-payment="<?= esc($request['payment_reference'], 'attr') ?>"
+                                            data-created="<?= esc($request['created_at'] ?? '', 'attr') ?>">
+                                        View
+                                    </button>
                                     <?= form_open('super-admin/approve-request/' . (int)$request['request_id'], [
                                         'class' => 'js-confirm-action-form',
                                         'data-action' => 'approve',
@@ -486,6 +524,15 @@
                             <td><?= esc($reset['created_at'] ?? '') ?></td>
                             <td>
                                 <div class="sa-row-actions">
+                                    <button type="button"
+                                            class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                            data-title="Password reset request #<?= (int)$reset['request_id'] ?>"
+                                            data-code="<?= esc($reset['tenant_code'], 'attr') ?>"
+                                            data-username="<?= esc($reset['username'], 'attr') ?>"
+                                            data-tenant="#<?= esc((string)($reset['tenant_id'] ?? ''), 'attr') ?>"
+                                            data-created="<?= esc($reset['created_at'] ?? '', 'attr') ?>">
+                                        View
+                                    </button>
                                     <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id'], [
                                         'class' => 'js-confirm-action-form',
                                         'data-action' => 'approve',
@@ -511,6 +558,16 @@
         </section>
         <?php endif; ?>
     </main>
+</div>
+
+<div id="sa-row-detail" class="sa-modal-overlay" aria-hidden="true">
+    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="sa-row-detail-title">
+        <div class="sa-modal__head" id="sa-row-detail-title">Details</div>
+        <div class="sa-modal__body sa-detail-list" id="sa-row-detail-body"></div>
+        <div class="sa-modal__actions">
+            <button type="button" class="sa-btn sa-btn--primary" id="sa-row-detail-close">Close</button>
+        </div>
+    </div>
 </div>
 
 <div id="request-action-confirm" class="sa-modal-overlay" aria-hidden="true">
@@ -832,6 +889,74 @@
             });
         }
 
+        const detailOverlay = document.getElementById('sa-row-detail');
+        const detailTitleEl = document.getElementById('sa-row-detail-title');
+        const detailBodyEl = document.getElementById('sa-row-detail-body');
+        const detailCloseBtn = document.getElementById('sa-row-detail-close');
+
+        const closeDetailModal = function() {
+            if (!detailOverlay) {
+                return;
+            }
+
+            detailOverlay.classList.remove('is-open');
+            detailOverlay.setAttribute('aria-hidden', 'true');
+        };
+
+        const openDetailModal = function(button) {
+            if (!detailOverlay || !detailTitleEl || !detailBodyEl) {
+                return;
+            }
+
+            const lines = [];
+            const map = {
+                id: 'ID',
+                company: 'Company',
+                code: 'Company code',
+                owner: 'Owner',
+                name: 'Full name',
+                email: 'Email',
+                phone: 'Phone',
+                username: 'Username',
+                plan: 'Plan',
+                payment: 'Payment reference',
+                tenant: 'Tenant',
+                status: 'Status',
+                created: 'Requested'
+            };
+
+            Object.keys(map).forEach(function(key) {
+                const value = button.dataset[key];
+                if (value) {
+                    lines.push('<div class="sa-detail-list__row"><span>' + map[key] + '</span><strong>' + value + '</strong></div>');
+                }
+            });
+
+            detailTitleEl.textContent = button.dataset.title || 'Details';
+            detailBodyEl.innerHTML = lines.join('');
+            detailOverlay.classList.add('is-open');
+            detailOverlay.setAttribute('aria-hidden', 'false');
+        };
+
+        document.querySelectorAll('.js-sa-view-detail').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.stopPropagation();
+                openDetailModal(button);
+            });
+        });
+
+        if (detailCloseBtn) {
+            detailCloseBtn.addEventListener('click', closeDetailModal);
+        }
+
+        if (detailOverlay) {
+            detailOverlay.addEventListener('click', function(event) {
+                if (event.target === detailOverlay) {
+                    closeDetailModal();
+                }
+            });
+        }
+
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && overlay && overlay.classList.contains('is-open')) {
                 closeModal();
@@ -841,6 +966,9 @@
             }
             if (actionOverlay && event.key === 'Escape' && actionOverlay.classList.contains('is-open')) {
                 closeActionModal();
+            }
+            if (detailOverlay && event.key === 'Escape' && detailOverlay.classList.contains('is-open')) {
+                closeDetailModal();
             }
         });
     });

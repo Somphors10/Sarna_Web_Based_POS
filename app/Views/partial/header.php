@@ -46,7 +46,7 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/register-63342285b6.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=27">
+        <link rel="stylesheet" href="css/dashboard.css?v=28">
         <link rel="stylesheet" href="css/forms.css?v=5">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
@@ -82,8 +82,7 @@ $request = Services::request();
         <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
-        <script src="resources/js/manage_tables-70efc473d8.js"></script>
-        <script src="js/password_toggle.js?v=1"></script>
+        <script src="resources/js/manage_tables-cc555419c7.js"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -91,7 +90,7 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-558897b1f2.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=27">
+        <link rel="stylesheet" href="css/dashboard.css?v=28">
         <link rel="stylesheet" href="css/forms.css?v=5">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
@@ -101,8 +100,7 @@ $request = Services::request();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-d58256b84d.min.js"></script>
-        <script src="js/password_toggle.js?v=1"></script>
+        <script src="resources/opensourcepos-adf16f0700.min.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>

@@ -679,6 +679,8 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     justify-content: center;
     z-index: 1200;
     padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sa-modal-overlay.is-open {
@@ -687,11 +689,16 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
 
 .sa-modal {
     width: min(420px, 100%);
+    max-height: calc(100vh - 2rem);
     background: #fff;
     border-radius: var(--sa-radius);
     box-shadow: var(--sa-shadow-lg);
     overflow: hidden;
     border: 1px solid var(--sa-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    margin: auto;
 }
 
 .sa-modal__head {
@@ -700,6 +707,7 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     font-weight: 700;
     color: var(--sa-text);
     letter-spacing: -0.01em;
+    flex-shrink: 0;
 }
 
 .sa-modal__body {
@@ -707,6 +715,10 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     color: #475569;
     line-height: 1.5;
     font-size: 0.9rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overscroll-behavior: contain;
 }
 
 .sa-modal__actions {
@@ -716,6 +728,7 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     padding: 0.9rem 1.35rem 1.15rem;
     border-top: 1px solid var(--sa-border-soft);
     background: #f8fafc;
+    flex-shrink: 0;
 }
 
 /* ── Mobile ── */
@@ -783,3 +796,35 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
         padding-right: 1.15rem;
     }
 }
+
+.sa-detail-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.sa-detail-list__row {
+    display: grid;
+    gap: 0.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--sa-border-soft);
+}
+
+.sa-detail-list__row:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.sa-detail-list__row span {
+    color: var(--sa-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sa-detail-list__row strong {
+    color: var(--sa-text);
+    font-size: 0.98rem;
+    font-weight: 600;
+}
+

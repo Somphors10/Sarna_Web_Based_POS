@@ -87,6 +87,13 @@
                         var node = $('<div></div>');
                         $.get($link.attr('href') || $link.data('href'), function(data) {
                             node.html(data);
+                            if ($link.hasClass('ospos-view-only')) {
+                                node.find('input, select, textarea, button[type="submit"]').prop('disabled', true);
+                                node.find('form').on('submit', function(event) {
+                                    event.preventDefault();
+                                    return false;
+                                });
+                            }
                         });
                         return node;
                     })

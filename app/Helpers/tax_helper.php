@@ -34,6 +34,7 @@ function get_tax_code_data_row($tax_code_row): array
         'tax_code_type' => $tax_code_row->tax_code_type,
         'city'          => $tax_code_row->city,
         'state'         => $tax_code_row->state,
+        'view'          => view_record_anchor("$controller_name/view_tax_codes/$tax_code_row->tax_code", lang(ucfirst($controller_name) . ".update_tax_codes")),
         'edit'          => anchor(
             "$controller_name/view_tax_codes/$tax_code_row->tax_code",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -72,6 +73,7 @@ function get_tax_categories_data_row($tax_categories_row): array
         'tax_category'       => $tax_categories_row->tax_category,
         'tax_category_code'  => $tax_categories_row->tax_category_code,
         'tax_group_sequence' => $tax_categories_row->tax_group_sequence,
+        'view'               => view_record_anchor("$controller_name/view/$tax_categories_row->tax_category_id"),
         'edit'               => anchor(
             "$controller_name/view/$tax_categories_row->tax_category_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -109,6 +111,7 @@ function get_tax_jurisdictions_data_row($tax_jurisdiction_row): array
         'jurisdiction_id'     => $tax_jurisdiction_row->jurisdiction_id,
         'jurisdiction_name'   => $tax_jurisdiction_row->jurisdiction_name,
         'reporting_authority' => $tax_jurisdiction_row->reporting_authority,
+        'view'                => view_record_anchor("$controller_name/view/$tax_jurisdiction_row->jurisdiction_id"),
         'edit'                => anchor(
             "$controller_name/view/$tax_jurisdiction_row->jurisdiction_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -155,6 +158,7 @@ function get_tax_rates_data_row($tax_rates_row): array
         'jurisdiction_name'  => $tax_rates_row->jurisdiction_name,
         'tax_rounding_code'  => $tax_rates_row->tax_rounding_code,
         'rounding_code_name' => Rounding_mode::get_rounding_code_name($tax_rates_row->tax_rounding_code),
+        'view'               => view_record_anchor("$controller_name/view/$tax_rates_row->tax_rate_id"),
         'edit'               => anchor(
             "$controller_name/view/$tax_rates_row->tax_rate_id",
             '<span class="glyphicon glyphicon-edit"></span>',

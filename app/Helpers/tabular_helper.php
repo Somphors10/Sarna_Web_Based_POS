@@ -53,6 +53,7 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
     }
 
     if ($editable) {
+        $headers[] = ['view' => '', 'sortable' => false, 'escape' => false];
         $headers[] = ['edit' => ''];
     }
 
@@ -62,7 +63,7 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
             'field'      => key($element),
             'title'      => current($element),
             'switchable' => $element['switchable'] ?? !preg_match('(^$|&nbsp)', current($element)),
-            'escape'     => !preg_match("/(edit|email|messages|item_pic|customer_name|note)/", key($element)) && !(isset($element['escape']) && !$element['escape']),
+            'escape'     => !preg_match("/(edit|view|email|messages|item_pic|customer_name|note)/", key($element)) && !(isset($element['escape']) && !$element['escape']),
             'sortable'   => $element['sortable'] ?? current($element) != '',
             'checkbox'   => $element['checkbox'] ?? false,
             'class'      => isset($element['checkbox']) || preg_match('(^$|&nbsp)', current($element)) ? 'print_hide' : '',
@@ -92,6 +93,21 @@ function tenant_receiving_display_id(int $receiving_id): int
 function tenant_receiving_label(int $receiving_id): string
 {
     return 'RECV ' . tenant_receiving_display_id($receiving_id);
+}
+
+/**
+ * Read-only view link for manage table rows (opens detail in modal).
+ */
+function view_record_anchor(string $url, ?string $title = null): string
+{
+    return anchor(
+        $url,
+        '<span class="glyphicon glyphicon-eye-open"></span>',
+        [
+            'class' => 'modal-dlg ospos-view-only',
+            'title' => $title ?? lang('Common.view_details'),
+        ]
+    );
 }
 
 function sales_headers(): array
@@ -162,6 +178,10 @@ function get_sale_data_row(object $sale): array
         "$controller/receipt/$sale->sale_id",
         '<span class="glyphicon glyphicon-usd"></span>',
         ['title' => lang('Sales.show_receipt')]
+    );
+    $row['view'] = view_record_anchor(
+        "$controller/receipt/$sale->sale_id",
+        lang('Sales.show_receipt')
     );
     $row['edit'] = anchor(
         "$controller/edit/$sale->sale_id",
@@ -261,6 +281,7 @@ function get_person_data_row(object $person): array
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
         'phone_number'     => $person->phone_number,
+        'view'             => view_record_anchor("$controller/view/$person->person_id"),
         'edit'             => anchor(
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -321,6 +342,7 @@ function get_customer_data_row(object $person, object $stats): array
         'tax_id'           => $person->tax_id,
         'date'             => empty($person->date) ? '' : date('Y-m-d H:i', strtotime($person->date)),
         'total'            => to_currency($stats->total),
+        'view'             => view_record_anchor("$controller/view/$person->person_id"),
         'edit'             => anchor(
             "$controller/view/$person->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -377,6 +399,7 @@ function get_supplier_data_row(object $supplier): array
         'first_name'       => $supplier->first_name,
         'email'            => empty($supplier->email) ? '' : mailto($supplier->email, $supplier->email),
         'phone_number'     => $supplier->phone_number,
+        'view'             => view_record_anchor("$controller/view/$supplier->person_id"),
         'edit'             => anchor(
             "$controller/view/$supplier->person_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -519,6 +542,7 @@ function get_item_data_row(object $item): array
                 'title' => lang(ucfirst($controller) . ".details_count")
             ]
         ),
+        'view'      => view_record_anchor("$controller/view/$item->item_id"),
         'edit'      => anchor(
             "$controller/view/$item->item_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -569,6 +593,7 @@ function get_giftcard_data_row(object $giftcard): array
         'first_name'      => $giftcard->first_name,
         'giftcard_number' => $giftcard->giftcard_number,
         'value'           => to_currency($giftcard->value),
+        'view'            => view_record_anchor("$controller/view/$giftcard->giftcard_id"),
         'edit'            => anchor(
             "$controller/view/$giftcard->giftcard_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -619,6 +644,7 @@ function get_item_kit_data_row(object $item_kit): array
         'description'      => $item_kit->description,
         'total_cost_price' => to_currency($item_kit->total_cost_price),
         'total_unit_price' => to_currency($item_kit->total_unit_price),
+        'view'             => view_record_anchor("$controller/view/$item_kit->item_kit_id"),
         'edit'             => anchor(
             "$controller/view/$item_kit->item_kit_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -725,6 +751,7 @@ function get_attribute_definition_data_row(object $attribute_row): array
         'definition_type'  => $attribute_row->definition_type,
         'definition_group' => $attribute_row->definition_group,
         'definition_flags' => $definition_flags,
+        'view'             => view_record_anchor("$controller/view/$attribute_row->definition_id"),
         'edit'             => anchor(
             "$controller/view/$attribute_row->definition_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -768,6 +795,7 @@ function get_expense_category_data_row(object $expense_category): array
         'expense_category_id'  => $tenant_expense_category_seq,
         'category_name'        => $expense_category->category_name,
         'category_description' => $expense_category->category_description,
+        'view'                 => view_record_anchor("$controller/view/$expense_category->expense_category_id"),
         'edit'                 => anchor(
             "$controller/view/$expense_category->expense_category_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -826,6 +854,7 @@ function get_expenses_data_row(object $expense): array
         'category_name'     => $expense->category_name,
         'description'       => $expense->description,
         'created_by'        => $expense->first_name . ' ' . $expense->last_name,
+        'view'              => view_record_anchor("$controller/view/$expense->expense_id"),
         'edit'              => anchor(
             "$controller/view/$expense->expense_id",
             '<span class="glyphicon glyphicon-edit"></span>',
@@ -932,6 +961,7 @@ function get_cash_up_data_row(object $cash_up): array
         'closed_amount_card'   => to_currency($cash_up->closed_amount_card),
         'closed_amount_check'  => to_currency($cash_up->closed_amount_check),
         'closed_amount_total'  => to_currency($cash_up->closed_amount_total),
+        'view'                 => view_record_anchor("$controller/view/$cash_up->cashup_id"),
         'edit'                 => anchor(
             "$controller/view/$cash_up->cashup_id",
             '<span class="glyphicon glyphicon-edit"></span>',
