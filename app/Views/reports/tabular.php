@@ -75,7 +75,7 @@
                 sortable: true,
                 showExport: true,
                 exportDataType: 'all',
-                exportTypes: ['json', 'xml', 'csv', 'txt', 'sql', 'excel', 'pdf'],
+                exportTypes: ['csv', 'excel', 'pdf'],
                 pagination: true,
                 smartDisplay: false,
                 paginationParts: ['pageInfo', 'pageSize', 'pageList'],

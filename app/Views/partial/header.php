@@ -82,7 +82,7 @@ $request = Services::request();
         <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
-        <script src="resources/js/manage_tables-cc555419c7.js"></script>
+        <script src="resources/js/manage_tables-c00fdab420.js"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -100,7 +100,7 @@ $request = Services::request();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-adf16f0700.min.js"></script>
+        <script src="resources/opensourcepos-62c5c8ffda.min.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>

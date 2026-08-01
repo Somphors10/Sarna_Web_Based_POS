@@ -302,7 +302,7 @@
             clickToSelect: true,
             showExport: true,
             exportDataType: 'basic',
-            exportTypes: ['json', 'xml', 'csv', 'txt', 'sql', 'excel', 'pdf'],
+            exportTypes: ['csv', 'excel', 'pdf'],
             exportOptions: {
                 fileName: options.resource.replace(/.*\/(.*?)$/g, '$1') + "_" + export_suffix
             },

@@ -19,7 +19,7 @@ Follow **one** setup method:
 
 ## 2. What is included in Git vs. what you must create locally
 
-Git **includes** source code, migrations, SQL dump, Docker files, and example environment files.
+Git **includes** source code, migrations, SQL dump, Docker files, example environment files, and **payment QR images** under `public/images/payment/`.
 
 Git **does not include** these — you must create them on your own machine:
 
@@ -243,6 +243,7 @@ Use this checklist after setup:
 | **500 Internal Server Error** (Docker) | Run `docker compose -f docker-compose.wbpos.yml up -d --build` |
 | **500 or blank page** (XAMPP) | Confirm `.env` exists, database is `wbpos`, prefix is `wbpos_`, Apache/MySQL are running |
 | **Missing CSS / broken layout** | Run `npm run build`, then Ctrl+F5 in browser |
+| **QR code missing on register page** | Image was previously excluded by `.gitignore` (`*.png`). Pull latest code — `public/images/payment/aba-khqr-code.png` must exist. If still missing, ask a teammate to commit and push that folder. |
 | **Class not found / PHP errors** | Run `composer install` |
 | **Login fails / empty data** | Re-import `app/Database/wbpos.sql` |
 | **Port 8080 already in use** (Docker) | Close the other app or change the port in `docker-compose.wbpos.yml` |

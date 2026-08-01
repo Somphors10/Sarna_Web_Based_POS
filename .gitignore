@@ -78,6 +78,7 @@ system/
 auth.json
 
 *.png
+!public/images/payment/*.png
 *.jpg
 *.jpeg
 *.webp
