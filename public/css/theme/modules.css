@@ -270,6 +270,7 @@
 .neo-global-content #item_form .control-label {
     color: #334155;
     font-weight: 600;
+    font-size: 13px;
 }
 
 .neo-global-content #item_form .btn-primary {
@@ -799,6 +800,42 @@
 .neo-global-content .form-horizontal .control-label {
     color: #334155;
     font-weight: 600;
+    font-size: 13px;
+    padding-top: 6px;
+}
+
+/* Add/Edit modals (New Item, New Customer, etc.) */
+.bootstrap-dialog .modal-body .control-label,
+.modal-body .control-label {
+    font-size: 13px;
+    font-weight: 600;
+    padding-top: 6px;
+    margin-bottom: 0;
+}
+
+.bootstrap-dialog .modal-body .form-control,
+.modal-body .form-control {
+    font-size: 13px;
+}
+
+.bootstrap-dialog .modal-body .input-group-addon,
+.modal-body .input-group-addon {
+    font-size: 12px;
+}
+
+.bootstrap-dialog .modal-body .radio label,
+.bootstrap-dialog .modal-body .checkbox label,
+.modal-body .radio label,
+.modal-body .checkbox label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.bootstrap-dialog .modal-body .pos-form-required,
+.modal-body .pos-form-required {
+    font-size: 12px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
 }
 
 .neo-global-content .sales_table_100 {

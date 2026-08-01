@@ -94,7 +94,6 @@ class Home extends Secure_Controller
                 'has_data'      => !empty($sales_series),
                 'summary'       => $period_summary,
                 'summary_keys'  => ['total', 'profit'],
-                'report_url'    => site_url("reports/graphical_summary_sales/$start_date/$end_date/complete/all"),
             ];
         }
 
@@ -128,7 +127,6 @@ class Home extends Secure_Controller
                     'has_data'      => true,
                     'summary'       => $payment_summary,
                     'summary_keys'  => ['total'],
-                    'report_url'    => site_url("reports/summary_payments/$start_date/$end_date"),
                 ];
             }
         }

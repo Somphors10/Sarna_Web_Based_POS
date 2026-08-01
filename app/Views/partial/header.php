@@ -46,8 +46,8 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/register-63342285b6.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=28">
-        <link rel="stylesheet" href="css/forms.css?v=5">
+        <link rel="stylesheet" href="css/dashboard.css?v=31">
+        <link rel="stylesheet" href="css/forms.css?v=6">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
@@ -82,7 +82,7 @@ $request = Services::request();
         <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
-        <script src="resources/js/manage_tables-c00fdab420.js"></script>
+        <script src="resources/js/manage_tables-0001c7019a.js"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -90,8 +90,8 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-558897b1f2.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=28">
-        <link rel="stylesheet" href="css/forms.css?v=5">
+        <link rel="stylesheet" href="css/dashboard.css?v=31">
+        <link rel="stylesheet" href="css/forms.css?v=6">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
@@ -100,7 +100,7 @@ $request = Services::request();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-62c5c8ffda.min.js"></script>
+        <script src="resources/opensourcepos-fcb6f8256f.min.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>

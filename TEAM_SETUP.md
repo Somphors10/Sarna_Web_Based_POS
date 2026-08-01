@@ -120,7 +120,11 @@ git pull
 docker compose -f docker-compose.wbpos.yml up -d --build
 ```
 
-Docker now runs `npm run build` inside the image, so CSS/JS are included automatically.
+Docker now mounts `public/images`, `public/css`, `public/js`, `public/resources`, and `app/Views` from your PC — after `git pull` + `npm run build`, run:
+
+```powershell
+docker compose -f docker-compose.wbpos.yml up -d
+```
 
 Hard-refresh the browser with **Ctrl + F5** if styles look outdated.
 
@@ -255,6 +259,7 @@ Use this checklist after setup:
 | **500 or blank page** (XAMPP) | Confirm `.env` exists, database is `wbpos`, prefix is `wbpos_`, Apache/MySQL are running |
 | **Missing CSS / broken layout** | Run `powershell -ExecutionPolicy Bypass -File scripts/setup-after-pull.ps1` then Ctrl+F5. Check URL includes `/public/` on XAMPP: `http://localhost/opensourcepos/public/login` |
 | **CSS files 404 in browser (F12 → Network)** | `public/resources/` is missing — run `npm install` then `npm run build`. Folder should have ~100+ files after build. |
+| **Empty list pages show no "no records" text** | Usually missing JS (`npm run build`) or table data failed to load. Run setup script, Ctrl+F5, then F12 → Network → check `/cashups/search` (or page name) returns JSON not 404/500. |
 | **QR code missing on register page** | 1) `git pull` 2) Check file exists: `public/images/payment/aba-khqr-code.png` 3) Docker: `docker compose -f docker-compose.wbpos.yml up -d` (images folder is mounted from your PC) 4) XAMPP: open `http://localhost/opensourcepos/public/images/payment/aba-khqr-code.png` — should show the image |
 | **Class not found / PHP errors** | Run `composer install` |
 | **Login fails / empty data** | Re-import `app/Database/wbpos.sql` |

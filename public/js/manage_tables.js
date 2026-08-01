@@ -323,6 +323,13 @@
                 enable_actions();
                 fix_toolbar_dropdowns($('#table'));
             },
+            onLoadError: function() {
+                enable_actions();
+                fix_toolbar_dropdowns($('#table'));
+                if ($.notify) {
+                    $.notify('Could not load table data. Check login session and run npm run build if scripts are missing.', { type: 'danger' });
+                }
+            },
             onPostBody: function() {
                 fix_toolbar_dropdowns($('#table'));
             },

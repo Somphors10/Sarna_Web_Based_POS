@@ -55,7 +55,8 @@ label.required.control-label::after {
 .pos-modern-form .control-label {
     color: #334155;
     font-weight: 600;
-    padding-top: 7px;
+    font-size: 13px;
+    padding-top: 6px;
 }
 
 .pos-modern-form .form-control {
