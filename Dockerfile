@@ -1,3 +1,11 @@
+FROM node:20-bookworm-slim AS assets
+WORKDIR /app
+COPY package.json package-lock.json gulpfile.js ./
+COPY public/js ./public/js
+COPY public/css ./public/css
+COPY app/Views/partial/header.php ./app/Views/partial/header.php
+RUN npm ci && npm run build:assets
+
 FROM php:8.2-apache AS ospos
 LABEL maintainer="jekkos"
 
@@ -40,6 +48,8 @@ RUN yes | pecl install xdebug \
 FROM ospos AS wbpos
 LABEL org.opencontainers.image.title="WBPOS"
 
+COPY --from=assets /app/public/resources /app/public/resources
+COPY --from=assets /app/app/Views/partial/header.php /app/app/Views/partial/header.php
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN apt-get update && apt-get install -y git unzip libzip-dev \
     && docker-php-ext-install zip \

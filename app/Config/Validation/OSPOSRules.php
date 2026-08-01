@@ -17,7 +17,7 @@ class OSPOSRules
     private array $config;
 
     /**
-     * Requires uppercase, lowercase, digit, special character, min 8 chars.
+     * Strong password: min 8 chars, hard to guess (length + variety score, no fixed format).
      *
      * @noinspection PhpUnused
      */

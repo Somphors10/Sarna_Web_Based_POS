@@ -120,6 +120,8 @@ git pull
 docker compose -f docker-compose.wbpos.yml up -d --build
 ```
 
+Docker now runs `npm run build` inside the image, so CSS/JS are included automatically.
+
 Hard-refresh the browser with **Ctrl + F5** if styles look outdated.
 
 ---
@@ -189,6 +191,15 @@ npm run build
 
 ### 5.2 After every `git pull` (XAMPP)
 
+**Easy way — run the setup script:**
+
+```powershell
+git pull
+powershell -ExecutionPolicy Bypass -File scripts/setup-after-pull.ps1
+```
+
+**Or run these commands manually:**
+
 ```powershell
 git pull
 composer install
@@ -242,8 +253,9 @@ Use this checklist after setup:
 |---------|----------|
 | **500 Internal Server Error** (Docker) | Run `docker compose -f docker-compose.wbpos.yml up -d --build` |
 | **500 or blank page** (XAMPP) | Confirm `.env` exists, database is `wbpos`, prefix is `wbpos_`, Apache/MySQL are running |
-| **Missing CSS / broken layout** | Run `npm run build`, then Ctrl+F5 in browser |
-| **QR code missing on register page** | Image was previously excluded by `.gitignore` (`*.png`). Pull latest code — `public/images/payment/aba-khqr-code.png` must exist. If still missing, ask a teammate to commit and push that folder. |
+| **Missing CSS / broken layout** | Run `powershell -ExecutionPolicy Bypass -File scripts/setup-after-pull.ps1` then Ctrl+F5. Check URL includes `/public/` on XAMPP: `http://localhost/opensourcepos/public/login` |
+| **CSS files 404 in browser (F12 → Network)** | `public/resources/` is missing — run `npm install` then `npm run build`. Folder should have ~100+ files after build. |
+| **QR code missing on register page** | 1) `git pull` 2) Check file exists: `public/images/payment/aba-khqr-code.png` 3) Docker: `docker compose -f docker-compose.wbpos.yml up -d` (images folder is mounted from your PC) 4) XAMPP: open `http://localhost/opensourcepos/public/images/payment/aba-khqr-code.png` — should show the image |
 | **Class not found / PHP errors** | Run `composer install` |
 | **Login fails / empty data** | Re-import `app/Database/wbpos.sql` |
 | **Port 8080 already in use** (Docker) | Close the other app or change the port in `docker-compose.wbpos.yml` |
@@ -266,7 +278,7 @@ This deletes the Docker MySQL volume and re-imports `wbpos.sql`.
 |------|--------|-------|
 | First env file | `copy .env.docker.example .env.docker` | `copy .env.example .env` |
 | Start app | `docker compose -f docker-compose.wbpos.yml up -d --build` | Start Apache + MySQL in XAMPP |
-| After git pull | `docker compose -f docker-compose.wbpos.yml up -d --build` | `composer install` + `npm install` + `npm run build` |
+| After git pull | `docker compose -f docker-compose.wbpos.yml up -d --build` | `powershell -ExecutionPolicy Bypass -File scripts/setup-after-pull.ps1` |
 | Shop URL | http://localhost:8080/login | http://localhost/opensourcepos/public/login |
 
 ---

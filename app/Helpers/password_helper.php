@@ -1,11 +1,54 @@
 <?php
 
 /**
- * Strong password: min 8 chars, upper, lower, digit, special character.
+ * Score password strength from length and character variety (no fixed format).
  */
-function strong_password_pattern(): string
+function password_strength_score(string $password): int
 {
-    return '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/';
+    $score = 0;
+    $length = strlen($password);
+
+    if ($length >= 8) {
+        $score++;
+    }
+    if ($length >= 12) {
+        $score++;
+    }
+    if ($length >= 16) {
+        $score++;
+    }
+    if (preg_match('/[a-z]/', $password)) {
+        $score++;
+    }
+    if (preg_match('/[A-Z]/', $password)) {
+        $score++;
+    }
+    if (preg_match('/\d/', $password)) {
+        $score++;
+    }
+    if (preg_match('/[^A-Za-z0-9]/', $password)) {
+        $score++;
+    }
+
+    return $score;
+}
+
+function is_common_weak_password(string $password): bool
+{
+    static $weak = [
+        'password',
+        '12345678',
+        '123456789',
+        '1234567890',
+        'qwerty123',
+        'admin123',
+        'pointofsale',
+        'password1',
+        'letmein',
+        'welcome1',
+    ];
+
+    return in_array(strtolower($password), $weak, true);
 }
 
 function is_strong_password(?string $password): bool
@@ -14,10 +57,33 @@ function is_strong_password(?string $password): bool
         return false;
     }
 
-    return (bool) preg_match(strong_password_pattern(), $password);
+    if (strlen($password) < 8) {
+        return false;
+    }
+
+    if (preg_match('/^(.)\1+$/', $password)) {
+        return false;
+    }
+
+    if (is_common_weak_password($password)) {
+        return false;
+    }
+
+    return password_strength_score($password) >= 4;
 }
 
+/**
+ * @deprecated Use server-side is_strong_password() only; HTML pattern removed from forms.
+ */
+function strong_password_pattern(): string
+{
+    return '/.+/';
+}
+
+/**
+ * @deprecated HTML pattern validation removed — strength is checked on the server.
+ */
 function strong_password_js_pattern(): string
 {
-    return '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
+    return '';
 }

@@ -53,6 +53,7 @@ services:
       - wbpos_net
     volumes:
       - ./.env.docker:/app/.env:ro
+      - ./public/images:/app/public/images:ro
       - wbpos_uploads:/app/public/uploads
       - wbpos_logs:/app/writable/logs
       - ./writable/cache:/app/writable/cache

@@ -9,6 +9,8 @@ $monthly_price = (float) ($plan['price_monthly'] ?? 20.00);
 $plan_id = (int)($plan['plan_id'] ?? 0);
 $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;
+$qr_image_path = 'images/payment/aba-khqr-code.png';
+$qr_image_exists = is_file(FCPATH . $qr_image_path);
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
@@ -21,7 +23,7 @@ $company = $brand_name;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=15">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=17">
     <link rel="stylesheet" href="css/password-toggle.css?v=1">
 </head>
 <body class="saas-modern saas-landing-body">
@@ -111,7 +113,7 @@ $company = $brand_name;
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_password">POS password</label>
-                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" pattern="<?= esc(strong_password_js_pattern(), 'attr') ?>" required>
+                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" required>
                         <span class="lp-field-hint"><?= lang('Common.password_strong_hint') ?></span>
                     </div>
                 </div>
@@ -147,10 +149,18 @@ $company = $brand_name;
                     <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                 </div>
                 <div class="lp-reg__qr-frame lp-reg__qr-frame--code-only">
+                    <?php if ($qr_image_exists): ?>
                     <img
-                        src="<?= base_url('images/payment/aba-khqr-code.png') ?>"
+                        src="<?= base_url($qr_image_path) ?>?v=1"
                         alt="Scan QR code to pay $<?= number_format($monthly_price, 0) ?> per month"
                     >
+                    <?php else: ?>
+                    <div class="lp-reg__qr-missing">
+                        <p><strong>QR image not found</strong></p>
+                        <p>After <code>git pull</code>, this file must exist:</p>
+                        <p><code>public/images/payment/aba-khqr-code.png</code></p>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <p class="lp-reg__qr-hint">Open ABA or any KHQR app and scan</p>
             </div>

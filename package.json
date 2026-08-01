@@ -26,6 +26,7 @@
     },
     "scripts": {
         "build": "gulp default",
+        "build:assets": "gulp clean copy-bootswatch copy-bootswatch5 copy-bootstrap debug-js prod-js debug-css prod-css copy-fonts copy-menubar",
         "gulp": "gulp"
     },
     "type": "module",
