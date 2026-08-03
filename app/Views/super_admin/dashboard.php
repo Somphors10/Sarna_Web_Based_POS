@@ -30,7 +30,7 @@ $format_request_date = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=13') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=15') ?>">
 </head>
 <body class="sa-dashboard">
 <script>
@@ -571,10 +571,16 @@ $format_request_date = static function (?string $value): string {
 </div>
 
 <div id="sa-row-detail" class="sa-modal-overlay" aria-hidden="true">
-    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="sa-row-detail-title">
-        <div class="sa-modal__head" id="sa-row-detail-title">Details</div>
-        <div class="sa-modal__body sa-detail-list" id="sa-row-detail-body"></div>
-        <div class="sa-modal__actions">
+    <div class="sa-modal sa-modal--detail" role="dialog" aria-modal="true" aria-labelledby="sa-row-detail-title">
+        <div class="sa-modal__head sa-modal__head--detail">
+            <div class="sa-modal__head-copy">
+                <p class="sa-modal__eyebrow" id="sa-row-detail-eyebrow">Request details</p>
+                <h3 class="sa-modal__title" id="sa-row-detail-title">Details</h3>
+            </div>
+            <button type="button" class="sa-modal__close" id="sa-row-detail-close-icon" aria-label="Close">&times;</button>
+        </div>
+        <div class="sa-modal__body" id="sa-row-detail-body"></div>
+        <div class="sa-modal__actions sa-modal__actions--detail">
             <button type="button" class="sa-btn sa-btn--primary" id="sa-row-detail-close">Close</button>
         </div>
     </div>
@@ -901,8 +907,11 @@ $format_request_date = static function (?string $value): string {
 
         const detailOverlay = document.getElementById('sa-row-detail');
         const detailTitleEl = document.getElementById('sa-row-detail-title');
+        const detailEyebrowEl = document.getElementById('sa-row-detail-eyebrow');
         const detailBodyEl = document.getElementById('sa-row-detail-body');
         const detailCloseBtn = document.getElementById('sa-row-detail-close');
+        const detailCloseIconBtn = document.getElementById('sa-row-detail-close-icon');
+        const detailFieldOrder = ['company', 'code', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'created'];
 
         const closeDetailModal = function() {
             if (!detailOverlay) {
@@ -935,18 +944,29 @@ $format_request_date = static function (?string $value): string {
                 created: 'Requested'
             };
 
-            Object.keys(map).forEach(function(key) {
+            detailFieldOrder.forEach(function(key) {
                 let value = button.dataset[key];
                 if (key === 'created' && value) {
                     value = value.split(/[ T]/)[0];
                 }
-                if (value) {
-                    lines.push('<div class="sa-detail-list__row"><span>' + map[key] + '</span><strong>' + value + '</strong></div>');
+                if (value && map[key]) {
+                    lines.push(
+                        '<div class="sa-detail-row">' +
+                            '<span class="sa-detail-row__label">' + map[key] + '</span>' +
+                            '<span class="sa-detail-row__value">' + value + '</span>' +
+                        '</div>'
+                    );
                 }
             });
 
-            detailTitleEl.textContent = button.dataset.title || 'Details';
-            detailBodyEl.innerHTML = lines.join('');
+            const title = button.dataset.title || 'Details';
+            detailTitleEl.textContent = title;
+            if (detailEyebrowEl) {
+                detailEyebrowEl.textContent = title.toLowerCase().indexOf('password') !== -1
+                    ? 'Password reset'
+                    : 'Registration request';
+            }
+            detailBodyEl.innerHTML = '<div class="sa-detail-sheet">' + lines.join('') + '</div>';
             detailOverlay.classList.add('is-open');
             detailOverlay.setAttribute('aria-hidden', 'false');
         };
@@ -960,6 +980,10 @@ $format_request_date = static function (?string $value): string {
 
         if (detailCloseBtn) {
             detailCloseBtn.addEventListener('click', closeDetailModal);
+        }
+
+        if (detailCloseIconBtn) {
+            detailCloseIconBtn.addEventListener('click', closeDetailModal);
         }
 
         if (detailOverlay) {

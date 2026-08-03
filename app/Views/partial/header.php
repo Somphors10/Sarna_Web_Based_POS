@@ -46,7 +46,7 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=43">
+        <link rel="stylesheet" href="css/dashboard.css?v=46">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
@@ -90,7 +90,7 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=43">
+        <link rel="stylesheet" href="css/dashboard.css?v=46">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 

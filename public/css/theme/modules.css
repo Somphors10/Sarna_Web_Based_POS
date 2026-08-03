@@ -867,6 +867,63 @@
 }
 
 /* Add/Edit modals (New Item, New Customer, etc.) */
+.bootstrap-dialog .modal-content {
+    border: 1px solid #e9d5ff;
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.1);
+    overflow: hidden;
+}
+
+.bootstrap-dialog .modal-header {
+    background: var(--wbpos-primary-soft) !important;
+    border-bottom: 1px solid #ddd6fe !important;
+    color: var(--wbpos-primary-darker) !important;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 14px 16px;
+}
+
+.bootstrap-dialog .modal-header .modal-title,
+.bootstrap-dialog .modal-header .bootstrap-dialog-title {
+    color: var(--wbpos-primary-darker) !important;
+    font-weight: 600;
+}
+
+.bootstrap-dialog .modal-header .close {
+    color: var(--wbpos-primary) !important;
+    opacity: 0.7 !important;
+    text-shadow: none !important;
+    font-weight: 400;
+}
+
+.bootstrap-dialog .modal-header .close:hover,
+.bootstrap-dialog .modal-header .close:focus {
+    color: var(--wbpos-primary-dark) !important;
+    opacity: 1 !important;
+}
+
+.bootstrap-dialog .modal-footer {
+    background: #fafafa;
+    border-top: 1px solid #e2e8f0;
+    padding: 12px 16px;
+}
+
+.bootstrap-dialog .modal-footer .btn-primary {
+    background: var(--wbpos-primary-light) !important;
+    border-color: var(--wbpos-primary-light) !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.bootstrap-dialog .modal-footer .btn-primary:hover,
+.bootstrap-dialog .modal-footer .btn-primary:focus {
+    background: var(--wbpos-primary) !important;
+    border-color: var(--wbpos-primary) !important;
+    color: #fff !important;
+}
+
 .bootstrap-dialog .modal-body .control-label,
 .modal-body .control-label {
     font-size: 13px;
@@ -895,9 +952,26 @@
 
 .bootstrap-dialog .modal-body .pos-form-required,
 .modal-body .pos-form-required {
+    background: #faf5ff !important;
+    border: 1px solid #e9d5ff !important;
+    color: #6d28d9 !important;
     font-size: 12px;
     padding: 6px 10px;
     margin-bottom: 8px;
+    border-radius: 8px;
+}
+
+.bootstrap-dialog .modal-body .input-group-addon,
+.bootstrap-dialog .modal-body .pos-modern-form .input-group-addon {
+    background: #f8fafc !important;
+    border-color: #d5dee8 !important;
+    color: #0f172a !important;
+}
+
+.bootstrap-dialog .pos-form-tabs > li.active > a,
+.bootstrap-dialog .pos-form-tabs > li.active > a:hover,
+.bootstrap-dialog .pos-form-tabs > li.active > a:focus {
+    border-bottom-color: var(--wbpos-primary-light) !important;
 }
 
 .neo-global-content .sales_table_100 {
