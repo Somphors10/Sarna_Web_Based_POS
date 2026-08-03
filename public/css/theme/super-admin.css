@@ -244,12 +244,26 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     border-radius: var(--sa-radius);
     padding: 1.25rem 1.35rem;
     box-shadow: var(--sa-shadow-sm);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+a.sa-stat-card,
+a.sa-metric {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+a.sa-stat-card:focus-visible,
+a.sa-metric:focus-visible {
+    outline: 2px solid var(--sa-primary);
+    outline-offset: 2px;
 }
 
 .sa-stat-card:hover {
     box-shadow: var(--sa-shadow);
     transform: translateY(-1px);
+    border-color: #ddd6fe;
 }
 
 .sa-stat-card__icon {
@@ -297,6 +311,22 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     color: var(--sa-text);
     line-height: 1;
     font-variant-numeric: tabular-nums;
+}
+
+.sa-stat-card__hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--sa-primary);
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+a.sa-stat-card:hover .sa-stat-card__hint,
+a.sa-stat-card:focus-visible .sa-stat-card__hint {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* ── Panels ── */
@@ -350,11 +380,13 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     border-radius: var(--sa-radius-sm);
     padding: 1.15rem 1.25rem;
     background: #fafbfc;
-    transition: box-shadow 0.18s ease;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .sa-metric:hover {
     box-shadow: var(--sa-shadow-sm);
+    border-color: #ddd6fe;
+    transform: translateY(-1px);
 }
 
 .sa-metric__top {
@@ -406,7 +438,17 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
 .sa-metric__hint {
     margin-top: 0.35rem;
     font-size: 0.78rem;
-    color: var(--sa-muted);
+    color: var(--sa-primary);
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+a.sa-metric:hover .sa-metric__hint,
+a.sa-metric:focus-visible .sa-metric__hint {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* ── Quick action cards ── */

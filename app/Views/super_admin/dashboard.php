@@ -30,7 +30,7 @@ $format_request_date = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=15') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=17') ?>">
 </head>
 <body class="sa-dashboard">
 <script>
@@ -200,33 +200,36 @@ $format_request_date = static function (?string $value): string {
 
         <?php if ($active_page === 'overview'): ?>
         <section class="sa-stat-grid">
-            <article class="sa-stat-card sa-stat-card--purple">
+            <a class="sa-stat-card sa-stat-card--purple" href="<?= site_url('super-admin/businesses') ?>" title="View all registered businesses">
                 <div class="sa-stat-card__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
                 </div>
                 <div class="sa-stat-card__body">
                     <p class="sa-stat-card__label">Total Businesses</p>
                     <p class="sa-stat-card__value"><?= $total_tenants ?></p>
+                    <p class="sa-stat-card__hint">View all businesses →</p>
                 </div>
-            </article>
-            <article class="sa-stat-card sa-stat-card--amber">
+            </a>
+            <a class="sa-stat-card sa-stat-card--amber" href="<?= site_url('super-admin/requests') ?>" title="View pending registration and password reset requests">
                 <div class="sa-stat-card__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/></svg>
                 </div>
                 <div class="sa-stat-card__body">
                     <p class="sa-stat-card__label">Pending Requests</p>
                     <p class="sa-stat-card__value"><?= $pending_count ?></p>
+                    <p class="sa-stat-card__hint">View pending requests →</p>
                 </div>
-            </article>
-            <article class="sa-stat-card sa-stat-card--blue">
+            </a>
+            <a class="sa-stat-card sa-stat-card--blue" href="<?= site_url('super-admin/admins') ?>" title="View platform admin accounts">
                 <div class="sa-stat-card__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                 </div>
                 <div class="sa-stat-card__body">
                     <p class="sa-stat-card__label">Platform Admins</p>
                     <p class="sa-stat-card__value"><?= $admins_count ?></p>
+                    <p class="sa-stat-card__hint">View platform admins →</p>
                 </div>
-            </article>
+            </a>
         </section>
 
         <section class="sa-panel">
@@ -236,30 +239,30 @@ $format_request_date = static function (?string $value): string {
             </div>
             <div class="sa-panel__body">
                 <div class="sa-metrics sa-metrics--status">
-                    <div class="sa-metric sa-metric--active">
+                    <a class="sa-metric sa-metric--active" href="<?= site_url('super-admin/businesses?status=active') ?>" title="View active businesses">
                         <div class="sa-metric__top">
                             <span class="sa-metric__dot"></span>
                             <span class="sa-metric__label">Active</span>
                         </div>
                         <div class="sa-metric__value"><?= $active_tenants ?></div>
-                        <div class="sa-metric__hint">Currently operating</div>
-                    </div>
-                    <div class="sa-metric sa-metric--suspended">
+                        <div class="sa-metric__hint">View active businesses →</div>
+                    </a>
+                    <a class="sa-metric sa-metric--suspended" href="<?= site_url('super-admin/businesses?status=suspended') ?>" title="View suspended businesses">
                         <div class="sa-metric__top">
                             <span class="sa-metric__dot"></span>
                             <span class="sa-metric__label">Suspended</span>
                         </div>
                         <div class="sa-metric__value"><?= $suspended_tenants ?></div>
-                        <div class="sa-metric__hint">Needs intervention</div>
-                    </div>
-                    <div class="sa-metric sa-metric--cancelled">
+                        <div class="sa-metric__hint">View suspended businesses →</div>
+                    </a>
+                    <a class="sa-metric sa-metric--cancelled" href="<?= site_url('super-admin/businesses?status=cancelled') ?>" title="View cancelled businesses">
                         <div class="sa-metric__top">
                             <span class="sa-metric__dot"></span>
                             <span class="sa-metric__label">Cancelled</span>
                         </div>
                         <div class="sa-metric__value"><?= $cancelled_tenants ?></div>
-                        <div class="sa-metric__hint">Closed accounts</div>
-                    </div>
+                        <div class="sa-metric__hint">View cancelled businesses →</div>
+                    </a>
                 </div>
             </div>
         </section>
@@ -824,6 +827,22 @@ $format_request_date = static function (?string $value): string {
         if (statusFilter) {
             statusFilter.addEventListener('change', applyRowFilters);
         }
+
+        const applyInitialFiltersFromUrl = function() {
+            if (!statusFilter || statusFilter.hidden) {
+                return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const status = (params.get('status') || '').toLowerCase();
+            const allowed = ['active', 'suspended', 'cancelled'];
+
+            if (allowed.indexOf(status) !== -1) {
+                statusFilter.value = status;
+            }
+        };
+
+        applyInitialFiltersFromUrl();
         applyRowFilters();
 
         document.querySelectorAll('.js-super-admin-logout').forEach(function(link) {
