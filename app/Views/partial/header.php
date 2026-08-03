@@ -42,11 +42,11 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/ospos_print-2ba645b044.css">
         <link rel="stylesheet" href="resources/css/ospos-73edad0b33.css">
         <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
-        <link rel="stylesheet" href="resources/css/receipt-708885feec.css">
-        <link rel="stylesheet" href="resources/css/register-63342285b6.css">
+        <link rel="stylesheet" href="resources/css/receipt-59573bfc05.css">
+        <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=40">
+        <link rel="stylesheet" href="css/dashboard.css?v=42">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
@@ -90,7 +90,7 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=40">
+        <link rel="stylesheet" href="css/dashboard.css?v=42">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 

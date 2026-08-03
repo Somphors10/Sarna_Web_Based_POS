@@ -32,9 +32,33 @@
     margin: 0;
 }
 
-#mode_form ul li,
-#add_item_form ul li {
+#mode_form .panel-body > ul > li,
+#add_item_form .panel-body > ul > li {
     margin-left: 1em;
+}
+
+#mode_form .bootstrap-select .dropdown-menu li,
+#add_item_form .bootstrap-select .dropdown-menu li {
+    margin-left: 0 !important;
+    width: 100%;
+}
+
+#mode_form .bootstrap-select .dropdown-menu > li > a,
+#add_item_form .bootstrap-select .dropdown-menu > li > a {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+#mode_form .bootstrap-select .dropdown-menu > li > a .text,
+#add_item_form .bootstrap-select .dropdown-menu > li > a .text {
+    white-space: nowrap;
+}
+
+#mode_form .bootstrap-select .dropdown-menu,
+#add_item_form .bootstrap-select .dropdown-menu {
+    min-width: 100%;
 }
 
 .first_li {
@@ -43,7 +67,7 @@
 
 #mode_form ul.dropdown-menu.inner,
 #add_item_form ul.dropdown-menu.inner {
-    margin-left: -1em !important;
+    margin-left: 0 !important;
 }
 
 #register {

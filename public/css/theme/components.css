@@ -150,6 +150,38 @@
     background: #f8fafc;
 }
 
+/* Bootstrap dropdown menus — readable black text, light highlights */
+.neo-global-content .dropdown-menu > li > a,
+.wrapper .dropdown-menu > li > a {
+    color: #0f172a !important;
+    padding: 8px 14px;
+}
+
+.neo-global-content .dropdown-menu > li > a:hover,
+.neo-global-content .dropdown-menu > li > a:focus,
+.wrapper .dropdown-menu > li > a:hover,
+.wrapper .dropdown-menu > li > a:focus {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .dropdown-menu > .active > a,
+.neo-global-content .dropdown-menu > .active > a:hover,
+.neo-global-content .dropdown-menu > .active > a:focus,
+.neo-global-content .dropdown-menu > li.active > a,
+.neo-global-content .dropdown-menu > li.selected > a,
+.wrapper .dropdown-menu > .active > a,
+.wrapper .dropdown-menu > .active > a:hover,
+.wrapper .dropdown-menu > .active > a:focus,
+.wrapper .dropdown-menu > li.active > a,
+.wrapper .dropdown-menu > li.selected > a {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
 .neo-global-content .bootstrap-table .fixed-table-container {
     border-color: #e2e8f0;
     border-radius: 10px;

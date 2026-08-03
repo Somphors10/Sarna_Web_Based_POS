@@ -55,7 +55,7 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: #0f172a;
     margin: 0 0 0.35rem;
 }
 
@@ -93,10 +93,10 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #64748b;
+    color: #0f172a;
     padding: 0.7rem 0.85rem;
-    border-bottom: 2px solid #7c3aed;
-    background: #faf5ff;
+    border-bottom: 2px solid #0f172a;
+    background: #f1f5f9;
     text-align: left;
 }
 
@@ -163,7 +163,7 @@
 
 .discount {
     font-weight: 600;
-    color: #7c3aed;
+    color: #0f172a;
 }
 
 #sale_return_policy {
@@ -239,6 +239,19 @@
 
     .receipt-page__footer #barcode {
         flex: 0 0 auto;
+    }
+
+    .receipt-page .neo-module-actions .btn-info {
+        background: var(--wbpos-primary) !important;
+        border-color: var(--wbpos-primary-dark) !important;
+        color: #fff !important;
+    }
+
+    .receipt-page .neo-module-actions .btn-info:hover,
+    .receipt-page .neo-module-actions .btn-info:focus {
+        background: var(--wbpos-primary-dark) !important;
+        border-color: var(--wbpos-primary-darker) !important;
+        color: #fff !important;
     }
 }
 

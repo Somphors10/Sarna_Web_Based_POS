@@ -136,18 +136,40 @@
 }
 
 .neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a {
-    color: #334155 !important;
+    color: #0f172a !important;
+    padding: 8px 14px;
 }
 
 .neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a .text {
-    color: #334155 !important;
+    color: #0f172a !important;
     display: block;
     white-space: normal;
 }
 
 .neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:hover,
 .neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:focus {
-    background: #f1f5f9;
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:hover .text,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li > a:focus .text {
+    color: #0f172a !important;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li.selected > a,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li.active > a,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > .active > a {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li.selected > a .text,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > li.active > a .text,
+.neo-global-content #toolbar .bootstrap-select .dropdown-menu > .active > a .text {
     color: #0f172a !important;
 }
 
@@ -215,17 +237,57 @@
 }
 
 .neo-global-content .bootstrap-select .dropdown-menu > li > a {
-    color: #334155 !important;
+    color: #0f172a !important;
+    padding: 8px 14px;
 }
 
 .neo-global-content .bootstrap-select .dropdown-menu > li > a .text {
-    color: #334155 !important;
+    color: #0f172a !important;
+    display: block;
+    white-space: normal;
 }
 
 .neo-global-content .bootstrap-select .dropdown-menu > li > a:hover,
 .neo-global-content .bootstrap-select .dropdown-menu > li > a:focus {
-    background: #f1f5f9;
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
     color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li > a:hover .text,
+.neo-global-content .bootstrap-select .dropdown-menu > li > a:focus .text {
+    color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li.selected > a,
+.neo-global-content .bootstrap-select .dropdown-menu > li.active > a,
+.neo-global-content .bootstrap-select .dropdown-menu > .active > a {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li.selected > a .text,
+.neo-global-content .bootstrap-select .dropdown-menu > li.active > a .text,
+.neo-global-content .bootstrap-select .dropdown-menu > .active > a .text {
+    color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu > li.selected > a:hover,
+.neo-global-content .bootstrap-select .dropdown-menu > li.selected > a:focus,
+.neo-global-content .bootstrap-select .dropdown-menu > li.active > a:hover,
+.neo-global-content .bootstrap-select .dropdown-menu > li.active > a:focus,
+.neo-global-content .bootstrap-select .dropdown-menu > .active > a:hover,
+.neo-global-content .bootstrap-select .dropdown-menu > .active > a:focus {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-menu.inner {
+    max-height: 260px !important;
+    overflow-y: auto !important;
 }
 
 .neo-global-content [id="table_holder"] {
