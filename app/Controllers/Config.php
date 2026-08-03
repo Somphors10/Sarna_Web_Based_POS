@@ -316,8 +316,12 @@ class Config extends Secure_Controller
     private function upload_logo(): array
     {
         $file = $this->request->getFile('company_logo');
-        if (!$file) {
+        if (!$file || $file->getError() === UPLOAD_ERR_NO_FILE || $file->getName() === '') {
             return [];
+        }
+
+        if (!$file->isValid()) {
+            return ['error' => lang('Config.company_logo_upload_failed')];
         }
 
         helper(['form']);
@@ -325,12 +329,10 @@ class Config extends Secure_Controller
             'company_logo' => [
                 'label' => 'Company logo',
                 'rules' => [
-                    'uploaded[company_logo]',
                     'is_image[company_logo]',
-                    'max_size[company_logo,1024]',
+                    'max_size[company_logo,2048]',
                     'mime_in[company_logo,image/png,image/jpg,image/jpeg,image/gif]',
-                    'ext_in[company_logo,png,jpg,gif]',
-                    'max_dims[company_logo,800,680]',
+                    'ext_in[company_logo,png,jpg,jpeg,gif]',
                 ]
             ]
         ];
@@ -338,7 +340,6 @@ class Config extends Secure_Controller
         if (!$this->validate($validation_rule)) {
             return (['error' => $this->validator->getError('company_logo')]);
         }
-
 
         $filename = $file->getClientName();
         $info = pathinfo($filename);
@@ -349,9 +350,69 @@ class Config extends Secure_Controller
             'file_ext'  => $file->guessExtension()
         ];
 
+        $target_path = FCPATH . 'uploads/' . $file_info['raw_name'] . '.' . $file_info['file_ext'];
         $file->move(FCPATH . 'uploads/', $file_info['raw_name'] . '.' . $file_info['file_ext'], true);
+        $this->resizeLogoIfNeeded($target_path, 800, 680);
 
         return ($file_info);
+    }
+
+    /**
+     * Scale down oversized logo uploads so receipts and config previews stay readable.
+     */
+    private function resizeLogoIfNeeded(string $path, int $maxWidth, int $maxHeight): void
+    {
+        if (!is_file($path) || !function_exists('getimagesize')) {
+            return;
+        }
+
+        $info = @getimagesize($path);
+        if ($info === false) {
+            return;
+        }
+
+        [$width, $height, $type] = $info;
+        if ($width <= $maxWidth && $height <= $maxHeight) {
+            return;
+        }
+
+        $source = match ($type) {
+            IMAGETYPE_JPEG => @imagecreatefromjpeg($path),
+            IMAGETYPE_PNG  => @imagecreatefrompng($path),
+            IMAGETYPE_GIF  => @imagecreatefromgif($path),
+            default        => null,
+        };
+
+        if (!$source) {
+            return;
+        }
+
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
+        $newWidth = max(1, (int) round($width * $ratio));
+        $newHeight = max(1, (int) round($height * $ratio));
+
+        $dest = imagecreatetruecolor($newWidth, $newHeight);
+        if (!$dest) {
+            imagedestroy($source);
+            return;
+        }
+
+        if ($type === IMAGETYPE_PNG) {
+            imagealphablending($dest, false);
+            imagesavealpha($dest, true);
+        }
+
+        imagecopyresampled($dest, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        match ($type) {
+            IMAGETYPE_JPEG => imagejpeg($dest, $path, 90),
+            IMAGETYPE_PNG  => imagepng($dest, $path),
+            IMAGETYPE_GIF  => imagegif($dest, $path),
+            default        => null,
+        };
+
+        imagedestroy($source);
+        imagedestroy($dest);
     }
 
     /**

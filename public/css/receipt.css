@@ -1,64 +1,301 @@
+/* Base — works on screen and print */
 #receipt_wrapper {
     width: 100%;
+    color: #0f172a;
+    line-height: 1.5;
 }
 
 #receipt_header {
-    text-align: center;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 1.25rem;
+}
+
+.receipt-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.receipt-header__logo img {
+    width: 88px;
+    height: 88px;
+    display: block;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.receipt-header__details {
+    min-width: 0;
 }
 
 #company_name {
-    font-size: 150%;
-    font-weight: bold;
+    font-size: 1.35em;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
 }
 
-#company_name img {
-    max-width: 150px;
-    max-height: 150px;
+#company_address,
+#company_phone {
+    font-size: 0.95em;
+    color: #475569;
+    margin-bottom: 0.2rem;
 }
 
 #company_phone {
-    margin-bottom: 15px;
+    margin-bottom: 0;
+}
 
+.receipt-header__meta {
+    text-align: right;
+}
+
+#sale_receipt {
+    font-size: 1.15em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 0 0 0.35rem;
 }
 
 #sale_time {
-    margin-bottom: 5px;
+    font-size: 0.95em;
+    color: #64748b;
+    margin: 0;
+}
+
+#receipt_general_info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2.5rem;
+    font-size: 0.95em;
+    margin-bottom: 1.25rem;
+    padding: 0.9rem 1.15rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+#receipt_general_info > div {
+    margin: 0;
 }
 
 #receipt_items {
-    position: relative;
     border-collapse: collapse;
-    margin-top: 15px;
-    margin-bottom: 15px;
     width: 100%;
+    margin: 0;
+    table-layout: fixed;
+}
+
+#receipt_items th {
+    font-size: 0.82em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 2px solid #7c3aed;
+    background: #faf5ff;
+    text-align: left;
+}
+
+#receipt_items th:nth-child(1),
+#receipt_items td:nth-child(1) {
+    width: 46%;
+}
+
+#receipt_items th:nth-child(2),
+#receipt_items td:nth-child(2) {
+    width: 18%;
+    text-align: right;
+}
+
+#receipt_items th:nth-child(3),
+#receipt_items td:nth-child(3) {
+    width: 18%;
+    text-align: center;
+}
+
+#receipt_items th:nth-child(4),
+#receipt_items td:nth-child(4) {
+    width: 18%;
+}
+
+#receipt_items th.total-value {
+    text-align: right;
 }
 
 #receipt_items td {
-    position: relative;
-    padding: 3px;
-    margin-bottom: 5px;
-
+    padding: 0.7rem 0.85rem;
+    vertical-align: top;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
 }
 
-#receipt_items tr {
-    margin-bottom: 5px;
+#receipt_items tbody tr td {
+    border-bottom: 1px solid #f1f5f9;
 }
 
-#sale_return_policy {
-    width: 80%;
-    margin: 0 auto;
-    text-align: center;
+#receipt_items td[colspan="2"]:not(.discount),
+#receipt_items td[colspan="3"]:not(.discount) {
+    font-size: 0.88em;
+    color: #64748b;
+    padding-top: 0;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-#receipt_wrapper #barcode {
-    margin-top: 10px;
-    text-align: center;
+#receipt_items tr:has(> td[colspan="4"]:only-child) td {
+    padding: 0.15rem 0;
+    border: none !important;
+    line-height: 0.3;
+}
+
+#receipt_items tr:empty {
+    display: none;
 }
 
 .total-value {
     text-align: right;
+    white-space: nowrap;
 }
 
 .discount {
-    font-weight: bold;
+    font-weight: 600;
+    color: #7c3aed;
+}
+
+#sale_return_policy {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    font-size: 0.92em;
+    color: #64748b;
+}
+
+#receipt_wrapper #barcode {
+    margin: 0;
+    text-align: right;
+    font-size: 0.88em;
+    color: #475569;
+}
+
+#receipt_wrapper #barcode img {
+    max-width: 220px;
+    height: auto;
+}
+
+/* Full-width screen layout */
+@media screen {
+    .receipt-page {
+        width: 100%;
+        max-width: none;
+        margin: 0 0 1.5rem;
+    }
+
+    .receipt-page__panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.75rem 2rem 2rem;
+    }
+
+    .receipt-page #receipt_wrapper {
+        font-size: 15px !important;
+    }
+
+    #receipt_header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+
+    .receipt-header__brand {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .receipt-header__meta {
+        flex-shrink: 0;
+        padding-top: 0.15rem;
+    }
+
+    .receipt-page__footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px dashed #cbd5e1;
+    }
+
+    .receipt-page__footer #sale_return_policy {
+        flex: 1;
+        max-width: 65%;
+    }
+
+    .receipt-page__footer #barcode {
+        flex: 0 0 auto;
+    }
+}
+
+@media print {
+    .receipt-page {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .receipt-page__panel {
+        border: none;
+        padding: 0;
+    }
+
+    #receipt_header {
+        display: block;
+        text-align: center;
+    }
+
+    .receipt-header__brand {
+        display: block;
+    }
+
+    .receipt-header__logo img {
+        margin: 0 auto 0.5rem;
+    }
+
+    .receipt-header__meta {
+        text-align: center;
+        margin-top: 0.75rem;
+    }
+
+    #receipt_general_info {
+        background: transparent;
+        border: none;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    #receipt_items th {
+        color: #000;
+        background: transparent;
+        border-bottom-color: #000;
+    }
+
+    .receipt-page__footer {
+        display: block;
+        margin-top: 1rem;
+    }
+
+    #sale_return_policy {
+        text-align: center;
+        margin-bottom: 0.75rem;
+    }
+
+    #receipt_wrapper #barcode {
+        text-align: center;
+    }
 }

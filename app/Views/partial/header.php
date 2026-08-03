@@ -42,12 +42,12 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/ospos_print-2ba645b044.css">
         <link rel="stylesheet" href="resources/css/ospos-73edad0b33.css">
         <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
-        <link rel="stylesheet" href="resources/css/receipt-a171207d8e.css">
+        <link rel="stylesheet" href="resources/css/receipt-708885feec.css">
         <link rel="stylesheet" href="resources/css/register-63342285b6.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=31">
-        <link rel="stylesheet" href="css/forms.css?v=6">
+        <link rel="stylesheet" href="css/dashboard.css?v=40">
+        <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
@@ -88,10 +88,10 @@ $request = Services::request();
         <?php $assets_injected = true; ?>
     <?php else : ?>
         <!--inject:prod:css -->
-        <link rel="stylesheet" href="resources/opensourcepos-558897b1f2.min.css">
+        <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=31">
-        <link rel="stylesheet" href="css/forms.css?v=6">
+        <link rel="stylesheet" href="css/dashboard.css?v=40">
+        <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->

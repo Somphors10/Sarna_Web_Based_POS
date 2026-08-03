@@ -14,8 +14,8 @@
             <ul id="info_error_message_box" class="error_message_box"></ul>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.company'), 'company', ['class' => 'control-label col-xs-2 required']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.company'), 'company', ['class' => 'control-label col-xs-12 col-sm-2 required']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
                         <span class="input-group-addon input-sm">
                             <span class="glyphicon glyphicon-home"></span>
@@ -31,8 +31,9 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.company_logo'), 'company_logo', ['class' => 'control-label col-xs-2']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.company_logo'), 'company_logo', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
+                    <p class="help-block" style="margin-top: 0;"><?= lang('Config.company_logo_hint') ?></p>
                     <div class="fileinput <?= $logo_exists ? 'fileinput-exists' : 'fileinput-new' ?>" data-provides="fileinput">
                         <div class="fileinput-new thumbnail" style="width: 200px; height: 200px;"></div>
                         <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 200px;">
@@ -51,8 +52,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.address'), 'address', ['class' => 'control-label col-xs-2 required']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.address'), 'address', ['class' => 'control-label col-xs-12 col-sm-2 required']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <?= form_textarea([
                         'name'  => 'address',
                         'id'    => 'address',
@@ -63,8 +64,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.website'), 'website', ['class' => 'control-label col-xs-2']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.website'), 'website', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
                         <span class="input-group-addon input-sm">
                             <span class="glyphicon glyphicon-globe"></span>
@@ -80,8 +81,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Common.email'), 'email', ['class' => 'control-label col-xs-2']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Common.email'), 'email', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
                         <span class="input-group-addon input-sm">
                             <span class="glyphicon glyphicon-envelope"></span>
@@ -98,8 +99,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.phone'), 'phone', ['class' => 'control-label col-xs-2 required']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.phone'), 'phone', ['class' => 'control-label col-xs-12 col-sm-2 required']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
                         <span class="input-group-addon input-sm">
                             <span class="glyphicon glyphicon-phone-alt"></span>
@@ -115,8 +116,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Config.fax'), 'fax', ['class' => 'control-label col-xs-2']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Config.fax'), 'fax', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
                         <span class="input-group-addon input-sm">
                             <span class="glyphicon glyphicon-phone-alt"></span>
@@ -132,8 +133,8 @@
             </div>
 
             <div class="form-group form-group-sm">
-                <?= form_label(lang('Common.return_policy'), 'return_policy', ['class' => 'control-label col-xs-2 required']) ?>
-                <div class="col-xs-6">
+                <?= form_label(lang('Common.return_policy'), 'return_policy', ['class' => 'control-label col-xs-12 col-sm-2 required']) ?>
+                <div class="col-xs-12 col-sm-10">
                     <?= form_textarea([
                         'name'  => 'return_policy',
                         'id'    => 'return_policy',
@@ -143,12 +144,14 @@
                 </div>
             </div>
 
-            <?= form_submit([
-                'name'  => 'submit_info',
-                'id'    => 'submit_info',
-                'value' => lang('Common.submit'),
-                'class' => 'btn btn-primary btn-sm pull-right'
-            ]) ?>
+            <div class="neo-form-submit clearfix">
+                <?= form_submit([
+                    'name'  => 'submit_info',
+                    'id'    => 'submit_info',
+                    'value' => lang('Common.submit'),
+                    'class' => 'btn btn-primary btn-sm pull-right'
+                ]) ?>
+            </div>
 
         </fieldset>
     </div>

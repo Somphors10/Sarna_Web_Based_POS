@@ -21,7 +21,7 @@ html {
     --pos-border: #dce3ef;
     --pos-accent: var(--wbpos-primary);
     --pos-accent-soft: rgba(124, 58, 237, 0.12);
-    --pos-teal: #18bc9c;
+    --pos-teal: var(--wbpos-primary);
     --pos-text: #1e293b;
     --pos-muted: #64748b;
     --pos-required: #e53935;

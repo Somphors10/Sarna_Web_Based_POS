@@ -78,6 +78,7 @@ label.required.control-label::after {
 
 .pos-modern-form .neo-form-submit {
     margin: 4px 14px 14px;
+    text-align: right;
 }
 
 .pos-form-tabs {

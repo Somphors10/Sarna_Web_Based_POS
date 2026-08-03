@@ -294,7 +294,7 @@
 }
 
 .neo-global-content .neo-report-breadcrumb a {
-    color: var(--wbpos-primary-dark);
+    color: #0f172a;
     text-decoration: none;
     font-weight: 600;
 }
@@ -362,7 +362,7 @@
 
 .neo-global-content .panel.panel-primary .list-group-item {
     border-color: #e2e8f0;
-    color: #334155;
+    color: #0f172a;
     font-weight: 500;
 }
 
@@ -382,9 +382,9 @@
 }
 
 .neo-global-content .panel.panel-primary .list-group-item.is-active-report {
-    background: var(--wbpos-primary-soft);
-    color: var(--wbpos-primary-dark);
-    border-left: 3px solid var(--wbpos-primary);
+    background: #f1f5f9;
+    color: #0f172a;
+    border-left: 3px solid #0f172a;
     font-weight: 600;
 }
 
@@ -416,11 +416,11 @@
     gap: 4px;
 }
 
-.neo-report-link {
+.neo-global-content a.neo-report-link {
     display: block;
     padding: 8px 10px;
     border-radius: 8px;
-    color: #334155;
+    color: #0f172a;
     text-decoration: none;
     font-size: 13px;
     font-weight: 500;
@@ -428,18 +428,18 @@
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.neo-report-link:hover,
-.neo-report-link:focus {
+.neo-global-content a.neo-report-link:hover,
+.neo-global-content a.neo-report-link:focus {
     background: #f8fafc;
     border-color: #e2e8f0;
     color: #0f172a;
     text-decoration: none;
 }
 
-.neo-report-link.is-active-report {
-    background: var(--wbpos-primary-soft);
-    border-color: #ddd6fe;
-    color: var(--wbpos-primary-dark);
+.neo-global-content a.neo-report-link.is-active-report {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #0f172a;
     font-weight: 600;
 }
 

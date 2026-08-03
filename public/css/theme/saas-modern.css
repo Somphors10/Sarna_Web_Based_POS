@@ -1388,7 +1388,7 @@ body.saas-landing-body {
 
 .lp-highlight-card__icon--inventory {
     background: #ecfeff;
-    color: #0891b2;
+    color: var(--wbpos-primary);
 }
 
 .lp-highlight-card__icon--customers {

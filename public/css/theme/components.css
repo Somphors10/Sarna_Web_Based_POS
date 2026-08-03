@@ -31,14 +31,46 @@
     font-weight: 500;
 }
 
-.neo-global-content .btn-info {
-    background: #0ea5e9;
-    border-color: #0284c7;
+.neo-global-content .btn-info,
+.wrapper .btn-info {
+    background: var(--wbpos-primary);
+    border-color: var(--wbpos-primary-dark);
+    color: #fff;
 }
 
-.neo-global-content .btn-info:hover {
-    background: #0284c7;
-    border-color: #0369a1;
+.neo-global-content .btn-info:hover,
+.neo-global-content .btn-info:focus,
+.wrapper .btn-info:hover,
+.wrapper .btn-info:focus {
+    background: var(--wbpos-primary-dark);
+    border-color: var(--wbpos-primary-darker);
+    color: #fff;
+}
+
+/* Primary link color — override Flatly teal (exclude sidebar nav, report links, and buttons) */
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn),
+.neo-global-content a:not(.neo-report-link):not(.btn) {
+    color: var(--wbpos-primary-dark);
+}
+
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):hover,
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):focus,
+.neo-global-content a:not(.neo-report-link):not(.btn):hover,
+.neo-global-content a:not(.neo-report-link):not(.btn):focus {
+    color: var(--wbpos-primary-darker);
+}
+
+/* Table row action icons (view, edit, clone, etc.) */
+.neo-global-content .bootstrap-table .table tbody a,
+.wrapper .bootstrap-table .table tbody a {
+    color: var(--wbpos-primary) !important;
+}
+
+.neo-global-content .bootstrap-table .table tbody a:hover,
+.neo-global-content .bootstrap-table .table tbody a:focus,
+.wrapper .bootstrap-table .table tbody a:hover,
+.wrapper .bootstrap-table .table tbody a:focus {
+    color: var(--wbpos-primary-darker) !important;
 }
 
 .neo-global-content .btn-default {
@@ -55,14 +87,20 @@
 .wrapper .btn-primary {
     background: var(--wbpos-primary);
     border-color: var(--wbpos-primary-dark);
+    color: #fff !important;
 }
 
 .neo-global-content .btn-primary:hover,
 .wrapper .btn-primary:hover,
 .neo-global-content .btn-primary:focus,
-.wrapper .btn-primary:focus {
+.wrapper .btn-primary:focus,
+.neo-global-content .btn-primary:active,
+.wrapper .btn-primary:active,
+.neo-global-content .btn-primary:visited,
+.wrapper .btn-primary:visited {
     background: var(--wbpos-primary-dark);
     border-color: var(--wbpos-primary-darker);
+    color: #fff !important;
 }
 
 .neo-global-content .form-control:focus {
@@ -146,17 +184,62 @@
     z-index: 90;
 }
 
-.neo-global-content .bootstrap-table .fixed-table-pagination {
-    padding: 8px 4px 4px;
+.neo-global-content .bootstrap-table .fixed-table-pagination,
+.wrapper .bootstrap-table .fixed-table-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 8px 8px;
     overflow: visible;
     border-top: 1px solid #e2e8f0;
     margin-top: 6px;
 }
 
+.neo-global-content .bootstrap-table .fixed-table-pagination .pull-left,
+.neo-global-content .bootstrap-table .fixed-table-pagination .pull-right,
+.wrapper .bootstrap-table .fixed-table-pagination .pull-left,
+.wrapper .bootstrap-table .fixed-table-pagination .pull-right {
+    float: none !important;
+}
+
 .neo-global-content .bootstrap-table .fixed-table-pagination .pagination-detail,
 .neo-global-content .bootstrap-table .fixed-table-pagination .page-list,
-.neo-global-content .bootstrap-table .fixed-table-pagination .pagination {
-    margin: 6px 0;
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination,
+.wrapper .bootstrap-table .fixed-table-pagination .pagination-detail,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list,
+.wrapper .bootstrap-table .fixed-table-pagination .pagination {
+    margin: 0;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination-detail,
+.wrapper .bootstrap-table .fixed-table-pagination .pagination-detail {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination-info,
+.wrapper .bootstrap-table .fixed-table-pagination .pagination-info {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    color: #0f172a;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .pagination,
+.wrapper .bootstrap-table .fixed-table-pagination .pagination {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto !important;
+    justify-content: flex-end;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-pagination .page-list .btn-group {
@@ -165,6 +248,207 @@
 
 .neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-toggle {
     min-width: 56px;
+    height: 34px;
+    padding: 6px 11px;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    border-radius: 8px;
+    box-shadow: none !important;
+    font-weight: 500;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-toggle:hover,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-toggle:focus {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu {
+    min-width: 80px;
+    padding: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    background: #fff !important;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a {
+    color: #0f172a !important;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
+    background: transparent !important;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a:hover,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a:focus,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a:hover,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > li > a:focus {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a:hover,
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a:focus,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a:hover,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .dropdown-menu > .active > a:focus {
+    background: #e2e8f0 !important;
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    font-weight: 700;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-pagination .page-list .caret,
+.wrapper .bootstrap-table .fixed-table-pagination .page-list .caret {
+    margin-left: 4px;
+    border-top-color: #64748b;
+}
+
+/* Pagination — clean neutral style, black text */
+.neo-global-content .pagination,
+.wrapper .pagination {
+    margin: 6px 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.neo-global-content .pagination > li,
+.wrapper .pagination > li {
+    display: inline-block;
+}
+
+.neo-global-content .pagination > li > a,
+.neo-global-content .pagination > li > span,
+.wrapper .pagination > li > a,
+.wrapper .pagination > li > span {
+    background: #fff !important;
+    background-color: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    border-radius: 8px !important;
+    margin: 0;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 11px;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    box-shadow: none !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.neo-global-content .pagination > li.active > a,
+.neo-global-content .pagination > li.active > span,
+.neo-global-content .pagination > .active > a,
+.neo-global-content .pagination > .active > span,
+.wrapper .pagination > li.active > a,
+.wrapper .pagination > li.active > span,
+.wrapper .pagination > .active > a,
+.wrapper .pagination > .active > span {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    border-color: #0f172a !important;
+    color: #0f172a !important;
+    font-weight: 700;
+}
+
+.neo-global-content .pagination > li > a:hover,
+.neo-global-content .pagination > li > a:focus,
+.neo-global-content .pagination > li > span:hover,
+.neo-global-content .pagination > li > span:focus,
+.wrapper .pagination > li > a:hover,
+.wrapper .pagination > li > a:focus,
+.wrapper .pagination > li > span:hover,
+.wrapper .pagination > li > span:focus {
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .pagination > li.disabled > a,
+.neo-global-content .pagination > li.disabled > span,
+.wrapper .pagination > li.disabled > a,
+.wrapper .pagination > li.disabled > span {
+    background: #fff !important;
+    background-color: #fff !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* Bootstrap Table 1.x page-link variant */
+.neo-global-content .page-item .page-link,
+.wrapper .page-item .page-link {
+    background: #fff !important;
+    background-color: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    border-radius: 8px !important;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    box-shadow: none !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.neo-global-content .page-item.active .page-link,
+.wrapper .page-item.active .page-link {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    border-color: #0f172a !important;
+    color: #0f172a !important;
+    font-weight: 700;
+}
+
+.neo-global-content .page-item .page-link:hover,
+.neo-global-content .page-item .page-link:focus,
+.wrapper .page-item .page-link:hover,
+.wrapper .page-item .page-link:focus {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.neo-global-content .page-item.disabled .page-link,
+.wrapper .page-item.disabled .page-link {
+    background: #fff !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
 }
 
 .neo-global-content .bootstrap-table .table thead > tr > th {
@@ -172,12 +456,6 @@
     color: #334155;
     font-weight: 600;
     border-bottom-color: #dbe4ee;
-}
-
-.neo-global-content .pagination > .active > a,
-.neo-global-content .pagination > .active > span {
-    background-color: var(--wbpos-primary);
-    border-color: var(--wbpos-primary);
 }
 
 .neo-global-content .bootstrap-table .fixed-table-body .fixed-table-loading {

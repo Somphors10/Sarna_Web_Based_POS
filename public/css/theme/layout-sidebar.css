@@ -135,7 +135,7 @@
     border-radius: 9px;
     border: 1px solid transparent;
     background: transparent;
-    color: #2f3d4f;
+    color: #0f172a;
     text-decoration: none;
     text-align: left;
     position: relative;
@@ -147,13 +147,15 @@
 .neo-global-menu-item:hover {
     background: #f7f9fc;
     border-color: #e7edf7;
-    color: #1f2937;
+    color: #0f172a;
     text-decoration: none;
 }
 
 .neo-global-menu-item:focus,
 .neo-global-menu-item:active,
-.neo-global-menu-item:focus-visible {
+.neo-global-menu-item:focus-visible,
+.neo-global-menu-item:visited {
+    color: #0f172a;
     outline: none;
     box-shadow: none;
 }
@@ -161,7 +163,7 @@
 .neo-global-menu-item.is-active {
     background: var(--wbpos-primary-soft);
     border-color: #ddd6fe;
-    color: var(--wbpos-primary-dark);
+    color: #0f172a;
     font-weight: 600;
     box-shadow: none;
 }

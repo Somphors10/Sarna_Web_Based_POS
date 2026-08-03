@@ -53,6 +53,8 @@ return [
     "company_remove_image"                      => "Remove Image",
     "company_required"                          => "Company name is a required field",
     "company_select_image"                      => "Select Image",
+    "company_logo_upload_failed"                => "Company logo upload failed. Please choose a PNG, JPG, or GIF image.",
+    "company_logo_hint"                         => "Optional. PNG, JPG, or GIF up to 2 MB. Large images are resized automatically.",
     "company_website_url"                       => "Company website is not a valid URL (http://...).",
     "country_codes"                             => "Country Codes",
     "country_codes_tooltip"                     => "Comma separated list of country codes for nominatim address lookup.",

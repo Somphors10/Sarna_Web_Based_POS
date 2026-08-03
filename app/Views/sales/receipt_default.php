@@ -19,20 +19,27 @@
 
 <div id="receipt_wrapper" style="font-size: <?= $config['receipt_font_size'] ?>px;">
     <div id="receipt_header">
-        <?php if ($config['company_logo'] != '') { ?>
-            <div id="company_name">
-                <img id="image" src="<?= base_url('uploads/' . esc($config['company_logo'], 'url')) ?>" alt="company_logo">
+        <div class="receipt-header__brand">
+            <?php if ($config['company_logo'] != '') { ?>
+                <div class="receipt-header__logo">
+                    <img id="image" src="<?= base_url('uploads/' . esc($config['company_logo'], 'url')) ?>" alt="company_logo">
+                </div>
+            <?php } ?>
+
+            <div class="receipt-header__details">
+                <?php if ($config['receipt_show_company_name']) { ?>
+                    <div id="company_name"><?= nl2br(esc($config['company'])) ?></div>
+                <?php } ?>
+
+                <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
+                <div id="company_phone"><?= esc($config['phone']) ?></div>
             </div>
-        <?php } ?>
+        </div>
 
-        <?php if ($config['receipt_show_company_name']) { ?>
-            <div id="company_name"><?= nl2br(esc($config['company'])) ?></div>
-        <?php } ?>
-
-        <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
-        <div id="company_phone"><?= esc($config['phone']) ?></div>
-        <div id="sale_receipt"><?= lang('Sales.receipt') ?></div>
-        <div id="sale_time"><?= ($transaction_time) ?></div>
+        <div class="receipt-header__meta">
+            <div id="sale_receipt"><?= lang('Sales.receipt') ?></div>
+            <div id="sale_time"><?= ($transaction_time) ?></div>
+        </div>
     </div>
 
     <div id="receipt_general_info">
@@ -164,12 +171,14 @@
         </tr>
     </table>
 
-    <div id="sale_return_policy">
-        <?= nl2br(esc($config['return_policy'])) ?>
-    </div>
+    <div class="receipt-page__footer">
+        <div id="sale_return_policy">
+            <?= nl2br(esc($config['return_policy'])) ?>
+        </div>
 
-    <div id="barcode">
-        <?= $barcode ?><br>
-        <?= $sale_id ?>
+        <div id="barcode">
+            <?= $barcode ?><br>
+            <?= $sale_id ?>
+        </div>
     </div>
 </div>
