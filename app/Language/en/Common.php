@@ -72,6 +72,7 @@ return [
     "new"                            => "New",
     "no"                             => "No",
     "no_persons_to_display"          => "There are no people to display.",
+    "no_modules_to_display"          => "No modules match your search.",
     "none_selected_text"             => "[Select]",
     "or"                             => "OR",
     "people"                         => "",

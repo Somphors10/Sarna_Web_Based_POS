@@ -284,9 +284,9 @@
         $('#table')
             .addClass("table-striped")
             .addClass("table-bordered")
-            .bootstrapTable($.extend(options, {
+            .            bootstrapTable($.extend(options, {
             columns: options.headers,
-            stickyHeader: true,
+            stickyHeader: false,
             url: options.resource + '/search',
             sidePagination: 'server',
             selectItemName: 'btSelectItem',

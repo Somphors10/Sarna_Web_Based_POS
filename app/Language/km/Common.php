@@ -60,6 +60,7 @@ return [
     "new"                            => "ថ្មី",
     "no"                             => "",
     "no_persons_to_display"          => "មិនមានមនុស្សដើម្បីបង្ហាញទេ",
+    "no_modules_to_display"          => "រកមិនឃើញម៉ូឌុលដែលត្រូវគ្នាទេ",
     "none_selected_text"             => "[ជ្រើសរើស]",
     "or"                             => "ឬ",
     "people"                         => "",

@@ -530,13 +530,60 @@ a.neo-kpi-card:focus-visible {
 }
 
 .neo-search-wrap {
-    width: min(280px, 100%);
+    position: relative;
+    width: min(320px, 100%);
+    flex-shrink: 0;
 }
 
-.neo-search-wrap .form-control {
-    height: 38px;
-    border-radius: 10px;
-    border-color: #dbe4ee;
+.neo-search-wrap__icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.neo-search-wrap .form-control,
+.neo-search-wrap .neo-search-input {
+    height: 42px;
+    padding: 0 14px 0 40px;
+    border-radius: 999px;
+    border: 1px solid #dbe4ee;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.neo-search-wrap .form-control::placeholder,
+.neo-search-wrap .neo-search-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.neo-search-wrap .form-control:focus,
+.neo-search-wrap .neo-search-input:focus {
+    border-color: var(--wbpos-primary-light);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+    outline: none;
+}
+
+.neo-module-empty {
+    margin: 8px 0 0;
+    padding: 18px 16px;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 14px;
+    text-align: center;
 }
 
 .neo-info-grid {

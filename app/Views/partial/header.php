@@ -46,7 +46,7 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=42">
+        <link rel="stylesheet" href="css/dashboard.css?v=43">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
@@ -82,7 +82,7 @@ $request = Services::request();
         <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
-        <script src="resources/js/manage_tables-0001c7019a.js"></script>
+        <script src="resources/js/manage_tables-a01dc92775.js"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -90,7 +90,7 @@ $request = Services::request();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=42">
+        <link rel="stylesheet" href="css/dashboard.css?v=43">
         <link rel="stylesheet" href="css/forms.css?v=7">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 

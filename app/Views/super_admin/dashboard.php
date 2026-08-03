@@ -7,6 +7,16 @@
  * @var array $password_reset_requests
  * @var string $active_page
  */
+
+$format_request_date = static function (?string $value): string {
+    if ($value === null || $value === '') {
+        return '';
+    }
+
+    $timestamp = strtotime($value);
+
+    return $timestamp !== false ? date('Y-m-d', $timestamp) : $value;
+};
 ?>
 <!doctype html>
 <html lang="en">
@@ -465,7 +475,7 @@
                                             data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
                                             data-plan="<?= esc($request['plan_name'] ?? '', 'attr') ?>"
                                             data-payment="<?= esc($request['payment_reference'], 'attr') ?>"
-                                            data-created="<?= esc($request['created_at'] ?? '', 'attr') ?>">
+                                            data-created="<?= esc($format_request_date($request['created_at'] ?? ''), 'attr') ?>">
                                         View
                                     </button>
                                     <?= form_open('super-admin/approve-request/' . (int)$request['request_id'], [
@@ -521,7 +531,7 @@
                             <td><?= esc($reset['tenant_code']) ?></td>
                             <td><?= esc($reset['username']) ?></td>
                             <td>#<?= esc($reset['tenant_id'] ?? '') ?></td>
-                            <td><?= esc($reset['created_at'] ?? '') ?></td>
+                            <td><?= esc($format_request_date($reset['created_at'] ?? '')) ?></td>
                             <td>
                                 <div class="sa-row-actions">
                                     <button type="button"
@@ -530,7 +540,7 @@
                                             data-code="<?= esc($reset['tenant_code'], 'attr') ?>"
                                             data-username="<?= esc($reset['username'], 'attr') ?>"
                                             data-tenant="#<?= esc((string)($reset['tenant_id'] ?? ''), 'attr') ?>"
-                                            data-created="<?= esc($reset['created_at'] ?? '', 'attr') ?>">
+                                            data-created="<?= esc($format_request_date($reset['created_at'] ?? ''), 'attr') ?>">
                                         View
                                     </button>
                                     <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id'], [
@@ -926,7 +936,10 @@
             };
 
             Object.keys(map).forEach(function(key) {
-                const value = button.dataset[key];
+                let value = button.dataset[key];
+                if (key === 'created' && value) {
+                    value = value.split(/[ T]/)[0];
+                }
                 if (value) {
                     lines.push('<div class="sa-detail-list__row"><span>' + map[key] + '</span><strong>' + value + '</strong></div>');
                 }

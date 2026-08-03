@@ -57,9 +57,6 @@
             .addClass("table-bordered")
             .bootstrapTable({
                 columns: applyColumnVisibility(<?= transform_headers(esc($headers['summary']), true) ?>),
-                stickyHeader: true,
-                stickyHeaderOffsetLeft: $('#table').offset().left + 'px',
-                stickyHeaderOffsetRight: $('#table').offset().right + 'px',
                 pageSize: <?= table_page_size($config['lines_per_page']) ?>,
                 pageList: <?= json_encode(table_page_list()) ?>,
                 pagination: true,
