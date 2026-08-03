@@ -11,6 +11,10 @@ $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;
 $qr_image_path = 'images/payment/aba-khqr-code.png';
 $qr_image_exists = is_file(FCPATH . $qr_image_path);
+$field_errors = ($has_errors ?? false) ? $validation->getErrors() : [];
+$field_invalid_class = static function (string $name) use ($field_errors): string {
+    return isset($field_errors[$name]) ? ' is-invalid' : '';
+};
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
@@ -23,7 +27,7 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=17">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=18">
     <link rel="stylesheet" href="css/password-toggle.css?v=1">
 </head>
 <body class="saas-modern saas-landing-body">
@@ -58,7 +62,7 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
                 </div>
             <?php endif; ?>
 
-            <?= form_open('saas/register', ['class' => 'lp-reg__form']) ?>
+            <?= form_open('saas/register', ['class' => 'lp-reg__form', 'novalidate' => 'novalidate']) ?>
             <input type="hidden" name="plan_id" value="<?= esc($plan_id) ?>">
 
             <section class="lp-reg__section">
@@ -71,12 +75,12 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
                 </div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="company_name">Company name</label>
-                        <input class="lp-field-input" id="company_name" name="company_name" required>
+                        <label class="lp-field-label" for="company_name">Company name <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('company_name') ?>" id="company_name" name="company_name" value="<?= set_value('company_name') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="tenant_code">Company code</label>
-                        <input class="lp-field-input" id="tenant_code" name="tenant_code" placeholder="my-store" required>
+                        <label class="lp-field-label" for="tenant_code">Company code <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="my-store" value="<?= set_value('tenant_code') ?>" required aria-required="true">
                         <span class="lp-field-hint">Short unique code (letters, numbers, dash)</span>
                     </div>
                 </div>
@@ -92,28 +96,28 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
                 </div>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_first_name">First name</label>
-                        <input class="lp-field-input" id="owner_first_name" name="owner_first_name" required>
+                        <label class="lp-field-label" for="owner_first_name">First name <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_first_name') ?>" id="owner_first_name" name="owner_first_name" value="<?= set_value('owner_first_name') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_last_name">Last name</label>
-                        <input class="lp-field-input" id="owner_last_name" name="owner_last_name" required>
+                        <label class="lp-field-label" for="owner_last_name">Last name <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_last_name') ?>" id="owner_last_name" name="owner_last_name" value="<?= set_value('owner_last_name') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_email">Email</label>
-                        <input class="lp-field-input" type="email" id="owner_email" name="owner_email" required>
+                        <label class="lp-field-label" for="owner_email">Email <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_email') ?>" type="email" id="owner_email" name="owner_email" value="<?= set_value('owner_email') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_phone">Phone</label>
-                        <input class="lp-field-input" id="owner_phone" name="owner_phone">
+                        <input class="lp-field-input" id="owner_phone" name="owner_phone" value="<?= set_value('owner_phone') ?>">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_username">POS username</label>
-                        <input class="lp-field-input" id="owner_username" name="owner_username" required>
+                        <label class="lp-field-label" for="owner_username">POS username <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_username') ?>" id="owner_username" name="owner_username" value="<?= set_value('owner_username') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_password">POS password</label>
-                        <input class="lp-field-input" type="password" id="owner_password" name="owner_password" minlength="8" required>
+                        <label class="lp-field-label" for="owner_password">POS password <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_password') ?>" type="password" id="owner_password" name="owner_password" minlength="8" required aria-required="true">
                         <span class="lp-field-hint"><?= lang('Common.password_strong_hint') ?></span>
                     </div>
                 </div>
@@ -129,8 +133,8 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
                 </div>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="lp-field-label" for="payment_reference">Transaction / receipt ID</label>
-                        <input class="lp-field-input" id="payment_reference" name="payment_reference" placeholder="e.g. ABA receipt number" required>
+                        <label class="lp-field-label" for="payment_reference">Transaction / receipt ID <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('payment_reference') ?>" id="payment_reference" name="payment_reference" placeholder="e.g. ABA receipt number" value="<?= set_value('payment_reference') ?>" required aria-required="true">
                     </div>
                 </div>
             </section>
@@ -187,6 +191,12 @@ $qr_image_exists = is_file(FCPATH . $qr_image_path);
 </footer>
 
 <script src="<?= base_url('js/password_toggle.js?v=1') ?>"></script>
+<?php if (!empty($field_errors)): ?>
+<script>
+    window.saasRegisterFieldErrors = <?= json_encode($field_errors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+</script>
+<?php endif; ?>
+<script src="<?= base_url('js/saas_register.js?v=1') ?>"></script>
 
 </body>
 </html>

@@ -2115,6 +2115,33 @@ body.saas-landing-body {
     border-color: #a5b4fc;
 }
 
+.lp-field-required {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.lp-field-input.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.lp-field-input.is-invalid:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
+.lp-field-error {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.lp-field-error[hidden] {
+    display: none;
+}
+
 .lp-field-hint {
     display: block;
     margin-top: 6px;
