@@ -414,6 +414,7 @@ class Employee extends Person
                 $this->session->set('person_id', $row->person_id);
                 $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
                 (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
+                model(\App\Models\Appconfig::class)->ensureCompleteConfig((int)$this->session->get('tenant_id'));
                 config(\Config\OSPOS::class)->update_settings();
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
@@ -422,6 +423,7 @@ class Employee extends Person
                 $this->session->set('person_id', $row->person_id);
                 $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
                 (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
+                model(\App\Models\Appconfig::class)->ensureCompleteConfig((int)$this->session->get('tenant_id'));
                 config(\Config\OSPOS::class)->update_settings();
 
                 return true;

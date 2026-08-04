@@ -37,12 +37,14 @@ class Load_config
             $this->session->destroy();
         }
 
-        // Language
-        $language_exists = file_exists('../app/Language/' . current_language_code());
+        // Language — employee prefs may be set while tenant_config is still partial (pre-backfill).
+        $language_code = $config->settings['language_code'] ?? null;
+        $language_name = $config->settings['language'] ?? null;
+        $language_exists = !empty($language_code) && file_exists('../app/Language/' . $language_code);
 
-        if (current_language_code() == null || current_language() == null || !$language_exists) {    // TODO: current_language() is undefined
-            $config->settings['language'] = 'english';
-            $config->settings['language_code'] = 'en';
+        if (empty($language_code) || empty($language_name) || !$language_exists) {
+            $config->settings['language'] = DEFAULT_LANGUAGE;
+            $config->settings['language_code'] = DEFAULT_LANGUAGE_CODE;
         }
 
         $language = Services::language();

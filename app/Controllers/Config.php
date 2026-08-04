@@ -223,7 +223,7 @@ class Config extends Secure_Controller
         $data['customer_rewards'] = $this->customer_rewards->get_all()->getResultArray();
         $data['support_barcode'] = $this->barcode_lib->get_list_barcodes();
         $data['barcode_fonts'] = $this->barcode_lib->listfonts('fonts');
-        $data['logo_exists'] = $this->config['company_logo'] != '';
+        $data['logo_exists'] = $this->company_logo_exists();
         $data['line_sequence_options'] = $this->sale_lib->get_line_sequence_options();
         $data['register_mode_options'] = $this->sale_lib->get_register_mode_options();
         $data['invoice_type_options'] = $this->sale_lib->get_invoice_type_options();
@@ -297,7 +297,7 @@ class Config extends Secure_Controller
             'return_policy' => $this->request->getPost('return_policy')
         ];
 
-        if (!empty($upload_data['orig_name']) && $upload_data['raw_name']) {
+        if (!empty($upload_data['raw_name']) && !empty($upload_data['file_ext'])) {
             $batch_save_data['company_logo'] = $upload_data['raw_name'] . '.' . $upload_data['file_ext'];
         }
 
@@ -306,7 +306,13 @@ class Config extends Secure_Controller
         $message = lang('Config.saved_' . ($success ? '' : 'un') . 'successfully');
         $message = $upload_success ? $message : strip_tags($upload_data['error']);
 
-        echo json_encode(['success' => $success, 'message' => $message]);
+        $response = ['success' => $success, 'message' => $message];
+
+        if ($success && !empty($batch_save_data['company_logo'])) {
+            $response['logo_url'] = base_url('uploads/' . $batch_save_data['company_logo']);
+        }
+
+        echo json_encode($response);
     }
 
 
@@ -343,18 +349,29 @@ class Config extends Secure_Controller
 
         $filename = $file->getClientName();
         $info = pathinfo($filename);
+        $extension = strtolower($file->getClientExtension() ?: (string)$file->guessExtension());
+
+        if ($extension === '') {
+            return ['error' => lang('Config.company_logo_upload_failed')];
+        }
 
         $file_info = [
             'orig_name' => $filename,
             'raw_name'  => $info['filename'],
-            'file_ext'  => $file->guessExtension()
+            'file_ext'  => $extension,
         ];
 
-        $target_path = FCPATH . 'uploads/' . $file_info['raw_name'] . '.' . $file_info['file_ext'];
-        $file->move(FCPATH . 'uploads/', $file_info['raw_name'] . '.' . $file_info['file_ext'], true);
+        $upload_dir = FCPATH . 'uploads/';
+        if (!is_dir($upload_dir) && !mkdir($upload_dir, 0755, true) && !is_dir($upload_dir)) {
+            return ['error' => lang('Config.company_logo_upload_failed')];
+        }
+
+        $stored_name = $file_info['raw_name'] . '.' . $file_info['file_ext'];
+        $target_path = $upload_dir . $stored_name;
+        $file->move($upload_dir, $stored_name, true);
         $this->resizeLogoIfNeeded($target_path, 800, 680);
 
-        return ($file_info);
+        return $file_info;
     }
 
     /**
@@ -1015,6 +1032,16 @@ class Config extends Secure_Controller
         }
 
         echo json_encode(['success' => $success, 'message' => lang('Config.saved_' . ($success ? '' : 'un') . 'successfully')]);
+    }
+
+    /**
+     * True when the active tenant has a logo file on disk.
+     */
+    private function company_logo_exists(): bool
+    {
+        $logo = trim((string)($this->config['company_logo'] ?? ''));
+
+        return $logo !== '' && is_file(FCPATH . 'uploads/' . $logo);
     }
 
     /**

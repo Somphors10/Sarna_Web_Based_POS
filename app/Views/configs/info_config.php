@@ -172,6 +172,34 @@
 
             errorLabelContainer: "#info_error_message_box",
 
+            submitHandler: function(form) {
+                var formData = new FormData(form);
+                var logoInput = form.querySelector('input[name="company_logo"]');
+
+                if (logoInput && logoInput.files.length > 0) {
+                    formData.set('company_logo', logoInput.files[0]);
+                }
+
+                $.ajax({
+                    url: $(form).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function(response) {
+                        $.notify(response.message, { type: response.success ? 'success' : 'danger' });
+
+                        if (response.success) {
+                            window.location.reload();
+                        }
+                    },
+                    error: function() {
+                        $.notify('<?= lang('Config.saved_unsuccessfully') ?>', { type: 'danger' });
+                    }
+                });
+            },
+
             rules: {
                 company: "required",
                 address: "required",

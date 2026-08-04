@@ -62,14 +62,6 @@ class TenantSeeder
 
 
 
-        if ($tenant_id === $source_tenant_id) {
-
-            return ['skipped' => 'source tenant'];
-
-        }
-
-
-
         return $this->runSeed($tenant_id, $source_tenant_id, true);
 
     }
@@ -108,7 +100,7 @@ class TenantSeeder
 
             $tenant_id = (int)$tenant['tenant_id'];
 
-            if ($tenant_id <= 0 || $tenant_id === $source_tenant_id) {
+            if ($tenant_id <= 0) {
 
                 continue;
 
@@ -130,6 +122,20 @@ class TenantSeeder
 
         return $report;
 
+    }
+
+
+
+    /**
+     * Ensure one tenant has a full copy of config keys (missing keys only).
+     */
+    public function ensureTenantConfig(int $tenant_id, int $source_tenant_id = 1): int
+    {
+        if ($tenant_id <= 0) {
+            return 0;
+        }
+
+        return $this->seedTenantConfig(db_connect(), $tenant_id, $source_tenant_id);
     }
 
 
@@ -229,11 +235,9 @@ class TenantSeeder
 
 
     /**
-
-     * Merge missing config keys from the source tenant without overwriting tenant-specific values.
-
+     * Copy missing config keys into the tenant.
+     * Template = app_config (install defaults) overlaid with source tenant overrides.
      */
-
     private function seedTenantConfig($db, int $tenant_id, int $source_tenant_id): int
 
     {
@@ -246,19 +250,15 @@ class TenantSeeder
 
 
 
-        $source_rows = $db->table('tenant_config')->where('tenant_id', $source_tenant_id)->get()->getResultArray();
+        $template = [];
 
-        if (empty($source_rows) && $db->tableExists('app_config')) {
+
+
+        if ($db->tableExists('app_config')) {
 
             foreach ($db->table('app_config')->get()->getResultArray() as $row) {
 
-                $source_rows[] = [
-
-                    'config_key' => $row['key'],
-
-                    'config_value' => $row['value'],
-
-                ];
+                $template[$row['key']] = $row['value'];
 
             }
 
@@ -266,7 +266,19 @@ class TenantSeeder
 
 
 
-        if (empty($source_rows)) {
+        if ($source_tenant_id > 0) {
+
+            foreach ($db->table('tenant_config')->where('tenant_id', $source_tenant_id)->get()->getResultArray() as $row) {
+
+                $template[$row['config_key']] = $row['config_value'];
+
+            }
+
+        }
+
+
+
+        if (empty($template)) {
 
             return 0;
 
@@ -286,9 +298,9 @@ class TenantSeeder
 
         $batch = [];
 
-        foreach ($source_rows as $row) {
+        foreach ($template as $config_key => $config_value) {
 
-            if (in_array($row['config_key'], $existing_keys, true)) {
+            if (in_array($config_key, $existing_keys, true)) {
 
                 continue;
 
@@ -300,9 +312,9 @@ class TenantSeeder
 
                 'tenant_id' => $tenant_id,
 
-                'config_key' => $row['config_key'],
+                'config_key' => $config_key,
 
-                'config_value' => $row['config_value'],
+                'config_value' => $config_value,
 
             ];
 

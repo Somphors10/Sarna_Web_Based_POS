@@ -9,7 +9,7 @@ use Config\OSPOS;
 use ReflectionException;
 
 /**
- * Appconfig class — per-tenant settings via tenant_config, global defaults via app_config.
+ * Appconfig class — per-tenant settings in tenant_config; app_config is install template only.
  */
 class Appconfig extends Model
 {
@@ -27,6 +27,40 @@ class Appconfig extends Model
     private function usesTenantConfig(): bool
     {
         return $this->isTenantScopingEnabled() && $this->db->tableExists('tenant_config');
+    }
+
+    /**
+     * Read tenant_config and backfill missing keys from the install template when needed.
+     */
+    private function loadTenantSettingsAssoc(): array
+    {
+        $tenant_id = $this->getTenantId();
+        $settings = [];
+
+        foreach ($this->db->table('tenant_config')
+            ->where('tenant_id', $tenant_id)
+            ->get()
+            ->getResult() as $row) {
+            $settings[$row->config_key] = $row->config_value;
+        }
+
+        if ($this->db->tableExists('app_config')) {
+            $expected_keys = (int)$this->db->table('app_config')->countAllResults();
+
+            if ($expected_keys > 0 && count($settings) < $expected_keys) {
+                $this->ensureCompleteConfig($tenant_id);
+
+                $settings = [];
+                foreach ($this->db->table('tenant_config')
+                    ->where('tenant_id', $tenant_id)
+                    ->get()
+                    ->getResult() as $row) {
+                    $settings[$row->config_key] = $row->config_value;
+                }
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -67,10 +101,14 @@ class Appconfig extends Model
     }
 
     /**
-     * Returns merged settings as associative array (used by OSPOS config).
+     * Returns settings for the active tenant only (no shared app_config merge).
      */
     public function get_all_assoc(): array
     {
+        if ($this->usesTenantConfig()) {
+            return $this->loadTenantSettingsAssoc();
+        }
+
         $settings = [];
 
         if ($this->db->tableExists('app_config')) {
@@ -79,16 +117,35 @@ class Appconfig extends Model
             }
         }
 
-        if ($this->usesTenantConfig()) {
-            foreach ($this->db->table('tenant_config')
-                ->where('tenant_id', $this->getTenantId())
-                ->get()
-                ->getResult() as $row) {
-                $settings[$row->config_key] = $row->config_value;
-            }
+        return $settings;
+    }
+
+    /**
+     * Copy any missing config keys from the global template into this tenant.
+     * app_config remains install defaults only; each shop reads tenant_config.
+     */
+    public function ensureCompleteConfig(?int $tenant_id = null): int
+    {
+        if (!$this->usesTenantConfig()) {
+            return 0;
         }
 
-        return $settings;
+        $tenant_id = $tenant_id ?? $this->getTenantId();
+
+        if ($tenant_id <= 0 || !$this->db->tableExists('app_config')) {
+            return 0;
+        }
+
+        $expected_keys = (int)$this->db->table('app_config')->countAllResults();
+        $existing_keys = (int)$this->db->table('tenant_config')
+            ->where('tenant_id', $tenant_id)
+            ->countAllResults();
+
+        if ($expected_keys > 0 && $existing_keys >= $expected_keys) {
+            return 0;
+        }
+
+        return (new \App\Libraries\TenantSeeder())->ensureTenantConfig($tenant_id);
     }
 
     /**
@@ -104,9 +161,12 @@ class Appconfig extends Model
                 ->where('config_key', $key)
                 ->get(1)
                 ->getRow();
+
             if ($row !== null) {
                 return (string)$row->config_value;
             }
+
+            return $default;
         }
 
         $builder = $this->db->table('app_config');
@@ -133,15 +193,20 @@ class Appconfig extends Model
 
         if ($this->usesTenantConfig()) {
             $tenant_id = $this->getTenantId();
-            $builder = $this->db->table('tenant_config');
-            $exists = $builder->where('tenant_id', $tenant_id)->where('config_key', $key)->countAllResults() > 0;
 
-            if ($exists) {
-                $success = $builder->where('tenant_id', $tenant_id)
+            $row = $this->db->table('tenant_config')
+                ->where('tenant_id', $tenant_id)
+                ->where('config_key', $key)
+                ->get(1)
+                ->getRow();
+
+            if ($row !== null) {
+                $success = $this->db->table('tenant_config')
+                    ->where('tenant_id', $tenant_id)
                     ->where('config_key', $key)
                     ->update(['config_value' => $value]);
             } else {
-                $success = $builder->insert([
+                $success = $this->db->table('tenant_config')->insert([
                     'tenant_id' => $tenant_id,
                     'config_key' => $key,
                     'config_value' => $value,
