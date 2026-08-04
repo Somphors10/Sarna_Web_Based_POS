@@ -488,15 +488,18 @@ function get_item_data_row(object $item): array
 
     $image = null;
     if (!empty($item->pic_filename)) {
+        $pics_dir = FCPATH . 'uploads/item_pics/';
         $ext = pathinfo($item->pic_filename, PATHINFO_EXTENSION);
 
         $images = $ext == ''
-            ? glob("./uploads/item_pics/$item->pic_filename.*")
-            : glob("./uploads/item_pics/$item->pic_filename");
+            ? glob($pics_dir . $item->pic_filename . '.*') ?: []
+            : (is_file($pics_dir . $item->pic_filename) ? [$pics_dir . $item->pic_filename] : []);
 
         if (sizeof($images) > 0) {
-            $image_src = base_url($images[0]);
-            $image .= '<a class="rollover js-item-image-lightbox" href="#" data-image-src="' . esc($image_src, 'attr') . '"><img alt="Image thumbnail" src="' . site_url('items/PicThumb/' . pathinfo($images[0], PATHINFO_BASENAME)) . '"></a>';
+            $basename = pathinfo($images[0], PATHINFO_BASENAME);
+            $image_src = base_url('uploads/item_pics/' . rawurlencode($basename));
+            $thumb_src = site_url('items/PicThumb/' . rawurlencode($basename));
+            $image .= '<a class="rollover js-item-image-lightbox" href="#" data-image-src="' . esc($image_src, 'attr') . '"><img alt="Image thumbnail" src="' . esc($thumb_src, 'attr') . '"></a>';
         }
     }
 

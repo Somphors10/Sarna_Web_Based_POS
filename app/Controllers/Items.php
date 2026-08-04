@@ -145,27 +145,37 @@ class Items extends Secure_Controller
      */
     public function getPicThumb(string $pic_filename): void
     {
-        helper('file');
+        $pic_filename = basename($pic_filename);
+        $pics_dir = FCPATH . 'uploads/item_pics/';
+        $image_path = $pics_dir . $pic_filename;
+
+        if (!is_file($image_path)) {
+            $this->response->setStatusCode(404)->send();
+
+            return;
+        }
 
         $file_extension = pathinfo($pic_filename, PATHINFO_EXTENSION);
-        $images = glob("./uploads/item_pics/$pic_filename");
-        $base_path = './uploads/item_pics/' . pathinfo($pic_filename, PATHINFO_FILENAME);
+        $thumb_path = $pics_dir . pathinfo($pic_filename, PATHINFO_FILENAME) . '_thumb.' . $file_extension;
 
-        if (sizeof($images) > 0) {
-            $image_path = $images[0];
-            $thumb_path = $base_path . "_thumb.$file_extension";
-
-            if (sizeof($images) < 2 && !file_exists($thumb_path)) {
-                $image = Services::image('gd2');
-                $image->withFile($image_path)
+        if (!is_file($thumb_path)) {
+            try {
+                Services::image('gd2')
+                    ->withFile($image_path)
                     ->resize(52, 32, true, 'height')
                     ->save($thumb_path);
+            } catch (Throwable $e) {
+                log_message('error', 'Item PicThumb: unable to create thumbnail. ' . $e->getMessage());
             }
-
-            $this->response->setContentType(mime_content_type($thumb_path));
-            $this->response->setBody(file_get_contents($thumb_path));
-            $this->response->send();
         }
+
+        $serve_path = is_file($thumb_path) ? $thumb_path : $image_path;
+        $mime = mime_content_type($serve_path) ?: 'image/jpeg';
+
+        $this->response
+            ->setContentType($mime)
+            ->setBody((string)file_get_contents($serve_path))
+            ->send();
     }
 
     /**
@@ -366,13 +376,16 @@ class Items extends Secure_Controller
 
         $data['logo_exists'] = $item_info->pic_filename !== null;
         if ($item_info->pic_filename != null) {
+            $pics_dir = FCPATH . 'uploads/item_pics/';
             $file_extension = pathinfo($item_info->pic_filename, PATHINFO_EXTENSION);
             if (empty($file_extension)) {
-                $images = glob("./uploads/item_pics/$item_info->pic_filename.*");
+                $images = glob($pics_dir . $item_info->pic_filename . '.*') ?: [];
             } else {
-                $images = glob("./uploads/item_pics/$item_info->pic_filename");
+                $images = is_file($pics_dir . $item_info->pic_filename)
+                    ? [$pics_dir . $item_info->pic_filename]
+                    : [];
             }
-            $data['image_path']    = sizeof($images) > 0 ? base_url($images[0]) : '';
+            $data['image_path']    = sizeof($images) > 0 ? base_url('uploads/item_pics/' . rawurlencode(pathinfo($images[0], PATHINFO_BASENAME))) : '';
         } else {
             $data['image_path']    = '';
         }
@@ -804,7 +817,20 @@ class Items extends Secure_Controller
             'file_ext'  => $file->guessExtension()
         ];
 
-        $file->move(FCPATH . 'uploads/item_pics/', $file_info['raw_name'] . '.' . $file_info['file_ext'], true);
+        $pics_dir = FCPATH . 'uploads/item_pics/';
+        if (!is_dir($pics_dir) && !mkdir($pics_dir, 0750, true) && !is_dir($pics_dir)) {
+            return ['error' => 'Upload folder is missing and could not be created (public/uploads/item_pics/).'];
+        }
+
+        if (!is_writable($pics_dir)) {
+            return ['error' => 'Upload folder is not writable (public/uploads/item_pics/).'];
+        }
+
+        $target_name = $file_info['raw_name'] . '.' . $file_info['file_ext'];
+        if (!$file->move($pics_dir, $target_name, true)) {
+            return ['error' => 'Could not save the uploaded image file.'];
+        }
+
         return ($file_info);
     }
 
