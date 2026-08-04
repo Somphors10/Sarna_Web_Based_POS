@@ -83,7 +83,7 @@ helper('url');
                 <li class="pull-left">
                     <?= form_dropdown('mode', $modes, $mode, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'auto']) ?>
                 </li>
-                <?php if ($config['dinner_table_enable']) { ?>
+                <?php if (dinner_tables_ui_enabled() && $config['dinner_table_enable']) { ?>
                     <li class="pull-left first_li">
                         <label class="control-label"><?= lang(ucfirst($controller_name) . '.table') ?></label>
                     </li>

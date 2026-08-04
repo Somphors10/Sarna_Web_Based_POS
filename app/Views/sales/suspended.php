@@ -22,7 +22,7 @@ $this->dinner_table = model(Dinner_table::class);
         <tr style="background-color: #ccc;">
             <th><?= lang('Sales.suspended_doc_id') ?></th>
             <th><?= lang('Sales.date') ?></th>
-            <?php if ($config['dinner_table_enable']) { ?>
+            <?php if (dinner_tables_ui_enabled() && $config['dinner_table_enable']) { ?>
                 <th><?= lang('Sales.table') ?></th>
             <?php } ?>
             <th><?= lang('Sales.customer') ?></th>
@@ -36,7 +36,7 @@ $this->dinner_table = model(Dinner_table::class);
             <tr>
                 <td><?= $suspended_sale['doc_id'] ?></td>
                 <td><?= date($config['dateformat'], strtotime($suspended_sale['sale_time'])) ?></td>
-                <?php if ($config['dinner_table_enable']) { ?>
+                <?php if (dinner_tables_ui_enabled() && $config['dinner_table_enable']) { ?>
                     <td><?= esc($this->dinner_table->get_name($suspended_sale['dinner_table_id'])) ?></td>
                 <?php } ?>
                 <td>

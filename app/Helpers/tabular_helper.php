@@ -20,6 +20,15 @@ function hidden_ui_module_ids(): array
 }
 
 /**
+ * Dinner/restaurant table UI (Config tab + Sales register selector).
+ * Code and database stay in place; set to true to show again.
+ */
+function dinner_tables_ui_enabled(): bool
+{
+    return false;
+}
+
+/**
  * Whether SMS / send-message UI should be shown.
  */
 function messaging_ui_enabled(): bool
