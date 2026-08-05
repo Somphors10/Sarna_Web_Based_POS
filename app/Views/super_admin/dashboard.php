@@ -5,6 +5,7 @@
  * @var bool $is_owner
  * @var array $subscription_requests
  * @var array $password_reset_requests
+ * @var object|null $logged_in_admin
  * @var string $active_page
  */
 
@@ -16,6 +17,36 @@ $format_request_date = static function (?string $value): string {
     $timestamp = strtotime($value);
 
     return $timestamp !== false ? date('Y-m-d', $timestamp) : $value;
+};
+
+$format_relative_time = static function (?string $value): string {
+    if ($value === null || $value === '') {
+        return '';
+    }
+
+    $timestamp = strtotime($value);
+    if ($timestamp === false) {
+        return $value;
+    }
+
+    $diff = time() - $timestamp;
+    if ($diff < 60) {
+        return 'Just now';
+    }
+    if ($diff < 3600) {
+        return (int) floor($diff / 60) . ' min ago';
+    }
+    if ($diff < 86400) {
+        return (int) floor($diff / 3600) . ' hours ago';
+    }
+    if ($diff < 604800) {
+        return (int) floor($diff / 86400) . ' days ago';
+    }
+    if ($diff < 2592000) {
+        return (int) floor($diff / 604800) . ' weeks ago';
+    }
+
+    return date('Y-m-d', $timestamp);
 };
 ?>
 <!doctype html>
@@ -30,9 +61,10 @@ $format_request_date = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=17') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=22') ?>">
 </head>
 <body class="sa-dashboard">
+<div id="sa_toast_stack" class="sa-toast-stack" aria-live="polite" aria-atomic="true"></div>
 <script>
     (function() {
         const key = 'ospos_sidebar_collapsed';
@@ -111,6 +143,57 @@ $format_request_date = static function (?string $value): string {
     if ($error_code !== '' && isset($error_messages[$error_code])) {
         $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
     }
+
+    $admin = $logged_in_admin ?? null;
+    $admin_display_name = trim((string)($admin->full_name ?? ''));
+    if ($admin_display_name === '') {
+        $admin_display_name = trim((string)($admin->username ?? 'Super Admin'));
+    }
+    $admin_username = trim((string)($admin->username ?? ''));
+    $admin_email = trim((string)($admin->email ?? ''));
+    $admin_initials = '';
+    foreach (preg_split('/\s+/', $admin_display_name) ?: [] as $part) {
+        if ($part !== '') {
+            $admin_initials .= strtoupper(substr($part, 0, 1));
+        }
+        if (strlen($admin_initials) >= 2) {
+            break;
+        }
+    }
+    if ($admin_initials === '') {
+        $admin_initials = 'SA';
+    }
+
+    $notification_items = [];
+    foreach ($subscription_requests as $request) {
+        $owner = trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? ''));
+        $notification_items[] = [
+            'type' => 'registration',
+            'id' => (int)$request['request_id'],
+            'key' => 'registration-' . (int)$request['request_id'],
+            'title' => 'New company registration',
+            'subtitle' => (string)($request['company_name'] ?? 'New registration'),
+            'body' => 'Tenant code: ' . ($request['tenant_code'] ?? '') . '. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
+            'meta' => (string)($request['owner_email'] ?? ''),
+            'created_at' => $format_request_date($request['created_at'] ?? ''),
+            'relative_time' => $format_relative_time($request['created_at'] ?? ''),
+            'review_url' => site_url('super-admin/requests'),
+        ];
+    }
+    foreach ($password_reset_requests ?? [] as $reset) {
+        $notification_items[] = [
+            'type' => 'password_reset',
+            'id' => (int)$reset['request_id'],
+            'key' => 'password_reset-' . (int)$reset['request_id'],
+            'title' => 'Password reset request',
+            'subtitle' => trim(($reset['username'] ?? '') . ' · ' . ($reset['tenant_code'] ?? '')),
+            'body' => 'A user requested a password reset for tenant #' . ($reset['tenant_id'] ?? '') . '. Review and approve from pending requests.',
+            'meta' => (string)($reset['tenant_code'] ?? ''),
+            'created_at' => $format_request_date($reset['created_at'] ?? ''),
+            'relative_time' => $format_relative_time($reset['created_at'] ?? ''),
+            'review_url' => site_url('super-admin/requests'),
+        ];
+    }
 ?>
 <div class="neo-layout sa-layout">
     <aside class="neo-global-sidebar">
@@ -155,12 +238,58 @@ $format_request_date = static function (?string $value): string {
     <div id="sa_sidebar_backdrop" class="neo-sidebar-backdrop" aria-hidden="true"></div>
 
     <main class="neo-global-content sa-main">
-        <header class="sa-mobile-topbar">
-            <button id="sa_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
-                <span class="neo-hamburger-icon" aria-hidden="true"></span>
-            </button>
-            <span class="sa-mobile-topbar__title"><?= esc($current_meta['title']) ?></span>
+        <header class="sa-top-navbar">
+            <div class="sa-top-navbar__start">
+                <button id="sa_mobile_sidebar_toggle" class="neo-mobile-menu-toggle sa-top-navbar__menu" type="button" aria-label="Open menu" aria-expanded="false">
+                    <span class="neo-hamburger-icon" aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="sa-top-navbar__end">
+                <div class="sa-top-navbar__search">
+                    <div class="sa-search-wrap sa-search-wrap--pill">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                        </svg>
+                        <input type="text" id="sa_navbar_search" class="sa-input sa-input--pill" placeholder="Search businesses, admins, requests..." autocomplete="off">
+                    </div>
+                </div>
+                <div class="sa-top-navbar__actions">
+                    <button type="button" class="sa-notify-btn" id="sa_notify_btn" aria-label="Notifications" aria-expanded="false" aria-controls="sa_notify_panel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="sa-notify-badge<?= $pending_count > 0 ? '' : ' sa-notify-badge--hidden' ?>" id="sa_navbar_badge"><?= $pending_count ?></span>
+                    </button>
+                <div class="sa-dropdown-wrap">
+                    <button type="button" class="sa-profile-btn" id="sa_profile_btn" aria-label="Super admin profile" aria-expanded="false" aria-haspopup="true">
+                        <span class="sa-profile-avatar" aria-hidden="true"><?= esc($admin_initials) ?></span>
+                    </button>
+                    <div class="sa-dropdown sa-dropdown--profile" id="sa_profile_dropdown" hidden>
+                        <div class="sa-profile-card">
+                            <span class="sa-profile-card__avatar" aria-hidden="true"><?= esc($admin_initials) ?></span>
+                            <div class="sa-profile-card__copy">
+                                <strong><?= esc($admin_display_name) ?></strong>
+                                <?php if ($admin_username !== ''): ?>
+                                    <span>@<?= esc($admin_username) ?></span>
+                                <?php endif; ?>
+                                <?php if ($admin_email !== ''): ?>
+                                    <span><?= esc($admin_email) ?></span>
+                                <?php endif; ?>
+                                <span class="sa-profile-card__role"><?= !empty($is_owner) ? 'Platform Owner' : 'Platform Admin' ?></span>
+                            </div>
+                        </div>
+                        <div class="sa-dropdown__menu">
+                            <a class="sa-dropdown__menu-item" href="<?= site_url('super-admin/admins') ?>">Platform Admins</a>
+                            <a class="sa-dropdown__menu-item js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
         </header>
+        <div class="sa-main-body">
         <header class="sa-page-header">
             <div class="sa-page-header__content">
                 <p class="sa-page-header__eyebrow">Platform Console</p>
@@ -168,14 +297,7 @@ $format_request_date = static function (?string $value): string {
                 <p class="sa-page-header__subtitle"><?= esc($current_meta['subtitle']) ?></p>
             </div>
             <?php if (in_array($active_page, ['businesses', 'admins', 'requests'], true)): ?>
-            <div class="sa-toolbar">
-                <div class="sa-search-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
-                    </svg>
-                    <input type="text" id="super_admin_search" class="sa-input" placeholder="Search businesses, admins, requests...">
-                </div>
+            <div class="sa-toolbar sa-toolbar--filter-only">
                 <?php if ($active_page === 'businesses'): ?>
                 <select id="super_admin_status_filter" class="sa-select">
                     <option value="">All Status</option>
@@ -216,7 +338,7 @@ $format_request_date = static function (?string $value): string {
                 </div>
                 <div class="sa-stat-card__body">
                     <p class="sa-stat-card__label">Pending Requests</p>
-                    <p class="sa-stat-card__value"><?= $pending_count ?></p>
+                    <p class="sa-stat-card__value" id="sa_pending_stat_value"><?= $pending_count ?></p>
                     <p class="sa-stat-card__hint">View pending requests →</p>
                 </div>
             </a>
@@ -570,6 +692,7 @@ $format_request_date = static function (?string $value): string {
             </div>
         </section>
         <?php endif; ?>
+        </div>
     </main>
 </div>
 
@@ -621,6 +744,54 @@ $format_request_date = static function (?string $value): string {
         </div>
     </div>
 </div>
+
+<div id="sa_notify_backdrop" class="sa-notify-backdrop" hidden aria-hidden="true"></div>
+<aside id="sa_notify_panel" class="sa-notify-panel" aria-hidden="true" aria-labelledby="sa_notify_panel_title">
+    <div class="sa-notify-panel__head">
+        <div class="sa-notify-panel__title-row">
+            <div class="sa-notify-panel__title-wrap">
+                <h2 id="sa_notify_panel_title">Notifications</h2>
+                <span class="sa-notify-panel__count<?= $pending_count > 0 ? '' : ' sa-notify-panel__count--hidden' ?>" id="sa_notify_panel_count"><?= $pending_count ?></span>
+            </div>
+            <button type="button" class="sa-notify-panel__close" id="sa_notify_close" aria-label="Close notifications">&times;</button>
+        </div>
+        <div class="sa-notify-panel__actions">
+            <button type="button" class="sa-notify-panel__action sa-notify-panel__action--read" id="sa_notify_mark_read">Mark all as read</button>
+            <button type="button" class="sa-notify-panel__action sa-notify-panel__action--clear" id="sa_notify_clear">Clear</button>
+        </div>
+    </div>
+    <div class="sa-notify-panel__body">
+        <ul class="sa-notify-panel__list" id="sa_notify_list">
+            <?php foreach ($notification_items as $item): ?>
+                <li class="sa-notify-card" data-notify-key="<?= esc($item['key'], 'attr') ?>">
+                    <button type="button" class="sa-notify-card__dismiss" aria-label="Dismiss notification">&times;</button>
+                    <div class="sa-notify-card__row">
+                        <span class="sa-notify-card__icon sa-notify-card__icon--<?= esc($item['type']) ?>" aria-hidden="true">
+                            <?php if ($item['type'] === 'password_reset'): ?>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <?php else: ?>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
+                            <?php endif; ?>
+                        </span>
+                        <div class="sa-notify-card__head">
+                            <strong><?= esc($item['title']) ?></strong>
+                            <?php if ($item['relative_time'] !== ''): ?>
+                                <time datetime="<?= esc($item['created_at'], 'attr') ?>"><?= esc($item['relative_time']) ?></time>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <p class="sa-notify-card__subtitle"><?= esc($item['subtitle']) ?></p>
+                    <p class="sa-notify-card__body"><?= esc($item['body']) ?></p>
+                    <?php if ($item['meta'] !== ''): ?>
+                        <p class="sa-notify-card__meta"><?= esc($item['meta']) ?></p>
+                    <?php endif; ?>
+                    <a class="sa-notify-card__link" href="<?= esc($item['review_url'], 'attr') ?>">View details</a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <p class="sa-notify-panel__empty<?= empty($notification_items) ? '' : ' sa-notify-panel__empty--hidden' ?>" id="sa_notify_empty">No pending requests.</p>
+    </div>
+</aside>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -714,11 +885,302 @@ $format_request_date = static function (?string $value): string {
         const actionMessageEl = document.getElementById('request-action-confirm-message');
         const actionCancelBtn = document.getElementById('request-action-confirm-cancel');
         const actionContinueBtn = document.getElementById('request-action-confirm-continue');
-        const searchInput = document.getElementById('super_admin_search');
+        const searchInput = document.getElementById('sa_navbar_search');
         const statusFilter = document.getElementById('super_admin_status_filter');
+        const notifyBtn = document.getElementById('sa_notify_btn');
+        const notifyPanel = document.getElementById('sa_notify_panel');
+        const notifyBackdrop = document.getElementById('sa_notify_backdrop');
+        const notifyCloseBtn = document.getElementById('sa_notify_close');
+        const notifyMarkReadBtn = document.getElementById('sa_notify_mark_read');
+        const notifyClearBtn = document.getElementById('sa_notify_clear');
+        const notifyList = document.getElementById('sa_notify_list');
+        const notifyEmpty = document.getElementById('sa_notify_empty');
+        const profileBtn = document.getElementById('sa_profile_btn');
+        const profileDropdown = document.getElementById('sa_profile_dropdown');
+        const dismissedStorageKey = 'sa_dismissed_notifications';
         let pendingForm = null;
         let pendingLogoutHref = null;
         let pendingActionForm = null;
+        let openDropdown = null;
+
+        const getDismissedKeys = function() {
+            try {
+                const parsed = JSON.parse(sessionStorage.getItem(dismissedStorageKey) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                return [];
+            }
+        };
+
+        const setDismissedKeys = function(keys) {
+            sessionStorage.setItem(dismissedStorageKey, JSON.stringify(keys));
+        };
+
+        const getVisibleNotifyCards = function() {
+            if (!notifyList) {
+                return [];
+            }
+
+            return Array.from(notifyList.querySelectorAll('.sa-notify-card')).filter(function(card) {
+                return card.style.display !== 'none';
+            });
+        };
+
+        const syncNotifyEmptyState = function() {
+            if (!notifyEmpty || !notifyList) {
+                return;
+            }
+
+            const visibleCount = getVisibleNotifyCards().length;
+            notifyEmpty.classList.toggle('sa-notify-panel__empty--hidden', visibleCount > 0);
+            notifyList.hidden = visibleCount === 0;
+        };
+
+        const syncNotifyCountsFromVisible = function() {
+            if (sessionStorage.getItem('sa_notifications_marked_read') === '1') {
+                updateNotifyCounts(0);
+                return;
+            }
+
+            updateNotifyCounts(getVisibleNotifyCards().length);
+        };
+
+        const updatePendingStatCount = function(total) {
+            const statValue = document.getElementById('sa_pending_stat_value');
+            const count = Math.max(0, parseInt(total, 10) || 0);
+
+            if (statValue) {
+                statValue.textContent = String(count);
+            }
+        };
+
+        const updateNotifyCounts = function(total) {
+            const count = Math.max(0, parseInt(total, 10) || 0);
+            const navbarBadge = document.getElementById('sa_navbar_badge');
+            const panelCount = document.getElementById('sa_notify_panel_count');
+
+            if (navbarBadge) {
+                navbarBadge.textContent = String(count);
+                navbarBadge.classList.toggle('sa-notify-badge--hidden', count <= 0);
+            }
+
+            if (panelCount) {
+                panelCount.textContent = String(count);
+                panelCount.classList.toggle('sa-notify-panel__count--hidden', count <= 0);
+            }
+        };
+
+        const pruneDismissedNotifications = function() {
+            if (!notifyList) {
+                return;
+            }
+
+            const validKeys = Array.from(notifyList.querySelectorAll('.sa-notify-card'))
+                .map(function(card) {
+                    return card.getAttribute('data-notify-key') || '';
+                })
+                .filter(function(key) {
+                    return key !== '';
+                });
+
+            const dismissed = getDismissedKeys().filter(function(key) {
+                return validKeys.indexOf(key) !== -1;
+            });
+
+            setDismissedKeys(dismissed);
+        };
+
+        const applyDismissedNotifications = function() {
+            if (!notifyList) {
+                return;
+            }
+
+            pruneDismissedNotifications();
+
+            const dismissed = getDismissedKeys();
+            notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
+                const key = card.getAttribute('data-notify-key') || '';
+                if (dismissed.indexOf(key) !== -1) {
+                    card.style.display = 'none';
+                }
+            });
+
+            syncNotifyEmptyState();
+            syncNotifyCountsFromVisible();
+        };
+
+        const closeNotifyPanel = function() {
+            if (!notifyPanel || !notifyBackdrop) {
+                return;
+            }
+
+            notifyPanel.classList.remove('is-open');
+            notifyPanel.setAttribute('aria-hidden', 'true');
+            notifyBackdrop.hidden = true;
+            notifyBackdrop.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('sa-notify-open');
+
+            if (notifyBtn) {
+                notifyBtn.setAttribute('aria-expanded', 'false');
+            }
+        };
+
+        const openNotifyPanel = function() {
+            if (!notifyPanel || !notifyBackdrop) {
+                return;
+            }
+
+            closeDropdowns();
+            applyDismissedNotifications();
+            notifyPanel.classList.add('is-open');
+            notifyPanel.setAttribute('aria-hidden', 'false');
+            notifyBackdrop.hidden = false;
+            notifyBackdrop.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('sa-notify-open');
+
+            if (notifyBtn) {
+                notifyBtn.setAttribute('aria-expanded', 'true');
+            }
+        };
+
+        const closeDropdowns = function() {
+            if (profileDropdown) {
+                profileDropdown.hidden = true;
+            }
+
+            if (profileBtn) {
+                profileBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            openDropdown = null;
+        };
+
+        const toggleDropdown = function(button, dropdown) {
+            if (!button || !dropdown) {
+                return;
+            }
+
+            const willOpen = dropdown.hidden;
+            closeDropdowns();
+
+            if (willOpen) {
+                dropdown.hidden = false;
+                button.setAttribute('aria-expanded', 'true');
+                openDropdown = dropdown;
+            }
+        };
+
+        if (notifyBtn && notifyPanel) {
+            notifyBtn.addEventListener('click', function(event) {
+                event.stopPropagation();
+                if (notifyPanel.classList.contains('is-open')) {
+                    closeNotifyPanel();
+                } else {
+                    openNotifyPanel();
+                }
+            });
+        }
+
+        if (notifyCloseBtn) {
+            notifyCloseBtn.addEventListener('click', closeNotifyPanel);
+        }
+
+        if (notifyBackdrop) {
+            notifyBackdrop.addEventListener('click', closeNotifyPanel);
+        }
+
+        if (notifyMarkReadBtn) {
+            notifyMarkReadBtn.addEventListener('click', function() {
+                if (notifyList) {
+                    notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
+                        if (card.style.display !== 'none') {
+                            card.classList.add('is-read');
+                        }
+                    });
+                }
+
+                sessionStorage.setItem('sa_notifications_marked_read', '1');
+                updateNotifyCounts(0);
+            });
+        }
+
+        if (notifyClearBtn && notifyList) {
+            notifyClearBtn.addEventListener('click', function() {
+                const dismissed = getDismissedKeys();
+
+                notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
+                    const key = card.getAttribute('data-notify-key') || '';
+                    card.style.display = 'none';
+                    if (key !== '' && dismissed.indexOf(key) === -1) {
+                        dismissed.push(key);
+                    }
+                });
+
+                setDismissedKeys(dismissed);
+                sessionStorage.removeItem('sa_notifications_marked_read');
+                syncNotifyCountsFromVisible();
+                syncNotifyEmptyState();
+            });
+        }
+
+        if (notifyList) {
+            notifyList.addEventListener('click', function(event) {
+                const dismissBtn = event.target.closest('.sa-notify-card__dismiss');
+                if (!dismissBtn) {
+                    return;
+                }
+
+                const card = dismissBtn.closest('.sa-notify-card');
+                if (!card) {
+                    return;
+                }
+
+                const key = card.getAttribute('data-notify-key') || '';
+                const dismissed = getDismissedKeys();
+                if (key !== '' && dismissed.indexOf(key) === -1) {
+                    dismissed.push(key);
+                    setDismissedKeys(dismissed);
+                }
+
+                card.style.display = 'none';
+                sessionStorage.removeItem('sa_notifications_marked_read');
+                syncNotifyCountsFromVisible();
+                syncNotifyEmptyState();
+            });
+        }
+
+        applyDismissedNotifications();
+
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', function(event) {
+                event.stopPropagation();
+                closeNotifyPanel();
+                toggleDropdown(profileBtn, profileDropdown);
+            });
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!openDropdown) {
+                return;
+            }
+
+            if (event.target.closest('.sa-dropdown-wrap')) {
+                return;
+            }
+
+            closeDropdowns();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && notifyPanel && notifyPanel.classList.contains('is-open')) {
+                closeNotifyPanel();
+                return;
+            }
+
+            if (event.key === 'Escape' && openDropdown) {
+                closeDropdowns();
+            }
+        });
 
         const closeModal = function() {
             overlay.classList.remove('is-open');
@@ -1027,6 +1489,134 @@ $format_request_date = static function (?string $value): string {
                 closeDetailModal();
             }
         });
+
+        (function initRegistrationAlerts() {
+            const pollUrl = <?= json_encode(site_url('super-admin/notifications/poll')) ?>;
+            const requestsUrl = <?= json_encode(site_url('super-admin/requests')) ?>;
+            const latestRegistrationId = <?= (int)($latest_registration_request_id ?? 0) ?>;
+            const activePage = <?= json_encode($active_page) ?>;
+            const storageKey = 'sa_last_registration_request_id';
+            const toastStack = document.getElementById('sa_toast_stack');
+            const pendingBadge = document.getElementById('sa_navbar_badge');
+            const pendingStatValue = document.getElementById('sa_pending_stat_value');
+            const pollIntervalMs = 30000;
+
+            let lastSeenRegistrationId = parseInt(localStorage.getItem(storageKey) || '0', 10);
+
+            if (activePage === 'requests' || lastSeenRegistrationId === 0) {
+                lastSeenRegistrationId = latestRegistrationId;
+                localStorage.setItem(storageKey, String(lastSeenRegistrationId));
+            }
+
+            const escapeHtml = function(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            };
+
+            const updatePendingBadge = function(total) {
+                updatePendingStatCount(total);
+                syncNotifyCountsFromVisible();
+            };
+
+            const showRegistrationToast = function(registration) {
+                if (!toastStack) {
+                    return;
+                }
+
+                const toast = document.createElement('div');
+                toast.className = 'sa-toast sa-toast--registration';
+                toast.innerHTML =
+                    '<div class="sa-toast__body">' +
+                        '<strong>New company registration</strong>' +
+                        '<p>' + escapeHtml(registration.company_name) + ' (' + escapeHtml(registration.tenant_code) + ')</p>' +
+                        '<p class="sa-toast__meta">' + escapeHtml(registration.owner_username) + ' · ' + escapeHtml(registration.owner_email) + '</p>' +
+                    '</div>' +
+                    '<a class="sa-toast__action" href="' + escapeHtml(registration.review_url || requestsUrl) + '">Review</a>' +
+                    '<button type="button" class="sa-toast__close" aria-label="Dismiss">&times;</button>';
+
+                toast.querySelector('.sa-toast__close').addEventListener('click', function() {
+                    toast.remove();
+                });
+
+                toastStack.appendChild(toast);
+
+                window.setTimeout(function() {
+                    toast.classList.add('is-leaving');
+                    window.setTimeout(function() {
+                        toast.remove();
+                    }, 300);
+                }, 12000);
+            };
+
+            const notifyBrowser = function(registration) {
+                if (!('Notification' in window) || Notification.permission !== 'granted') {
+                    return;
+                }
+
+                const notification = new Notification('New company registration', {
+                    body: registration.company_name + ' (' + registration.tenant_code + ')',
+                    tag: 'wbpos-registration-' + registration.request_id
+                });
+
+                notification.onclick = function() {
+                    window.focus();
+                    window.location.href = registration.review_url || requestsUrl;
+                };
+            };
+
+            const pollNotifications = function() {
+                fetch(pollUrl + '?since=' + encodeURIComponent(String(lastSeenRegistrationId)), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('poll failed');
+                        }
+
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (!data || typeof data !== 'object') {
+                            return;
+                        }
+
+                        updatePendingBadge(parseInt(data.pending_total, 10) || 0);
+
+                        const newRegistrations = Array.isArray(data.new_registrations) ? data.new_registrations : [];
+                        if (newRegistrations.length > 0) {
+                            sessionStorage.removeItem('sa_notifications_marked_read');
+                        }
+
+                        const newRegistrationsList = newRegistrations;
+                        if (newRegistrationsList.length === 0) {
+                            return;
+                        }
+
+                        newRegistrationsList.forEach(function(registration) {
+                            showRegistrationToast(registration);
+                            notifyBrowser(registration);
+                        });
+
+                        const latestId = parseInt(data.latest_registration_request_id, 10) || lastSeenRegistrationId;
+                        lastSeenRegistrationId = latestId;
+                        localStorage.setItem(storageKey, String(lastSeenRegistrationId));
+                    })
+                    .catch(function() {
+                        /* ignore transient network errors */
+                    });
+            };
+
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().catch(function() {});
+            }
+
+            window.setInterval(pollNotifications, pollIntervalMs);
+            window.setTimeout(pollNotifications, 5000);
+        })();
     });
 </script>
 </body>

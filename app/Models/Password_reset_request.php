@@ -22,6 +22,17 @@ class Password_reset_request extends Model
         'reviewed_at',
     ];
 
+    public function count_pending(): int
+    {
+        if (!$this->db->tableExists('password_reset_requests')) {
+            return 0;
+        }
+
+        return (int)$this->db->table('password_reset_requests')
+            ->where('status', 'pending')
+            ->countAllResults();
+    }
+
     public function get_pending(): array
     {
         return $this->db->table('password_reset_requests')

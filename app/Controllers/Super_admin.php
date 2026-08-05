@@ -70,14 +70,18 @@ class Super_admin extends BaseController
         $tenant_model = model(Tenant::class);
         $request_model = model(Subscription_request::class);
         $password_reset_model = model(Password_reset_request::class);
+        $subscription_requests = $request_model->get_pending_with_plan();
+        $password_reset_requests = $password_reset_model->db->tableExists('password_reset_requests')
+            ? $password_reset_model->get_pending()
+            : [];
         $data = [
             'tenants' => $tenant_model->get_with_owner_summary(),
             'platform_admins' => $platform_admin->get_all_admins(),
+            'logged_in_admin' => $platform_admin->get_logged_in_admin(),
             'is_owner' => $platform_admin->is_owner(),
-            'subscription_requests' => $request_model->get_pending_with_plan(),
-            'password_reset_requests' => $password_reset_model->db->tableExists('password_reset_requests')
-                ? $password_reset_model->get_pending()
-                : [],
+            'subscription_requests' => $subscription_requests,
+            'password_reset_requests' => $password_reset_requests,
+            'latest_registration_request_id' => $request_model->get_latest_pending_id(),
             'active_page' => $page
         ];
 
@@ -107,6 +111,47 @@ class Super_admin extends BaseController
         model(Platform_admin::class)->logout();
         (new TenantContext())->clearTenantDatabaseSession();
         return redirect()->to('super-admin/login');
+    }
+
+    /**
+     * Poll for new business registration requests (Super Admin dashboard alerts).
+     */
+    public function getNotificationPoll()
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $since_id = (int)($this->request->getGet('since') ?? 0);
+        $request_model = model(Subscription_request::class);
+        $password_reset_model = model(Password_reset_request::class);
+
+        $pending_registrations = $request_model->count_pending();
+        $pending_password_resets = $password_reset_model->count_pending();
+        $new_registrations = $request_model->get_registrations_since_id($since_id);
+
+        $mapped = [];
+        foreach ($new_registrations as $row) {
+            $mapped[] = [
+                'request_id'     => (int)$row['request_id'],
+                'company_name'   => (string)($row['company_name'] ?? ''),
+                'tenant_code'    => (string)($row['tenant_code'] ?? ''),
+                'owner_username' => (string)($row['owner_username'] ?? ''),
+                'owner_email'    => (string)($row['owner_email'] ?? ''),
+                'plan_name'      => (string)($row['plan_name'] ?? ''),
+                'created_at'     => (string)($row['created_at'] ?? ''),
+                'review_url'     => site_url('super-admin/requests'),
+            ];
+        }
+
+        return $this->response->setJSON([
+            'pending_registrations'            => $pending_registrations,
+            'pending_password_resets'          => $pending_password_resets,
+            'pending_total'                    => $pending_registrations + $pending_password_resets,
+            'latest_registration_request_id'   => $request_model->get_latest_pending_id(),
+            'new_registrations'                => $mapped,
+        ]);
     }
 
     public function postCreateAdmin(): RedirectResponse

@@ -39,6 +39,46 @@ class Subscription_request extends Model
             ->getResultArray();
     }
 
+    public function count_pending(): int
+    {
+        return (int)$this->db->table('subscription_requests')
+            ->where('status', 'pending')
+            ->countAllResults();
+    }
+
+    public function get_latest_pending_id(): int
+    {
+        $row = $this->db->table('subscription_requests')
+            ->select('request_id')
+            ->where('status', 'pending')
+            ->orderBy('request_id', 'desc')
+            ->get(1)
+            ->getRowArray();
+
+        return $row ? (int)$row['request_id'] : 0;
+    }
+
+    /**
+     * Pending registration requests created after the given request id.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function get_registrations_since_id(int $since_id): array
+    {
+        if ($since_id <= 0) {
+            return [];
+        }
+
+        return $this->db->table('subscription_requests')
+            ->select('subscription_requests.*, plans.plan_name, plans.price_monthly')
+            ->join('plans', 'plans.plan_id = subscription_requests.plan_id', 'left')
+            ->where('subscription_requests.status', 'pending')
+            ->where('subscription_requests.request_id >', $since_id)
+            ->orderBy('subscription_requests.request_id', 'asc')
+            ->get()
+            ->getResultArray();
+    }
+
     public function get_info_for_review(int $request_id): ?object
     {
         return $this->db->table('subscription_requests')
