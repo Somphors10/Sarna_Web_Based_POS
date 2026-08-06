@@ -27,7 +27,7 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=18">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=19">
     <link rel="stylesheet" href="css/password-toggle.css?v=1">
 </head>
 <body class="saas-modern saas-landing-body">
@@ -152,19 +152,23 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
                     <span class="lp-reg__qr-badge">Scan to pay</span>
                     <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                 </div>
-                <div class="lp-reg__qr-frame lp-reg__qr-frame--code-only">
-                    <?php if ($qr_image_exists): ?>
-                    <img
-                        src="<?= base_url($qr_image_path) ?>?v=1"
-                        alt="Scan QR code to pay $<?= number_format($monthly_price, 0) ?> per month"
-                    >
-                    <?php else: ?>
-                    <div class="lp-reg__qr-missing">
-                        <p><strong>QR image not found</strong></p>
-                        <p>After <code>git pull</code>, this file must exist:</p>
-                        <p><code>public/images/payment/aba-khqr-code.png</code></p>
+                <div class="lp-reg__qr-tile">
+                    <div class="lp-reg__qr-tile-inner">
+                        <?php if ($qr_image_exists): ?>
+                        <img
+                            src="<?= base_url($qr_image_path) ?>?v=2"
+                            alt="Scan QR code to pay $<?= number_format($monthly_price, 0) ?> per month"
+                            width="512"
+                            height="512"
+                        >
+                        <?php else: ?>
+                        <div class="lp-reg__qr-missing">
+                            <p><strong>QR image not found</strong></p>
+                            <p>After <code>git pull</code>, this file must exist:</p>
+                            <p><code>public/images/payment/aba-khqr-code.png</code></p>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
                 <p class="lp-reg__qr-hint">Open ABA or any KHQR app and scan</p>
             </div>
