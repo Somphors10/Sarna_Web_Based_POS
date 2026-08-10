@@ -190,20 +190,23 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
 
 .sa-notify-badge {
     position: absolute;
-    top: -0.05rem;
-    right: -0.2rem;
-    min-width: 1.05rem;
-    height: 1.05rem;
-    padding: 0 0.2rem;
-    border-radius: 999px;
-    background: #2563eb;
-    color: #fff;
-    font-size: 0.6rem;
+    top: -0.2rem;
+    right: -0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.32rem;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 0.625rem;
     font-weight: 700;
-    line-height: 1.05rem;
+    line-height: 1;
     text-align: center;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
+    border: 1px solid #bfdbfe;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08);
 }
 
 .sa-notify-badge--hidden {
@@ -321,14 +324,16 @@ body.sa-notify-open {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.35rem;
-    border-radius: 999px;
-    background: #2563eb;
-    color: #fff;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    padding: 0 0.4rem;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #2563eb;
     font-size: 0.72rem;
     font-weight: 700;
+    line-height: 1;
+    border: 1px solid #bfdbfe;
 }
 
 .sa-notify-panel__count--hidden {

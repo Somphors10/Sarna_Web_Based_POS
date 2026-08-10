@@ -61,7 +61,7 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=22') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=23') ?>">
 </head>
 <body class="sa-dashboard">
 <div id="sa_toast_stack" class="sa-toast-stack" aria-live="polite" aria-atomic="true"></div>
