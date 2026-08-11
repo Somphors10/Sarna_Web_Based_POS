@@ -1291,7 +1291,12 @@ a.sa-metric:focus-visible .sa-metric__hint {
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+
+.sa-row-actions__form {
+    display: inline-flex;
+    margin: 0;
 }
 
 .sa-select--sm {
@@ -1502,6 +1507,10 @@ a.sa-metric:focus-visible .sa-metric__hint {
     .sa-panel__body {
         padding-left: 1.15rem;
         padding-right: 1.15rem;
+    }
+
+    .sa-row-actions {
+        flex-wrap: wrap;
     }
 }
 

@@ -61,7 +61,7 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=23') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=25') ?>">
 </head>
 <body class="sa-dashboard">
 <div id="sa_toast_stack" class="sa-toast-stack" aria-live="polite" aria-atomic="true"></div>
@@ -604,14 +604,14 @@ $format_relative_time = static function (?string $value): string {
                                         View
                                     </button>
                                     <?= form_open('super-admin/approve-request/' . (int)$request['request_id'], [
-                                        'class' => 'js-confirm-action-form',
+                                        'class' => 'js-confirm-action-form sa-row-actions__form',
                                         'data-action' => 'approve',
                                         'data-context' => 'registration',
                                     ]) ?>
                                     <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-request/' . (int)$request['request_id'], [
-                                        'class' => 'js-confirm-action-form',
+                                        'class' => 'js-confirm-action-form sa-row-actions__form',
                                         'data-action' => 'reject',
                                         'data-context' => 'registration',
                                     ]) ?>
@@ -669,14 +669,14 @@ $format_relative_time = static function (?string $value): string {
                                         View
                                     </button>
                                     <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id'], [
-                                        'class' => 'js-confirm-action-form',
+                                        'class' => 'js-confirm-action-form sa-row-actions__form',
                                         'data-action' => 'approve',
                                         'data-context' => 'password-reset',
                                     ]) ?>
                                     <button class="sa-btn sa-btn--success" type="submit">Approve</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-password-reset/' . (int)$reset['request_id'], [
-                                        'class' => 'js-confirm-action-form',
+                                        'class' => 'js-confirm-action-form sa-row-actions__form',
                                         'data-action' => 'reject',
                                         'data-context' => 'password-reset',
                                     ]) ?>
