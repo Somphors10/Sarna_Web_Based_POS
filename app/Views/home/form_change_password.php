@@ -81,7 +81,8 @@
 <script type="text/javascript">
     window.WBPOS_STRONG_PASSWORD_MESSAGE = <?= json_encode(lang('Employees.password_strong')) ?>;
 </script>
-<script src="<?= base_url('js/strong_password.js') ?>"></script>
+<script src="<?= base_url('js/password_strength.js?v=1') ?>"></script>
+<script src="<?= base_url('js/strong_password.js?v=2') ?>"></script>
 <script type="text/javascript">
     // Validation and submit handling
     $(document).ready(function() {

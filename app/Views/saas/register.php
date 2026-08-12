@@ -195,12 +195,16 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
 </footer>
 
 <script src="<?= base_url('js/password_toggle.js?v=1') ?>"></script>
+<script>
+    window.WBPOS_STRONG_PASSWORD_MESSAGE = <?= json_encode(lang('Common.password_strong'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+</script>
 <?php if (!empty($field_errors)): ?>
 <script>
     window.saasRegisterFieldErrors = <?= json_encode($field_errors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 </script>
 <?php endif; ?>
-<script src="<?= base_url('js/saas_register.js?v=1') ?>"></script>
+<script src="<?= base_url('js/password_strength.js?v=1') ?>"></script>
+<script src="<?= base_url('js/saas_register.js?v=2') ?>"></script>
 
 </body>
 </html>

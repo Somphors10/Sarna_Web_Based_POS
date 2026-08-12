@@ -24,7 +24,7 @@ return [
     "one_or_multiple"              => "employee(s)",
     "password"                     => "Password",
     "password_minlength"           => "Password must be at least 8 characters in length.",
-    "password_strong"              => "Please choose a stronger password (at least 8 characters, hard to guess).",
+    "password_strong"              => "Password must be at least 8 characters and include both letters and numbers.",
     "password_must_match"          => "Passwords do not match.",
     "password_not_must_match"      => "Current password and new password must be unique.",
     "password_required"            => "Password is required.",

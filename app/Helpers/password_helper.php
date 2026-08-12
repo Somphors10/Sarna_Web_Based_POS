@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Score password strength from length and character variety (no fixed format).
+ * Score password strength from length and character variety (informational only).
  */
 function password_strength_score(string $password): int
 {
@@ -17,7 +17,7 @@ function password_strength_score(string $password): int
     if ($length >= 16) {
         $score++;
     }
-    if (preg_match('/[a-z]/', $password)) {
+    if (preg_match('/[a-zA-Z]/', $password)) {
         $score++;
     }
     if (preg_match('/[A-Z]/', $password)) {
@@ -61,6 +61,14 @@ function is_strong_password(?string $password): bool
         return false;
     }
 
+    if (!preg_match('/[a-zA-Z]/', $password)) {
+        return false;
+    }
+
+    if (!preg_match('/\d/', $password)) {
+        return false;
+    }
+
     if (preg_match('/^(.)\1+$/', $password)) {
         return false;
     }
@@ -69,7 +77,7 @@ function is_strong_password(?string $password): bool
         return false;
     }
 
-    return password_strength_score($password) >= 4;
+    return true;
 }
 
 /**

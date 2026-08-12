@@ -14,7 +14,7 @@
         owner_last_name: 'Enter at least 2 characters.',
         owner_email: 'Enter a valid email address.',
         owner_username: 'Username must be at least 4 characters.',
-        owner_password: 'Password must be at least 8 characters.',
+        owner_password: window.WBPOS_STRONG_PASSWORD_MESSAGE || 'Password must be at least 8 characters and include both letters and numbers.',
         payment_reference: 'Enter your transaction or receipt ID (min 3 characters).'
     };
 
@@ -95,7 +95,9 @@
                 valid = value.length >= 4;
                 break;
             case 'owner_password':
-                valid = raw.length >= 8;
+                valid = window.WBPOS && typeof window.WBPOS.isStrongPassword === 'function'
+                    ? window.WBPOS.isStrongPassword(raw)
+                    : raw.length >= 8;
                 break;
             case 'payment_reference':
                 valid = value.length >= 3;
