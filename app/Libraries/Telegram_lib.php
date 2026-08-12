@@ -42,46 +42,116 @@ class Telegram_lib
         $plan_label = (string)($request['plan_name'] ?? 'Subscription plan');
         $plan_price = isset($request['plan_price']) ? number_format((float)$request['plan_price'], 2) : null;
         $review_url = (string)($request['review_url'] ?? '');
+        $company_name = (string)($request['company_name'] ?? '');
+        $tenant_code = (string)($request['tenant_code'] ?? '');
+        $username = (string)($request['owner_username'] ?? '');
+        $email = (string)($request['owner_email'] ?? '');
+        $phone = trim((string)($request['owner_phone'] ?? ''));
+        $payment_ref = (string)($request['payment_reference'] ?? '');
+        $request_id = !empty($request['request_id']) ? (int)$request['request_id'] : null;
 
         $lines = [
-            '<b>New company registration</b>',
+            $this->field_line('📋', 'New company registration', '', false, true),
             '',
-            '<b>Company:</b> ' . $this->escape((string)($request['company_name'] ?? '')),
-            '<b>Company code:</b> ' . $this->escape((string)($request['tenant_code'] ?? '')),
-            '<b>Owner:</b> ' . $this->escape($owner_name),
-            '<b>Username:</b> ' . $this->escape((string)($request['owner_username'] ?? '')),
-            '<b>Email:</b> ' . $this->escape((string)($request['owner_email'] ?? '')),
+            $this->field_line('🏢', 'Company', $company_name),
+            $this->field_line('🔖', 'Code', $tenant_code, true),
+            '',
+            $this->field_line('👤', 'Owner', $owner_name),
+            $this->field_line('🔑', 'Username', $username, true),
         ];
 
-        $phone = trim((string)($request['owner_phone'] ?? ''));
+        if ($email !== '') {
+            $lines[] = $this->field_line('✉️', 'Email', $email);
+        }
+
         if ($phone !== '') {
-            $lines[] = '<b>Phone:</b> ' . $this->escape($phone);
-        }
-
-        if ($plan_price !== null) {
-            $lines[] = '<b>Plan:</b> ' . $this->escape($plan_label) . ' ($' . $plan_price . '/month)';
-        } else {
-            $lines[] = '<b>Plan:</b> ' . $this->escape($plan_label);
-        }
-
-        $lines[] = '<b>Payment ref:</b> ' . $this->escape((string)($request['payment_reference'] ?? ''));
-
-        if (!empty($request['request_id'])) {
-            $lines[] = '<b>Request ID:</b> #' . (int)$request['request_id'];
+            $lines[] = $this->field_line('📞', 'Phone', $phone);
         }
 
         $lines[] = '';
-        $lines[] = 'Status: <b>Pending approval</b>';
 
-        if ($review_url !== '') {
+        if ($plan_price !== null) {
+            $lines[] = $this->field_line('💳', 'Plan', $plan_label . ' ($' . $plan_price . '/month)');
+        } else {
+            $lines[] = $this->field_line('💳', 'Plan', $plan_label);
+        }
+
+        $lines[] = $this->field_line('🧾', 'Payment ref', $payment_ref, true);
+
+        if ($request_id !== null) {
+            $lines[] = $this->field_line('🆔', 'Request', '#' . $request_id);
+        }
+
+        $lines[] = '';
+        $lines[] = $this->field_line('⏳', 'Status', 'Pending approval');
+
+        $keyboard = null;
+        if ($review_url !== '' && $this->is_telegram_button_url($review_url)) {
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        [
+                            'text' => 'Review in Super Admin',
+                            'url'  => $review_url,
+                        ],
+                    ],
+                ],
+            ];
+        } elseif ($review_url !== '') {
             $lines[] = '';
             $lines[] = '<a href="' . $this->escape_attr($review_url) . '">Open Super Admin → Requests</a>';
         }
 
-        return $this->send_message(implode("\n", $lines));
+        return $this->send_message(implode("\n", $lines), $keyboard);
     }
 
-    private function send_message(string $text): bool
+    /**
+     * One line: icon + bold label + value (e.g. "🏢 Company: kkk").
+     */
+    private function field_line(string $icon, string $label, string $value, bool $use_code = false, bool $title_only = false): string
+    {
+        if ($title_only) {
+            return $icon . ' <b>' . $this->escape($label) . '</b>';
+        }
+
+        $formatted_value = $use_code
+            ? '<code>' . $this->escape($value) . '</code>'
+            : $this->escape($value);
+
+        return $icon . ' <b>' . $this->escape($label) . ':</b> ' . $formatted_value;
+    }
+
+    /**
+     * Telegram inline buttons require a public http(s) URL — localhost is rejected.
+     */
+    private function is_telegram_button_url(string $url): bool
+    {
+        $parts = parse_url($url);
+        if ($parts === false || empty($parts['scheme']) || empty($parts['host'])) {
+            return false;
+        }
+
+        if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+            return false;
+        }
+
+        $host = strtolower($parts['host']);
+
+        if (in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true)) {
+            return false;
+        }
+
+        if (str_ends_with($host, '.local') || str_ends_with($host, '.localhost')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed>|null $reply_markup
+     */
+    private function send_message(string $text, ?array $reply_markup = null): bool
     {
         if (!$this->is_enabled()) {
             return false;
@@ -89,12 +159,16 @@ class Telegram_lib
 
         $url = 'https://api.telegram.org/bot' . $this->bot_token . '/sendMessage';
 
-        $payload = http_build_query([
+        $payload = [
             'chat_id'                  => $this->chat_id,
             'text'                     => $text,
             'parse_mode'               => 'HTML',
-            'disable_web_page_preview' => 'true',
-        ]);
+            'disable_web_page_preview' => true,
+        ];
+
+        if ($reply_markup !== null) {
+            $payload['reply_markup'] = $reply_markup;
+        }
 
         $ch = curl_init($url);
         if ($ch === false) {
@@ -105,7 +179,8 @@ class Telegram_lib
 
         curl_setopt_array($ch, [
             CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_TIMEOUT        => 15,
