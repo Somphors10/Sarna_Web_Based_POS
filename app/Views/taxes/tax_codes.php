@@ -8,19 +8,21 @@
     <div id="config_wrapper">
         <fieldset id="config_info">
 
-            <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
+            <div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
             <ul id="tax_codes_error_message_box" class="error_message_box"></ul>
 
             <div id="tax_codes">
                 <?= view('partial/tax_codes', ['tax_codes' => $tax_codes]) ?>
             </div>
 
-            <?= form_submit([
-                'name'  => 'submit_tax_codes',
-                'id'    => 'submit_tax_codes',
-                'value' => lang('Common.submit'),
-                'class' => 'btn btn-primary btn-sm pull-right'
-            ]) ?>
+            <div class="neo-form-submit">
+                <?= form_submit([
+                    'name'  => 'submit_tax_codes',
+                    'id'    => 'submit_tax_codes',
+                    'value' => lang('Common.submit'),
+                    'class' => 'btn btn-primary tax-form-submit',
+                ]) ?>
+            </div>
 
         </fieldset>
     </div>
@@ -43,15 +45,15 @@
         };
 
         var add_tax_code = function() {
-            var id = $(this).parent().find("input[name='tax_code[]']").attr('id');
+            var row = $(this).closest('.tax-repeat-row');
+            var id = row.find("input[name='tax_code[]']").attr('id');
             id = id.replace(/.*?_(\d+)$/g, "$1");
-            var previous_tax_code_id = 'tax_code_' + id;
-            var block = $(this).parent().clone(true);
-            var new_block = block.insertAfter($(this).parent());
+            var block = row.clone(true);
+            var new_block = block.insertAfter(row);
             ++tax_code_count;
             var new_tax_code_id = 'tax_code_' + tax_code_count;
 
-            $(new_block).find('label').html("<?= lang('Taxes.tax_code') ?> " + tax_code_count).attr('for', new_tax_code_id).attr('class', 'control-label col-xs-2');
+            $(new_block).find('.tax-repeat-row__label label').html("<?= lang('Taxes.tax_code') ?> " + tax_code_count).attr('for', new_tax_code_id);
             $(new_block).find("input[name='tax_code[]']").attr('id', new_tax_code_id).removeAttr('disabled').attr('class', 'form-control text-uppercase required input-sm').val('');
             $(new_block).find("input[name='tax_code_name[]']").removeAttr('disabled').attr('class', 'form-control required input-sm').val('');
             $(new_block).find("input[name='city[]']").removeAttr('disabled').attr('class', 'form-control input-sm').val('');
@@ -62,7 +64,7 @@
         };
 
         var remove_tax_code = function() {
-            $(this).parent().remove();
+            $(this).closest('.tax-repeat-row').remove();
             hide_show_remove_tax_code();
         };
 

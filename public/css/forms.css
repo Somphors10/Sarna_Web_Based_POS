@@ -122,3 +122,273 @@ label.required.control-label::after {
     color: #dc2626;
     font-weight: 600;
 }
+
+/* Tax repeat rows (codes, categories, jurisdictions) */
+.pos-modern-form #config_wrapper {
+    padding: 4px 2px 0;
+}
+
+.pos-modern-form #required_fields_message {
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.tax-repeat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tax-repeat-head,
+.tax-repeat-row {
+    display: grid;
+    align-items: center;
+    gap: 10px;
+}
+
+.tax-repeat-head {
+    padding: 0 12px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.tax-repeat-list--categories .tax-repeat-row,
+.tax-repeat-list--codes .tax-repeat-row,
+.tax-repeat-list--jurisdictions .tax-repeat-row {
+    grid-template-columns: minmax(110px, 150px) minmax(0, 1fr) 72px;
+    grid-template-areas: "label fields actions";
+    margin-bottom: 0;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.tax-repeat-row__label {
+    grid-area: label;
+}
+
+.tax-repeat-row__label label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.3;
+}
+
+.tax-repeat-row__grid {
+    grid-area: fields;
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.tax-repeat-row__grid--categories {
+    grid-template-columns: minmax(0, 1fr) 96px;
+}
+
+.tax-repeat-row__grid--codes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tax-repeat-row__grid--jurisdictions {
+    grid-template-columns: minmax(120px, 1.4fr) 88px minmax(110px, 1fr) minmax(120px, 1.2fr) 80px 80px;
+}
+
+.tax-repeat-row__actions {
+    grid-area: actions;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.tax-repeat-head__actions {
+    grid-area: actions;
+}
+
+.tax-repeat-head__label {
+    grid-area: label;
+}
+
+.tax-repeat-head--categories {
+    grid-template-columns: minmax(120px, 150px) minmax(0, 1fr) 96px 72px;
+    grid-template-areas: "label name seq actions";
+}
+
+.tax-repeat-head--categories .tax-repeat-head__col:nth-child(2) {
+    grid-area: name;
+}
+
+.tax-repeat-head--categories .tax-repeat-head__col:nth-child(3) {
+    grid-area: seq;
+}
+
+.tax-repeat-head--codes {
+    grid-template-columns: minmax(110px, 130px) repeat(4, minmax(0, 1fr)) 72px;
+    grid-template-areas: "label code name city state actions";
+}
+
+.tax-repeat-head--codes .tax-repeat-head__col:nth-child(2) { grid-area: code; }
+.tax-repeat-head--codes .tax-repeat-head__col:nth-child(3) { grid-area: name; }
+.tax-repeat-head--codes .tax-repeat-head__col:nth-child(4) { grid-area: city; }
+.tax-repeat-head--codes .tax-repeat-head__col:nth-child(5) { grid-area: state; }
+
+.tax-repeat-head--jurisdictions {
+    grid-template-columns: minmax(110px, 130px) minmax(120px, 1.4fr) 88px minmax(110px, 1fr) minmax(120px, 1.2fr) 80px 80px 72px;
+    grid-template-areas: "label jname jgroup jtype jauth jseq jcascade actions";
+}
+
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(2) { grid-area: jname; }
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(3) { grid-area: jgroup; }
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(4) { grid-area: jtype; }
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(5) { grid-area: jauth; }
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(6) { grid-area: jseq; }
+.tax-repeat-head--jurisdictions .tax-repeat-head__col:nth-child(7) { grid-area: jcascade; }
+
+.tax-repeat-list--jurisdictions {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.tax-repeat-list--jurisdictions .tax-repeat-head,
+.tax-repeat-list--jurisdictions .tax-repeat-row {
+    min-width: 980px;
+}
+
+.tax-repeat-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.tax-repeat-btn span {
+    display: block;
+    margin-top: -1px;
+}
+
+.tax-repeat-btn--add {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+.tax-repeat-btn--add:hover,
+.tax-repeat-btn--add:focus {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.tax-repeat-btn--remove {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.tax-repeat-btn--remove:hover,
+.tax-repeat-btn--remove:focus {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+.tax-form-submit {
+    min-width: 120px;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 8px 18px;
+}
+
+.pos-modern-form .neo-form-submit {
+    margin: 14px 0 4px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Tax rates tab toolbar */
+.tax-rates-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 12px;
+}
+
+.tax-rates-toolbar__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tax-rates-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 7px 14px;
+}
+
+.tax-rates-btn .glyphicon {
+    top: 0;
+}
+
+.tax-rates-btn--danger {
+    background: #ffffff;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.tax-rates-btn--danger:hover,
+.tax-rates-btn--danger:focus {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.tax-rates-table-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+@media (max-width: 991px) {
+    .tax-repeat-head {
+        display: none;
+    }
+
+    .tax-repeat-list--categories .tax-repeat-row,
+    .tax-repeat-list--codes .tax-repeat-row,
+    .tax-repeat-list--jurisdictions .tax-repeat-row {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "label"
+            "fields"
+            "actions";
+    }
+
+    .tax-repeat-row__grid--codes,
+    .tax-repeat-row__grid--jurisdictions,
+    .tax-repeat-row__grid--categories {
+        grid-template-columns: 1fr;
+    }
+
+    .tax-repeat-row__actions {
+        justify-content: flex-start;
+    }
+}

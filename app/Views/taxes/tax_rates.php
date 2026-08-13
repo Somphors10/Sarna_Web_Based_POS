@@ -18,20 +18,21 @@
     });
 </script>
 
-<div id="title_bar" class="btn-toolbar">
-    <button class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . ".new") ?>">
-        <span class="glyphicon glyphicon-usd">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new") ?>
-    </button>
-</div>
-
-<div id="toolbar">
-    <div class="pull-left btn-toolbar">
-        <button id="delete" class="btn btn-default btn-sm">
-            <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
+<div class="tax-rates-toolbar">
+    <div class="tax-rates-toolbar__actions">
+        <button id="delete" class="btn btn-default tax-rates-btn tax-rates-btn--danger">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+            <?= lang('Common.delete') ?>
+        </button>
+        <button class="btn btn-primary tax-rates-btn modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            <?= lang(ucfirst($controller_name) . '.new') ?>
         </button>
     </div>
 </div>
 
-<div id="table_holder">
+<div id="toolbar"></div>
+
+<div id="table_holder" class="tax-rates-table-wrap">
     <table id="table"></table>
 </div>

@@ -47,7 +47,7 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
         <!-- endinject -->
         <link rel="stylesheet" href="css/dashboard.css?v=46">
-        <link rel="stylesheet" href="css/forms.css?v=7">
+        <link rel="stylesheet" href="css/forms.css?v=8">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
@@ -91,7 +91,7 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
         <!-- endinject -->
         <link rel="stylesheet" href="css/dashboard.css?v=46">
-        <link rel="stylesheet" href="css/forms.css?v=7">
+        <link rel="stylesheet" href="css/forms.css?v=8">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->

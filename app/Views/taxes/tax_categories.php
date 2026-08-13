@@ -8,19 +8,21 @@
     <div id="config_wrapper">
         <fieldset id="config_info">
 
-            <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
+            <div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
             <ul id="tax_categories_error_message_box" class="error_message_box"></ul>
 
             <div id="tax_categories">
                 <?= view('partial/tax_categories') ?>
             </div>
 
-            <?= form_submit([
-                'name'  => 'submit_tax_categories',
-                'id'    => 'submit_tax_categories',
-                'value' => lang('Common.submit'),
-                'class' => 'btn btn-primary btn-sm pull-right'
-            ]) ?>
+            <div class="neo-form-submit">
+                <?= form_submit([
+                    'name'  => 'submit_tax_categories',
+                    'id'    => 'submit_tax_categories',
+                    'value' => lang('Common.submit'),
+                    'class' => 'btn btn-primary tax-form-submit',
+                ]) ?>
+            </div>
 
         </fieldset>
     </div>
@@ -43,16 +45,16 @@
         };
 
         var add_tax_category = function() {
-            var id = $(this).parent().find('input').attr('id');
+            var row = $(this).closest('.tax-repeat-row');
+            var id = row.find("input[name='tax_category[]']").attr('id');
             id = id.replace(/.*?_(\d+)$/g, "$1");
 
-            var previous_tax_category_id = 'tax_category_' + id;
-            var block = $(this).parent().clone(true);
-            var new_block = block.insertAfter($(this).parent());
+            var block = row.clone(true);
+            var new_block = block.insertAfter(row);
             ++tax_categories_count;
             var new_tax_category_id = 'tax_category_' + tax_categories_count;
 
-            $(new_block).find('label').html("<?= lang('Taxes.tax_category') ?> " + tax_categories_count).attr('for', new_tax_category_id).attr('class', 'control-label col-xs-2');
+            $(new_block).find('.tax-repeat-row__label label').html("<?= lang('Taxes.tax_category') ?> " + tax_categories_count).attr('for', new_tax_category_id);
             $(new_block).find("input[name='tax_category[]']").attr('id', new_tax_category_id).removeAttr('disabled').attr('class', 'form-control input-sm required').val('');
             $(new_block).find("input[name='tax_group_sequence[]']").removeAttr('disabled').attr('class', 'form-control input-sm').val('');
             $(new_block).find("input[name='tax_category_id[]']").val('-1');
@@ -60,7 +62,7 @@
         };
 
         var remove_tax_category = function() {
-            $(this).parent().remove();
+            $(this).closest('.tax-repeat-row').remove();
             hide_show_remove_tax_category();
         };
 
