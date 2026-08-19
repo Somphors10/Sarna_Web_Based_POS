@@ -147,4 +147,8 @@ return [
     "work_orders"                             => "Work Orders",
     "zero_and_less"                           => "Zero and less",
     "toggle_cost_and_profit"                  => "Toggle Cost & Profit",
+    "graphical_no_chart_data"                 => "No chart data for this period.",
+    "graphical_no_chart_data_hint"            => "Try a wider date range or open the Summary table report for full details.",
+    "graphical_no_customer_chart_data"        => "No sales were linked to a customer in this period.",
+    "graphical_no_customer_chart_data_hint"   => "Select a customer on the Sales register before completing a sale. Totals below still include walk-in sales.",
 ];

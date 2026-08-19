@@ -49,3 +49,39 @@ function can_show_report(string $permission_id, array $restrict_views = []): boo
 
     return true;
 }
+
+/**
+ * Whether a graphical report has at least one non-zero chart point.
+ */
+function report_chart_has_data(array $labels, array $series): bool
+{
+    if (empty($labels) && empty($series)) {
+        return false;
+    }
+
+    foreach ($series as $point) {
+        $value = is_array($point) ? ($point['value'] ?? null) : $point;
+
+        if (is_numeric($value) && (float) $value !== 0.0) {
+            return true;
+        }
+    }
+
+    return !empty($labels);
+}
+
+/**
+ * Format a graphical report summary row value for display.
+ */
+function report_format_graphical_summary_value(string $name, $value): string
+{
+    if ($name === 'total_quantity') {
+        return to_quantity_decimals($value ?? 0);
+    }
+
+    if (is_numeric($value)) {
+        return to_currency($value);
+    }
+
+    return to_currency(0);
+}

@@ -1098,15 +1098,17 @@ class Reports extends Secure_Controller
         }
 
         $data = [
-            'title'          => lang('Reports.customers_summary_report'),
-            'subtitle'       => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
-            'chart_type'     => 'reports/graphs/hbar',
-            'labels_1'       => $labels,
-            'series_data_1'  => $series,
-            'summary_data_1' => $summary,
-            'yaxis_title'    => lang('Reports.customers'),
-            'xaxis_title'    => lang('Reports.revenue'),
-            'show_currency'  => true
+            'title'               => lang('Reports.customers_summary_report'),
+            'subtitle'            => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
+            'chart_type'          => 'reports/graphs/hbar',
+            'labels_1'            => $labels,
+            'series_data_1'       => $series,
+            'summary_data_1'      => $summary,
+            'yaxis_title'         => lang('Reports.customers'),
+            'xaxis_title'         => lang('Reports.revenue'),
+            'show_currency'       => true,
+            'chart_empty_message' => lang('Reports.graphical_no_customer_chart_data'),
+            'chart_empty_hint'    => lang('Reports.graphical_no_customer_chart_data_hint'),
         ];
 
         echo view('reports/graphical', $data);

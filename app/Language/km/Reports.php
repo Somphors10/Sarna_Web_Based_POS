@@ -146,4 +146,8 @@ return [
     "used"                                    => "",
     "work_orders"                             => "",
     "zero_and_less"                           => "",
+    "graphical_no_chart_data"                 => "មិនមានទិន្នន័យ chart សម្រាប់រយៈពេលនេះទេ។",
+    "graphical_no_chart_data_hint"            => "ព្យាយាមពង្រីកថ្ងៃ ឬបើក Summary table report សម្រាប់លម្អិតពេញ។",
+    "graphical_no_customer_chart_data"        => "មិនមានការលក់ដែលភ្ជាប់ជាមួយ customer ក្នុងរយៈពេលនេះទេ។",
+    "graphical_no_customer_chart_data_hint"   => "ជ្រើស customer នៅ Sales register មុន Complete។ លេខសរុបខាងក្រោមនៅតែរាប់ walk-in sales។",
 ];

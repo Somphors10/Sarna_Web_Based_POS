@@ -181,7 +181,7 @@ class Sale extends Model
         } else {
             $builder->select([
                 '`' . $db_prefix . 'sales`.`sale_id` AS sale_id',
-                'MAX(' . $this->tenantSequenceSql('sales', 'sale_id', 'tenant_sale_seq', $db_prefix . 'sales') . ')',
+                $this->tenantSequenceSql('sales', 'sale_id', 'tenant_sale_seq', $db_prefix . 'sales'),
                 'MAX(DATE(`' . $db_prefix . 'sales`.`sale_time`)) AS sale_date',
                 'MAX(`' . $db_prefix . 'sales`.`sale_time`) AS sale_time',
                 'MAX(`' . $db_prefix . 'sales`.`invoice_number`) AS invoice_number',

@@ -70,11 +70,17 @@ class Customer_rewards extends Model
      */
     public function get_name(int $package_id): string
     {
+        if ($package_id <= 0) {
+            return '';
+        }
+
         $builder = $this->db->table('customers_packages');
         $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
-        return $builder->get()->getRow()->package_name;
+        $row = $builder->get()->getRow();
+
+        return $row !== null ? (string) $row->package_name : '';
     }
 
     /**
@@ -83,11 +89,17 @@ class Customer_rewards extends Model
      */
     public function get_points_percent(int $package_id): float
     {
+        if ($package_id <= 0) {
+            return 0.0;
+        }
+
         $builder = $this->db->table('customers_packages');
         $this->scopeModelTenant($builder);
         $builder->where('package_id', $package_id);
 
-        return $builder->get()->getRow()->points_percent;
+        $row = $builder->get()->getRow();
+
+        return $row !== null ? (float) $row->points_percent : 0.0;
     }
 
     /**

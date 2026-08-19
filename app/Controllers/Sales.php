@@ -128,6 +128,14 @@ class Sales extends Secure_Controller
      */
     public function getSearch(): void
     {
+        $person_id = (int)$this->session->get('person_id');
+
+        if (!$this->employee->has_grant('reports_sales', $person_id)) {
+            echo json_encode(['total' => 0, 'rows' => [], 'payment_summary' => '']);
+
+            return;
+        }
+
         $search = $this->request->getGet('search', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         $limit = $this->request->getGet('limit', FILTER_SANITIZE_NUMBER_INT);
         $offset = $this->request->getGet('offset', FILTER_SANITIZE_NUMBER_INT);
@@ -977,8 +985,8 @@ class Sales extends Secure_Controller
             $data['customer_discount_type'] = $customer_info->discount_type;
             $package_id = $this->customer->get_info($customer_id)->package_id;
 
-            if ($package_id != null) {
-                $package_name = $this->customer_rewards->get_name($package_id);
+            if ($package_id != null && $this->customer_rewards->exists((int) $package_id)) {
+                $package_name = $this->customer_rewards->get_name((int) $package_id);
                 $points = $this->customer->get_info($customer_id)->points;
                 $data['customer_rewards']['package_id'] = $package_id;
                 $data['customer_rewards']['points'] = empty($points) ? 0 : $points;
