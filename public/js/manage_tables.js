@@ -204,7 +204,8 @@
 
     var do_action = function(action) {
         return function (url, ids) {
-            if (confirm($.fn.bootstrapTable.defaults.formatConfirmAction(action))) {
+            var message = $.fn.bootstrapTable.defaults.formatConfirmAction(action);
+            var proceed = function() {
                 $.post((url || options.resource) + '/' + action, {'ids[]': ids || selected_ids()}, function (response) {
                     // Delete was successful, remove checkbox rows
                     if (response.success) {
@@ -228,6 +229,19 @@
                         $.notify(response.message, {type: 'danger'});
                     }
                 }, "json");
+            };
+
+            if (typeof window.osposConfirm === 'function') {
+                window.osposConfirm({ action: action, message: message }, function(confirmed) {
+                    if (confirmed) {
+                        proceed();
+                    }
+                });
+                return false;
+            }
+
+            if (confirm(message)) {
+                proceed();
             } else {
                 return false;
             }

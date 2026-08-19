@@ -48,9 +48,9 @@ $html_lang = current_language_code();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=58">
+        <link rel="stylesheet" href="css/dashboard.css?v=60">
         <link rel="stylesheet" href="css/forms.css?v=8">
-        <link rel="stylesheet" href="css/password-toggle.css?v=1">
+        <link rel="stylesheet" href="css/password-toggle.css?v=2">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -92,9 +92,9 @@ $html_lang = current_language_code();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=58">
+        <link rel="stylesheet" href="css/dashboard.css?v=60">
         <link rel="stylesheet" href="css/forms.css?v=8">
-        <link rel="stylesheet" href="css/password-toggle.css?v=1">
+        <link rel="stylesheet" href="css/password-toggle.css?v=2">
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
@@ -121,6 +121,7 @@ $html_lang = current_language_code();
     } ?>
 
     <?= view('partial/header_js') ?>
+    <script src="js/password_toggle.js?v=3"></script>
     <?= view('partial/lang_lines') ?>
 
     <style>

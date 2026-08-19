@@ -63,9 +63,11 @@
         }
 
         if (parent.classList.contains('input-group')) {
-            const toggle = createToggleButton('password-toggle__btn--addon input-group-addon input-sm');
-            toggle.setAttribute('tabindex', '0');
-            parent.appendChild(toggle);
+            const addon = document.createElement('span');
+            addon.className = 'input-group-addon input-sm password-toggle__addon';
+            const toggle = createToggleButton();
+            addon.appendChild(toggle);
+            parent.appendChild(addon);
             bindToggle(toggle, input);
             return;
         }

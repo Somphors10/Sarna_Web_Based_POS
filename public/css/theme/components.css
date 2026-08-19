@@ -191,8 +191,80 @@
 .neo-global-content .bootstrap-table .fixed-table-toolbar {
     position: relative;
     z-index: 110;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin: 0 0 6px;
+    padding: 0;
     overflow: visible;
     pointer-events: auto;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar::after {
+    display: none;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .columns {
+    float: none !important;
+    position: relative;
+    margin: 0;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    order: 1;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars #toolbar,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars .neo-table-toolbar {
+    width: auto;
+    max-width: 100%;
+    margin: 0;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search.input-group {
+    display: block;
+    flex: 0 0 168px;
+    width: 168px;
+    max-width: 168px;
+    margin-left: auto;
+    order: 2;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .columns {
+    flex: 0 0 auto;
+    width: auto;
+    order: 3;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search .form-control,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search input,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search .search-input {
+    height: 32px;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 8px 0 28px;
+    border: 1px solid #d5dee8;
+    border-radius: 8px;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 8px 50%;
+    background-size: 12px 12px;
+    color: #0f172a;
+    font-size: 13px;
+    box-shadow: none;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search .form-control::placeholder,
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search input::placeholder {
+    color: #94a3b8;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-toolbar .btn,

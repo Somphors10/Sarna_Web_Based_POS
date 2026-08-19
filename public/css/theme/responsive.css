@@ -170,6 +170,19 @@
         width: 100%;
     }
 
+    .neo-global-content .bootstrap-table .fixed-table-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .neo-global-content .bootstrap-table .fixed-table-toolbar .search,
+    .neo-global-content .bootstrap-table .fixed-table-toolbar .search.input-group {
+        flex: 1 1 100%;
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        order: 0;
+    }
+
     .neo-info-grid {
         grid-template-columns: 1fr;
     }

@@ -19,6 +19,8 @@ return [
     "password_strong_hint"           => "យ៉ាងតិច 8 តួ មានអក្សរ និងលេខ (ឧ. Shop2024)។ អកษรធំ ឬសញ្ញាជម្រើសបន្ថែម។",
     "date"                           => "កាលបរិច្ឆេទ",
     "delete"                         => "លុប",
+    "confirm_delete_title"           => "បញ្ជាក់ការលុប",
+    "confirm_restore_title"          => "បញ្ជាក់ការស្តារ",
     "det"                            => "លម្អិត",
     "download_import_template"       => "ទាញយកការនាំចូលទំព័រគំរូ CSV",
     "edit"                           => "កែប្រែ",

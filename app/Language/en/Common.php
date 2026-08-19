@@ -30,6 +30,8 @@ return [
     "password_strong_hint"           => "At least 8 characters with letters and numbers (e.g. Shop2024). Symbols and uppercase are optional but recommended.",
     "date"                           => "Date",
     "delete"                         => "Delete",
+    "confirm_delete_title"           => "Confirm delete",
+    "confirm_restore_title"          => "Confirm restore",
     "det"                            => "details",
     "view_details"                   => "View details",
     "download_import_template"       => "Download Import CSV Template (CSV)",
