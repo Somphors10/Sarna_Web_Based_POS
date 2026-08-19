@@ -88,7 +88,8 @@ class Secure_Controller extends BaseController
 
         // Load up global global_view_data visible to all the loaded views
         if ($menu_group == null) {
-            $menu_group = $this->session->get('menu_group');
+            $menu_group = $this->session->get('menu_group') ?: 'home';
+            $this->session->set('menu_group', $menu_group);
         } else {
             $this->session->set('menu_group', $menu_group);
         }
@@ -98,6 +99,7 @@ class Secure_Controller extends BaseController
             : $this->module->get_allowed_office_modules($logged_in_employee_info->person_id);
 
         $this->global_view_data = [];
+        $this->global_view_data['allowed_modules'] = [];
         foreach ($allowed_modules->getResult() as $module) {
             if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
                 continue;

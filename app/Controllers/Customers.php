@@ -262,7 +262,10 @@ class Customers extends Persons
             'comments'     => $this->request->getPost('comments')
         ];
 
-        $date_formatter = date_create_from_format($this->config['dateformat'] . ' ' . $this->config['timeformat'], $this->request->getPost('date'));
+        $date_posted = (string)$this->request->getPost('date');
+        $date_formatter = $date_posted !== ''
+            ? date_create_from_format($this->config['dateformat'] . ' ' . $this->config['timeformat'], $date_posted)
+            : false;
 
         $customer_data = [
             'consent'           => $this->request->getPost('consent') != null,
@@ -273,8 +276,8 @@ class Customers extends Persons
             'discount_type'     => $this->request->getPost('discount_type') == null ? PERCENT : $this->request->getPost('discount_type', FILTER_SANITIZE_NUMBER_INT),
             'package_id'        => $this->request->getPost('package_id') == '' ? null : $this->request->getPost('package_id'),
             'taxable'           => $this->request->getPost('taxable') != null,
-            'date'              => $date_formatter->format('Y-m-d H:i:s'),
-            'employee_id'       => $this->request->getPost('employee_id', FILTER_SANITIZE_NUMBER_INT),
+            'date'              => $date_formatter instanceof \DateTimeInterface ? $date_formatter->format('Y-m-d H:i:s') : date('Y-m-d H:i:s'),
+            'employee_id'       => $this->request->getPost('employee_id', FILTER_SANITIZE_NUMBER_INT) ?: $this->employee->get_logged_in_employee_info()->person_id,
             'sales_tax_code_id' => $this->request->getPost('sales_tax_code_id') == '' ? null : $this->request->getPost('sales_tax_code_id', FILTER_SANITIZE_NUMBER_INT)
         ];
 

@@ -659,7 +659,7 @@ class Items extends Secure_Controller
         // Save item data
         $item_data = [
             'name'                  => $this->request->getPost('name'),
-            'description'           => $this->request->getPost('description'),
+            'description'           => (string)($this->request->getPost('description') ?? ''),
             'category'              => $this->request->getPost('category'),
             'item_type'             => $item_type,
             'stock_type'            => $this->request->getPost('stock_type') === null ? HAS_STOCK : intval($this->request->getPost('stock_type')),
@@ -711,12 +711,12 @@ class Items extends Secure_Controller
 
             if (!$use_destination_based_tax) {
                 $items_taxes_data = [];
-                $tax_names = $this->request->getPost('tax_names');
-                $tax_percents = $this->request->getPost('tax_percents');
+                $tax_names = $this->request->getPost('tax_names') ?? [];
+                $tax_percents = $this->request->getPost('tax_percents') ?? [];
 
                 $tax_name_index = 0;
 
-                foreach ($tax_percents as $tax_percent) {
+                foreach ((array)$tax_percents as $tax_percent) {
                     $tax_percentage = parse_tax($tax_percent);
 
                     if (is_numeric($tax_percentage)) {
@@ -731,7 +731,7 @@ class Items extends Secure_Controller
             // Save item quantity
             $stock_locations = $this->stock_location->get_undeleted_all()->getResultArray();
             foreach ($stock_locations as $location) {
-                $updated_quantity = parse_quantity($this->request->getPost('quantity_' . $location['location_id']));
+                $updated_quantity = parse_quantity((string)($this->request->getPost('quantity_' . $location['location_id']) ?? '0'));
 
                 if ($item_data['item_type'] == ITEM_TEMP) {
                     $updated_quantity = 0;
