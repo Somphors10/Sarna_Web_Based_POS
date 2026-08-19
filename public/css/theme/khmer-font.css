@@ -1,0 +1,167 @@
+@font-face {
+    font-family: "Khmer OS Siemreap";
+    src: url("../fonts/KhmerOSSiemreap.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+html[lang="km"],
+html.lang-km {
+    font-family: "Khmer OS Siemreap", "Khmer OS", Siemreap, sans-serif !important;
+}
+
+/*
+ * Headings often look correct because they are bold, while smaller copy
+ * (subtitles, buttons, tables, inputs) keeps Lato / system-ui.
+ * Force Siemreap on every element, then restore icon/barcode fonts.
+ */
+html[lang="km"] body,
+html.lang-km body,
+html[lang="km"] button,
+html.lang-km button,
+html[lang="km"] input,
+html.lang-km input,
+html[lang="km"] select,
+html.lang-km select,
+html[lang="km"] textarea,
+html.lang-km textarea,
+html[lang="km"] optgroup,
+html.lang-km optgroup,
+html[lang="km"] option,
+html.lang-km option,
+html[lang="km"] *:not(.glyphicon):not([class*="glyphicon"]):not([class^="font_"]),
+html.lang-km *:not(.glyphicon):not([class*="glyphicon"]):not([class^="font_"]) {
+    font-family: "Khmer OS Siemreap", "Khmer OS", Siemreap, sans-serif !important;
+}
+
+html[lang="km"] .glyphicon,
+html.lang-km .glyphicon,
+html[lang="km"] [class*="glyphicon"],
+html.lang-km [class*="glyphicon"],
+html[lang="km"] .glyphicon::before,
+html.lang-km .glyphicon::before,
+html[lang="km"] [class*="glyphicon"]::before,
+html.lang-km [class*="glyphicon"]::before {
+    font-family: "Glyphicons Halflings" !important;
+}
+
+/*
+ * Khmer glyphs read smaller than Latin at the same pixel size.
+ * Add 2px across the store UI when language is Khmer.
+ */
+html[lang="km"] body,
+html.lang-km body,
+html[lang="km"] .btn:not(.btn-sm):not(.btn-xs),
+html.lang-km .btn:not(.btn-sm):not(.btn-xs),
+html[lang="km"] .form-control,
+html.lang-km .form-control,
+html[lang="km"] .form-select,
+html.lang-km .form-select,
+html[lang="km"] select,
+html.lang-km select,
+html[lang="km"] textarea,
+html.lang-km textarea,
+html[lang="km"] .table,
+html.lang-km .table,
+html[lang="km"] .nav,
+html.lang-km .nav,
+html[lang="km"] .dropdown-menu,
+html.lang-km .dropdown-menu,
+html[lang="km"] .pagination,
+html.lang-km .pagination,
+html[lang="km"] .panel,
+html.lang-km .panel,
+html[lang="km"] .modal,
+html.lang-km .modal,
+html[lang="km"] .bootstrap-table,
+html.lang-km .bootstrap-table,
+html[lang="km"] .fixed-table-toolbar,
+html.lang-km .fixed-table-toolbar,
+html[lang="km"] .fixed-table-pagination,
+html.lang-km .fixed-table-pagination,
+html[lang="km"] label,
+html.lang-km label,
+html[lang="km"] .control-label,
+html.lang-km .control-label,
+html[lang="km"] .help-block,
+html.lang-km .help-block,
+html[lang="km"] .pos-modal,
+html.lang-km .pos-modal,
+html[lang="km"] .pos-modal__body,
+html.lang-km .pos-modal__body {
+    font-size: 17px !important;
+}
+
+html[lang="km"] .neo-module-title,
+html.lang-km .neo-module-title,
+html[lang="km"] .neo-dash-header__title,
+html.lang-km .neo-dash-header__title {
+    font-size: 24px !important;
+}
+
+html[lang="km"] .neo-module-subtitle,
+html.lang-km .neo-module-subtitle {
+    font-size: 14px !important;
+}
+
+html[lang="km"] .neo-dash-header__subtitle,
+html.lang-km .neo-dash-header__subtitle {
+    font-size: 15px !important;
+}
+
+html[lang="km"] .neo-global-menu-item span,
+html.lang-km .neo-global-menu-item span,
+html[lang="km"] .neo-sidebar-logout,
+html.lang-km .neo-sidebar-logout {
+    font-size: 16px !important;
+}
+
+html[lang="km"] .pos-topbar,
+html.lang-km .pos-topbar,
+html[lang="km"] .pos-topbar-user,
+html.lang-km .pos-topbar-user,
+html[lang="km"] .pos-profile-dropdown,
+html.lang-km .pos-profile-dropdown,
+html[lang="km"] .pos-profile-card__copy strong,
+html.lang-km .pos-profile-card__copy strong,
+html[lang="km"] .pos-profile-dropdown__item,
+html.lang-km .pos-profile-dropdown__item {
+    font-size: 18px !important;
+}
+
+html[lang="km"] .pos-topbar-clock,
+html.lang-km .pos-topbar-clock,
+html[lang="km"] .neo-module-subtitle,
+html.lang-km .neo-module-subtitle,
+html[lang="km"] .btn-sm,
+html.lang-km .btn-sm {
+    font-size: 14px !important;
+}
+
+html[lang="km"] .neo-kpi-label,
+html.lang-km .neo-kpi-label {
+    font-size: 12px !important;
+}
+
+html[lang="km"] .neo-kpi-hint,
+html.lang-km .neo-kpi-hint,
+html[lang="km"] .neo-kpi-link-hint,
+html.lang-km .neo-kpi-link-hint {
+    font-size: 13px !important;
+}
+
+html[lang="km"] .neo-kpi-value,
+html.lang-km .neo-kpi-value {
+    font-size: 26px !important;
+}
+
+html[lang="km"] .pos-modal__head,
+html.lang-km .pos-modal__head {
+    font-size: 20px !important;
+}
+
+html[lang="km"] .pos-modal-btn,
+html.lang-km .pos-modal-btn {
+    font-size: 16px !important;
+}

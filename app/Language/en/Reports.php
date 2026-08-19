@@ -151,4 +151,6 @@ return [
     "graphical_no_chart_data_hint"            => "Try a wider date range or open the Summary table report for full details.",
     "graphical_no_customer_chart_data"        => "No sales were linked to a customer in this period.",
     "graphical_no_customer_chart_data_hint"   => "Select a customer on the Sales register before completing a sale. Totals below still include walk-in sales.",
+    "graphical_hbar_caption"                  => "Each row is one {0}. The bar and amount show {1} for this period.",
+    "graphical_hbar_total_hint"               => "The totals under the list are for all sales in this period, including walk-in sales and rows not shown here.",
 ];

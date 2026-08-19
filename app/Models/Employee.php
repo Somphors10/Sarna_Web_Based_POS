@@ -630,4 +630,19 @@ class Employee extends Person
             'AND tenant_seq_inner.deleted = 0'
         );
     }
+
+    /**
+     * Save the logged-in employee's UI language preference.
+     */
+    public function update_language(int $person_id, string $language_code, string $language): bool
+    {
+        $builder = $this->db->table('employees');
+        $builder->where('person_id', $person_id);
+        $this->scopeTenant($builder, 'employees.tenant_id');
+
+        return $builder->update([
+            'language_code' => $language_code,
+            'language'      => $language,
+        ]);
+    }
 }

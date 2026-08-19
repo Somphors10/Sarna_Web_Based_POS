@@ -53,7 +53,7 @@ services:
       - wbpos_net
     volumes:
       - ./.env.docker:/app/.env:ro
-      - ./app/Views:/app/app/Views:ro
+      - ./app:/app/app
       - ./public/css:/app/public/css:ro
       - ./public/js:/app/public/js:ro
       - ./public/images:/app/public/images:ro

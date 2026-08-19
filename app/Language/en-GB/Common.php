@@ -20,6 +20,7 @@ return [
     "det"                            => "details",
     "download_import_template"       => "Download Import CSV Template (CSV)",
     "edit"                           => "edit",
+    "edit_profile"                   => "Edit Profile",
     "email"                          => "Email",
     "email_invalid_format"           => "The email address is not in the correct format.",
     "export_csv"                     => "CSV Export",
@@ -86,4 +87,7 @@ return [
     "yes"                            => "Yes",
     "you_are_using_ospos"            => "",
     "zip"                            => "Post Code",
+    "profile"                        => "Profile",
+    "language_english"               => "English",
+    "language_khmer"                 => "Khmer",
 ];

@@ -536,11 +536,28 @@
     margin-bottom: 8px;
 }
 
-.neo-report-pay-item__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+.neo-report-pay-item__rank {
     flex-shrink: 0;
+    width: 22px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.neo-report-hbar-caption,
+.neo-report-hbar-hint {
+    max-width: 640px;
+    margin: 0 auto 12px;
+    padding: 0 14px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.neo-report-hbar-hint {
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
 
 .neo-report-pay-item__name {

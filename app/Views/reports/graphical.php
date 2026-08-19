@@ -35,7 +35,7 @@ $chart_view_data = [
 
 <?= view('partial/header') ?>
 
-<link rel="stylesheet" href="css/reports.css?v=2">
+<link rel="stylesheet" href="css/reports.css?v=3">
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
@@ -57,7 +57,11 @@ $chart_view_data = [
     </header>
 
     <?php if ($has_chart_data): ?>
-        <?php if (empty($hide_chart_container)): ?>
+        <?php
+            $list_charts = ['reports/graphs/hbar', 'reports/graphs/payment_breakdown'];
+            $show_ct_box = empty($hide_chart_container) && !in_array($chart_type, $list_charts, true);
+        ?>
+        <?php if ($show_ct_box): ?>
             <div class="ct-chart ct-golden-section neo-report-chart" id="chart1"></div>
         <?php endif; ?>
 

@@ -27,6 +27,18 @@ $routes->get('super-admin/requests', 'Super_admin::index/requests');
 $routes->get('super-admin/login', 'Super_admin::login');
 $routes->post('super-admin/login', 'Super_admin::login');
 $routes->get('super-admin/logout', 'Super_admin::logout');
+$routes->get('home', 'Home::getIndex');
+$routes->group('home', static function ($routes) {
+    $routes->get('/', 'Home::getIndex');
+    $routes->get('logout', 'Home::getLogout');
+    $routes->get('language/(:segment)', 'Home::getChangeLanguage/$1');
+    $routes->get('changelanguage/(:segment)', 'Home::getChangeLanguage/$1');
+    $routes->get('changeLanguage/(:segment)', 'Home::getChangeLanguage/$1');
+    $routes->get('changepassword/(:num)', 'Home::getChangePassword/$1');
+    $routes->get('changePassword/(:num)', 'Home::getChangePassword/$1');
+    $routes->post('save/(:num)', 'Home::postSave/$1');
+    $routes->post('save', 'Home::postSave');
+});
 $routes->get('super-admin/notifications/poll', 'Super_admin::getNotificationPoll');
 $routes->post('super-admin/toggle-status/(:num)', 'Super_admin::postToggleStatus/$1');
 $routes->post('super-admin/approve-request/(:num)', 'Super_admin::postApproveRequest/$1');

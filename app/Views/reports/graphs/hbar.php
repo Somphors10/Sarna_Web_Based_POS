@@ -1,5 +1,7 @@
 <?php
 /**
+ * Ranked horizontal bars (customers, items, etc.) — readable list instead of Chartist.
+ *
  * @var array $labels_1
  * @var string $yaxis_title
  * @var array $series_data_1
@@ -7,113 +9,60 @@
  * @var string $xaxis_title
  * @var array $config
  */
+
+$labels_1 = $labels_1 ?? [];
+$series_data_1 = $series_data_1 ?? [];
+$yaxis_title = $yaxis_title ?? lang('Reports.customers');
+$xaxis_title = $xaxis_title ?? lang('Reports.revenue');
+
+$rows = [];
+foreach ($labels_1 as $index => $label) {
+    $raw = $series_data_1[$index] ?? 0;
+    $amount = is_array($raw) ? (float) ($raw['value'] ?? 0) : (float) $raw;
+    $name = html_entity_decode((string) $label, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $name = str_replace(['\\x20', '\x20'], ' ', $name);
+    $name = trim(preg_replace('/\s+/', ' ', $name));
+    if ($name === '') {
+        $name = lang('Common.unknown');
+    }
+    $rows[] = [
+        'name'   => $name,
+        'amount' => $amount,
+    ];
+}
+
+usort($rows, static fn ($a, $b) => $b['amount'] <=> $a['amount']);
+
+$limit = 12;
+$shown = array_slice($rows, 0, $limit);
+$chart_total = array_sum(array_column($shown, 'amount'));
+$legend_total = max($chart_total, 1);
+$palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#64748b'];
 ?>
 
-<script type="text/javascript">
-    // Labels and data series
-    var data = {
-        labels: <?= json_encode(esc($labels_1, 'js')) ?>,
-        series: [{
-            name: '<?= esc($yaxis_title, 'js') ?>',
-            data: <?= json_encode(esc($series_data_1, 'js')) ?>
-        }]
-    };
+<p class="neo-report-hbar-caption">
+    <?= esc(lang('Reports.graphical_hbar_caption', [mb_strtolower($yaxis_title), mb_strtolower($xaxis_title)])) ?>
+</p>
 
-    // We are setting a few options for our chart and override the defaults
-    var options = {
+<div class="neo-report-pay-breakdown" role="list" aria-label="<?= esc($yaxis_title) ?>">
+    <?php foreach ($shown as $index => $row): ?>
+        <?php
+            $pct = round($row['amount'] / $legend_total * 100, 1);
+            $color = $palette[$index % count($palette)];
+        ?>
+        <div class="neo-report-pay-item" role="listitem">
+            <div class="neo-report-pay-item__top">
+                <span class="neo-report-pay-item__rank"><?= $index + 1 ?></span>
+                <span class="neo-report-pay-item__dot" style="background-color: <?= esc($color) ?>"></span>
+                <span class="neo-report-pay-item__name"><?= esc($row['name']) ?></span>
+                <span class="neo-report-pay-item__amount"><?= to_currency($row['amount']) ?></span>
+                <span class="neo-report-pay-item__pct"><?= esc($pct) ?>%</span>
+            </div>
+            <div class="neo-report-pay-item__bar" aria-hidden="true">
+                <span class="neo-report-pay-item__fill" style="width: <?= esc($pct) ?>%; background-color: <?= esc($color) ?>"></span>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</div>
 
-        // Specify a fixed width for the chart as a string (i.e. '100px' or '50%')
-        width: '100%',
-
-        // Specify a fixed height for the chart as a string (i.e. '100px' or '50%')
-        height: '100%',
-
-        // Padding of the chart drawing area to the container element and labels as a number or padding object {top: 5, right: 5, bottom: 5, left: 5}
-        chartPadding: {
-            top: 20,
-            bottom: 100
-        },
-
-        // Set the bar chart to be horizontal
-        horizontalBars: true,
-
-        // X-Axis specific configuration
-        axisX: {
-            // Lets offset the chart a bit from the labels
-            offset: 120,
-            position: 'end',
-            // The label interpolation function enables you to modify the values
-            // used for the labels on each axis.
-            labelInterpolationFnc: function(value) {
-                <?php
-                if ($show_currency) {
-                    if (is_right_side_currency_symbol()) {
-                ?>
-                        return value + '<?= esc($config['currency_symbol'], 'js') ?>';
-                    <?php } else { ?>
-                        return '<?= esc($config['currency_symbol'], 'js') ?>' + value;
-                    <?php
-                    }
-                } else {
-                    ?>
-                    return value;
-                <?php } ?>
-            }
-        },
-
-        // Y-Axis specific configuration
-        axisY: {
-            // Lets offset the chart a bit from the labels
-            offset: 120
-        },
-
-        // Plugins configuration
-        plugins: [
-            Chartist.plugins.ctAxisTitle({
-                axisX: {
-                    axisTitle: '<?= esc($xaxis_title, 'js') ?>',
-                    axisClass: 'ct-axis-title',
-                    offset: {
-                        x: -100,
-                        y: 100
-                    },
-                    textAnchor: 'middle'
-                },
-                axisY: {
-                    axisTitle: '<?= esc($yaxis_title, 'js') ?>',
-                    axisClass: 'ct-axis-title',
-                    offset: {
-                        x: 0,
-                        y: 0
-                    },
-                    textAnchor: 'middle',
-                    flipTitle: false
-                }
-            }),
-
-            Chartist.plugins.ctBarLabels(),
-
-            Chartist.plugins.ctPointLabels({
-                textAnchor: 'middle'
-            })
-        ]
-    };
-
-    var responsiveOptions = [
-        ['screen and (min-width: 640px)', {
-            height: '80%',
-            chartPadding: {
-                top: 20,
-                bottom: 0
-            },
-        }]
-        /* ,
-         * ['screen and (min-width: 1024px)', {
-         *     labelOffset: 80,
-         *     chartPadding: 20
-         * }]
-         */
-    ];
-
-    new Chartist.Bar('#chart1', data, options, responsiveOptions);
-</script>
+<p class="neo-report-hbar-hint"><?= esc(lang('Reports.graphical_hbar_total_hint')) ?></p>

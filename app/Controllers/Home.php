@@ -7,6 +7,7 @@ use App\Models\Reports\Summary_payments;
 use App\Models\Reports\Summary_sales;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\OSPOS;
+use Config\Services;
 
 class Home extends Secure_Controller
 {
@@ -16,10 +17,17 @@ class Home extends Secure_Controller
     }
 
     /**
-     * @return void
+     * Dashboard. Extra URI segments are accepted because auto-routing may
+     * pass them here when a defined language route is not used.
+     *
+     * @return RedirectResponse|void
      */
-    public function getIndex(): void
+    public function getIndex(?string $action = null, ?string $code = null)
     {
+        if ($action !== null && in_array(strtolower($action), ['language', 'changelanguage'], true)) {
+            return $this->getChangeLanguage((string)$code);
+        }
+
         helper(['report', 'locale']);
 
         $person_id = (int)$this->session->get('person_id');
@@ -169,6 +177,47 @@ class Home extends Secure_Controller
     {
         $this->employee->logout();
         return redirect()->to('login');
+    }
+
+    /**
+     * Switch UI language for the logged-in employee.
+     * URI: home/language/{en|km} (auto-routing also accepts home/changelanguage/{code}).
+     *
+     * @noinspection PhpUnused
+     */
+    public function getLanguage(string $language_code = ''): RedirectResponse
+    {
+        return $this->getChangeLanguage($language_code);
+    }
+
+    /**
+     * Switch UI language for the logged-in employee.
+     *
+     * @noinspection PhpUnused
+     */
+    public function getChangeLanguage(string $language_code = ''): RedirectResponse
+    {
+        $allowed = [
+            'en' => 'english',
+            'km' => 'centralkhmer',
+        ];
+
+        if (!isset($allowed[$language_code])) {
+            return redirect()->to('home');
+        }
+
+        $person_id = (int)$this->session->get('person_id');
+        if ($person_id <= 0) {
+            return redirect()->to('login');
+        }
+
+        if (!$this->employee->update_language($person_id, $language_code, $allowed[$language_code])) {
+            return redirect()->back();
+        }
+
+        Services::language()->setLocale($language_code);
+
+        return redirect()->to('home');
     }
 
     /**

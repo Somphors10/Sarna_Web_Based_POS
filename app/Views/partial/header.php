@@ -9,10 +9,12 @@
 use Config\Services;
 
 $request = Services::request();
+helper('locale');
+$html_lang = current_language_code();
 ?>
 
 <!doctype html>
-<html lang="<?= $request->getLocale() ?>">
+<html lang="<?= esc($html_lang) ?>" class="lang-<?= esc($html_lang) ?>">
 
 <head>
     <meta charset="utf-8">
@@ -38,15 +40,15 @@ $request = Services::request();
         <link rel="stylesheet" href="resources/css/bootstrap-tagsinput-5a6d46a06c.css">
         <link rel="stylesheet" href="resources/css/bootstrap-toggle-e12db6c1f3.css">
         <link rel="stylesheet" href="resources/css/bootstrap-292fc0ad3b.autocomplete.css">
-        <link rel="stylesheet" href="resources/css/invoice-1eae5e39b9.css">
+        <link rel="stylesheet" href="resources/css/invoice-e9f26a7ebc.css">
         <link rel="stylesheet" href="resources/css/ospos_print-2ba645b044.css">
         <link rel="stylesheet" href="resources/css/ospos-73edad0b33.css">
         <link rel="stylesheet" href="resources/css/popupbox-7b616030b0.css">
         <link rel="stylesheet" href="resources/css/receipt-59573bfc05.css">
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
-        <link rel="stylesheet" href="resources/css/reports-9d3be6da95.css">
+        <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=46">
+        <link rel="stylesheet" href="css/dashboard.css?v=58">
         <link rel="stylesheet" href="css/forms.css?v=8">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
         <!-- inject:debug:js -->
@@ -88,9 +90,9 @@ $request = Services::request();
         <?php $assets_injected = true; ?>
     <?php else : ?>
         <!--inject:prod:css -->
-        <link rel="stylesheet" href="resources/opensourcepos-d70963c442.min.css">
+        <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=46">
+        <link rel="stylesheet" href="css/dashboard.css?v=58">
         <link rel="stylesheet" href="css/forms.css?v=8">
         <link rel="stylesheet" href="css/password-toggle.css?v=1">
 
@@ -100,7 +102,7 @@ $request = Services::request();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-fcb6f8256f.min.js"></script>
+        <script src="resources/opensourcepos-3f65cab4ca.min.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>
@@ -214,6 +216,51 @@ $request = Services::request();
                 syncForViewport();
                 setExpandedState();
             });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const profileBtn = document.getElementById('pos_profile_btn');
+                const profileDropdown = document.getElementById('pos_profile_dropdown');
+                let openDropdown = null;
+
+                const closeDropdown = function() {
+                    if (openDropdown) {
+                        openDropdown.hidden = true;
+                        openDropdown = null;
+                    }
+                    if (profileBtn) {
+                        profileBtn.setAttribute('aria-expanded', 'false');
+                    }
+                };
+
+                if (!profileBtn || !profileDropdown) {
+                    return;
+                }
+
+                profileBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const willOpen = profileDropdown.hasAttribute('hidden');
+                    closeDropdown();
+                    if (willOpen) {
+                        profileDropdown.removeAttribute('hidden');
+                        profileBtn.setAttribute('aria-expanded', 'true');
+                        openDropdown = profileDropdown;
+                    }
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (event.target.closest('.pos-profile-dropdown-wrap')) {
+                        return;
+                    }
+                    closeDropdown();
+                });
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape') {
+                        closeDropdown();
+                    }
+                });
+            });
         })();
     </script>
     <div class="wrapper">
@@ -279,7 +326,68 @@ $request = Services::request();
                         </div>
 
                         <div class="navbar-right pos-topbar-user">
-                            <?= anchor("home/changePassword/$user_info->person_id", "$user_info->first_name $user_info->last_name", ['class' => 'modal-dlg pos-user-link', 'data-btn-submit' => lang('Common.submit'), 'title' => lang('Employees.change_password')]) ?>
+                            <?php
+                                helper('locale');
+                                $profile_initials = strtoupper(
+                                    substr((string)($user_info->first_name ?? ''), 0, 1)
+                                    . substr((string)($user_info->last_name ?? ''), 0, 1)
+                                );
+                                $active_language = current_language_code();
+                                $label_or = static function (string $key, string $fallback): string {
+                                    $line = lang($key);
+                                    return ($line === $key || $line === '') ? $fallback : $line;
+                                };
+                                $label_profile = $label_or('Common.profile', 'Profile');
+                                $label_edit_profile = $label_or('Common.edit_profile', 'Edit Profile');
+                                $label_english = $label_or('Common.language_english', 'English');
+                                $label_khmer = $label_or('Common.language_khmer', 'Khmer');
+                            ?>
+                            <div class="pos-profile-dropdown-wrap">
+                                <button
+                                    type="button"
+                                    class="pos-profile-btn"
+                                    id="pos_profile_btn"
+                                    aria-label="<?= esc($label_profile) ?>"
+                                    aria-expanded="false"
+                                    aria-haspopup="true"
+                                >
+                                    <span class="pos-profile-avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
+                                </button>
+                                <div class="pos-profile-dropdown" id="pos_profile_dropdown" hidden>
+                                    <div class="pos-profile-card">
+                                        <span class="pos-profile-card__avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
+                                        <div class="pos-profile-card__copy">
+                                            <strong><?= esc(trim($user_info->first_name . ' ' . $user_info->last_name)) ?></strong>
+                                            <span><?= esc($label_profile) ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="pos-profile-dropdown__menu">
+                                        <?= anchor(
+                                            "home/changepassword/$user_info->person_id",
+                                            $label_edit_profile,
+                                            [
+                                                'class'           => 'pos-profile-dropdown__item modal-dlg',
+                                                'data-btn-submit' => lang('Common.submit'),
+                                                'title'           => lang('Employees.change_password'),
+                                            ]
+                                        ) ?>
+                                        <a
+                                            class="pos-profile-dropdown__item<?= $active_language === 'en' ? ' is-active' : '' ?>"
+                                            href="<?= site_url('home/language/en') ?>"
+                                        ><?= esc($label_english) ?></a>
+                                        <a
+                                            class="pos-profile-dropdown__item<?= $active_language === 'km' ? ' is-active' : '' ?>"
+                                            href="<?= site_url('home/language/km') ?>"
+                                        ><?= esc($label_khmer) ?></a>
+                                        <a
+                                            class="pos-profile-dropdown__item pos-profile-dropdown__item--logout js-pos-logout"
+                                            href="<?= site_url('home/logout') ?>"
+                                            data-logout-url="<?= site_url('home/logout') ?>"
+                                            onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"
+                                        ><?= lang('Login.logout') ?></a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

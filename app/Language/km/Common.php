@@ -22,6 +22,7 @@ return [
     "det"                            => "លម្អិត",
     "download_import_template"       => "ទាញយកការនាំចូលទំព័រគំរូ CSV",
     "edit"                           => "កែប្រែ",
+    "edit_profile"                   => "កែសម្រួលប្រវត្តិរូប",
     "email"                          => "អ៊ីមែល",
     "email_invalid_format"           => "អ៊ីមែលនេះគឺខុសទម្រង់",
     "email_no_recipients"            => "សូមជ្រើសរើសកំណត់ត្រាដែលមានអ៊ីមែល។",
@@ -91,4 +92,7 @@ return [
     "yes"                            => "",
     "you_are_using_ospos"            => "",
     "zip"                            => "កូដប្រៃសណីយ៍",
+    "profile"                        => "ប្រវត្តិរូប",
+    "language_english"               => "ភាសាអង់គ្លេស",
+    "language_khmer"                 => "ភាសាខ្មែរ",
 ];
