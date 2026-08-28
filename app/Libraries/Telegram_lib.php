@@ -49,16 +49,32 @@ class Telegram_lib
         $phone = trim((string)($request['owner_phone'] ?? ''));
         $payment_ref = (string)($request['payment_reference'] ?? '');
         $request_id = !empty($request['request_id']) ? (int)$request['request_id'] : null;
+        $business_type = trim((string)($request['business_type'] ?? ''));
+        $address = trim((string)($request['address'] ?? ''));
+        $city = trim((string)($request['city'] ?? ''));
+        $country = trim((string)($request['country'] ?? ''));
+        $tax_id = trim((string)($request['tax_id'] ?? ''));
 
         $lines = [
             $this->field_line('📋', 'New company registration', '', false, true),
             '',
             $this->field_line('🏢', 'Company', $company_name),
             $this->field_line('🔖', 'Code', $tenant_code, true),
-            '',
-            $this->field_line('👤', 'Owner', $owner_name),
-            $this->field_line('🔑', 'Username', $username, true),
         ];
+
+        if ($business_type !== '') {
+            $lines[] = $this->field_line('🏬', 'Type', $business_type);
+        }
+        if ($address !== '' || $city !== '' || $country !== '') {
+            $lines[] = $this->field_line('📍', 'Address', trim($address . ', ' . $city . ', ' . $country, ' ,'));
+        }
+        if ($tax_id !== '') {
+            $lines[] = $this->field_line('🆔', 'Tax ID', $tax_id, true);
+        }
+
+        $lines[] = '';
+        $lines[] = $this->field_line('👤', 'Owner', $owner_name);
+        $lines[] = $this->field_line('🔑', 'Username', $username, true);
 
         if ($email !== '') {
             $lines[] = $this->field_line('✉️', 'Email', $email);
@@ -76,14 +92,16 @@ class Telegram_lib
             $lines[] = $this->field_line('💳', 'Plan', $plan_label);
         }
 
-        $lines[] = $this->field_line('🧾', 'Payment ref', $payment_ref, true);
+        if ($payment_ref !== '') {
+            $lines[] = $this->field_line('🧾', 'Payment ref', $payment_ref, true);
+        }
 
         if ($request_id !== null) {
             $lines[] = $this->field_line('🆔', 'Request', '#' . $request_id);
         }
 
         $lines[] = '';
-        $lines[] = $this->field_line('⏳', 'Status', 'Pending approval');
+        $lines[] = $this->field_line('⏳', 'Status', 'Pending review — not paid yet');
 
         $keyboard = null;
         if ($review_url !== '' && $this->is_telegram_button_url($review_url)) {
@@ -103,6 +121,91 @@ class Telegram_lib
         }
 
         return $this->send_message(implode("\n", $lines), $keyboard);
+    }
+
+    /**
+     * After Super Admin activates a shop, send KHQR so it can be forwarded to the owner.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function notify_activation_payment(array $data): bool
+    {
+        if (!$this->is_enabled()) {
+            return false;
+        }
+
+        $company = (string)($data['company_name'] ?? '');
+        $code = (string)($data['tenant_code'] ?? '');
+        $phone = trim((string)($data['owner_phone'] ?? ''));
+        $email = trim((string)($data['owner_email'] ?? ''));
+        $plan = (string)($data['plan_name'] ?? 'POS');
+        $price = isset($data['plan_price']) ? number_format((float)$data['plan_price'], 0) : '';
+        $checkout_url = (string)($data['checkout_url'] ?? '');
+        $qr_path = (string)($data['qr_path'] ?? '');
+
+        $lines = [
+            $this->field_line('✅', 'Activated — send KHQR to owner', '', false, true),
+            '',
+            $this->field_line('🏢', 'Company', $company),
+            $this->field_line('🔖', 'Code', $code, true),
+            $this->field_line('💳', 'Plan', $plan . ($price !== '' ? ' ($' . $price . '/month)' : '')),
+        ];
+        if ($phone !== '') {
+            $lines[] = $this->field_line('📞', 'Owner phone', $phone, true);
+        }
+        if ($email !== '') {
+            $lines[] = $this->field_line('✉️', 'Owner email', $email);
+        }
+        $lines[] = '';
+        $lines[] = $this->field_line('1', 'Tell them to open Complete payment', $checkout_url);
+        $lines[] = $this->field_line('2', 'Enter company code + email, scan QR, paste receipt ID', '');
+
+        $this->send_message(implode("\n", $lines));
+
+        $caption = 'KHQR for ' . $company . ' — $' . $price . '/month. Forward this QR to the owner.';
+        if ($qr_path !== '' && is_file($qr_path)) {
+            return $this->send_photo($caption, $qr_path);
+        }
+
+        return true;
+    }
+
+    private function send_photo(string $caption, string $photo_path): bool
+    {
+        if (!$this->is_enabled() || !is_file($photo_path)) {
+            return false;
+        }
+
+        $url = 'https://api.telegram.org/bot' . $this->bot_token . '/sendPhoto';
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return false;
+        }
+
+        $post = [
+            'chat_id' => $this->chat_id,
+            'caption' => $caption,
+            'photo' => new \CURLFile($photo_path, 'image/png', 'khqr.png'),
+        ];
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $post,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 20,
+        ]);
+
+        $response = curl_exec($ch);
+        $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $http_code !== 200) {
+            log_message('error', 'Telegram sendPhoto failed. HTTP ' . $http_code . '. ' . (string)$response);
+            return false;
+        }
+
+        return true;
     }
 
     /**

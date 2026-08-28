@@ -1,0 +1,42 @@
+CI_ENVIRONMENT = production
+session.useFile = true
+tenant.forceShared = true
+
+database.default.hostname = 'localhost'
+database.default.database = 'pos_wbpos'
+database.default.username = 'pos_wbpos'
+database.default.password = 'Ln8cQ7AZ4UbXagzHTU7f'
+database.default.DBDriver = 'MySQLi'
+database.default.DBPrefix = 'wbpos_'
+
+database.development.hostname = 'localhost'
+database.development.database = 'pos_wbpos'
+database.development.username = 'pos_wbpos'
+database.development.password = 'Ln8cQ7AZ4UbXagzHTU7f'
+database.development.DBDriver = 'MySQLi'
+database.development.DBPrefix = 'wbpos_'
+
+database.tests.hostname = 'localhost'
+database.tests.database = 'pos_wbpos'
+database.tests.username = 'pos_wbpos'
+database.tests.password = 'Ln8cQ7AZ4UbXagzHTU7f'
+database.tests.DBDriver = 'MySQLi'
+database.tests.DBPrefix = 'wbpos_'
+
+encryption.key = '18ade524011b729a178dbc041b160895d465ce4944c4fb71b9ce9c916a7788ae'
+
+logger.threshold = 4
+app.db_log_enabled = false
+
+honeypot.hidden = true
+honeypot.label = 'Fill This Field'
+honeypot.name = 'honeypot'
+honeypot.template = '<label>{label}</label><input type="text" name="{name}" value="">'
+honeypot.container = '<div style="display:none">{template}</div>'
+
+telegram.enabled = false
+telegram.bot_token =
+telegram.super_admin_chat_id =
+
+email.fromEmail = 'noreply@pos.chhit.com'
+email.fromName = 'WBPOS'

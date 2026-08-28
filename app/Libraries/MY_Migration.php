@@ -35,7 +35,7 @@ class MY_Migration extends MigrationRunner
      */
     public static function get_current_version(): int
     {
-        $db = Database::connect();
+        $db = Database::connect('platform');
         if ($db->tableExists('migrations')) {
             $builder = $db->table('migrations');
             $builder->select('version')->orderBy('version', 'DESC')->limit(1);

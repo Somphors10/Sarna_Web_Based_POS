@@ -15,17 +15,33 @@ if (empty($series_data_1)) {
     return;
 }
 
+$series_values = array_map(static function ($item) {
+    return (float) (is_array($item) ? ($item['value'] ?? 0) : $item);
+}, $series_data_1);
+
+$series_meta = array_map(static function ($item) {
+    return is_array($item) ? (string) ($item['meta'] ?? '') : '';
+}, $series_data_1);
+
 $palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#14b8a6', '#64748b'];
 ?>
 
 <script type="text/javascript">
     (function () {
-        var data = {
-            labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-            series: <?= json_encode($series_data_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-        };
-
+        var labels = <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        var values = <?= json_encode($series_values, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        var meta = <?= json_encode($series_meta, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
         var palette = <?= json_encode($palette, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+        var data = {
+            labels: labels,
+            series: values.map(function (value, index) {
+                return {
+                    value: value,
+                    meta: meta[index] || labels[index] || ''
+                };
+            })
+        };
 
         var options = {
             width: '100%',
@@ -37,20 +53,27 @@ $palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#
             labelPosition: 'outside',
             labelDirection: 'explode',
             labelInterpolationFnc: function (value) {
+                if (!isFinite(value)) {
+                    return '';
+                }
+
                 return Math.round(value) + '%';
             },
             plugins: [
                 Chartist.plugins.tooltip({
-                    transformTooltipTextFnc: function (value) {
+                    transformTooltipTextFnc: function (value, label, pointMeta) {
+                        var formatted;
                         <?php if ($show_currency): ?>
                             <?php if (is_right_side_currency_symbol()): ?>
-                                return value + '<?= esc($config['currency_symbol'], 'js') ?>';
+                                formatted = value + '<?= esc($config['currency_symbol'], 'js') ?>';
                             <?php else: ?>
-                                return '<?= esc($config['currency_symbol'], 'js') ?>' + value;
+                                formatted = '<?= esc($config['currency_symbol'], 'js') ?>' + value;
                             <?php endif; ?>
                         <?php else: ?>
-                            return value;
+                            formatted = value;
                         <?php endif; ?>
+
+                        return pointMeta ? pointMeta + ' · ' + formatted : formatted;
                     }
                 })
             ]

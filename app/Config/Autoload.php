@@ -203,6 +203,7 @@ class Autoload extends AutoloadConfig
     public $helpers = [
         'form',
         'cookie',
+        'platform_features',
         'tabular',
         'locale',
         'security',

@@ -211,15 +211,47 @@ class Supplier extends Person
             });
         }
 
-        $builder->delete();
+        return $builder->update(['deleted' => 1]);
+    }
+
+    private function ensureDeletedColumn(): void
+    {
+        if ($this->db->fieldExists('deleted', 'suppliers')) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . $this->db->prefixTable('suppliers') . '` ADD COLUMN `deleted` TINYINT(1) NOT NULL DEFAULT 0'
+        );
+    }
+
+    /**
+     * Hides suppliers from lists. Rows stay in the database.
+     */
+    public function delete_list(array $person_ids): bool
+    {
+        $this->ensureDeletedColumn();
+        $builder = $this->db->table('suppliers');
+        $builder->whereIn('person_id', $person_ids);
+        if ($this->hasSupplierTenantColumn()) {
+            $builder->where('tenant_id', $this->getTenantId());
+        } elseif ($this->hasPeopleTenantColumn()) {
+            $builder->whereIn('person_id', function (BaseBuilder $subquery) {
+                $subquery->select('person_id')
+                    ->from('people')
+                    ->where('tenant_id', $this->getTenantId());
+            });
+        }
+
+        $builder->update(['deleted' => 1]);
 
         return $this->db->affectedRows() > 0;
     }
 
     /**
-     * Deletes a list of suppliers
+     * Restores a list of hidden suppliers.
      */
-    public function delete_list(array $person_ids): bool
+    public function undelete_list(array $person_ids): bool
     {
         $builder = $this->db->table('suppliers');
         $builder->whereIn('person_id', $person_ids);
@@ -233,9 +265,7 @@ class Supplier extends Person
             });
         }
 
-        $builder->delete();
-
-        return $this->db->affectedRows() > 0;
+        return $builder->update(['deleted' => 0]);
     }
 
     /**
@@ -330,16 +360,18 @@ class Supplier extends Person
     /**
      * Gets rows
      */
-    public function get_found_rows(string $search): int
+    public function get_found_rows(string $search, int $deleted = 0): int
     {
-        return $this->search($search, 0, 0, 'last_name', 'asc', true);
+        return $this->search($search, 0, 0, 'last_name', 'asc', true, $deleted);
     }
 
     /**
      * Perform a search on suppliers
      */
-    public function search(string $search, ?int $rows = 25, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, ?int $rows = 25, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false, int $deleted = 0)
     {
+        $this->ensureDeletedColumn();
+
         // Set default values on null
         $rows = $rows ?? 25;
         $limit_from = $limit_from ?? 0;
@@ -362,7 +394,7 @@ class Supplier extends Person
                     SELECT COUNT(*)
                     FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
                     WHERE s2.tenant_id = suppliers.tenant_id
-                      AND s2.deleted = 0
+                      AND s2.deleted = ' . (int) $deleted . '
                       AND s2.person_id <= suppliers.person_id
                 ) AS tenant_supplier_seq', false);
             } elseif ($this->hasPeopleTenantColumn()) {
@@ -371,7 +403,7 @@ class Supplier extends Person
                     FROM ' . $this->db->prefixTable('suppliers') . ' AS s2
                     JOIN ' . $this->db->prefixTable('people') . ' AS p2 ON p2.person_id = s2.person_id
                     WHERE p2.tenant_id = ' . (int)$this->getTenantId() . '
-                      AND s2.deleted = 0
+                      AND s2.deleted = ' . (int) $deleted . '
                       AND s2.person_id <= suppliers.person_id
                 ) AS tenant_supplier_seq', false);
             }
@@ -391,7 +423,7 @@ class Supplier extends Person
         $builder->orLike('account_number', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);    // TODO: According to PHPStorm, this line down to the return is repeated in Customer.php and Employee.php... perhaps refactoring a method in a library could be helpful?
         $builder->groupEnd();
-        $builder->where('suppliers.deleted', 0);
+        $builder->where('suppliers.deleted', $deleted);
 
         if ($count_only) {
             return $builder->get()->getRow()->count;

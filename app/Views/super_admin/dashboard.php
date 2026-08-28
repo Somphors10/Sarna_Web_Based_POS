@@ -4,10 +4,14 @@
  * @var array $platform_admins
  * @var bool $is_owner
  * @var array $subscription_requests
- * @var array $password_reset_requests
+ * @var array $subscription_request_history
  * @var object|null $logged_in_admin
  * @var string $active_page
  */
+
+$unverified_requests = $unverified_requests ?? [];
+$mail_delivery = $mail_delivery ?? \App\Libraries\PlatformMail::deliveryInfo();
+$mail_ready = in_array((string)($mail_delivery['mode'] ?? ''), ['gmail', 'smtp'], true);
 
 $format_request_date = static function (?string $value): string {
     if ($value === null || $value === '') {
@@ -61,7 +65,41 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=25') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=42') ?>">
+    <style>
+        .sa-mail { display:grid; gap:16px; max-width:920px; }
+        .sa-mail-hero { display:flex; gap:16px; align-items:center; padding:20px 22px; border-radius:16px; border:1px solid #e2e8f0; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.04); }
+        .sa-mail-hero.is-on { background:linear-gradient(135deg,#ecfdf5 0%,#fff 58%); border-color:#a7f3d0; }
+        .sa-mail-hero.is-off { background:linear-gradient(135deg,#f5f3ff 0%,#fff 58%); border-color:#ddd6fe; }
+        .sa-mail-hero__icon { width:52px; height:52px; border-radius:14px; display:grid; place-items:center; flex-shrink:0; }
+        .sa-mail-hero.is-on .sa-mail-hero__icon { background:#059669; color:#fff; }
+        .sa-mail-hero.is-off .sa-mail-hero__icon { background:#7c3aed; color:#fff; }
+        .sa-mail-hero__badge { display:inline-block; margin-bottom:6px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+        .sa-mail-hero.is-on .sa-mail-hero__badge { background:#d1fae5; color:#047857; }
+        .sa-mail-hero.is-off .sa-mail-hero__badge { background:#ede9fe; color:#6d28d9; }
+        .sa-mail-hero h2 { margin:0 0 6px; font-size:1.2rem; letter-spacing:-.02em; }
+        .sa-mail-hero p { margin:0; color:#64748b; }
+        .sa-mail-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0; padding:0; list-style:none; }
+        .sa-mail-steps li { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+        .sa-mail-steps span { display:grid; place-items:center; width:28px; height:28px; margin-bottom:10px; border-radius:999px; background:#ede9fe; color:#7c3aed; font-size:12px; font-weight:800; }
+        .sa-mail-steps strong { display:block; margin-bottom:4px; }
+        .sa-mail-steps em { color:#64748b; font-style:normal; font-size:.85rem; }
+        .sa-mail-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:16px; align-items:start; }
+        .sa-mail-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.04); }
+        .sa-mail-card--soft { background:#f8fafc; }
+        .sa-mail-card h3 { margin:0 0 4px; font-size:1.02rem; }
+        .sa-mail-card .sa-mail-card__head p { margin:0 0 16px; color:#64748b; font-size:.88rem; }
+        .sa-mail-form { display:grid; gap:6px; }
+        .sa-mail-label { font-size:12px; font-weight:700; color:#475569; }
+        .sa-mail .sa-input { margin-bottom:8px; background:#fff; }
+        .sa-mail-help { margin:0 0 12px; color:#7c3aed; font-size:.82rem; font-weight:700; text-decoration:none; }
+        .sa-mail-help:hover { text-decoration:underline; }
+        .sa-mail .sa-btn { height:42px; width:100%; border-radius:10px; }
+        @media (max-width:860px) {
+            .sa-mail-hero { align-items:flex-start; }
+            .sa-mail-steps, .sa-mail-grid { grid-template-columns:1fr; }
+        }
+    </style>
 </head>
 <body class="sa-dashboard">
 <div id="sa_toast_stack" class="sa-toast-stack" aria-live="polite" aria-atomic="true"></div>
@@ -75,13 +113,28 @@ $format_relative_time = static function (?string $value): string {
 </script>
 <?php
     $total_tenants = count($tenants);
-    $pending_count = count($subscription_requests) + count($password_reset_requests ?? []);
+    $pending_count = count($subscription_requests);
     $admins_count = count($platform_admins);
     $active_page = $active_page ?? 'overview';
+    $subscription_plans = $subscription_plans ?? [];
+    $plan_feature_matrix = $plan_feature_matrix ?? [];
+    $template_meta = $template_meta ?? ['template_version' => '1', 'last_sync_at' => null];
+    $template_sync = $template_sync ?? null;
+    $isolate_report = $isolate_report ?? null;
+    $subscription_request_history = $subscription_request_history ?? [];
 
     $active_tenants = 0;
     $suspended_tenants = 0;
     $cancelled_tenants = 0;
+    $awaiting_payment_tenants = 0;
+    $isolated_tenants = 0;
+    $shared_tenants = 0;
+    $platform_db_name = (string)(config('Database')->platform['database'] ?? 'wbpos');
+    $tenant_is_isolated = static function (array $tenant) use ($platform_db_name): bool {
+        $name = trim((string)($tenant['db_name'] ?? ''));
+
+        return $name !== '' && strcasecmp($name, $platform_db_name) !== 0;
+    };
     foreach ($tenants as $tenant) {
         $status = strtolower((string)($tenant['status'] ?? ''));
         if ($status === 'active') {
@@ -90,6 +143,13 @@ $format_relative_time = static function (?string $value): string {
             $suspended_tenants++;
         } elseif ($status === 'cancelled') {
             $cancelled_tenants++;
+        } elseif ($status === 'awaiting_payment') {
+            $awaiting_payment_tenants++;
+        }
+        if ($tenant_is_isolated($tenant)) {
+            $isolated_tenants++;
+        } else {
+            $shared_tenants++;
         }
     }
 
@@ -108,37 +168,76 @@ $format_relative_time = static function (?string $value): string {
         ],
         'requests' => [
             'title' => 'Pending Requests',
-            'subtitle' => 'Review website registrations and password reset requests.',
+            'subtitle' => 'Owners verify by Gmail first. Then you Activate and send KHQR.',
+        ],
+        'email' => [
+            'title' => 'Email',
+            'subtitle' => 'Save Gmail once. After that, every new registration emails the owner a verify link automatically.',
+        ],
+        'history' => [
+            'title' => 'Request History',
+            'subtitle' => 'View approved and rejected website registrations.',
+        ],
+        'features' => [
+            'title' => 'Master POS Features',
+            'subtitle' => 'Global kill switches for the shared POS template. Plan assignment is on Plans & Sync.',
+        ],
+        'plans' => [
+            'title' => 'Plans & Template Sync',
+            'subtitle' => 'One $20 plan with every POS module. Push template updates without touching shop sales data.',
+        ],
+        'feature' => [
+            'title' => $current_feature['label'] ?? 'Feature',
+            'subtitle' => 'This feature is part of the shared WBPOS system. Super Admin cannot see another shop’s customers, items, or sales.',
         ],
     ];
     $current_meta = $page_meta[$active_page] ?? $page_meta['overview'];
+    $page_eyebrow = in_array($active_page, ['features', 'feature', 'plans'], true) ? 'Master Template' : 'Subscriptions';
 
     $flash_messages = [];
     if (service('request')->getGet('request_approved') === '1') {
-        $flash_messages[] = ['type' => 'success', 'text' => 'Registration approved. The business account is now active.'];
+        $flash_messages[] = ['type' => 'success', 'text' => 'Registration activated. The shop cannot log in until they pay via KHQR.'];
     }
     if (service('request')->getGet('request_rejected') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'Registration request rejected.'];
     }
-    if (service('request')->getGet('password_reset_approved') === '1') {
-        $flash_messages[] = ['type' => 'success', 'text' => 'Password reset approved. The user can sign in with the new password.'];
+    if (service('request')->getGet('plan_updated') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Plan feature assignment saved. Shops receive it on their next login or refresh.'];
     }
-    if (service('request')->getGet('password_reset_rejected') === '1') {
-        $flash_messages[] = ['type' => 'success', 'text' => 'Password reset request rejected.'];
+    if (service('request')->getGet('template_synced') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Template sync completed. Shop sales, stock, and customers were not changed.'];
     }
-    if (service('request')->getGet('company_created') === '1') {
-        $flash_messages[] = ['type' => 'success', 'text' => 'New company created successfully.'];
+    if (service('request')->getGet('tenants_isolated') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Shop databases were provisioned. Each business now has a private database.'];
+    }
+    if (service('request')->getGet('tenant_isolated') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'This shop now has its own isolated database.'];
+    }
+    if (service('request')->getGet('gmail_saved') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Gmail saved. New registrations will send a verify link to the owner.'];
+    }
+    if (service('request')->getGet('gmail_test') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Test email sent. Check that inbox (and Spam).'];
+    }
+    if (service('request')->getGet('verify_sent') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Verification email sent to the owner. They must click the link in Gmail.'];
+    }
+
+    $gmail_error = trim((string)session()->getFlashdata('gmail_error'));
+    if ($gmail_error !== '') {
+        $flash_messages[] = ['type' => 'error', 'text' => $gmail_error];
     }
 
     $error_code = (string)service('request')->getGet('error');
     $error_messages = [
         'request_not_found' => 'Request not found or already processed.',
+        'email_not_verified' => 'This owner has not clicked the verify link in their email yet.',
+        'verify_not_sent' => 'Could not send the verify email. Save Gmail on Email settings, then send again.',
         'tenant_or_user_exists' => 'Tenant code or owner username already exists.',
         'approve_failed' => 'Could not approve the request. Please try again.',
-        'admin_creation_disabled' => 'Creating platform admins from this screen is disabled.',
-        'password_reset_not_found' => 'Password reset request not found or already processed.',
-        'password_reset_failed' => 'Could not approve the password reset. Please try again.',
-        'password_reset_unavailable' => 'Password reset table is not installed yet.',
+        'feature_update_failed' => 'Could not update the feature. Please try again.',
+        'isolate_failed' => 'Could not create a private database for this shop. Check MySQL CREATE DATABASE privileges.',
+        'feature_update_failed' => 'Could not update this feature. Try again.',
     ];
     if ($error_code !== '' && isset($error_messages[$error_code])) {
         $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
@@ -180,23 +279,9 @@ $format_relative_time = static function (?string $value): string {
             'review_url' => site_url('super-admin/requests'),
         ];
     }
-    foreach ($password_reset_requests ?? [] as $reset) {
-        $notification_items[] = [
-            'type' => 'password_reset',
-            'id' => (int)$reset['request_id'],
-            'key' => 'password_reset-' . (int)$reset['request_id'],
-            'title' => 'Password reset request',
-            'subtitle' => trim(($reset['username'] ?? '') . ' · ' . ($reset['tenant_code'] ?? '')),
-            'body' => 'A user requested a password reset for tenant #' . ($reset['tenant_id'] ?? '') . '. Review and approve from pending requests.',
-            'meta' => (string)($reset['tenant_code'] ?? ''),
-            'created_at' => $format_request_date($reset['created_at'] ?? ''),
-            'relative_time' => $format_relative_time($reset['created_at'] ?? ''),
-            'review_url' => site_url('super-admin/requests'),
-        ];
-    }
 ?>
 <div class="neo-layout sa-layout">
-    <aside class="neo-global-sidebar">
+    <aside class="neo-global-sidebar sa-sidebar">
         <div class="neo-global-brand-row">
             <a class="neo-global-brand" href="<?= site_url('super-admin/overview') ?>">
                 <span class="neo-global-brand-full">WBPOS</span>
@@ -209,27 +294,15 @@ $format_relative_time = static function (?string $value): string {
             </button>
         </div>
         <div class="neo-global-sidebar-body">
-            <nav class="neo-global-menu">
-                <a class="neo-global-menu-item <?= $active_page === 'overview' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/overview') ?>" title="Overview">
-                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt="">
-                    <span>Overview</span>
-                </a>
-                <a class="neo-global-menu-item <?= $active_page === 'businesses' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/businesses') ?>" title="Businesses">
-                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/businesses.svg') ?>" alt="">
-                    <span>Businesses</span>
-                </a>
-                <a class="neo-global-menu-item <?= $active_page === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>" title="Platform Admins">
-                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt="">
-                    <span>Platform Admins</span>
-                </a>
-                <a class="neo-global-menu-item <?= $active_page === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>" title="Pending Requests">
-                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/pending.svg') ?>" alt="">
-                    <span>Pending Requests</span>
-                </a>
-            </nav>
+                    <nav class="neo-global-menu">
+                        <?= view('partial/super_admin_nav', [
+                            'sa_active' => $active_page,
+                            'pos_modules' => super_admin_pos_nav_modules(),
+                        ]) ?>
+                    </nav>
             <div class="neo-sidebar-footer">
                 <a class="neo-sidebar-logout js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>" title="Logout">
-                    <img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
+                    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt=""></span>
                     <span>Logout</span>
                 </a>
             </div>
@@ -292,18 +365,25 @@ $format_relative_time = static function (?string $value): string {
         <div class="sa-main-body">
         <header class="sa-page-header">
             <div class="sa-page-header__content">
-                <p class="sa-page-header__eyebrow">Platform Console</p>
+                <p class="sa-page-header__eyebrow"><?= esc($page_eyebrow) ?></p>
                 <h1 class="sa-page-header__title"><?= esc($current_meta['title']) ?></h1>
                 <p class="sa-page-header__subtitle"><?= esc($current_meta['subtitle']) ?></p>
             </div>
-            <?php if (in_array($active_page, ['businesses', 'admins', 'requests'], true)): ?>
+            <?php if (in_array($active_page, ['businesses', 'admins', 'requests', 'history'], true)): ?>
             <div class="sa-toolbar sa-toolbar--filter-only">
                 <?php if ($active_page === 'businesses'): ?>
                 <select id="super_admin_status_filter" class="sa-select">
                     <option value="">All Status</option>
                     <option value="active">Active</option>
+                    <option value="awaiting_payment">Awaiting payment</option>
                     <option value="suspended">Suspended</option>
                     <option value="cancelled">Cancelled</option>
+                </select>
+                <?php elseif ($active_page === 'history'): ?>
+                <select id="super_admin_status_filter" class="sa-select">
+                    <option value="">All History</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
                 </select>
                 <?php else: ?>
                 <select id="super_admin_status_filter" class="sa-select" hidden aria-hidden="true">
@@ -319,6 +399,23 @@ $format_relative_time = static function (?string $value): string {
                 <?= esc($flash['text']) ?>
             </div>
         <?php endforeach; ?>
+        <?php $activation_pay_url = trim((string)($activation_pay_url ?? '')); ?>
+        <?php if ($activation_pay_url !== ''): ?>
+            <div class="sa-alert sa-alert--info sa-pay-flash">
+                <p>
+                    <?php if ((string)($activation_email_ok ?? '') === '1'): ?>
+                        Payment email sent. Also copy this KHQR link and send it to the owner if needed:
+                    <?php else: ?>
+                        Email may not have sent (SMTP is often off on local XAMPP). Copy this KHQR payment link and send it to the owner:
+                    <?php endif; ?>
+                </p>
+                <div class="sa-copy-row">
+                    <input class="sa-copy-row__input" id="sa_activation_pay_url" type="text" readonly value="<?= esc($activation_pay_url, 'attr') ?>">
+                    <button type="button" class="sa-btn sa-btn--primary js-copy-pay-url" data-target="sa_activation_pay_url">Copy link</button>
+                    <a class="sa-btn sa-btn--ghost" href="<?= esc($activation_pay_url, 'attr') ?>" target="_blank" rel="noopener">Open</a>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <?php if ($active_page === 'overview'): ?>
         <section class="sa-stat-grid">
@@ -332,7 +429,7 @@ $format_relative_time = static function (?string $value): string {
                     <p class="sa-stat-card__hint">View all businesses →</p>
                 </div>
             </a>
-            <a class="sa-stat-card sa-stat-card--amber" href="<?= site_url('super-admin/requests') ?>" title="View pending registration and password reset requests">
+            <a class="sa-stat-card sa-stat-card--amber" href="<?= site_url('super-admin/requests') ?>" title="View pending registration requests">
                 <div class="sa-stat-card__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/></svg>
                 </div>
@@ -385,6 +482,58 @@ $format_relative_time = static function (?string $value): string {
                         <div class="sa-metric__value"><?= $cancelled_tenants ?></div>
                         <div class="sa-metric__hint">View cancelled businesses →</div>
                     </a>
+                    <a class="sa-metric sa-metric--suspended" href="<?= site_url('super-admin/businesses?status=awaiting_payment') ?>" title="View shops waiting to pay">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Awaiting payment</span>
+                        </div>
+                        <div class="sa-metric__value"><?= $awaiting_payment_tenants ?></div>
+                        <div class="sa-metric__hint">View unpaid activations →</div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Architecture</h2>
+                <p class="sa-panel__subtitle">Master POS template is shared. Each shop can have a private database so sales and stock never mix.</p>
+            </div>
+            <div class="sa-panel__body">
+                <div class="sa-metrics sa-metrics--status">
+                    <div class="sa-metric sa-metric--active">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Private DBs</span>
+                        </div>
+                        <div class="sa-metric__value"><?= $isolated_tenants ?></div>
+                        <div class="sa-metric__hint">Isolated shop databases</div>
+                    </div>
+                    <div class="sa-metric sa-metric--suspended">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Shared fallback</span>
+                        </div>
+                        <div class="sa-metric__value"><?= $shared_tenants ?></div>
+                        <div class="sa-metric__hint">Still on the platform database</div>
+                    </div>
+                    <div class="sa-metric sa-metric--cancelled">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Template</span>
+                        </div>
+                        <div class="sa-metric__value">v<?= esc($template_meta['template_version'] ?? '1') ?></div>
+                        <div class="sa-metric__hint"><?= !empty($template_meta['last_sync_at']) ? 'Last sync ' . esc($template_meta['last_sync_at']) : 'Not synced yet' ?></div>
+                    </div>
+                </div>
+                <div class="sa-template-actions">
+                    <?= form_open('super-admin/isolate-tenants') ?>
+                        <button class="sa-btn sa-btn--primary" type="submit">Create private databases for all shops</button>
+                    <?= form_close() ?>
+                    <?= form_open('super-admin/sync-template') ?>
+                        <button class="sa-btn sa-btn--ghost" type="submit">Sync / Deploy template</button>
+                    <?= form_close() ?>
+                    <a class="sa-btn sa-btn--ghost" href="<?= site_url('super-admin/plans') ?>">Assign plan features</a>
                 </div>
             </div>
         </section>
@@ -416,6 +565,16 @@ $format_relative_time = static function (?string $value): string {
                         </span>
                         <span class="sa-action-card__arrow" aria-hidden="true">→</span>
                     </a>
+                    <a class="sa-action-card" href="<?= site_url('items') ?>">
+                        <span class="sa-action-card__icon sa-action-card__icon--purple" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        </span>
+                        <span class="sa-action-card__text">
+                            <strong>POS Features</strong>
+                            <span>Open Items, Sales, Customers, and every Admin screen.</span>
+                        </span>
+                        <span class="sa-action-card__arrow" aria-hidden="true">→</span>
+                    </a>
                     <a class="sa-action-card" href="<?= site_url('super-admin/admins') ?>">
                         <span class="sa-action-card__icon sa-action-card__icon--blue" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -435,13 +594,13 @@ $format_relative_time = static function (?string $value): string {
         <section class="sa-panel">
             <div class="sa-panel__head">
                 <h2 class="sa-panel__title">All Businesses</h2>
-                <p class="sa-panel__subtitle">Manage tenant status and owner account visibility.</p>
+                <p class="sa-panel__subtitle">Shop ID is from the businesses table. Match shops by company code.</p>
             </div>
-            <div class="sa-table-wrap">
+            <div class="sa-table-wrap sa-table-wrap--stack">
                 <table class="sa-table">
                     <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Shop ID</th>
                         <th>Code</th>
                         <th>Company</th>
                         <th>Owner</th>
@@ -459,36 +618,48 @@ $format_relative_time = static function (?string $value): string {
                         <tr class="js-searchable-row"
                             data-group="tenant"
                             data-status="<?= esc($status) ?>"
-                            data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '')))) ?>">
-                            <td><?= esc($tenant['tenant_id']) ?></td>
-                            <td><?= esc($tenant['tenant_code']) ?></td>
-                            <td><?= esc($tenant['company_name']) ?></td>
-                            <td><?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? ''))) ?></td>
-                            <td><?= esc($tenant['username'] ?? '') ?></td>
-                            <td><span class="sa-status sa-status--<?= esc($status) ?>"><?= esc($tenant['status']) ?></span></td>
-                            <td>
-                                <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form']) ?>
+                            data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '') . ' ' . ($tenant['email'] ?? '') . ' ' . ($tenant['owner_email'] ?? '') . ' ' . ($tenant['phone_number'] ?? '')))) ?>">
+                            <td data-label="Shop ID"><?= esc($tenant['tenant_id']) ?></td>
+                            <td data-label="Code"><?= esc($tenant['tenant_code']) ?></td>
+                            <td data-label="Company"><?= esc($tenant['company_name']) ?></td>
+                            <td data-label="Owner"><?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? ''))) ?></td>
+                            <td data-label="Username"><?= esc($tenant['username'] ?? '') ?></td>
+                            <td data-label="Status"><span class="sa-status sa-status--<?= esc($status === 'awaiting_payment' ? 'pending' : $status) ?>"><?= esc($status === 'awaiting_payment' ? 'Awaiting payment' : $tenant['status']) ?></span></td>
+                            <td data-label="Action">
                                 <div class="sa-row-actions">
                                     <button type="button"
                                             class="sa-btn sa-btn--ghost js-sa-view-detail"
-                                            data-title="Business #<?= (int)$tenant['tenant_id'] ?>"
+                                            data-kind="business"
+                                            data-title="<?= esc($tenant['company_name'] ?: ('Business #' . (int)$tenant['tenant_id']), 'attr') ?>"
                                             data-id="<?= esc((string)$tenant['tenant_id'], 'attr') ?>"
                                             data-company="<?= esc($tenant['company_name'], 'attr') ?>"
                                             data-code="<?= esc($tenant['tenant_code'], 'attr') ?>"
+                                            data-type="<?= esc(saas_business_type_label($tenant['business_type'] ?? ''), 'attr') ?>"
+                                            data-address="<?= esc((string)($tenant['address'] ?? $tenant['address_1'] ?? ''), 'attr') ?>"
+                                            data-city="<?= esc((string)($tenant['city'] ?? ''), 'attr') ?>"
+                                            data-country="<?= esc((string)($tenant['country'] ?? ''), 'attr') ?>"
+                                            data-tax="<?= esc((string)($tenant['tax_id'] ?? ''), 'attr') ?>"
                                             data-owner="<?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '')), 'attr') ?>"
-                                            data-username="<?= esc($tenant['username'] ?? '', 'attr') ?>"
-                                            data-status="<?= esc($tenant['status'], 'attr') ?>">
+                                            data-email="<?= esc((string)($tenant['email'] ?? $tenant['owner_email'] ?? ''), 'attr') ?>"
+                                            data-phone="<?= esc((string)($tenant['phone_number'] ?? $tenant['owner_phone'] ?? ''), 'attr') ?>"
+                                            data-username="<?= esc((string)($tenant['username'] ?? $tenant['owner_username'] ?? ''), 'attr') ?>"
+                                            data-plan="<?= esc((string)($tenant['plan_name'] ?? ''), 'attr') ?>"
+                                            data-payment="<?= esc((string)($tenant['payment_reference'] ?? ''), 'attr') ?>"
+                                            data-status="<?= esc((string)$tenant['status'], 'attr') ?>"
+                                            data-created="<?= esc($format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')), 'attr') ?>">
                                         View
                                     </button>
+                                    <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form sa-row-actions__form']) ?>
                                     <select class="sa-select--sm" name="status">
                                         <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                                        <option value="awaiting_payment" <?= $tenant['status'] === 'awaiting_payment' ? 'selected' : '' ?>>Awaiting payment</option>
                                         <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
                                         <option value="cancelled" <?= $tenant['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
                                     </select>
                                     <input type="hidden" name="tenant_code" value="<?= esc($tenant['tenant_code']) ?>">
                                     <button class="sa-btn sa-btn--primary" type="submit">Save</button>
+                                    <?= form_close() ?>
                                 </div>
-                                <?= form_close() ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -509,7 +680,6 @@ $format_relative_time = static function (?string $value): string {
                 <table class="sa-table">
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Username</th>
                         <th>Full Name</th>
                         <th>Email</th>
@@ -519,14 +689,13 @@ $format_relative_time = static function (?string $value): string {
                     </thead>
                     <tbody>
                     <?php if (empty($platform_admins)): ?>
-                        <tr><td colspan="6" class="sa-empty">No platform admins.</td></tr>
+                        <tr><td colspan="5" class="sa-empty">No platform admins.</td></tr>
                     <?php else: ?>
                     <?php foreach ($platform_admins as $admin): ?>
                         <?php $admin_status = strtolower((string)($admin['status'] ?? '')); ?>
                         <tr class="js-searchable-row"
                             data-group="admin"
                             data-search="<?= esc(strtolower(trim(($admin['username'] ?? '') . ' ' . ($admin['full_name'] ?? '') . ' ' . ($admin['email'] ?? '')))) ?>">
-                            <td><?= esc($admin['admin_id']) ?></td>
                             <td><?= esc($admin['username']) ?></td>
                             <td><?= esc($admin['full_name']) ?></td>
                             <td><?= esc($admin['email'] ?? '') ?></td>
@@ -534,7 +703,8 @@ $format_relative_time = static function (?string $value): string {
                             <td>
                                 <button type="button"
                                         class="sa-btn sa-btn--ghost js-sa-view-detail"
-                                        data-title="Platform admin #<?= (int)$admin['admin_id'] ?>"
+                                        data-title="<?= esc($admin['username'], 'attr') ?>"
+                                        data-kind="admin"
                                         data-id="<?= esc((string)$admin['admin_id'], 'attr') ?>"
                                         data-username="<?= esc($admin['username'], 'attr') ?>"
                                         data-name="<?= esc($admin['full_name'], 'attr') ?>"
@@ -552,54 +722,131 @@ $format_relative_time = static function (?string $value): string {
         </section>
         <?php endif; ?>
 
+        <?php if ($active_page === 'email'): ?>
+        <?php $sending_gmail = trim((string)($mail_delivery['user'] ?? '')); ?>
+        <div class="sa-mail">
+            <section class="sa-mail-hero <?= $mail_ready ? 'is-on' : 'is-off' ?>">
+                <div class="sa-mail-hero__icon" aria-hidden="true">
+                    <?php if ($mail_ready): ?>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <?php else: ?>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4V6z" stroke="currentColor" stroke-width="2"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <?php endif; ?>
+                </div>
+                <div class="sa-mail-hero__copy">
+                    <span class="sa-mail-hero__badge"><?= $mail_ready ? 'Automatic sending on' : 'Setup required' ?></span>
+                    <h2><?= $mail_ready ? 'Owners get verify email on register' : 'Connect Gmail so owners get verify email' ?></h2>
+                    <p>
+                        <?php if ($mail_ready && $sending_gmail !== ''): ?>
+                            Sending from <strong><?= esc($sending_gmail) ?></strong>. Super Admin does not send each verify message.
+                        <?php else: ?>
+                            This is one-time wiring. Super Admin does not click Verify for the owner.
+                        <?php endif; ?>
+                    </p>
+                </div>
+            </section>
+
+            <ol class="sa-mail-steps">
+                <li>
+                    <span>1</span>
+                    <strong>Owner registers</strong>
+                    <em>Public website signup</em>
+                </li>
+                <li>
+                    <span>2</span>
+                    <strong>Email goes out</strong>
+                    <em>Automatically, from Gmail above</em>
+                </li>
+                <li>
+                    <span>3</span>
+                    <strong>Owner clicks Verify</strong>
+                    <em>Then Super Admin can Activate</em>
+                </li>
+            </ol>
+
+            <div class="sa-mail-grid">
+                <section class="sa-mail-card">
+                    <div class="sa-mail-card__head">
+                        <h3>Sending account</h3>
+                        <p>Use a Google App Password, not the normal Gmail password.</p>
+                    </div>
+                    <?= form_open('super-admin/save-gmail', ['class' => 'sa-mail-form']) ?>
+                    <label class="sa-mail-label" for="gmail_user">Sending Gmail</label>
+                    <input class="sa-input" id="gmail_user" name="gmail_user" type="email" value="<?= esc($sending_gmail, 'attr') ?>" placeholder="you@gmail.com" required>
+                    <label class="sa-mail-label" for="gmail_app_password">App Password</label>
+                    <input class="sa-input" id="gmail_app_password" name="gmail_app_password" type="password" autocomplete="new-password" placeholder="<?= $mail_ready ? 'Saved — paste a new one only to replace' : 'xxxx xxxx xxxx xxxx' ?>" required>
+                    <a class="sa-mail-help" href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">Create an App Password</a>
+                    <button class="sa-btn sa-btn--success" type="submit"><?= $mail_ready ? 'Update Gmail' : 'Save Gmail' ?></button>
+                    <?= form_close() ?>
+                </section>
+
+                <section class="sa-mail-card sa-mail-card--soft">
+                    <div class="sa-mail-card__head">
+                        <h3>Send a test</h3>
+                        <p>Optional check. Owners still get mail from the public register form, not from this button.</p>
+                    </div>
+                    <?= form_open('super-admin/test-gmail', ['class' => 'sa-mail-form']) ?>
+                    <label class="sa-mail-label" for="test_email">Send a test to</label>
+                    <input class="sa-input" id="test_email" name="test_email" type="email" value="<?= esc($sending_gmail, 'attr') ?>" placeholder="owner@gmail.com" required>
+                    <button class="sa-btn sa-btn--ghost" type="submit">Send test email</button>
+                    <?= form_close() ?>
+                </section>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <?php if ($active_page === 'requests'): ?>
         <section class="sa-panel">
             <div class="sa-panel__head">
-                <h2 class="sa-panel__title">Pending Website Registrations</h2>
-                <p class="sa-panel__subtitle">Approve paid requests to auto-create active business POS accounts.</p>
+                <h2 class="sa-panel__title">Ready to activate</h2>
+                <p class="sa-panel__subtitle">Owners appear here only after they click the verify link in their email. Activate then emails KHQR. They cannot log in until they pay.</p>
             </div>
             <div class="sa-table-wrap">
                 <table class="sa-table">
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Company</th>
+                        <th>Signup ID</th>
                         <th>Code</th>
+                        <th>Company</th>
                         <th>Owner</th>
                         <th>Email</th>
                         <th>Plan</th>
-                        <th>Payment Ref</th>
                         <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php if (empty($subscription_requests)): ?>
-                        <tr><td colspan="8" class="sa-empty">No pending requests.</td></tr>
+                        <tr><td colspan="7" class="sa-empty">No verified requests yet.</td></tr>
                     <?php else: ?>
                     <?php foreach ($subscription_requests as $request): ?>
                         <tr class="js-searchable-row"
                             data-group="request"
-                            data-search="<?= esc(strtolower(trim(($request['company_name'] ?? '') . ' ' . ($request['tenant_code'] ?? '') . ' ' . ($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '') . ' ' . ($request['owner_email'] ?? '') . ' ' . ($request['plan_name'] ?? '') . ' ' . ($request['payment_reference'] ?? '')))) ?>">
+                            data-search="<?= esc(strtolower(trim(($request['company_name'] ?? '') . ' ' . ($request['tenant_code'] ?? '') . ' ' . ($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '') . ' ' . ($request['owner_email'] ?? '') . ' ' . ($request['plan_name'] ?? '') . ' ' . ($request['payment_reference'] ?? '') . ' ' . ($request['city'] ?? '') . ' ' . ($request['tax_id'] ?? '')))) ?>">
                             <td><?= esc($request['request_id']) ?></td>
-                            <td><?= esc($request['company_name']) ?></td>
                             <td><?= esc($request['tenant_code']) ?></td>
+                            <td><?= esc($request['company_name']) ?></td>
                             <td><?= esc($request['owner_first_name'] . ' ' . $request['owner_last_name']) ?></td>
                             <td><?= esc($request['owner_email']) ?></td>
                             <td><?= esc($request['plan_name'] ?? '') ?></td>
-                            <td><?= esc($request['payment_reference']) ?></td>
                             <td>
                                 <div class="sa-row-actions">
                                     <button type="button"
                                             class="sa-btn sa-btn--ghost js-sa-view-detail"
-                                            data-title="Registration request #<?= (int)$request['request_id'] ?>"
+                                            data-kind="registration"
+                                            data-title="<?= esc($request['company_name'], 'attr') ?>"
+                                            data-id="<?= esc((string)$request['request_id'], 'attr') ?>"
                                             data-company="<?= esc($request['company_name'], 'attr') ?>"
                                             data-code="<?= esc($request['tenant_code'], 'attr') ?>"
+                                            data-type="<?= esc(saas_business_type_label($request['business_type'] ?? ''), 'attr') ?>"
+                                            data-address="<?= esc($request['address'] ?? '', 'attr') ?>"
+                                            data-city="<?= esc($request['city'] ?? '', 'attr') ?>"
+                                            data-country="<?= esc($request['country'] ?? '', 'attr') ?>"
+                                            data-tax="<?= esc($request['tax_id'] ?? '', 'attr') ?>"
                                             data-owner="<?= esc(trim($request['owner_first_name'] . ' ' . $request['owner_last_name']), 'attr') ?>"
                                             data-email="<?= esc($request['owner_email'], 'attr') ?>"
                                             data-phone="<?= esc($request['owner_phone'] ?? '', 'attr') ?>"
                                             data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
                                             data-plan="<?= esc($request['plan_name'] ?? '', 'attr') ?>"
-                                            data-payment="<?= esc($request['payment_reference'], 'attr') ?>"
                                             data-created="<?= esc($format_request_date($request['created_at'] ?? ''), 'attr') ?>">
                                         View
                                     </button>
@@ -608,7 +855,7 @@ $format_relative_time = static function (?string $value): string {
                                         'data-action' => 'approve',
                                         'data-context' => 'registration',
                                     ]) ?>
-                                    <button class="sa-btn sa-btn--success" type="submit">Approve</button>
+                                    <button class="sa-btn sa-btn--success" type="submit">Activate</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-request/' . (int)$request['request_id'], [
                                         'class' => 'js-confirm-action-form sa-row-actions__form',
@@ -626,69 +873,207 @@ $format_relative_time = static function (?string $value): string {
                 </table>
             </div>
         </section>
+        <?php endif; ?>
 
-        <section class="sa-panel" style="margin-top: 24px;">
+        <?php if ($active_page === 'history'): ?>
+        <section class="sa-panel">
             <div class="sa-panel__head">
-                <h2 class="sa-panel__title">Pending Password Resets</h2>
-                <p class="sa-panel__subtitle">Approve reset requests submitted from the POS login page.</p>
+                <h2 class="sa-panel__title">Registration History</h2>
+                <p class="sa-panel__subtitle">Signup ID is from the registration table. It will not match Shop ID.</p>
             </div>
             <div class="sa-table-wrap">
                 <table class="sa-table">
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Company Code</th>
-                        <th>Username</th>
-                        <th>Tenant</th>
-                        <th>Requested</th>
-                        <th>Action</th>
+                        <th>Signup ID</th>
+                        <th>Code</th>
+                        <th>Company</th>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Payment Ref</th>
+                        <th>Status</th>
+                        <th>Reviewed</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
-                    <?php if (empty($password_reset_requests)): ?>
-                        <tr><td colspan="6" class="sa-empty">No pending password resets.</td></tr>
+                    <?php if (empty($subscription_request_history)): ?>
+                        <tr><td colspan="10" class="sa-empty">No registration history yet.</td></tr>
                     <?php else: ?>
-                    <?php foreach ($password_reset_requests as $reset): ?>
+                    <?php foreach ($subscription_request_history as $request): ?>
+                        <?php
+                            $history_status = strtolower((string)($request['status'] ?? ''));
+                            $history_paid = trim((string)($request['payment_reference'] ?? '')) !== '';
+                            $history_label = $history_status === 'approved'
+                                ? ($history_paid ? 'Paid' : 'Awaiting payment')
+                                : $request['status'];
+                            $history_badge = $history_status === 'rejected'
+                                ? 'cancelled'
+                                : ($history_paid ? 'active' : 'pending');
+                        ?>
                         <tr class="js-searchable-row"
-                            data-group="password-reset"
-                            data-search="<?= esc(strtolower(trim(($reset['tenant_code'] ?? '') . ' ' . ($reset['username'] ?? '') . ' ' . ($reset['tenant_id'] ?? '')))) ?>">
-                            <td><?= esc($reset['request_id']) ?></td>
-                            <td><?= esc($reset['tenant_code']) ?></td>
-                            <td><?= esc($reset['username']) ?></td>
-                            <td>#<?= esc($reset['tenant_id'] ?? '') ?></td>
-                            <td><?= esc($format_request_date($reset['created_at'] ?? '')) ?></td>
+                            data-group="history"
+                            data-status="<?= esc($history_status) ?>"
+                            data-search="<?= esc(strtolower(trim(($request['company_name'] ?? '') . ' ' . ($request['tenant_code'] ?? '') . ' ' . ($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '') . ' ' . ($request['owner_email'] ?? '') . ' ' . ($request['plan_name'] ?? '') . ' ' . ($request['payment_reference'] ?? '') . ' ' . ($request['status'] ?? '') . ' ' . ($request['city'] ?? '') . ' ' . ($request['tax_id'] ?? '')))) ?>">
+                            <td><?= esc($request['request_id']) ?></td>
+                            <td><?= esc($request['tenant_code']) ?></td>
+                            <td><?= esc($request['company_name']) ?></td>
+                            <td><?= esc(trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? ''))) ?></td>
+                            <td><?= esc($request['owner_email']) ?></td>
+                            <td><?= esc($request['plan_name'] ?? '') ?></td>
+                            <td><?= $history_paid ? esc($request['payment_reference']) : '—' ?></td>
                             <td>
-                                <div class="sa-row-actions">
-                                    <button type="button"
-                                            class="sa-btn sa-btn--ghost js-sa-view-detail"
-                                            data-title="Password reset request #<?= (int)$reset['request_id'] ?>"
-                                            data-code="<?= esc($reset['tenant_code'], 'attr') ?>"
-                                            data-username="<?= esc($reset['username'], 'attr') ?>"
-                                            data-tenant="#<?= esc((string)($reset['tenant_id'] ?? ''), 'attr') ?>"
-                                            data-created="<?= esc($format_request_date($reset['created_at'] ?? ''), 'attr') ?>">
-                                        View
-                                    </button>
-                                    <?= form_open('super-admin/approve-password-reset/' . (int)$reset['request_id'], [
-                                        'class' => 'js-confirm-action-form sa-row-actions__form',
-                                        'data-action' => 'approve',
-                                        'data-context' => 'password-reset',
-                                    ]) ?>
-                                    <button class="sa-btn sa-btn--success" type="submit">Approve</button>
-                                    <?= form_close() ?>
-                                    <?= form_open('super-admin/reject-password-reset/' . (int)$reset['request_id'], [
-                                        'class' => 'js-confirm-action-form sa-row-actions__form',
-                                        'data-action' => 'reject',
-                                        'data-context' => 'password-reset',
-                                    ]) ?>
-                                    <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
-                                    <?= form_close() ?>
-                                </div>
+                                <span class="sa-status sa-status--<?= esc($history_badge) ?>">
+                                    <?= esc($history_label) ?>
+                                </span>
+                            </td>
+                            <td><?= esc($format_request_date($request['reviewed_at'] ?? '')) ?></td>
+                            <td>
+                                <button type="button"
+                                        class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                        data-kind="registration"
+                                        data-title="<?= esc($request['company_name'] ?? '', 'attr') ?>"
+                                        data-id="<?= esc((string)$request['request_id'], 'attr') ?>"
+                                        data-company="<?= esc($request['company_name'] ?? '', 'attr') ?>"
+                                        data-code="<?= esc($request['tenant_code'] ?? '', 'attr') ?>"
+                                        data-type="<?= esc(saas_business_type_label($request['business_type'] ?? ''), 'attr') ?>"
+                                        data-address="<?= esc($request['address'] ?? '', 'attr') ?>"
+                                        data-city="<?= esc($request['city'] ?? '', 'attr') ?>"
+                                        data-country="<?= esc($request['country'] ?? '', 'attr') ?>"
+                                        data-tax="<?= esc($request['tax_id'] ?? '', 'attr') ?>"
+                                        data-owner="<?= esc(trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '')), 'attr') ?>"
+                                        data-email="<?= esc($request['owner_email'] ?? '', 'attr') ?>"
+                                        data-phone="<?= esc($request['owner_phone'] ?? '', 'attr') ?>"
+                                        data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
+                                        data-plan="<?= esc($request['plan_name'] ?? '', 'attr') ?>"
+                                        data-payment="<?= esc($request['payment_reference'] ?? '', 'attr') ?>"
+                                        data-status="<?= esc($request['status'] ?? '', 'attr') ?>"
+                                        data-created="<?= esc($format_request_date($request['created_at'] ?? ''), 'attr') ?>">
+                                    View
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'features'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Master feature catalog</h2>
+                <p class="sa-panel__subtitle">Global on/off for the shared POS template. Use Plans &amp; Sync to decide which paid tier receives each module. Shop sales data stays private.</p>
+            </div>
+            <div class="sa-panel__body">
+                <div class="sa-feature-grid">
+                    <?php foreach ($system_features as $feature): ?>
+                        <a class="sa-feature-card" href="<?= site_url('super-admin/features/' . $feature['id']) ?>">
+                            <img class="sa-feature-card__icon" src="<?= base_url($feature['icon']) ?>" alt="">
+                            <div class="sa-feature-card__copy">
+                                <strong><?= esc($feature['label']) ?></strong>
+                                <span><?= esc($feature['description']) ?></span>
+                            </div>
+                            <span class="sa-status sa-status--<?= $feature['enabled'] ? 'active' : 'cancelled' ?>">
+                                <?= $feature['enabled'] ? 'On for all shops' : 'Off for all shops' ?>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'plans'): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Push template update</h2>
+                <p class="sa-panel__subtitle">Deploys interface/catalog changes to every isolated shop database. Private sales, stock, and customers are never copied or deleted. PHP code is already shared — cashiers see new screens after refresh.</p>
+            </div>
+            <div class="sa-panel__body">
+                <p class="sa-feature-detail__note">Template version <strong>v<?= esc($template_meta['template_version'] ?? '1') ?></strong><?= !empty($template_meta['last_sync_at']) ? ' · last sync ' . esc($template_meta['last_sync_at']) : '' ?>.</p>
+                <?= form_open('super-admin/sync-template', ['class' => 'sa-template-actions']) ?>
+                    <button class="sa-btn sa-btn--primary" type="submit">Sync / Deploy Update</button>
+                    <a class="sa-btn sa-btn--ghost" href="<?= site_url('sales') ?>">Test on Admin POS</a>
+                <?= form_close() ?>
+                <?php if (is_array($template_sync) && !empty($template_sync['tenants'])): ?>
+                    <ul class="sa-sync-report">
+                        <?php foreach ($template_sync['tenants'] as $row): ?>
+                            <li><?= esc($row['tenant_code'] ?? '') ?> — <?= esc($row['message'] ?? '') ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+        </section>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Feature toggling by plan</h2>
+                <p class="sa-panel__subtitle">The $20 WBPOS plan includes every POS module.</p>
+            </div>
+            <div class="sa-table-wrap">
+                <table class="sa-table sa-table--plans">
+                    <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <?php foreach ($subscription_plans as $plan): ?>
+                            <th><?= esc($plan['plan_name']) ?><br><small>$<?= number_format((float)$plan['price_monthly'], 0) ?>/mo</small></th>
+                        <?php endforeach; ?>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($system_features as $feature): ?>
+                        <tr>
+                            <td>
+                                <strong><?= esc($feature['label']) ?></strong>
+                                <div class="sa-muted"><?= esc($feature['description']) ?></div>
+                            </td>
+                            <?php foreach ($subscription_plans as $plan): ?>
+                                <?php
+                                    $plan_id = (int)$plan['plan_id'];
+                                    $on = !empty($plan_feature_matrix[$plan_id][$feature['id']]);
+                                ?>
+                                <td>
+                                    <?= form_open('super-admin/plans/' . $plan_id . '/feature') ?>
+                                        <input type="hidden" name="feature_id" value="<?= esc($feature['id']) ?>">
+                                        <input type="hidden" name="enabled" value="<?= $on ? '0' : '1' ?>">
+                                        <button class="sa-btn <?= $on ? 'sa-btn--success' : 'sa-btn--ghost' ?>" type="submit">
+                                            <?= $on ? 'On' : 'Off' ?>
+                                        </button>
+                                    <?= form_close() ?>
+                                </td>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'feature' && $current_feature): ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title"><?= esc($current_feature['label']) ?></h2>
+                <p class="sa-panel__subtitle"><?= esc($current_feature['description']) ?></p>
+            </div>
+            <div class="sa-panel__body sa-feature-detail">
+                <div class="sa-feature-detail__meta">
+                    <img class="sa-feature-card__icon" src="<?= base_url($current_feature['icon']) ?>" alt="">
+                    <span class="sa-status sa-status--<?= $current_feature['enabled'] ? 'active' : 'cancelled' ?>">
+                        <?= $current_feature['enabled'] ? 'On for all shops' : 'Off for all shops' ?>
+                    </span>
+                </div>
+                <p class="sa-feature-detail__note">Applies to <?= (int) $active_tenants ?> active subscription<?= $active_tenants === 1 ? '' : 's' ?>. This screen is the system feature, not a shop’s private data.</p>
+                <?= form_open('super-admin/features/' . $current_feature['id'] . '/toggle', ['class' => 'sa-feature-detail__form']) ?>
+                    <input type="hidden" name="enabled" value="<?= $current_feature['enabled'] ? '0' : '1' ?>">
+                    <button class="sa-btn <?= $current_feature['enabled'] ? 'sa-btn--danger' : 'sa-btn--success' ?>" type="submit">
+                        <?= $current_feature['enabled'] ? 'Turn off for all subscriptions' : 'Turn on for all subscriptions' ?>
+                    </button>
+                    <a class="sa-btn sa-btn--ghost" href="<?= site_url('super-admin/features') ?>">Back to all features</a>
+                <?= form_close() ?>
             </div>
         </section>
         <?php endif; ?>
@@ -767,11 +1152,7 @@ $format_relative_time = static function (?string $value): string {
                     <button type="button" class="sa-notify-card__dismiss" aria-label="Dismiss notification">&times;</button>
                     <div class="sa-notify-card__row">
                         <span class="sa-notify-card__icon sa-notify-card__icon--<?= esc($item['type']) ?>" aria-hidden="true">
-                            <?php if ($item['type'] === 'password_reset'): ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                            <?php else: ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-                            <?php endif; ?>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
                         </span>
                         <div class="sa-notify-card__head">
                             <strong><?= esc($item['title']) ?></strong>
@@ -1231,23 +1612,23 @@ $format_relative_time = static function (?string $value): string {
             const action = form.dataset.action || 'approve';
             const context = form.dataset.context || 'registration';
             const isApprove = action === 'approve';
+            const isResendVerify = action === 'resend-verify';
 
-            actionTitleEl.textContent = isApprove ? 'Confirm approval' : 'Confirm rejection';
-
-            if (context === 'password-reset') {
-                actionMessageEl.textContent = isApprove
-                    ? 'Are you sure you want to approve this password reset?'
-                    : 'Are you sure you want to reject this password reset?';
+            if (isResendVerify) {
+                actionTitleEl.textContent = 'Send verify email';
+                actionMessageEl.textContent = 'Send the verification link to the owner’s Gmail. Super Admin does not verify for them — they must click the link.';
+                actionContinueBtn.textContent = 'Send verify email';
+                actionContinueBtn.className = 'sa-btn sa-btn--success';
             } else {
+                actionTitleEl.textContent = isApprove ? 'Confirm activation' : 'Confirm rejection';
                 actionMessageEl.textContent = isApprove
-                    ? 'Are you sure you want to approve this company registration?'
-                    : 'Are you sure you want to reject this company registration?';
+                    ? 'Activate this shop and send the KHQR to the owner’s email? They cannot log in until they pay.'
+                    : 'Are you sure you want to reject this registration?';
+                actionContinueBtn.textContent = isApprove ? 'Activate' : 'Reject';
+                actionContinueBtn.className = isApprove
+                    ? 'sa-btn sa-btn--success'
+                    : 'sa-btn sa-btn--danger-solid';
             }
-
-            actionContinueBtn.textContent = isApprove ? 'Approve' : 'Reject';
-            actionContinueBtn.className = isApprove
-                ? 'sa-btn sa-btn--success'
-                : 'sa-btn sa-btn--danger-solid';
 
             pendingActionForm = form;
             actionOverlay.classList.add('is-open');
@@ -1278,7 +1659,8 @@ $format_relative_time = static function (?string $value): string {
                 const rowStatus = (row.dataset.status || '').toLowerCase();
 
                 const queryMatch = query === '' || haystack.indexOf(query) !== -1;
-                const statusMatch = rowGroup !== 'tenant' || status === '' || rowStatus === status;
+                const usesStatusFilter = rowGroup === 'tenant' || rowGroup === 'history';
+                const statusMatch = !usesStatusFilter || status === '' || rowStatus === status;
                 row.style.display = queryMatch && statusMatch ? '' : 'none';
             });
         };
@@ -1297,7 +1679,7 @@ $format_relative_time = static function (?string $value): string {
 
             const params = new URLSearchParams(window.location.search);
             const status = (params.get('status') || '').toLowerCase();
-            const allowed = ['active', 'suspended', 'cancelled'];
+            const allowed = ['active', 'suspended', 'cancelled', 'awaiting_payment', 'approved', 'rejected'];
 
             if (allowed.indexOf(status) !== -1) {
                 statusFilter.value = status;
@@ -1392,7 +1774,7 @@ $format_relative_time = static function (?string $value): string {
         const detailBodyEl = document.getElementById('sa-row-detail-body');
         const detailCloseBtn = document.getElementById('sa-row-detail-close');
         const detailCloseIconBtn = document.getElementById('sa-row-detail-close-icon');
-        const detailFieldOrder = ['company', 'code', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'created'];
+        const detailFieldOrder = ['id', 'company', 'code', 'type', 'address', 'city', 'country', 'tax', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'created'];
 
         const closeDetailModal = function() {
             if (!detailOverlay) {
@@ -1409,10 +1791,21 @@ $format_relative_time = static function (?string $value): string {
             }
 
             const lines = [];
+            const kind = button.dataset.kind || '';
+            const idLabels = {
+                business: 'Shop ID',
+                registration: 'Signup ID',
+                admin: 'Admin ID'
+            };
             const map = {
-                id: 'ID',
+                id: idLabels[kind] || 'ID',
                 company: 'Company',
                 code: 'Company code',
+                type: 'Business type',
+                address: 'Store address',
+                city: 'City / Province',
+                country: 'Country',
+                tax: 'Tax ID / VAT TIN',
                 owner: 'Owner',
                 name: 'Full name',
                 email: 'Email',
@@ -1420,7 +1813,7 @@ $format_relative_time = static function (?string $value): string {
                 username: 'Username',
                 plan: 'Plan',
                 payment: 'Payment reference',
-                tenant: 'Tenant',
+                tenant: 'Shop ID',
                 status: 'Status',
                 created: 'Requested'
             };
@@ -1429,6 +1822,9 @@ $format_relative_time = static function (?string $value): string {
                 let value = button.dataset[key];
                 if (key === 'created' && value) {
                     value = value.split(/[ T]/)[0];
+                }
+                if (key === 'tenant') {
+                    return;
                 }
                 if (value && map[key]) {
                     lines.push(
@@ -1443,9 +1839,13 @@ $format_relative_time = static function (?string $value): string {
             const title = button.dataset.title || 'Details';
             detailTitleEl.textContent = title;
             if (detailEyebrowEl) {
-                detailEyebrowEl.textContent = title.toLowerCase().indexOf('password') !== -1
-                    ? 'Password reset'
-                    : 'Registration request';
+                if (kind === 'business') {
+                    detailEyebrowEl.textContent = 'Business profile';
+                } else if (kind === 'password' || kind === 'admin') {
+                    detailEyebrowEl.textContent = kind === 'admin' ? 'Platform admin' : 'Password reset';
+                } else {
+                    detailEyebrowEl.textContent = 'Registration request';
+                }
             }
             detailBodyEl.innerHTML = '<div class="sa-detail-sheet">' + lines.join('') + '</div>';
             detailOverlay.classList.add('is-open');
@@ -1488,6 +1888,32 @@ $format_relative_time = static function (?string $value): string {
             if (detailOverlay && event.key === 'Escape' && detailOverlay.classList.contains('is-open')) {
                 closeDetailModal();
             }
+        });
+
+        document.querySelectorAll('.js-copy-pay-url').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const targetId = button.getAttribute('data-target');
+                const value = targetId && document.getElementById(targetId)
+                    ? document.getElementById(targetId).value
+                    : (button.getAttribute('data-url') || '');
+                if (!value) {
+                    return;
+                }
+                const done = function() {
+                    const original = button.textContent;
+                    button.textContent = 'Copied';
+                    window.setTimeout(function() {
+                        button.textContent = original;
+                    }, 1600);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(value).then(done).catch(function() {
+                        window.prompt('Copy this payment link', value);
+                    });
+                    return;
+                }
+                window.prompt('Copy this payment link', value);
+            });
         });
 
         (function initRegistrationAlerts() {

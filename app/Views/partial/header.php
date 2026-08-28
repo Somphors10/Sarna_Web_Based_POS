@@ -11,6 +11,7 @@ use Config\Services;
 $request = Services::request();
 helper('locale');
 $html_lang = current_language_code();
+$is_sa_pos_shell = is_platform_super_admin();
 ?>
 
 <!doctype html>
@@ -48,9 +49,15 @@ $html_lang = current_language_code();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=60">
+        <link rel="stylesheet" href="css/dashboard.css?v=62">
         <link rel="stylesheet" href="css/forms.css?v=8">
-        <link rel="stylesheet" href="css/password-toggle.css?v=2">
+        <link rel="stylesheet" href="css/password-toggle.css?v=4">
+        <?php if ($is_sa_pos_shell): ?>
+        <link rel="stylesheet" href="css/theme/tokens.css">
+        <link rel="stylesheet" href="css/theme/layout-sidebar.css">
+        <link rel="stylesheet" href="css/theme/responsive.css">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=42">
+        <?php endif; ?>
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -84,7 +91,7 @@ $html_lang = current_language_code();
         <script src="resources/js/bootstrap-toggle-1c7a19a049.js"></script>
         <script src="resources/js/clipboard-908af414ab.js"></script>
         <script src="resources/js/imgpreview-62e42c15a0.full.jquery.js"></script>
-        <script src="resources/js/manage_tables-a01dc92775.js"></script>
+        <script src="resources/js/manage_tables-8df051b53c.js"></script>
         <script src="resources/js/nominatim-599d9d6f9c.autocomplete.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
@@ -92,9 +99,15 @@ $html_lang = current_language_code();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=60">
+        <link rel="stylesheet" href="css/dashboard.css?v=62">
         <link rel="stylesheet" href="css/forms.css?v=8">
-        <link rel="stylesheet" href="css/password-toggle.css?v=2">
+        <link rel="stylesheet" href="css/password-toggle.css?v=4">
+        <?php if ($is_sa_pos_shell): ?>
+        <link rel="stylesheet" href="css/theme/tokens.css">
+        <link rel="stylesheet" href="css/theme/layout-sidebar.css">
+        <link rel="stylesheet" href="css/theme/responsive.css">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=42">
+        <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
@@ -102,7 +115,7 @@ $html_lang = current_language_code();
         <?php } ?>
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
-        <script src="resources/opensourcepos-3f65cab4ca.min.js"></script>
+        <script src="resources/opensourcepos-04102e27be.min.js"></script>
         <!-- endinject -->
         <?php $assets_injected = true; ?>
     <?php endif; ?>
@@ -140,7 +153,7 @@ $html_lang = current_language_code();
     </script>
 </head>
 
-<body>
+<body<?= $is_sa_pos_shell ? ' class="sa-dashboard"' : '' ?>>
     <script>
         (function() {
             const key = 'ospos_sidebar_collapsed';
@@ -264,11 +277,11 @@ $html_lang = current_language_code();
             });
         })();
     </script>
-    <div class="wrapper">
-        <div class="neo-layout">
-            <aside class="neo-global-sidebar">
+    <?php if (!$is_sa_pos_shell): ?><div class="wrapper"><?php endif; ?>
+        <div class="neo-layout<?= $is_sa_pos_shell ? ' sa-layout' : '' ?>">
+            <aside class="neo-global-sidebar<?= $is_sa_pos_shell ? ' sa-sidebar' : '' ?>">
                 <div class="neo-global-brand-row">
-                    <a class="neo-global-brand" href="<?= site_url('home') ?>">
+                    <a class="neo-global-brand" href="<?= site_url(is_platform_super_admin() ? 'super-admin/overview' : 'home') ?>">
                         <span class="neo-global-brand-full"><?= lang('Common.software_short') ?></span>
                         <span class="neo-global-brand-mini">W</span>
                     </a>
@@ -278,6 +291,12 @@ $html_lang = current_language_code();
                 </div>
                 <div class="neo-global-sidebar-body">
                     <nav class="neo-global-menu">
+                        <?php if (is_platform_super_admin()): ?>
+                            <?= view('partial/super_admin_nav', [
+                                'sa_active' => (string) $request->getUri()->getSegment(1),
+                                'pos_modules' => super_admin_pos_nav_modules(),
+                            ]) ?>
+                        <?php else: ?>
                         <?php
                             // Keep the menu mostly complete, hide only low-priority modules.
                             $hidden_sidebar_modules = hidden_ui_module_ids();
@@ -295,16 +314,22 @@ $html_lang = current_language_code();
                                 <span><?= lang('Module.' . $module->module_id) ?></span>
                             </a>
                         <?php endforeach; ?>
+                        <?php endif; ?>
                     </nav>
                     <div class="neo-sidebar-footer">
+                        <?php
+                            $header_logout_url = is_platform_super_admin()
+                                ? site_url('super-admin/logout')
+                                : site_url('home/logout');
+                        ?>
                         <a
-                            class="neo-sidebar-logout pos-logout-link"
-                            href="<?= site_url('home/logout') ?>"
-                            data-logout-url="<?= site_url('home/logout') ?>"
+                            class="neo-sidebar-logout <?= is_platform_super_admin() ? 'js-super-admin-logout' : 'pos-logout-link' ?>"
+                            href="<?= $header_logout_url ?>"
+                            data-logout-url="<?= $header_logout_url ?>"
                             title="<?= lang('Login.logout') ?>"
                             onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"
                         >
-                            <img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt="">
+                            <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt=""></span>
                             <span><?= lang('Login.logout') ?></span>
                         </a>
                     </div>
@@ -312,9 +337,9 @@ $html_lang = current_language_code();
             </aside>
             <div id="neo_sidebar_backdrop" class="neo-sidebar-backdrop"></div>
 
-            <main class="neo-global-content">
+            <main class="neo-global-content<?= $is_sa_pos_shell ? ' sa-main' : '' ?>">
                 <div class="topbar pos-topbar">
-                    <div class="container pos-topbar-inner">
+                    <div class="<?= $is_sa_pos_shell ? 'pos-topbar-inner sa-pos-topbar-inner' : 'container pos-topbar-inner' ?>">
                         <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu">
                             <span class="neo-hamburger-icon" aria-hidden="true"></span>
                         </button>
@@ -323,7 +348,7 @@ $html_lang = current_language_code();
                         </div>
 
                         <div class="navbar-center pos-topbar-company">
-                            <strong><?= esc($config['company']) ?></strong>
+                            <strong><?= is_platform_super_admin() ? 'Super Admin' : esc($config['company']) ?></strong>
                         </div>
 
                         <div class="navbar-right pos-topbar-user">
@@ -381,9 +406,9 @@ $html_lang = current_language_code();
                                             href="<?= site_url('home/language/km') ?>"
                                         ><?= esc($label_khmer) ?></a>
                                         <a
-                                            class="pos-profile-dropdown__item pos-profile-dropdown__item--logout js-pos-logout"
-                                            href="<?= site_url('home/logout') ?>"
-                                            data-logout-url="<?= site_url('home/logout') ?>"
+                                            class="pos-profile-dropdown__item pos-profile-dropdown__item--logout <?= is_platform_super_admin() ? 'js-super-admin-logout' : 'js-pos-logout' ?>"
+                                            href="<?= is_platform_super_admin() ? site_url('super-admin/logout') : site_url('home/logout') ?>"
+                                            data-logout-url="<?= is_platform_super_admin() ? site_url('super-admin/logout') : site_url('home/logout') ?>"
                                             onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"
                                         ><?= lang('Login.logout') ?></a>
                                     </div>
@@ -392,5 +417,9 @@ $html_lang = current_language_code();
                         </div>
                     </div>
                 </div>
+                <?php if ($is_sa_pos_shell): ?>
+                <div class="sa-main-body sa-pos-content">
+                <?php else: ?>
                 <div class="container">
                     <div class="row">
+                <?php endif; ?>

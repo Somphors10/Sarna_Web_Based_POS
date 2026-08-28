@@ -8,6 +8,7 @@ use App\Models\Reports\Summary_sales;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\OSPOS;
 use Config\Services;
+use Throwable;
 
 class Home extends Secure_Controller
 {
@@ -54,6 +55,7 @@ class Home extends Secure_Controller
         $kpis = [];
         $charts = [];
 
+        try {
         if ($this->employee->has_grant('reports_sales', $person_id)) {
             $summary_sales = model(Summary_sales::class);
             $period_summary = $summary_sales->getSummaryData($sale_inputs);
@@ -156,15 +158,34 @@ class Home extends Secure_Controller
                 'report_url' => site_url("reports/summary_expenses_categories/$start_date/$end_date/complete"),
             ];
         }
+        } catch (\Throwable $e) {
+            log_message('error', 'Home dashboard failed: {msg}', ['msg' => $e->getMessage()]);
+        }
+
+        $period_label = '';
+        try {
+            $period_label = lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]);
+        } catch (\Throwable $e) {
+            $period_label = $start_date . ' – ' . $end_date;
+        }
 
         $data = [
             'config'       => $config,
             'kpis'         => $kpis,
             'charts'       => $charts,
-            'period_label' => lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]),
+            'period_label' => $period_label,
         ];
 
-        echo view('home/home', $data);
+        try {
+            echo view('home/home', $data);
+        } catch (Throwable $e) {
+            $dump = $e->getMessage() . PHP_EOL . $e->getFile() . ':' . $e->getLine() . PHP_EOL . PHP_EOL . $e->getTraceAsString();
+            @file_put_contents(FCPATH . 'last-crash.txt', $dump);
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $dump;
+            exit;
+        }
     }
 
     /**
@@ -175,8 +196,9 @@ class Home extends Secure_Controller
      */
     public function getLogout(): RedirectResponse
     {
+        $was_super_admin = function_exists('is_platform_super_admin') && is_platform_super_admin();
         $this->employee->logout();
-        return redirect()->to('login');
+        return redirect()->to($was_super_admin ? 'super-admin/login' : 'login');
     }
 
     /**

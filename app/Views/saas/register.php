@@ -5,16 +5,16 @@
  * @var bool $has_errors
  * @var $validation
  */
-$monthly_price = (float) ($plan['price_monthly'] ?? 20.00);
+$plans = $plans ?? [];
+$monthly_price = saas_monthly_price((float) ($plan['price_monthly'] ?? 0));
 $plan_id = (int)($plan['plan_id'] ?? 0);
 $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;
-$qr_image_path = 'images/payment/aba-khqr-code.png';
-$qr_image_exists = is_file(FCPATH . $qr_image_path);
 $field_errors = ($has_errors ?? false) ? $validation->getErrors() : [];
 $field_invalid_class = static function (string $name) use ($field_errors): string {
     return isset($field_errors[$name]) ? ' is-invalid' : '';
 };
+$show_register_aside = false; // set true to show “What happens next” again
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
@@ -27,12 +27,12 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=19">
-    <link rel="stylesheet" href="css/password-toggle.css?v=1">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=37">
+    <link rel="stylesheet" href="css/password-toggle.css?v=4">
 </head>
 <body class="saas-modern saas-landing-body">
 
-<header class="lp-nav lp-nav--scrolled" id="lp-nav">
+<header class="lp-nav lp-nav--scrolled lp-nav--simple" id="lp-nav">
     <div class="lp-nav__inner saas-shell">
         <a class="lp-brand" href="<?= site_url() ?>">
             <span class="lp-brand__mark">W</span>
@@ -40,19 +40,29 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
         </a>
         <div class="lp-nav__actions">
             <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
-            <a class="lp-btn lp-btn--outline" href="<?= site_url() ?>">Back to home</a>
+            <a class="lp-btn lp-btn--outline" href="<?= site_url() ?>">
+                <span class="lp-nav__label-full">Back to home</span>
+                <span class="lp-nav__label-short">Home</span>
+            </a>
         </div>
     </div>
 </header>
 
-<main class="lp-reg">
+<main class="lp-reg lp-reg--compact">
     <div class="lp-reg__header saas-shell">
         <p class="lp-label">POS Subscription</p>
-        <h1 class="lp-reg__title">Start Your POS Subscription</h1>
-        <p class="lp-reg__subtitle">Full access to sales, inventory, reports &amp; staff — <strong>$<?= number_format($monthly_price, 0) ?>/month</strong></p>
+        <h1 class="lp-reg__title">Register your POS</h1>
+        <p class="lp-reg__subtitle">$<?= number_format($monthly_price, 0) ?>/month · all features. You pay after Super Admin activates — not on this form.</p>
+        <ol class="lp-reg__flow" aria-label="Registration steps">
+            <li class="is-now"><strong>1</strong><span>Register</span></li>
+            <li><strong>2</strong><span>Verify</span></li>
+            <li><strong>3</strong><span>Activate</span></li>
+            <li><strong>4</strong><span>Pay KHQR</span></li>
+            <li><strong>5</strong><span>Log in</span></li>
+        </ol>
     </div>
 
-    <div class="lp-reg__layout saas-shell">
+    <div class="lp-reg__layout saas-shell<?= empty($show_register_aside) ? ' lp-reg__layout--form-only' : '' ?>">
         <div class="lp-reg__form-wrap">
             <?php if ($has_errors): ?>
                 <div class="lp-reg__alert">
@@ -63,25 +73,22 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
             <?php endif; ?>
 
             <?= form_open('saas/register', ['class' => 'lp-reg__form', 'novalidate' => 'novalidate']) ?>
-            <input type="hidden" name="plan_id" value="<?= esc($plan_id) ?>">
+            <input type="hidden" name="plan_id" value="<?= esc($plan_id) ?>" data-price="<?= (int)$monthly_price ?>">
 
-            <section class="lp-reg__section">
+            <section class="lp-reg__section lp-reg__section--plan">
                 <div class="lp-reg__section-head">
                     <span class="lp-reg__step">1</span>
                     <div>
-                        <h2>Business information</h2>
-                        <p>Tell us about your store</p>
+                        <h2>Your plan</h2>
                     </div>
                 </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="lp-field-label" for="company_name">Company name <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('company_name') ?>" id="company_name" name="company_name" value="<?= set_value('company_name') ?>" required aria-required="true">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="lp-field-label" for="tenant_code">Company code <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="my-store" value="<?= set_value('tenant_code') ?>" required aria-required="true">
-                        <span class="lp-field-hint">Short unique code (letters, numbers, dash)</span>
+                <div class="lp-plan-picker">
+                    <div class="lp-plan-option lp-plan-option--card is-selected">
+                        <span>
+                            <strong><?= esc((string)($plan['plan_name'] ?? 'WBPOS')) ?></strong>
+                            <em>All POS features</em>
+                            <b>$<?= number_format($monthly_price, 0) ?><small>/month</small></b>
+                        </span>
                     </div>
                 </div>
             </section>
@@ -90,11 +97,58 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
                 <div class="lp-reg__section-head">
                     <span class="lp-reg__step">2</span>
                     <div>
+                        <h2>Business information</h2>
+                        <p>Store details used on receipts and your POS account</p>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="company_name">Company name <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('company_name') ?>" id="company_name" name="company_name" value="<?= set_value('company_name') ?>" required aria-required="true">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="tenant_code">Company code <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="my-store" value="<?= set_value('tenant_code') ?>" required aria-required="true">
+                        <span class="lp-field-hint">Short unique code (letters, numbers, dash).</span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="business_type">Business type <span class="lp-field-required">*</span></label>
+                        <select class="lp-field-input<?= $field_invalid_class('business_type') ?>" id="business_type" name="business_type" required aria-required="true">
+                            <option value="">Select type</option>
+                            <?php foreach (($business_types ?? []) as $type_id => $type_label): ?>
+                                <option value="<?= esc($type_id) ?>" <?= set_select('business_type', $type_id) ?>><?= esc($type_label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="tax_id">Tax ID / VAT TIN <span class="lp-field-optional">optional</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('tax_id') ?>" id="tax_id" name="tax_id" placeholder="e.g. K001-901234567" value="<?= set_value('tax_id') ?>" maxlength="64">
+                        <span class="lp-field-hint">Cambodia VAT number. Leave blank if you do not have one yet. You can add it later in POS settings. Printed on receipts if filled.</span>
+                    </div>
+                    <div class="col-12">
+                        <label class="lp-field-label" for="address">Store address <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('address') ?>" id="address" name="address" placeholder="Street, building, or village" value="<?= set_value('address') ?>" required aria-required="true">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="city">City / Province <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('city') ?>" id="city" name="city" placeholder="e.g. Phnom Penh" value="<?= set_value('city') ?>" required aria-required="true">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="country">Country <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('country') ?>" id="country" name="country" placeholder="e.g. Cambodia" value="<?= set_value('country', 'Cambodia') ?>" required aria-required="true" maxlength="80">
+                    </div>
+                </div>
+            </section>
+
+            <section class="lp-reg__section">
+                <div class="lp-reg__section-head">
+                    <span class="lp-reg__step">3</span>
+                    <div>
                         <h2>Owner account</h2>
                         <p>Your login credentials for the POS</p>
                     </div>
                 </div>
-                <div class="row g-3">
+                <div class="row g-2">
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_first_name">First name <span class="lp-field-required">*</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('owner_first_name') ?>" id="owner_first_name" name="owner_first_name" value="<?= set_value('owner_first_name') ?>" required aria-required="true">
@@ -108,8 +162,8 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
                         <input class="lp-field-input<?= $field_invalid_class('owner_email') ?>" type="email" id="owner_email" name="owner_email" value="<?= set_value('owner_email') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_phone">Phone</label>
-                        <input class="lp-field-input" id="owner_phone" name="owner_phone" value="<?= set_value('owner_phone') ?>">
+                        <label class="lp-field-label" for="owner_phone">Phone <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_phone') ?>" type="tel" id="owner_phone" name="owner_phone" placeholder="e.g. 012 345 678" value="<?= set_value('owner_phone') ?>" required aria-required="true" minlength="8">
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_username">POS username <span class="lp-field-required">*</span></label>
@@ -125,52 +179,39 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
 
             <section class="lp-reg__section">
                 <div class="lp-reg__section-head">
-                    <span class="lp-reg__step">3</span>
+                    <span class="lp-reg__step">4</span>
                     <div>
-                        <h2>Payment reference</h2>
-                        <p>Scan the QR code, pay $<?= number_format($monthly_price, 0) ?>, then paste your receipt ID</p>
+                        <h2>Security check</h2>
+                        <p>Enter the code you see in the picture</p>
                     </div>
                 </div>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="lp-field-label" for="payment_reference">Transaction / receipt ID <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('payment_reference') ?>" id="payment_reference" name="payment_reference" placeholder="e.g. ABA receipt number" value="<?= set_value('payment_reference') ?>" required aria-required="true">
+                <div class="lp-captcha<?= $field_invalid_class('captcha_code') ?>">
+                    <img class="lp-captcha__img" id="saas-captcha-img" src="<?= site_url('saas/captcha') ?>?v=<?= time() ?>" alt="Verification code picture" width="188" height="58">
+                    <button class="lp-captcha__refresh" type="button" id="saas-captcha-refresh">New picture</button>
+                    <div class="lp-captcha__field">
+                        <label class="lp-field-label" for="captcha_code">Code from the picture <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('captcha_code') ?>" id="captcha_code" name="captcha_code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" required aria-required="true">
                     </div>
                 </div>
             </section>
 
             <div class="lp-reg__actions">
-                <button class="lp-btn lp-btn--primary lp-btn--lg" type="submit">Submit subscription</button>
+                <button class="lp-btn lp-btn--primary lp-btn--lg" type="submit">Submit registration</button>
                 <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Cancel</a>
             </div>
             <?= form_close() ?>
         </div>
 
+        <?php if (!empty($show_register_aside)): ?>
         <aside class="lp-reg__aside">
-            <div class="lp-reg__qr">
-                <div class="lp-reg__qr-head">
-                    <span class="lp-reg__qr-badge">Scan to pay</span>
-                    <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
-                </div>
-                <div class="lp-reg__qr-tile">
-                    <div class="lp-reg__qr-tile-inner">
-                        <?php if ($qr_image_exists): ?>
-                        <img
-                            src="<?= base_url($qr_image_path) ?>?v=2"
-                            alt="Scan QR code to pay $<?= number_format($monthly_price, 0) ?> per month"
-                            width="512"
-                            height="512"
-                        >
-                        <?php else: ?>
-                        <div class="lp-reg__qr-missing">
-                            <p><strong>QR image not found</strong></p>
-                            <p>After <code>git pull</code>, this file must exist:</p>
-                            <p><code>public/images/payment/aba-khqr-code.png</code></p>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <p class="lp-reg__qr-hint">Open ABA or any KHQR app and scan</p>
+            <div class="lp-reg__next">
+                <p class="lp-reg__next-badge">No payment yet</p>
+                <h3>What happens next</h3>
+                <ol class="lp-reg__next-list">
+                    <li>We email you a verification link. Click it first.</li>
+                    <li>Super Admin activates your shop.</li>
+                    <li>You receive the KHQR by email. Scan it in ABA, then you can log in.</li>
+                </ol>
             </div>
 
             <ul class="lp-reg__checklist">
@@ -180,6 +221,7 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
                 <li>Cloud access — any device</li>
             </ul>
         </aside>
+        <?php endif; ?>
     </div>
 </main>
 
@@ -190,7 +232,7 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>
-        <p class="lp-footer__tagline">Cloud POS · $<?= number_format($monthly_price, 0) ?>/month</p>
+        <p class="lp-footer__tagline">Cloud POS · $<span data-plan-price><?= number_format($monthly_price, 0) ?></span>/month</p>
     </div>
 </footer>
 
@@ -203,8 +245,8 @@ $field_invalid_class = static function (string $name) use ($field_errors): strin
     window.saasRegisterFieldErrors = <?= json_encode($field_errors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 </script>
 <?php endif; ?>
-<script src="<?= base_url('js/password_strength.js?v=1') ?>"></script>
-<script src="<?= base_url('js/saas_register.js?v=2') ?>"></script>
+<script src="<?= base_url('js/password_strength.js?v=4') ?>"></script>
+<script src="<?= base_url('js/saas_register.js?v=9') ?>"></script>
 
 </body>
 </html>

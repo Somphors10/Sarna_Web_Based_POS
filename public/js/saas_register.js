@@ -13,15 +13,21 @@
         owner_first_name: 'Enter at least 2 characters.',
         owner_last_name: 'Enter at least 2 characters.',
         owner_email: 'Enter a valid email address.',
+        owner_phone: 'Enter a valid phone number (min 8 digits).',
         owner_username: 'Username must be at least 4 characters.',
-        owner_password: window.WBPOS_STRONG_PASSWORD_MESSAGE || 'Password must be at least 8 characters and include both letters and numbers.',
-        payment_reference: 'Enter your transaction or receipt ID (min 3 characters).'
+        owner_password: window.WBPOS_STRONG_PASSWORD_MESSAGE || 'Password must be at least 8 characters and include a letter, a number, and a symbol.',
+        business_type: 'Select your business type.',
+        address: 'Enter the store street address.',
+        city: 'Enter city or province.',
+        country: 'Enter your country.',
+        tax_id: 'Enter your Tax ID / VAT TIN.',
+        captcha_code: 'Enter the code from the picture.'
     };
 
     const requiredFields = form.querySelectorAll('.lp-field-input[required]');
 
     const getFieldContainer = function (input) {
-        return input.closest('.col-md-6, .col-12') || input.parentElement;
+        return input.closest('.col-md-6, .col-12, .col-md-4, .lp-captcha__field, .lp-captcha') || input.parentElement;
     };
 
     const getOrCreateErrorEl = function (input) {
@@ -70,6 +76,10 @@
         const value = input.type === 'password' ? raw : raw.trim();
 
         if (value === '') {
+            if (name === 'tax_id' || !input.required) {
+                clearFieldError(input);
+                return true;
+            }
             if (showMessage) {
                 setFieldError(input, messages.required);
             }
@@ -91,6 +101,9 @@
             case 'owner_email':
                 valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
                 break;
+            case 'owner_phone':
+                valid = value.replace(/\D/g, '').length >= 8;
+                break;
             case 'owner_username':
                 valid = value.length >= 4;
                 break;
@@ -99,8 +112,21 @@
                     ? window.WBPOS.isStrongPassword(raw)
                     : raw.length >= 8;
                 break;
-            case 'payment_reference':
+            case 'address':
                 valid = value.length >= 3;
+                break;
+            case 'tax_id':
+                valid = value.length >= 3;
+                break;
+            case 'city':
+                valid = value.length >= 2;
+                break;
+            case 'business_type':
+            case 'country':
+                valid = value.length >= 2;
+                break;
+            case 'captcha_code':
+                valid = value.length >= 4;
                 break;
             default:
                 valid = true;
@@ -124,10 +150,28 @@
             }
         });
 
+        input.addEventListener('change', function () {
+            if (input.classList.contains('is-invalid')) {
+                validateField(input, true);
+            }
+        });
+
         input.addEventListener('blur', function () {
             validateField(input, true);
         });
     });
+
+    const taxId = form.querySelector('[name="tax_id"]');
+    if (taxId) {
+        taxId.addEventListener('blur', function () {
+            validateField(taxId, true);
+        });
+        taxId.addEventListener('input', function () {
+            if (taxId.classList.contains('is-invalid')) {
+                validateField(taxId, true);
+            }
+        });
+    }
 
     form.addEventListener('submit', function (event) {
         let firstInvalid = null;
@@ -141,6 +185,13 @@
                 }
             }
         });
+
+        if (taxId && !validateField(taxId, true)) {
+            allValid = false;
+            if (!firstInvalid) {
+                firstInvalid = taxId;
+            }
+        }
 
         if (!allValid) {
             event.preventDefault();
@@ -158,4 +209,42 @@
             setFieldError(input, serverErrors[fieldName]);
         }
     });
+
+    const syncPlanPrice = function () {
+        const selected = form.querySelector('input[name="plan_id"]:checked');
+        if (!selected) {
+            return;
+        }
+
+        const price = selected.getAttribute('data-price') || '0';
+        document.querySelectorAll('[data-plan-price]').forEach(function (el) {
+            el.textContent = price;
+        });
+    };
+
+    form.querySelectorAll('input[name="plan_id"]').forEach(function (input) {
+        input.addEventListener('change', syncPlanPrice);
+    });
+    syncPlanPrice();
+
+    const captchaImg = document.getElementById('saas-captcha-img');
+    const captchaRefresh = document.getElementById('saas-captcha-refresh');
+    const reloadCaptcha = function () {
+        if (!captchaImg) {
+            return;
+        }
+        captchaImg.src = captchaImg.src.replace(/([?&]v=)\d+/, '$1' + Date.now());
+        const input = form.querySelector('[name="captcha_code"]');
+        if (input) {
+            input.value = '';
+            clearFieldError(input);
+            input.focus();
+        }
+    };
+    if (captchaImg) {
+        captchaImg.addEventListener('click', reloadCaptcha);
+    }
+    if (captchaRefresh) {
+        captchaRefresh.addEventListener('click', reloadCaptcha);
+    }
 })();

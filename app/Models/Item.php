@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantAware;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -161,6 +162,7 @@ class Item extends Model
                     SELECT COUNT(*)
                     FROM ' . $this->db->prefixTable('items') . ' AS i2
                     WHERE i2.tenant_id = items.tenant_id
+                      AND i2.deleted = ' . (int) $filters['is_deleted'] . '
                       AND i2.item_id <= items.item_id
                 )
             ) AS tenant_item_seq', false);
@@ -581,6 +583,18 @@ class Item extends Model
     }
 
     /**
+     * Restores a list of hidden items.
+     */
+    public function undelete_list(array $item_ids): bool
+    {
+        $builder = $this->db->table('items');
+        $builder->whereIn('item_id', $item_ids);
+        $this->scopeTenant($builder, 'items.tenant_id');
+
+        return $builder->update(['deleted' => 0]);
+    }
+
+    /**
      * Deletes a list of items
      */
     public function delete_list(array $item_ids): bool
@@ -713,6 +727,46 @@ class Item extends Model
      * @param int $limit
      * @return array
      */
+    /**
+     * Hide catalog items that cannot be sold from the selected store:
+     * inventory items need qty > 0 there; service items (no stock) still appear.
+     */
+    private function applyStoreAvailability(BaseBuilder $builder, array $filters): void
+    {
+        if (empty($filters['in_stock_only'])) {
+            return;
+        }
+
+        $location_id = (int) ($filters['stock_location_id'] ?? 0);
+        if ($location_id < 1) {
+            return;
+        }
+
+        $items_table = $this->db->prefixTable('items');
+        $qty_table = $this->db->prefixTable('item_quantities');
+        $has_stock_here = "EXISTS (
+            SELECT 1
+            FROM {$qty_table} store_qty
+            WHERE store_qty.item_id = {$items_table}.item_id
+              AND store_qty.location_id = {$location_id}
+              AND store_qty.tenant_id = {$items_table}.tenant_id
+              AND store_qty.quantity > 0
+        )";
+
+        $builder->where(
+            "({$items_table}.stock_type = " . HAS_NO_STOCK . " OR {$has_stock_here})",
+            null,
+            false
+        );
+    }
+
+    /**
+     * @param string $search
+     * @param array $filters
+     * @param bool $unique
+     * @param int $limit
+     * @return array
+     */
     public function get_search_suggestions(string $search, array $filters = ['is_deleted' => false, 'search_custom' => false], bool $unique = false, int $limit = 25): array
     {
         $suggestions = [];
@@ -720,11 +774,12 @@ class Item extends Model
 
         $builder = $this->db->table('items');
         $this->scopeTenant($builder, 'items.tenant_id');
+        $this->applyStoreAvailability($builder, $filters);
         $builder->select($this->get_search_suggestion_format('item_id, name, pack_name'));
-        $builder->where('deleted', $filters['is_deleted']);
-        $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
-        $builder->like('name', $search);    // TODO: this and the next 11 lines are duplicated directly below.  We should extract a method here.
-        $builder->orderBy('name', 'asc');
+        $builder->where('items.deleted', $filters['is_deleted']);
+        $builder->whereIn('items.item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
+        $builder->like('items.name', $search);    // TODO: this and the next 11 lines are duplicated directly below.  We should extract a method here.
+        $builder->orderBy('items.name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
             $suggestions[] = ['value' => $row->item_id, 'label' => $this->get_search_suggestion_label($row)];
@@ -732,11 +787,12 @@ class Item extends Model
 
         $builder = $this->db->table('items');
         $this->scopeTenant($builder, 'items.tenant_id');
+        $this->applyStoreAvailability($builder, $filters);
         $builder->select($this->get_search_suggestion_format('item_id, item_number, pack_name'));
-        $builder->where('deleted', $filters['is_deleted']);
-        $builder->whereIn('item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
-        $builder->like('item_number', $search);
-        $builder->orderBy('item_number', 'asc');
+        $builder->where('items.deleted', $filters['is_deleted']);
+        $builder->whereIn('items.item_type', $non_kit); // Standard, exclude kit items since kits will be picked up later
+        $builder->like('items.item_number', $search);
+        $builder->orderBy('items.item_number', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
             $suggestions[] = ['value' => $row->item_id, 'label' => $this->get_search_suggestion_label($row)];

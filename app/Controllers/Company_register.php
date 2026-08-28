@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PlatformArchitecture;
+use App\Libraries\TenantContext;
+use App\Libraries\TenantDatabaseProvisioner;
 use App\Models\Platform_admin;
 use App\Models\Tenant;
-use App\Libraries\TenantContext;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\OSPOS;
 
@@ -61,7 +63,7 @@ class Company_register extends BaseController
             return view('company_register', $data);
         }
 
-        $existing_user = $db->table('employees')->where('username', $username)->countAllResults();
+        $existing_user = (new PlatformArchitecture())->usernameExists($username);
         if ($existing_user > 0) {
             $validation->setError('username', 'Username already exists.');
             $data['has_errors'] = true;
@@ -158,6 +160,19 @@ class Company_register extends BaseController
 
         (new \App\Libraries\TenantSeeder())->seedForTenant($tenant_id);
 
+        $pro = $db->table('plans')->select('plan_id')->where('plan_code', 'pro')->get(1)->getRow();
+        if ($pro && $db->tableExists('subscriptions')) {
+            $db->table('subscriptions')->insert([
+                'tenant_id' => $tenant_id,
+                'plan_id' => (int)$pro->plan_id,
+                'status' => 'active',
+                'trial_ends_at' => null,
+                'period_start' => date('Y-m-d H:i:s'),
+                'period_end' => date('Y-m-d H:i:s', strtotime('+1 month')),
+                'cancel_at_period_end' => 0,
+            ]);
+        }
+
         $db->transComplete();
 
         if (!$db->transStatus()) {
@@ -166,8 +181,17 @@ class Company_register extends BaseController
             return view('company_register', $data);
         }
 
+        (new TenantDatabaseProvisioner())->isolateExisting($tenant_id);
+        (new PlatformArchitecture())->upsertTenantLogin(
+            $tenant_id,
+            $person_id,
+            $username,
+            trim($first_name . ' ' . $last_name),
+            true
+        );
+
         // Keep platform admin session on control-plane DB.
-        (new TenantContext())->clearTenantDatabaseSession();
+        (new TenantContext())->restoreSharedConnection();
 
         return redirect()->to('super-admin?company_created=1');
     }

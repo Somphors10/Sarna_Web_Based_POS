@@ -162,6 +162,9 @@ class Person extends Model
     {
         $builder = $this->db->table('people');
         $person_data['tenant_id'] = $this->getTenantId();
+        if (array_key_exists('gender', $person_data) && ($person_data['gender'] === '' || $person_data['gender'] === false)) {
+            $person_data['gender'] = null;
+        }
 
         if ($person_id == NEW_ENTRY || !$this->exists($person_id)) {
             if ($builder->insert($person_data)) {

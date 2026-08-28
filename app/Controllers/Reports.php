@@ -873,7 +873,7 @@ class Reports extends Secure_Controller
         $series = [];
         foreach ($report_data as $row) {
             $labels[] = $row['category'];
-            $series[] = ['meta' => $row['category'] . ' ' . round($row['total'] / $summary['total'] * 100, 2) . '%', 'value' => $row['total']];
+            $series[] = ['meta' => $row['category'] . ' ' . round($row['total'] / max((float) ($summary['total'] ?? 0), 1) * 100, 2) . '%', 'value' => (float) $row['total']];
         }
 
         $data = [

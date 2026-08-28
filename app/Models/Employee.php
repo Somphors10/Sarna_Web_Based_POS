@@ -33,6 +33,17 @@ class Employee extends Person
         'tenant_id'
     ];
 
+    private function ensureDeletedColumn(): void
+    {
+        if ($this->db->fieldExists('deleted', 'employees')) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . $this->db->prefixTable('employees') . '` ADD COLUMN `deleted` TINYINT(1) NOT NULL DEFAULT 0'
+        );
+    }
+
     public function __construct()
     {
         parent::__construct();
@@ -87,6 +98,9 @@ class Employee extends Person
         $builder = $this->db->table('employees AS employees');
         $this->scopeTenant($builder, 'employees.tenant_id');
         $builder->where('employees.deleted', 0);
+        if (function_exists('super_admin_pos_username')) {
+            $builder->where('employees.username !=', super_admin_pos_username());
+        }
         $builder->join('people AS people', 'employees.person_id = people.person_id');
         if ($this->db->fieldExists('tenant_id', 'employees')) {
             $builder->select('employees.*, people.*, ' . $this->employeeSequenceSql(), false);
@@ -189,6 +203,19 @@ class Employee extends Person
 
         $success &= $this->db->transStatus();
 
+        if ($success) {
+            $username = (string)($employee_data['username'] ?? '');
+            $display = trim(($person_data['first_name'] ?? '') . ' ' . ($person_data['last_name'] ?? ''));
+            (new \App\Libraries\PlatformArchitecture())->upsertTenantLogin(
+                $tenant_id,
+                (int)$employee_id,
+                $username,
+                $display,
+                false,
+                true
+            );
+        }
+
         return $success;
     }
 
@@ -197,29 +224,16 @@ class Employee extends Person
      */
     public function delete($employee_id = null, bool $purge = false): bool
     {
-        $success = false;
-
         // Don't let employees delete themselves
         if ($employee_id == $this->get_logged_in_employee_info()->person_id) {
             return false;
         }
 
-        // Run these queries as a transaction, we want to make sure we do all or nothing
-        $this->db->transStart();
+        $builder = $this->db->table('employees');
+        $builder->where('person_id', $employee_id);
+        $this->scopeTenant($builder, 'employees.tenant_id');
 
-        // Delete permissions
-        $builder = $this->db->table('grants');
-
-        if ($builder->delete(['person_id' => $employee_id])) {
-            $builder = $this->db->table('employees');
-            $builder->where('person_id', $employee_id);
-            $this->scopeTenant($builder, 'employees.tenant_id');
-            $success = $builder->update(['deleted' => 1]);
-        }
-
-        $this->db->transComplete();
-
-        return $success;
+        return $builder->update(['deleted' => 1]);
     }
 
     /**
@@ -227,31 +241,31 @@ class Employee extends Person
      */
     public function delete_list(array $person_ids): bool
     {
-        $success = false;
-
         // Don't let employees delete themselves
         if (in_array($this->get_logged_in_employee_info()->person_id, $person_ids)) {
             return false;
         }
 
-        // Run these queries as a transaction, we want to make sure we do all or nothing
-        $this->db->transStart();
-
-        $builder = $this->db->table('grants');
+        $this->ensureDeletedColumn();
+        $builder = $this->db->table('employees');
         $builder->whereIn('person_id', $person_ids);
-        // Delete permissions
-        if ($builder->delete()) {
-            // Delete from employee table
-            $builder = $this->db->table('employees');
-            $builder->whereIn('person_id', $person_ids);
-            $this->scopeTenant($builder, 'employees.tenant_id');
-            $success = $builder->update(['deleted' => 1]);
-        }
+        $this->scopeTenant($builder, 'employees.tenant_id');
 
-        $this->db->transComplete();
-        $success &= $this->db->transStatus();
+        $builder->update(['deleted' => 1]);
 
-        return $success;
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Restores a list of hidden employees. Permissions are left in place.
+     */
+    public function undelete_list(array $person_ids): bool
+    {
+        $builder = $this->db->table('employees');
+        $builder->whereIn('person_id', $person_ids);
+        $this->scopeTenant($builder, 'employees.tenant_id');
+
+        return $builder->update(['deleted' => 0]);
     }
 
     /**
@@ -336,16 +350,18 @@ class Employee extends Person
     /**
      * Gets rows
      */
-    public function get_found_rows(string $search): int
+    public function get_found_rows(string $search, int $deleted = 0): int
     {
-        return $this->search($search, 0, 0, 'last_name', 'asc', true);
+        return $this->search($search, 0, 0, 'last_name', 'asc', true, $deleted);
     }
 
     /**
      * Performs a search on employees
      */
-    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false, int $deleted = 0)
     {
+        $this->ensureDeletedColumn();
+
         // Set default values
         if ($rows == null) $rows = 0;
         if ($limit_from == null) $limit_from = 0;
@@ -370,7 +386,10 @@ class Employee extends Person
         $builder->orLike('username', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
         $builder->groupEnd();
-        $builder->where('employees.deleted', 0);
+        $builder->where('employees.deleted', $deleted);
+        if (function_exists('super_admin_pos_username')) {
+            $builder->where('employees.username !=', super_admin_pos_username());
+        }
 
         // get_found_rows case
         if ($count_only) {
@@ -395,42 +414,114 @@ class Employee extends Person
      */
     public function login(string $username, string $password): bool
     {
+        $isolated = $this->loginViaTenantDirectory($username, $password);
+        if ($isolated !== null) {
+            return $isolated;
+        }
+
         $builder = $this->db->table('employees');
         $builder->where('username', $username);
         $builder->where('deleted', 0);
         $query = $builder->get(1);
 
         if ($query->getNumRows() === 1) {
-            $row = $query->getRow();
-            $tenant_id = (int)($row->tenant_id ?? 0);
-
-            if (!$this->is_tenant_active($tenant_id)) {
-                return false;
-            }
-
-            // Compare passwords depending on the hash version
-            if ($row->hash_version === '1' && $row->password === md5($password)) {
-                $builder->where('person_id', $row->person_id);
-                $this->session->set('person_id', $row->person_id);
-                $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
-                (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
-                model(\App\Models\Appconfig::class)->ensureCompleteConfig((int)$this->session->get('tenant_id'));
-                config(\Config\OSPOS::class)->update_settings();
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-                return $builder->update(['hash_version' => 2, 'password' => $password_hash]);
-            } elseif ($row->hash_version === '2' && password_verify($password, $row->password)) {
-                $this->session->set('person_id', $row->person_id);
-                $this->session->set('tenant_id', $tenant_id > 0 ? $tenant_id : 1);
-                (new TenantContext())->bootstrapSessionTenantDatabase((int)$this->session->get('tenant_id'));
-                model(\App\Models\Appconfig::class)->ensureCompleteConfig((int)$this->session->get('tenant_id'));
-                config(\Config\OSPOS::class)->update_settings();
-
-                return true;
-            }
+            return $this->completeLogin($query->getRow(), $password);
         }
 
         return false;
+    }
+
+    private function loginViaTenantDirectory(string $username, string $password): ?bool
+    {
+        try {
+            $platform = db_connect('platform');
+        } catch (Throwable $e) {
+            return null;
+        }
+
+        if (!$platform->tableExists('tenant_logins')) {
+            return null;
+        }
+
+        $login = $platform->table('tenant_logins')
+            ->where('username', $username)
+            ->where('is_active', 1)
+            ->get(1)
+            ->getRow();
+
+        if ($login === null) {
+            return null;
+        }
+
+        $tenant_id = (int)$login->tenant_id;
+        if (!$this->is_tenant_active($tenant_id)) {
+            return false;
+        }
+
+        $context = new TenantContext();
+        $context->applyRuntimeConnection($tenant_id);
+
+        try {
+            $tenant_db = \Config\Database::connect('default', false);
+            $row = $tenant_db->table('employees')
+                ->where('username', $username)
+                ->where('deleted', 0)
+                ->get(1)
+                ->getRow();
+        } catch (Throwable $e) {
+            $context->restoreSharedConnection();
+            return false;
+        }
+
+        if ($row === null) {
+            $context->restoreSharedConnection();
+            return false;
+        }
+
+        $row->tenant_id = $tenant_id;
+
+        return $this->completeLogin($row, $password, $tenant_db);
+    }
+
+    /**
+     * @param object $row
+     */
+    private function completeLogin($row, string $password, $employee_db = null): bool
+    {
+        $tenant_id = (int)($row->tenant_id ?? 0);
+        if (!$this->is_tenant_active($tenant_id)) {
+            return false;
+        }
+
+        $builder_db = $employee_db ?? $this->db;
+        $ok = false;
+        if ((string)$row->hash_version === '1' && $row->password === md5($password)) {
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $builder_db->table('employees')
+                ->where('person_id', $row->person_id)
+                ->update(['hash_version' => 2, 'password' => $password_hash]);
+            $ok = true;
+        } elseif ((string)$row->hash_version === '2' && password_verify($password, $row->password)) {
+            $ok = true;
+        }
+
+        if (!$ok) {
+            return false;
+        }
+
+        $resolved_tenant_id = $tenant_id > 0 ? $tenant_id : 1;
+        $plan_id = (new \App\Libraries\PlatformArchitecture())->getTenantPlanId($resolved_tenant_id);
+        $this->session->set('person_id', $row->person_id);
+        $this->session->set('tenant_id', $resolved_tenant_id);
+        if ($plan_id !== null) {
+            $this->session->set('plan_id', $plan_id);
+        }
+
+        (new TenantContext())->applyRuntimeConnection($resolved_tenant_id);
+        model(\App\Models\Appconfig::class)->ensureCompleteConfig($resolved_tenant_id);
+        config(\Config\OSPOS::class)->update_settings();
+
+        return true;
     }
 
     /**
@@ -438,7 +529,7 @@ class Employee extends Person
      */
     public function logout(): void
     {
-        (new TenantContext())->clearTenantDatabaseSession();
+        (new TenantContext())->restoreSharedConnection();
         session()->destroy();
     }
 
@@ -614,6 +705,35 @@ class Employee extends Person
             // Fail open to avoid blocking authentication if platform DB
             // is temporarily unavailable during migration setup.
             return true;
+        }
+    }
+
+    public function tenant_login_block_reason(string $username): ?string
+    {
+        try {
+            $platform_db = db_connect('platform');
+            if (!$platform_db->tableExists('tenant_logins') || !$platform_db->tableExists('tenants')) {
+                return null;
+            }
+
+            $login = $platform_db->table('tenant_logins')
+                ->where('username', $username)
+                ->get(1)
+                ->getRow();
+            if ($login === null) {
+                return null;
+            }
+
+            $row = $platform_db->table('tenants')
+                ->select('status')
+                ->where('tenant_id', (int)$login->tenant_id)
+                ->get(1)
+                ->getRow();
+            $status = strtolower((string)($row->status ?? ''));
+
+            return $status === 'awaiting_payment' ? 'awaiting_payment' : null;
+        } catch (Throwable $e) {
+            return null;
         }
     }
 

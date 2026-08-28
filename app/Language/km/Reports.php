@@ -85,7 +85,7 @@ return [
     "received_by"                             => "",
     "receiving_id"                            => "",
     "receiving_type"                          => "",
-    "receivings"                              => "",
+    "receivings"                              => "ការទិញ",
     "reorder_level"                           => "",
     "report"                                  => "",
     "report_input"                            => "",

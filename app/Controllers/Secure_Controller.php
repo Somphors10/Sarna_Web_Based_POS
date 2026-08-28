@@ -38,14 +38,36 @@ class Secure_Controller extends BaseController
     {
         $this->session = session();
 
-        // Clear stale per-tenant DB overrides before any model connects.
+        try {
+            $this->bootSecureController($module_id, $submodule_id, $menu_group);
+        } catch (Throwable $e) {
+            $dump = $e->getMessage() . PHP_EOL . $e->getFile() . ':' . $e->getLine() . PHP_EOL . PHP_EOL . $e->getTraceAsString();
+            if (defined('FCPATH')) {
+                @file_put_contents(FCPATH . 'last-crash.txt', $dump);
+            }
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $dump;
+            exit;
+        }
+    }
+
+    private function bootSecureController(string $module_id, ?string $submodule_id, ?string $menu_group): void
+    {
+
         $bootstrap_tenant_id = (int)($this->session->get('tenant_id') ?? 0);
-        (new TenantContext())->bootstrapSessionTenantDatabase($bootstrap_tenant_id > 0 ? $bootstrap_tenant_id : 1);
+        if ($bootstrap_tenant_id > 0) {
+            (new TenantContext())->applyRuntimeConnection($bootstrap_tenant_id);
+        }
 
         $this->employee = model(Employee::class);
         $this->module = model(Module::class);
         $config = config(OSPOS::class)->settings;
         $validation = Services::validation();
+
+        if (function_exists('is_platform_super_admin') && is_platform_super_admin()) {
+            refresh_super_admin_pos_session();
+        }
 
         if (!$this->employee->is_logged_in()) {
             header("Location:" . base_url('login'));
@@ -53,6 +75,7 @@ class Secure_Controller extends BaseController
         }
 
         $logged_in_employee_info = $this->employee->get_logged_in_employee_info();
+        $is_super_admin = function_exists('is_platform_super_admin') && is_platform_super_admin();
         $tenant_id = (int)($this->session->get('tenant_id') ?? 0);
         if ($tenant_id <= 0) {
             $tenant_id = (int)($logged_in_employee_info->tenant_id ?? 0);
@@ -76,11 +99,21 @@ class Secure_Controller extends BaseController
             }
             $this->session->set('tenant_id', $tenant_id);
         }
-        (new TenantContext())->bootstrapSessionTenantDatabase($tenant_id);
+        (new TenantContext())->applyRuntimeConnection($tenant_id);
 
         if (
             !$this->employee->has_module_grant($module_id, $logged_in_employee_info->person_id)
             || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, $logged_in_employee_info->person_id))
+        ) {
+            header("Location:" . base_url("no_access/$module_id/$submodule_id"));
+            exit();
+        }
+
+        if (
+            $module_id !== ''
+            && !$is_super_admin
+            && function_exists('tenant_feature_enabled')
+            && !tenant_feature_enabled($module_id)
         ) {
             header("Location:" . base_url("no_access/$module_id/$submodule_id"));
             exit();
@@ -100,12 +133,31 @@ class Secure_Controller extends BaseController
 
         $this->global_view_data = [];
         $this->global_view_data['allowed_modules'] = [];
-        foreach ($allowed_modules->getResult() as $module) {
-            if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
-                continue;
-            }
+        $hidden_modules = $is_super_admin
+            ? ['messages', 'migrate', 'office']
+            : hidden_ui_module_ids();
 
-            $this->global_view_data['allowed_modules'][] = $module;
+        if ($is_super_admin) {
+            $seen_modules = [];
+            $super_admin_modules = array_merge(
+                $this->module->get_allowed_home_modules($logged_in_employee_info->person_id)->getResult(),
+                $this->module->get_allowed_office_modules($logged_in_employee_info->person_id)->getResult()
+            );
+            foreach ($super_admin_modules as $module) {
+                if (isset($seen_modules[$module->module_id]) || in_array($module->module_id, $hidden_modules, true)) {
+                    continue;
+                }
+                $seen_modules[$module->module_id] = true;
+                $this->global_view_data['allowed_modules'][] = $module;
+            }
+        } else {
+            foreach ($allowed_modules->getResult() as $module) {
+                if (in_array($module->module_id, $hidden_modules, true)) {
+                    continue;
+                }
+
+                $this->global_view_data['allowed_modules'][] = $module;
+            }
         }
 
         $this->global_view_data += [

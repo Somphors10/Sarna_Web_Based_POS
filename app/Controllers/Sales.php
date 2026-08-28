@@ -194,8 +194,18 @@ class Sales extends Secure_Controller
             // If a valid receipt or invoice was found the search term will be replaced with a receipt number (POS #)
             $suggestions[] = $receipt;
         }
-        $suggestions = array_merge($suggestions, $this->item->get_search_suggestions($search, ['search_custom' => false, 'is_deleted' => false], true));
-        $suggestions = array_merge($suggestions, $this->item_kit->get_search_suggestions($search));
+        $location_id = (int) $this->sale_lib->get_sale_location();
+        $suggestions = array_merge($suggestions, $this->item->get_search_suggestions(
+            (string) $search,
+            [
+                'search_custom'      => false,
+                'is_deleted'         => false,
+                'in_stock_only'      => true,
+                'stock_location_id'  => $location_id,
+            ],
+            true
+        ));
+        $suggestions = array_merge($suggestions, $this->item_kit->get_search_suggestions((string) $search));
 
         echo json_encode($suggestions);
     }
@@ -545,7 +555,9 @@ class Sales extends Secure_Controller
             // Add item kit items to order
             $stock_warning = null;
             if (!$this->sale_lib->add_item_kit($item_id_or_number_or_item_kit_or_receipt, $item_location, $discount, $discount_type, $kit_price_option, $kit_print_option, $stock_warning)) {
-                $data['error'] = lang('Sales.unable_to_add_item');
+                $data['error'] = $stock_warning !== null && $stock_warning !== ''
+                    ? $stock_warning
+                    : lang('Sales.unable_to_add_item');
             } elseif ($stock_warning != null) {
                 $data['warning'] = $stock_warning;
             }

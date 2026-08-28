@@ -38,7 +38,7 @@
                 'type'    => 'radio',
                 'id'      => 'gender',
                 'value'   => 1,
-                'checked' => $person_info->gender === '1'
+                'checked' => (string) $person_info->gender === '1'
             ]) ?> <?= lang('Common.gender_male') ?>
         </label>
         <label class="radio-inline">
@@ -47,7 +47,7 @@
                 'type'    => 'radio',
                 'id'      => 'gender',
                 'value'   => 0,
-                'checked' => $person_info->gender === '0'
+                'checked' => (string) $person_info->gender === '0'
             ]) ?> <?= lang('Common.gender_female') ?>
         </label>
 

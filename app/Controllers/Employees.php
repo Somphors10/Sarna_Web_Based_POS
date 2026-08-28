@@ -33,8 +33,8 @@ class Employees extends Persons
         $sort   = $this->sanitizeSortColumn(person_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'people.person_id');
         $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $employees = $this->employee->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->employee->get_found_rows($search);
+        $employees = $this->employee->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+        $total_rows = $this->employee->get_found_rows($search, list_deleted_flag());
 
         $data_rows = [];
         foreach ($employees->getResult() as $person) {
@@ -224,6 +224,21 @@ class Employees extends Persons
         } else {
             echo json_encode(['success' => false, 'message' => lang('Employees.cannot_be_deleted')]);
         }
+    }
+
+    /**
+     * Restores hidden employees.
+     */
+    public function postRestore(): void
+    {
+        $employees_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($employees_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->employee->undelete_list($employees_to_restore), count($employees_to_restore), 'Employees');
     }
 
     /**

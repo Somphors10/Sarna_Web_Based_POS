@@ -278,6 +278,10 @@ class TenantSeeder
 
 
 
+        foreach ($this->cambodiaShopDefaults() as $key => $value) {
+            $template[$key] = $value;
+        }
+
         if (empty($template)) {
 
             return 0;
@@ -452,6 +456,28 @@ class TenantSeeder
 
         return $inserted;
 
+    }
+
+    /**
+     * Shop defaults that match common Cambodia POS practice (VAT 10%, USD + KHR).
+     *
+     * @return array<string, string>
+     */
+    private function cambodiaShopDefaults(): array
+    {
+        return [
+            'default_tax_1_name' => 'VAT',
+            'default_tax_1_rate' => '10',
+            'default_tax_rate' => '10',
+            'tax_included' => '0',
+            'receipt_show_taxes' => '1',
+            'invoice_type' => 'tax_invoice',
+            'country_codes' => 'kh',
+            'timezone' => 'Asia/Phnom_Penh',
+            'currency_code' => 'USD',
+            'khr_exchange_rate' => '4100',
+            'dateformat' => 'd/m/Y',
+        ];
     }
 
 }

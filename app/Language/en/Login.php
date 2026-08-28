@@ -6,6 +6,7 @@ return [
     "invalid_gcaptcha"              => "Please verify that you are not a robot.",
     "invalid_installation"          => "The installation is not correct, check your php.ini file.",
     "invalid_username_and_password" => "Invalid username and/or password.",
+    "awaiting_payment"              => "Your shop is approved, but payment is not complete. Open the KHQR payment link we sent, enter your receipt ID, then try again.",
     "login"                         => "Login",
     "login_title"                   => "Sign In",
     "logout"                        => "Logout",

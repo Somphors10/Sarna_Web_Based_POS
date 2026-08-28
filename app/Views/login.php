@@ -19,7 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/login.css?v=15') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=17') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=1') ?>">
     <meta name="theme-color" content="#4f46e5">
 </head>
@@ -33,6 +33,12 @@
             <h1 class="login-card__title">Sign In</h1>
 
             <?= form_open('login', ['id' => 'login-form']) ?>
+
+            <?php if (service('request')->getGet('password_reset') === '1'): ?>
+                <div class="login-alert login-alert--success">
+                    Your password was updated. You can sign in with your new password.
+                </div>
+            <?php endif; ?>
 
             <?php if ($has_errors): ?>
                 <?php foreach (($validation?->getErrors() ?? []) as $error): ?>

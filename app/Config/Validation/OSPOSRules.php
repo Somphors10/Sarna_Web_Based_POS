@@ -17,7 +17,7 @@ class OSPOSRules
     private array $config;
 
     /**
-     * Strong password: min 8 chars, at least one letter and one number.
+     * Strong password: min 8 chars, at least one letter, one number, and one symbol.
      *
      * @noinspection PhpUnused
      */
@@ -63,7 +63,10 @@ class OSPOSRules
 
         $password = $data['password'];
         if (!$employee->login($username, $password)) {
-            $error = lang('Login.invalid_username_and_password');
+            $reason = $employee->tenant_login_block_reason($username);
+            $error = $reason === 'awaiting_payment'
+                ? lang('Login.awaiting_payment')
+                : lang('Login.invalid_username_and_password');
 
             return false;
         }

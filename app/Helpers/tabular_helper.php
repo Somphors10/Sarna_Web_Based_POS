@@ -16,7 +16,14 @@ use Config\Services;
  */
 function hidden_ui_module_ids(): array
 {
-    return ['messages', 'migrate', 'giftcards'];
+    $hidden = ['messages', 'migrate'];
+    if (function_exists('tenant_disabled_feature_ids')) {
+        $hidden = array_merge($hidden, tenant_disabled_feature_ids());
+    } elseif (function_exists('platform_disabled_feature_ids')) {
+        $hidden = array_merge($hidden, platform_disabled_feature_ids());
+    }
+
+    return array_values(array_unique($hidden));
 }
 
 /**
@@ -34,6 +41,62 @@ function dinner_tables_ui_enabled(): bool
 function messaging_ui_enabled(): bool
 {
     return !in_array('messages', hidden_ui_module_ids(), true);
+}
+
+/**
+ * True when a manage table is listing hidden (soft-deleted) rows.
+ */
+function list_deleted_requested(): bool
+{
+    $request = service('request');
+
+    if ($request->getGet('list_view') === 'deleted') {
+        return true;
+    }
+
+    $isDeleted = $request->getGet('is_deleted');
+    if ($isDeleted === '1' || $isDeleted === 1 || $isDeleted === true || $isDeleted === 'true') {
+        return true;
+    }
+
+    $filters = $request->getGet('filters');
+    if ($filters === null || $filters === '') {
+        return false;
+    }
+
+    if (!is_array($filters)) {
+        $filters = [$filters];
+    }
+
+    return in_array('is_deleted', $filters, true);
+}
+
+/**
+ * deleted column value for the current manage-table request (0 = active, 1 = deleted).
+ */
+function list_deleted_flag(): int
+{
+    return list_deleted_requested() ? 1 : 0;
+}
+
+/**
+ * JSON response for restore (undelete) actions on manage tables.
+ */
+function json_soft_restore_result(bool $ok, int $count, string $module): void
+{
+    if ($ok) {
+        echo json_encode([
+            'success' => true,
+            'message' => lang('Common.successful_restored') . ' ' . $count . ' ' . lang($module . '.one_or_multiple')
+        ]);
+
+        return;
+    }
+
+    echo json_encode([
+        'success' => false,
+        'message' => lang('Common.cannot_be_restored')
+    ]);
 }
 
 /**
@@ -621,12 +684,12 @@ function get_giftcard_data_row(object $giftcard): array
 function item_kit_headers(): array
 {
     return [
-        ['item_kit_id'      => lang('Item_kits.kit')],
-        ['item_kit_number'  => lang('Item_kits.item_kit_number')],
-        ['name'             => lang('Item_kits.name')],
-        ['description'      => lang('Item_kits.description')],
-        ['total_cost_price' => lang('Items.cost_price'), 'sortable' => FALSE],
-        ['total_unit_price' => lang('Items.unit_price'), 'sortable' => FALSE]
+        ['item_kits.item_kit_id' => lang('Item_kits.kit')],
+        ['item_kit_number'      => lang('Item_kits.item_kit_number')],
+        ['name'                 => lang('Item_kits.name')],
+        ['description'          => lang('Item_kits.description')],
+        ['total_cost_price'     => lang('Items.cost_price'), 'sortable' => FALSE],
+        ['total_unit_price'     => lang('Items.unit_price'), 'sortable' => FALSE]
     ];
 }
 
@@ -649,9 +712,9 @@ function get_item_kit_data_row(object $item_kit): array
         : (int)$item_kit->item_kit_id;
 
     return [
-        'item_kit_id_key'  => (int)$item_kit->item_kit_id,
-        'item_kit_id'      => $tenant_item_kit_seq,
-        'item_kit_number'  => $item_kit->item_kit_number,
+        'item_kit_id'          => (int)$item_kit->item_kit_id,
+        'item_kits.item_kit_id'=> $tenant_item_kit_seq,
+        'item_kit_number'      => $item_kit->item_kit_number,
         'name'             => $item_kit->name,
         'description'      => $item_kit->description,
         'total_cost_price' => to_currency($item_kit->total_cost_price),

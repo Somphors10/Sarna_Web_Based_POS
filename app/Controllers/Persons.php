@@ -61,9 +61,9 @@ abstract class Persons extends Secure_Controller
      *
      * returns John O'Grady-Smith
      */
-    protected function nameize(string $input): string
+    protected function nameize(?string $input): string
     {
-        $adjusted_name = str_name_case($input);
+        $adjusted_name = str_name_case($input ?? '');
 
         // TODO: Use preg_replace to match HTML entities and convert them to lowercase. This is a workaround for https://github.com/tamtamchik/namecase/issues/20
         return preg_replace_callback('/&[a-zA-Z0-9#]+;/', function ($matches) {

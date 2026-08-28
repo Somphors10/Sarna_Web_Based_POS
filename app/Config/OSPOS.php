@@ -46,18 +46,29 @@ class OSPOS extends BaseConfig
         $cache = $this->cache->get($cache_key);
 
         if ($cache) {
-            $this->settings = decode_array($cache);
+            try {
+                $decoded = decode_array($cache);
+            } catch (\Throwable $e) {
+                $decoded = null;
+            }
 
-            if (str_starts_with($cache_key, 'settings_tenant_') && !isset($this->settings['language_code'])) {
-                $this->cache->delete($cache_key);
-            } else {
+            if (is_array($decoded) && isset($decoded['language_code'])) {
+                $this->settings = $decoded;
                 return;
             }
+
+            $this->cache->delete($cache_key);
         }
 
         $appconfig = model(Appconfig::class);
-        $this->settings = $appconfig->get_all_assoc();
-        $this->cache->save($cache_key, encode_array($this->settings));
+        try {
+            $this->settings = $appconfig->get_all_assoc();
+        } catch (\Throwable $e) {
+            $this->settings = [];
+        }
+        if ($this->settings !== []) {
+            $this->cache->save($cache_key, encode_array($this->settings));
+        }
     }
 
     /**

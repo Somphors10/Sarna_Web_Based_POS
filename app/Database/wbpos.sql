@@ -59,8 +59,8 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('category_dropdown', ''),
 ('company', 'WBPOS Demo Store'),
 ('company_logo', ''),
-('country_codes', 'us'),
-('currency_code', ''),
+('country_codes', 'kh'),
+('currency_code', 'USD'),
 ('currency_decimals', '2'),
 ('currency_symbol', '$'),
 ('customer_reward_enable', '0'),
@@ -71,14 +71,14 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('default_register_mode', 'sale'),
 ('default_sales_discount', '0'),
 ('default_sales_discount_type', '0'),
-('default_tax_1_name', 'Sales Tax'),
-('default_tax_1_rate', '8'),
+('default_tax_1_name', 'VAT'),
+('default_tax_1_rate', '10'),
 ('default_tax_2_name', ''),
 ('default_tax_2_rate', ''),
 ('default_tax_category', 'Standard'),
 ('default_tax_code', ''),
 ('default_tax_jurisdiction', ''),
-('default_tax_rate', '8'),
+('default_tax_rate', '10'),
 ('derive_sale_quantity', '0'),
 ('dinner_table_enable', '0'),
 ('email', 'admin@wbpos.demo'),
@@ -135,7 +135,7 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('receipt_show_company_name', '1'),
 ('receipt_show_description', '1'),
 ('receipt_show_serialnumber', '1'),
-('receipt_show_taxes', '0'),
+('receipt_show_taxes', '1'),
 ('receipt_show_tax_ind', '0'),
 ('receipt_show_total_discount', '1'),
 ('receipt_template', 'receipt_default'),
@@ -158,10 +158,11 @@ INSERT INTO `wbpos_app_config` (`key`, `value`) VALUES
 ('tax_decimals', '2'),
 ('tax_id', ''),
 ('tax_included', '0'),
+('khr_exchange_rate', '4100'),
 ('theme', 'flatly'),
 ('thousands_separator', '1'),
 ('timeformat', 'H:i:s'),
-('timezone', 'America/New_York'),
+('timezone', 'Asia/Phnom_Penh'),
 ('use_destination_based_tax', '0'),
 ('website', ''),
 ('work_order_enable', '0'),
@@ -753,13 +754,13 @@ CREATE TABLE `wbpos_items_taxes` (
 --
 
 INSERT INTO `wbpos_items_taxes` (`item_id`, `name`, `percent`, `tenant_id`) VALUES
-(1001, 'Sales Tax', 8.000, 1),
-(1002, 'Sales Tax', 8.000, 1),
-(1003, 'Sales Tax', 8.000, 1),
-(1004, 'Sales Tax', 8.000, 1),
-(1005, 'Sales Tax', 8.000, 1),
-(1006, 'Sales Tax', 8.000, 1),
-(1007, 'Sales Tax', 8.000, 2);
+(1001, 'VAT', 10.000, 1),
+(1002, 'VAT', 10.000, 1),
+(1003, 'VAT', 10.000, 1),
+(1004, 'VAT', 10.000, 1),
+(1005, 'VAT', 10.000, 1),
+(1006, 'VAT', 10.000, 1),
+(1007, 'VAT', 10.000, 2);
 
 -- --------------------------------------------------------
 
@@ -777,6 +778,7 @@ CREATE TABLE `wbpos_item_kits` (
   `kit_discount_type` tinyint(1) NOT NULL DEFAULT 0,
   `price_option` tinyint(1) NOT NULL DEFAULT 0,
   `print_option` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted` tinyint(1) NOT NULL DEFAULT 0,
   `tenant_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantAware;
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\ResultInterface;
 use CodeIgniter\Model;
 use Config\OSPOS;
@@ -28,8 +29,31 @@ class Item_kit extends Model
         'kit_discount_type',
         'price_option',
         'print_option',
+        'deleted',
         'tenant_id'
     ];
+
+    private function ensureDeletedColumn(): void
+    {
+        if ($this->db->fieldExists('deleted', 'item_kits')) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . $this->db->prefixTable('item_kits') . '` ADD COLUMN `deleted` TINYINT(1) NOT NULL DEFAULT 0 AFTER `print_option`'
+        );
+    }
+
+    private function whereDeletedStatus(BaseBuilder $builder, int $deleted = 0, string $column = 'item_kits.deleted'): void
+    {
+        $this->ensureDeletedColumn();
+        $builder->where($column, $deleted);
+    }
+
+    private function whereActive(BaseBuilder $builder, string $column = 'item_kits.deleted'): void
+    {
+        $this->whereDeletedStatus($builder, 0, $column);
+    }
 
     /**
      * Determines if a given item_id is an item kit
@@ -39,6 +63,7 @@ class Item_kit extends Model
         $builder = $this->db->table('item_kits');
         $builder->where('item_kit_id', $item_kit_id);
         $this->scopeTenant($builder, 'tenant_id');
+        $this->whereActive($builder, 'deleted');
 
         return ($builder->get()->getNumRows() == 1);    // TODO: ===
     }
@@ -93,6 +118,7 @@ class Item_kit extends Model
     {
         $builder = $this->db->table('item_kits');
         $this->scopeTenant($builder, 'tenant_id');
+        $this->whereActive($builder, 'deleted');
 
         return $builder->countAllResults();
     }
@@ -197,27 +223,46 @@ class Item_kit extends Model
     }
 
     /**
-     * Deletes one item kit
+     * Hides one item kit from lists. The row stays in the database.
      */
     public function delete($item_kit_id = null, bool $purge = false): bool
     {
+        $this->ensureDeletedColumn();
         $builder = $this->db->table('item_kits');
         $builder->where('item_kit_id', $item_kit_id);
         $this->scopeTenant($builder, 'tenant_id');
 
-        return $builder->delete();
+        return $builder->update(['deleted' => 1]);
     }
 
     /**
-     * Deletes a list of item kits
+     * Hides item kits from lists. Rows stay in the database.
      */
     public function delete_list(array $item_kit_ids): bool
     {
+        $this->ensureDeletedColumn();
         $builder = $this->db->table('item_kits');
         $builder->whereIn('item_kit_id', $item_kit_ids);
         $this->scopeTenant($builder, 'tenant_id');
 
-        return $builder->delete();
+        $builder->update(['deleted' => 1]);
+
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Restores a list of hidden item kits.
+     */
+    public function undelete_list(array $item_kit_ids): bool
+    {
+        $this->ensureDeletedColumn();
+        $builder = $this->db->table('item_kits');
+        $builder->whereIn('item_kit_id', $item_kit_ids);
+        $this->scopeTenant($builder, 'tenant_id');
+
+        $builder->update(['deleted' => 0]);
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**
@@ -231,6 +276,7 @@ class Item_kit extends Model
 
         $builder = $this->db->table('item_kits');
         $this->scopeTenant($builder, 'tenant_id');
+        $this->whereActive($builder, 'deleted');
 
         // KIT #
         if (stripos($search, 'KIT ') !== false) {
@@ -248,7 +294,7 @@ class Item_kit extends Model
             $builder->orderBy('name', 'asc');
 
             foreach ($builder->get()->getResult() as $row) {
-                $suggestions[] = ['value' => 'KIT ' . $row->item_kit_id, 'label' => $row->name];
+                $suggestions[] = ['value' => 'KIT ' . $row->item_kit_id, 'label' => lang('Items.kit') . ': ' . $row->name];
             }
         }
 
@@ -263,15 +309,15 @@ class Item_kit extends Model
     /**
      * Gets rows
      */
-    public function get_found_rows(string $search): int
+    public function get_found_rows(string $search, int $deleted = 0): int
     {
-        return $this->search($search, 0, 0, 'name', 'asc', true);
+        return $this->search($search, 0, 0, 'name', 'asc', true, $deleted);
     }
 
     /**
      * Perform a search on items
      */
-    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'name', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'name', ?string $order = 'asc', ?bool $count_only = false, int $deleted = 0)
     {
         // Set default values
         if ($rows == null) $rows = 0;
@@ -282,6 +328,7 @@ class Item_kit extends Model
 
         $builder = $this->db->table('item_kits AS item_kits');
         $this->scopeTenant($builder, 'item_kits.tenant_id');
+        $this->whereDeletedStatus($builder, $deleted);
 
         // get_found_rows case
         if ($count_only) {
@@ -292,6 +339,7 @@ class Item_kit extends Model
                 SELECT COUNT(*)
                 FROM ' . $this->db->prefixTable('item_kits') . ' AS ik2
                 WHERE ik2.tenant_id = item_kits.tenant_id
+                  AND ik2.deleted = ' . (int) $deleted . '
                   AND ik2.item_kit_id <= item_kits.item_kit_id
             ) AS tenant_item_kit_seq', false);
         }

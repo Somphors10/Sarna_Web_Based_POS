@@ -862,7 +862,8 @@ class Config extends Secure_Controller
             'default_tax_code'          => $this->request->getPost('default_tax_code'),
             'default_tax_category'      => $this->request->getPost('default_tax_category'),
             'default_tax_jurisdiction'  => $this->request->getPost('default_tax_jurisdiction'),
-            'tax_id'                    => $this->request->getPost('tax_id', FILTER_SANITIZE_NUMBER_INT)
+            'tax_id'                    => $this->request->getPost('tax_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+            'khr_exchange_rate'         => preg_replace('/[^0-9.]/', '', (string)$this->request->getPost('khr_exchange_rate')) ?: '4100',
         ];
 
         $success = $this->appconfig->batch_save($batch_save_data);

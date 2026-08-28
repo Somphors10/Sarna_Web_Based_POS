@@ -37,6 +37,35 @@
     border-radius: 8px;
 }
 
+.neo-list-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.neo-list-tab {
+    border: 1px solid #dbe4ee;
+    background: #fff;
+    color: #475569;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.neo-list-tab:hover {
+    border-color: #c4b5fd;
+    color: #5b21b6;
+}
+
+.neo-list-tab.is-active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
+}
+
 .neo-table-toolbar {
     margin-bottom: 0;
 }

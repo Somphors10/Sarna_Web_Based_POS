@@ -173,7 +173,7 @@ class Giftcard extends Model
     public function save_value(array &$giftcard_data, int $giftcard_id = NEW_ENTRY): bool
     {
         $giftcard_data['tenant_id'] = $this->getTenantId();
-        $builder = $this->db->table('giftcards AS giftcards');
+        $builder = $this->db->table('giftcards');
 
         if ($giftcard_id == NEW_ENTRY || !$this->exists($giftcard_id)) {
             if ($builder->insert($giftcard_data)) {
@@ -187,7 +187,7 @@ class Giftcard extends Model
         }
 
         $builder->where('giftcard_id', $giftcard_id);
-        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->update($giftcard_data);
     }
@@ -197,9 +197,9 @@ class Giftcard extends Model
      */
     public function update_multiple(array $giftcard_data, array $giftcard_ids): bool    // TODO: This function appears to never be used in the code.
     {
-        $builder = $this->db->table('giftcards AS giftcards');
+        $builder = $this->db->table('giftcards');
         $builder->whereIn('giftcard_id', $giftcard_ids);
-        $this->scopeTenant($builder, 'giftcards.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
 
         return $builder->update($giftcard_data);
     }
@@ -213,13 +213,11 @@ class Giftcard extends Model
         $builder->where('giftcard_id', $giftcard_id);
         $this->scopeTenant($builder, 'tenant_id');
 
-        $builder->delete();
-
-        return $this->db->affectedRows() > 0;
+        return $builder->update(['deleted' => 1]);
     }
 
     /**
-     * Deletes a list of giftcards
+     * Hides gift cards from lists. Rows stay in the database.
      */
     public function delete_list(array $giftcard_ids): bool
     {
@@ -227,9 +225,7 @@ class Giftcard extends Model
         $builder->whereIn('giftcard_id', $giftcard_ids);
         $this->scopeTenant($builder, 'tenant_id');
 
-        $builder->delete();
-
-        return $this->db->affectedRows() > 0;
+        return $builder->update(['deleted' => 1]);
     }
 
     /**

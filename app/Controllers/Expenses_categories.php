@@ -37,8 +37,8 @@ class Expenses_categories extends Secure_Controller    // TODO: Is this class ev
         $sort   = $this->sanitizeSortColumn(expense_category_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'expense_category_id');
         $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $expense_categories = $this->expense_category->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->expense_category->get_found_rows($search);
+        $expense_categories = $this->expense_category->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+        $total_rows = $this->expense_category->get_found_rows($search, list_deleted_flag());
 
         $data_rows = [];
         foreach ($expense_categories->getResult() as $expense_category) {
@@ -125,5 +125,24 @@ class Expenses_categories extends Secure_Controller    // TODO: Is this class ev
         } else {
             echo json_encode(['success' => false, 'message' => lang('Expenses_categories.cannot_be_deleted')]);
         }
+    }
+
+    /**
+     * Restores hidden expense categories.
+     */
+    public function postRestore(): void
+    {
+        $expense_categories_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($expense_categories_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result(
+            $this->expense_category->undelete_list($expense_categories_to_restore),
+            count($expense_categories_to_restore),
+            'Expenses_categories'
+        );
     }
 }

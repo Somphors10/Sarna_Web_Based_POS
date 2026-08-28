@@ -15,6 +15,8 @@
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="tax_error_message_box" class="error_message_box"></ul>
 
+            <p class="help-block" style="margin: 0 0 16px;"><?= lang('Config.cambodia_vat_hint') ?></p>
+
             <div class="form-group form-group-sm">
                 <?= form_label(lang('Config.tax_id'), 'tax_id', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
@@ -24,6 +26,21 @@
                         'class' => 'form-control input-sm',
                         'value' => $config['tax_id']
                     ]) ?>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Config.khr_exchange_rate'), 'khr_exchange_rate', ['class' => 'control-label col-xs-2']) ?>
+                <div class="col-xs-2">
+                    <?= form_input([
+                        'name'  => 'khr_exchange_rate',
+                        'id'    => 'khr_exchange_rate',
+                        'class' => 'form-control input-sm',
+                        'value' => $config['khr_exchange_rate'] ?? '4100'
+                    ]) ?>
+                </div>
+                <div class="col-xs-6">
+                    <span class="help-block" style="margin: 6px 0 0;"><?= lang('Config.khr_exchange_rate_note') ?></span>
                 </div>
             </div>
 

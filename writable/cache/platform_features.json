@@ -1,0 +1,16 @@
+{
+    "sales": true,
+    "customers": true,
+    "items": true,
+    "item_kits": true,
+    "suppliers": true,
+    "receivings": true,
+    "employees": true,
+    "giftcards": true,
+    "expenses": true,
+    "cashups": true,
+    "reports": true,
+    "taxes": true,
+    "config": true,
+    "attributes": true
+}

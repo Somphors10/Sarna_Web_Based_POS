@@ -31,6 +31,17 @@ class Customer extends Person
         'tenant_id'
     ];
 
+    private function ensureDeletedColumn(): void
+    {
+        if ($this->db->fieldExists('deleted', 'customers')) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . $this->db->prefixTable('customers') . '` ADD COLUMN `deleted` TINYINT(1) NOT NULL DEFAULT 0'
+        );
+    }
+
     /**
      * Generates the next tenant-scoped customer code.
      * Example: CUST-00001, CUST-00002
@@ -296,13 +307,15 @@ class Customer extends Person
         $this->db->transStart();
 
         if (parent::save_value($person_data, $customer_id)) {
-            $builder = $this->db->table('customers AS customers');
+            // Do not alias this table on write. MariaDB rejects
+            // WHERE wbpos_customers.tenant_id when the table is "AS customers".
+            $builder = $this->db->table('customers');
             if ($customer_id == NEW_ENTRY || !$customer_id || !$this->exists($customer_id)) {
                 $customer_data['person_id'] = $person_data['person_id'];
                 $success = $builder->insert($customer_data);
             } else {
                 $builder->where('person_id', $customer_id);
-                $this->scopeTenant($builder, 'customers.tenant_id');
+                $this->scopeTenant($builder, 'tenant_id');
                 $success = $builder->update($customer_data);
             }
         }
@@ -319,9 +332,9 @@ class Customer extends Person
      */
     public function update_reward_points_value(int $customer_id, int $value): void
     {
-        $builder = $this->db->table('customers AS customers');
+        $builder = $this->db->table('customers');
         $builder->where('person_id', $customer_id);
-        $this->scopeTenant($builder, 'customers.tenant_id');
+        $this->scopeTenant($builder, 'tenant_id');
         $builder->update(['points' => $value]);
     }
 
@@ -336,37 +349,38 @@ class Customer extends Person
             return false;
         }
 
-        $this->db->transStart();
-
-        // Remove customer row first, then base person row.
-        // This enforces true DB deletion (not soft-delete).
-        $builder = $this->db->table('customers AS customers');
+        $builder = $this->db->table('customers');
         $builder->where('person_id', $customer_id);
-        $this->scopeTenant($builder, 'customers.tenant_id');
-        $result = $builder->delete();
+        $this->scopeTenant($builder, 'tenant_id');
 
-        $builder = $this->db->table('people AS people');
-        $builder->where('person_id', $customer_id);
-        $this->scopeTenant($builder, 'people.tenant_id');
-        $result = $result && $builder->delete();
-
-        $this->db->transComplete();
-
-        return $result && $this->db->transStatus();
+        return $builder->update(['deleted' => 1]);
     }
 
     /**
-     * Deletes a list of customers
+     * Hides customers from lists. Rows stay in the database.
      */
     public function delete_list(array $person_ids): bool
     {
-        $result = true;
+        $this->ensureDeletedColumn();
+        $builder = $this->db->table('customers');
+        $builder->whereIn('person_id', $person_ids);
+        $this->scopeTenant($builder, 'tenant_id');
 
-        foreach ($person_ids as $person_id) {
-            $result = $this->delete((int)$person_id) && $result;
-        }
+        $builder->update(['deleted' => 1]);
 
-        return $result;
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Restores a list of hidden customers.
+     */
+    public function undelete_list(array $person_ids): bool
+    {
+        $builder = $this->db->table('customers');
+        $builder->whereIn('person_id', $person_ids);
+        $this->scopeTenant($builder, 'tenant_id');
+
+        return $builder->update(['deleted' => 0]);
     }
 
     /**
@@ -457,16 +471,18 @@ class Customer extends Person
     /**
      * Gets rows
      */
-    public function get_found_rows(string $search): int
+    public function get_found_rows(string $search, int $deleted = 0): int
     {
-        return $this->search($search, 0, 0, 'last_name', 'asc', true);
+        return $this->search($search, 0, 0, 'last_name', 'asc', true, $deleted);
     }
 
     /**
      * Performs a search on customers
      */
-    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'last_name', ?string $order = 'asc', ?bool $count_only = false, int $deleted = 0)
     {
+        $this->ensureDeletedColumn();
+
         // Set default values
         if ($rows == null) $rows = 0;
         if ($limit_from == null) $limit_from = 0;
@@ -484,7 +500,7 @@ class Customer extends Person
                 SELECT COUNT(*)
                 FROM ' . $this->db->prefixTable('customers') . ' AS c2
                 WHERE c2.tenant_id = customers.tenant_id
-                  AND c2.deleted = 0
+                  AND c2.deleted = ' . (int) $deleted . '
                   AND c2.person_id <= customers.person_id
             ) AS tenant_customer_seq', false);
 
@@ -503,7 +519,7 @@ class Customer extends Person
         $builder->orLike('company_name', $search);
         $builder->orLike('CONCAT(first_name, " ", last_name)', $search);    // TODO: Duplicated code.
         $builder->groupEnd();
-        $builder->where('customers.deleted', 0);
+        $builder->where('customers.deleted', $deleted);
 
         // get_found_rows case
         if ($count_only) {

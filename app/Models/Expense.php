@@ -34,6 +34,17 @@ class Expense extends Model
         'tenant_id'
     ];
 
+    private function ensureDeletedColumn(): void
+    {
+        if ($this->db->fieldExists('deleted', 'expenses')) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . $this->db->prefixTable('expenses') . '` ADD COLUMN `deleted` TINYINT(1) NOT NULL DEFAULT 0'
+        );
+    }
+
     private function hasExpensesTenantColumn(): bool
     {
         return $this->db->tableExists('expenses') && $this->db->fieldExists('tenant_id', 'expenses');
@@ -135,6 +146,8 @@ class Expense extends Model
      */
     public function search(string $search, array $filters, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'expense_id', ?string $order = 'asc', ?bool $count_only = false): false|string|ResultInterface
     {
+        $this->ensureDeletedColumn();
+
         // Set default values
         if ($rows == null) $rows = 0;
         if ($limit_from == null) $limit_from = 0;
@@ -355,16 +368,30 @@ class Expense extends Model
     }
 
     /**
-     * Deletes a list of expense_category
+     * Hides expenses from lists. Rows stay in the database.
      */
     public function delete_list(array $expense_ids): bool
+    {
+        $this->ensureDeletedColumn();
+        $builder = $this->db->table('expenses');
+        $builder->whereIn('expense_id', $expense_ids);
+        $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
+
+        $builder->update(['deleted' => 1]);
+
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Restores a list of hidden expenses.
+     */
+    public function undelete_list(array $expense_ids): bool
     {
         $builder = $this->db->table('expenses');
         $builder->whereIn('expense_id', $expense_ids);
         $this->scopeExpensesByTenant($builder, 'expenses.tenant_id', 'expenses.employee_id');
-        $builder->delete();
 
-        return $this->db->affectedRows() > 0;
+        return $builder->update(['deleted' => 0]);
     }
 
     /**

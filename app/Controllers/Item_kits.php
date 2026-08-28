@@ -79,8 +79,11 @@ class Item_kits extends Secure_Controller
         $sort   = $this->sanitizeSortColumn(item_kit_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'item_kit_id');
         $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $item_kits = $this->item_kit->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->item_kit->get_found_rows($search);
+        $request_filters = array_fill_keys($this->request->getGet('filters', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? [], true);
+        $deleted = !empty($request_filters['is_deleted']) ? 1 : 0;
+
+        $item_kits = $this->item_kit->search($search, $limit, $offset, $sort, $order, false, $deleted);
+        $total_rows = $this->item_kit->get_found_rows($search, $deleted);
 
         $data_rows = [];
         foreach ($item_kits->getResult() as $item_kit) {
@@ -242,6 +245,21 @@ class Item_kits extends Secure_Controller
         } else {
             echo json_encode(['success' => false, 'message' => lang('Item_kits.cannot_be_deleted')]);
         }
+    }
+
+    /**
+     * Restores hidden item kits.
+     */
+    public function postRestore(): void
+    {
+        $item_kits_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($item_kits_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->item_kit->undelete_list($item_kits_to_restore), count($item_kits_to_restore), 'Item_kits');
     }
 
     /**

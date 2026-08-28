@@ -3,6 +3,21 @@
 use App\Models\Employee;
 use Config\OSPOS;
 
+function locale_intl_available(): bool
+{
+    return class_exists('NumberFormatter');
+}
+
+function locale_fmt_decimal(): int
+{
+    return locale_intl_available() ? NumberFormatter::DECIMAL : 1;
+}
+
+function locale_fmt_currency(): int
+{
+    return locale_intl_available() ? NumberFormatter::CURRENCY : 2;
+}
+
 /**
  * Returns the currently configured language code.
  *
@@ -284,6 +299,10 @@ function get_payment_options(): array
  */
 function is_right_side_currency_symbol(): bool
 {
+    if (!locale_intl_available()) {
+        return false;
+    }
+
     $config = config(OSPOS::class)->settings;
     $fmt = new NumberFormatter($config['number_locale'], NumberFormatter::CURRENCY);
     $fmt->setSymbol(NumberFormatter::CURRENCY_SYMBOL, $config['currency_symbol']);
@@ -355,7 +374,7 @@ function to_datetime(int $datetime = DEFAULT_DATETIME): string
  */
 function to_currency(?string $number): string
 {
-    return to_decimals($number, 'currency_decimals', NumberFormatter::CURRENCY);
+    return to_decimals($number, 'currency_decimals', locale_fmt_currency());
 }
 
 /**
@@ -376,10 +395,26 @@ function to_currency_tax(?string $number): string
     $config = config(OSPOS::class)->settings;
 
     if ($config['tax_included']) {    // TODO: ternary notation
-        return to_decimals($number, 'tax_decimals', NumberFormatter::CURRENCY);
+        return to_decimals($number, 'tax_decimals', locale_fmt_currency());
     } else {
-        return to_decimals($number, 'currency_decimals', NumberFormatter::CURRENCY);
+        return to_decimals($number, 'currency_decimals', locale_fmt_currency());
     }
+}
+
+/**
+ * Cambodia receipts must also show the total in Khmer Riel (NBC daily rate).
+ */
+function to_khr_currency($amount): string
+{
+    $config = config(OSPOS::class)->settings;
+    $rate = (float)($config['khr_exchange_rate'] ?? 4100);
+    if ($rate <= 0) {
+        $rate = 4100;
+    }
+
+    $riel = (int)round((float)$amount * $rate);
+
+    return number_format($riel, 0, '.', ',') . ' ៛';
 }
 
 /**
@@ -418,16 +453,28 @@ function to_quantity_decimals(?string $number): string
  * @param int $type
  * @return string
  */
-function to_decimals(?string $number, ?string $decimals = null, int $type = NumberFormatter::DECIMAL): string
+function to_decimals(?string $number, ?string $decimals = null, ?int $type = null): string
 {
     if (!isset($number)) {
         return '';
     }
 
     $config = config(OSPOS::class)->settings;
+    $type = $type ?? locale_fmt_decimal();
+    $precision = empty($decimals) ? (defined('DEFAULT_PRECISION') ? DEFAULT_PRECISION : 2) : (int) ($config[$decimals] ?? 2);
+
+    if (!locale_intl_available()) {
+        $formatted = number_format((float) $number, $precision, '.', empty($config['thousands_separator']) ? '' : ',');
+        if ($type === locale_fmt_currency()) {
+            return ($config['currency_symbol'] ?? '$') . $formatted;
+        }
+
+        return $formatted;
+    }
+
     $fmt = new NumberFormatter($config['number_locale'], $type);
-    $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
-    $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
+    $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $precision);
+    $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $precision);
 
     if (empty($config['thousands_separator'])) {
         $fmt->setTextAttribute(NumberFormatter::GROUPING_SEPARATOR_SYMBOL, '');
@@ -468,6 +515,19 @@ function parse_decimals(string $number, ?int $decimals = null): mixed
 
 
     $config = config(OSPOS::class)->settings;
+
+    if (!locale_intl_available()) {
+        $normalized = str_replace([',', ' '], '', $number);
+        if (!is_numeric($normalized)) {
+            return false;
+        }
+        $locale_safe_number = (float) $normalized;
+        if ($locale_safe_number > MAX_PRECISION || $locale_safe_number > 1.e14) {
+            return false;
+        }
+
+        return $locale_safe_number;
+    }
 
     $fmt = new NumberFormatter($config['number_locale'], NumberFormatter::DECIMAL);
 
