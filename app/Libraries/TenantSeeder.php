@@ -269,6 +269,9 @@ class TenantSeeder
         if ($source_tenant_id > 0) {
 
             foreach ($db->table('tenant_config')->where('tenant_id', $source_tenant_id)->get()->getResultArray() as $row) {
+                if ($this->isTenantOwnedConfigKey($row['config_key'])) {
+                    continue;
+                }
 
                 $template[$row['config_key']] = $row['config_value'];
 
@@ -310,7 +313,9 @@ class TenantSeeder
 
             }
 
-
+            if ($this->isTenantOwnedConfigKey($config_key)) {
+                $config_value = '';
+            }
 
             $batch[] = [
 
@@ -480,6 +485,22 @@ class TenantSeeder
         ];
     }
 
+    /**
+     * Shop profile fields — each tenant must set their own; never inherit from another shop or demo defaults.
+     */
+    private function isTenantOwnedConfigKey(string $config_key): bool
+    {
+        return in_array($config_key, [
+            'company_logo',
+            'company',
+            'address',
+            'phone',
+            'email',
+            'fax',
+            'website',
+            'return_policy',
+            'tax_id',
+        ], true);
+    }
+
 }
-
-

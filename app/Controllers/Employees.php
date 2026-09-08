@@ -163,20 +163,19 @@ class Employees extends Persons
                 return;
             }
 
-            $exploded = explode(":", $this->request->getPost('language', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+            // Language field is hidden; new/updated employees use system language.
             $employee_data = [
                 'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
                 'password'      => password_hash($plain_password, PASSWORD_DEFAULT),
                 'hash_version'  => 2,
-                'language_code' => $exploded[0],
-                'language'      => $exploded[1]
+                'language_code' => '',
+                'language'      => ''
             ];
         } else { // Password not changed
-            $exploded = explode(":", $this->request->getPost('language', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
             $employee_data = [
                 'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-                'language_code' => $exploded[0],
-                'language'      => $exploded[1]
+                'language_code' => '',
+                'language'      => ''
             ];
         }
 
@@ -185,20 +184,20 @@ class Employees extends Persons
             if ($employee_id == NEW_ENTRY) {
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Employees.successful_adding') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Employees.successful_adding') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $employee_data['person_id']
                 ]);
             } else { // Existing employee
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Employees.successful_updating') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Employees.successful_updating') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $employee_id
                 ]);
             }
         } else { // Failure
             echo json_encode([
                 'success' => false,
-                'message' => lang('Employees.error_adding_updating') . ' ' . $first_name . ' ' . $last_name,
+                'message' => lang('Employees.error_adding_updating') . ' ' . format_person_name($first_name, $last_name),
                 'id'      => NEW_ENTRY
             ]);
         }

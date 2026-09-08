@@ -1,0 +1,100 @@
+%% WBPOS DFD Level 2 — corrected from real code
+%% Key rule: tenants / payment_token / payment_reference live in D1 (platform).
+%% D2 is only the shop database (items, employees, sales) seeded on approve.
+
+%% ============================================================
+%% A — New Shop Registrant (Process 1.0)
+%% ============================================================
+flowchart TB
+  E1["New Shop Registrant"]
+  P11["1.1\nSubmit Registration"]
+  P12["1.2\nSend Verify Email"]
+  P13["1.3\nConfirm Email Verification"]
+  P14["1.4\nPay with KHQR"]
+  D1[("D1 Platform Database")]
+
+  E1 -->|"Registration data"| P11
+  P11 -->|"Subscription request (pending)"| D1
+  D1 -->|"Saved request id"| P11
+  P11 -->|"Pending request"| P12
+  P12 -->|"email_verify_token"| D1
+  P12 -->|"Verify email link"| E1
+  E1 -->|"Click verify link + token"| P13
+  P13 -->|"Lookup token"| D1
+  D1 -->|"Request by token"| P13
+  P13 -->|"Mark email verified"| D1
+  P13 -->|"Verification success"| E1
+  E1 -->|"Open pay URL + payment_reference"| P14
+  P14 -->|"Read approved request / payment_token"| D1
+  D1 -->|"Approved request + token"| P14
+  P14 -->|"payment_reference + tenant status=active"| D1
+  P14 -->|"Payment success / shop active"| E1
+
+%% NOTE: 1.4 runs only after Super Admin Approve (2.2) creates payment_token.
+
+%% ============================================================
+%% B — Super Admin (Process 2.0)
+%% ============================================================
+flowchart TB
+  E2["Super Admin"]
+  P21["2.1\nReview Registration Requests"]
+  P22["2.2\nApprove / Reject Request"]
+  P23["2.3\nSend KHQR / Confirm Payment"]
+  P24["2.4\nManage Tenant Status"]
+  D1b[("D1 Platform Database")]
+  D2b[("D2 Tenant Shop Database")]
+
+  D1b -->|"Pending / verified requests"| P21
+  P21 -->|"Request list / detail"| E2
+  E2 -->|"Approve or reject + reason"| P22
+  P22 -->|"Rejected status + notes"| D1b
+  P22 -->|"Tenant awaiting_payment + payment_token + subscription"| D1b
+  P22 -->|"Seed shop owner / grants"| D2b
+  P22 -->|"Approved request + token"| P23
+  P23 -->|"KHQR / payment link page"| E2
+  E2 -->|"Confirm payment / activate"| P23
+  P23 -->|"payment_reference + tenants.status=active"| D1b
+  E2 -->|"Suspend / activate / cancel"| P24
+  D1b -->|"Tenant profile / status"| P24
+  P24 -->|"Update tenants.status"| D1b
+  P24 -->|"Business status view"| E2
+
+%% ============================================================
+%% C — Shop Owner (Process 3.0) — shop ops after active
+%% ============================================================
+flowchart TB
+  E3["Shop Owner"]
+  P31["3.1\nManage Items"]
+  P32["3.2\nManage Staff"]
+  P33["3.3\nConfigure Shop"]
+  D2c[("D2 Tenant Shop Database")]
+
+  E3 -->|"Item data"| P31
+  E3 -->|"Staff / permissions"| P32
+  E3 -->|"Config settings"| P33
+  P31 -->|"Items & prices"| D2c
+  D2c -->|"Item records"| P31
+  P32 -->|"Employee grants"| D2c
+  D2c -->|"Staff records"| P32
+  P33 -->|"Shop config"| D2c
+  D2c -->|"Config records"| P33
+  P33 -->|"Shop reports"| E3
+
+%% ============================================================
+%% D — Cashier (Process 4.0)
+%% ============================================================
+flowchart TB
+  E4["Cashier"]
+  P41["4.1\nSelect Item"]
+  P42["4.2\nProcess Payment"]
+  P43["4.3\nIssue Receipt"]
+  D2d[("D2 Tenant Shop Database")]
+
+  E4 -->|"Scan / select item"| P41
+  D2d -->|"Item lookup"| P41
+  P41 -->|"Cart line"| P42
+  E4 -->|"Payment data"| P42
+  P42 -->|"Sales & stock update"| D2d
+  P42 -->|"Sale complete"| P43
+  P43 -->|"Receipt"| E4
+  D2d -->|"Sale record"| P43

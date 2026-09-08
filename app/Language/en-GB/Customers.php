@@ -49,7 +49,7 @@ return [
     "successful_deleted"            => "You have successfully deleted Customer",
     "successful_updating"           => "You have successfully updated Customer",
     "tax_code"                      => "Tax Code",
-    "tax_id"                        => "Tax Id",
+    "tax_id"                        => "VAT TIN",
     "taxable"                       => "Taxable",
     "total"                         => "Total spent",
     "update"                        => "Update Customer",

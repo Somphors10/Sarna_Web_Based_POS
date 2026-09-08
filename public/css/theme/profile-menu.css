@@ -1,0 +1,188 @@
+/**
+ * Shared profile dropdown — POS topbar + Super Admin navbar.
+ * Loaded last so theme/link colors cannot shrink or recolor menu items.
+ */
+
+.sa-dropdown-wrap {
+    position: relative;
+    z-index: 50;
+}
+
+.sa-profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.sa-profile-btn:focus-visible {
+    outline: none;
+}
+
+.sa-profile-btn:hover .sa-profile-avatar,
+.sa-profile-btn:focus-visible .sa-profile-avatar {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.sa-profile-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.sa-dropdown.sa-dropdown--profile {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1100;
+    min-width: 280px;
+    max-width: min(320px, calc(100vw - 24px));
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.sa-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sa-profile-card__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.sa-profile-card__copy {
+    min-width: 0;
+    flex: 1;
+    display: grid;
+    gap: 3px;
+}
+
+.sa-profile-card__copy strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #0f172a;
+}
+
+.sa-profile-card__copy span:not(.sa-profile-card__role) {
+    display: block;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #64748b;
+    word-break: break-word;
+}
+
+.sa-profile-card__role {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7c3aed;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.sa-dropdown--profile .sa-dropdown__menu {
+    padding: 6px;
+}
+
+.sa-dropdown--profile .sa-dropdown__menu-item,
+.sa-dropdown--profile a.sa-dropdown__menu-item,
+.sa-dropdown--profile button.sa-dropdown__menu-item {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #0f172a !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    font-style: normal !important;
+    line-height: 1.4 !important;
+    letter-spacing: normal !important;
+    text-align: left;
+    text-decoration: none !important;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: background 0.15s ease;
+}
+
+.sa-dropdown--profile .sa-dropdown__menu-item.is-active {
+    background: #f5f3ff;
+    color: #6d28d9 !important;
+    font-weight: 600 !important;
+}
+
+.sa-dropdown--profile .sa-dropdown__menu-item:hover,
+.sa-dropdown--profile .sa-dropdown__menu-item:focus,
+.sa-dropdown--profile .sa-dropdown__menu-item:focus-visible {
+    background: #f1f5f9 !important;
+    outline: none;
+    color: #0f172a !important;
+    text-decoration: none !important;
+}
+
+/* POS topbar: do not shrink profile area on mobile */
+@media (min-width: 768px) {
+    .pos-topbar-user {
+        min-width: auto !important;
+    }
+}
+
+.pos-topbar.topbar {
+    font-size: 14px !important;
+    color: #0f172a;
+    background: #ffffff !important;
+}

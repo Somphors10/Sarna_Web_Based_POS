@@ -46,12 +46,12 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label" for="first_name">Owner First Name</label>
-                    <input class="form-control" id="first_name" name="first_name" required>
-                </div>
-                <div class="col-md-6">
                     <label class="form-label" for="last_name">Owner Last Name</label>
                     <input class="form-control" id="last_name" name="last_name" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="first_name">Owner First Name</label>
+                    <input class="form-control" id="first_name" name="first_name" required>
                 </div>
 
                 <div class="col-md-6">

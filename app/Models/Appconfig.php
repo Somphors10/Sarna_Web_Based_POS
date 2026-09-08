@@ -317,4 +317,218 @@ class Appconfig extends Model
         return (string)$last_used;
     }
 
+    /**
+     * Replace install/demo company email with the shop owner's registration email.
+     * Safe for shops that registered before provisioning was fixed.
+     *
+     * @return string|null Corrected email when a repair ran, otherwise null
+     */
+    public function repairPlaceholderShopEmail(): ?string
+    {
+        $placeholders = ['admin@wbpos.demo', 'changeme@example.com', ''];
+        $current = strtolower(trim($this->get_value('email', '')));
+        if (!in_array($current, $placeholders, true)) {
+            return null;
+        }
+
+        $owner_email = $this->resolveOwnerRegistrationEmail();
+        if ($owner_email === '' || in_array($owner_email, $placeholders, true)) {
+            return null;
+        }
+
+        // Write directly to avoid recursive OSPOS settings reload from save().
+        $tenant_id = $this->getTenantId();
+        if ($this->usesTenantConfig() && $tenant_id > 0) {
+            $row = $this->db->table('tenant_config')
+                ->where('tenant_id', $tenant_id)
+                ->where('config_key', 'email')
+                ->get(1)
+                ->getRow();
+            if ($row !== null) {
+                $this->db->table('tenant_config')
+                    ->where('tenant_id', $tenant_id)
+                    ->where('config_key', 'email')
+                    ->update(['config_value' => $owner_email]);
+            } else {
+                $this->db->table('tenant_config')->insert([
+                    'tenant_id'    => $tenant_id,
+                    'config_key'   => 'email',
+                    'config_value' => $owner_email,
+                ]);
+            }
+        }
+
+        if ($this->db->tableExists('app_config')) {
+            $exists = $this->db->table('app_config')->where('key', 'email')->countAllResults() > 0;
+            if ($exists) {
+                $this->db->table('app_config')->where('key', 'email')->update(['value' => $owner_email]);
+            } else {
+                $this->db->table('app_config')->insert(['key' => 'email', 'value' => $owner_email]);
+            }
+        }
+
+        return $owner_email;
+    }
+
+    private function resolveOwnerRegistrationEmail(): string
+    {
+        $tenant_id = $this->getTenantId();
+        $placeholders = ['admin@wbpos.demo', 'changeme@example.com'];
+
+        // Owner person on this shop DB
+        if ($tenant_id > 0 && $this->db->tableExists('people') && $this->db->tableExists('tenant_users')) {
+            $row = $this->db->table('people p')
+                ->select('p.email')
+                ->join('tenant_users tu', 'tu.person_id = p.person_id AND tu.tenant_id = p.tenant_id', 'inner')
+                ->where('p.tenant_id', $tenant_id)
+                ->where('tu.tenant_role', 'owner')
+                ->where('p.email !=', '')
+                ->get(1)
+                ->getRow();
+            $email = strtolower(trim((string)($row->email ?? '')));
+            if ($email !== '' && !in_array($email, $placeholders, true)) {
+                return $email;
+            }
+        }
+
+        // Any non-demo employee email
+        if ($tenant_id > 0 && $this->db->tableExists('people') && $this->db->tableExists('employees')) {
+            $row = $this->db->table('people p')
+                ->select('p.email')
+                ->join('employees e', 'e.person_id = p.person_id', 'inner')
+                ->where('p.tenant_id', $tenant_id)
+                ->where('p.email !=', '')
+                ->orderBy('p.person_id', 'asc')
+                ->get(1)
+                ->getRow();
+            $email = strtolower(trim((string)($row->email ?? '')));
+            if ($email !== '' && !in_array($email, $placeholders, true)) {
+                return $email;
+            }
+        }
+
+        // Platform registration request
+        try {
+            $platform = db_connect('platform');
+            if (!$platform->tableExists('subscription_requests') || !$platform->tableExists('tenants')) {
+                return '';
+            }
+
+            $tenant = $platform->table('tenants')
+                ->select('tenant_code')
+                ->where('tenant_id', $tenant_id)
+                ->get(1)
+                ->getRow();
+            $code = (string)($tenant->tenant_code ?? '');
+            if ($code === '') {
+                return '';
+            }
+
+            $row = $platform->table('subscription_requests')
+                ->select('owner_email')
+                ->where('tenant_code', $code)
+                ->where('owner_email !=', '')
+                ->orderBy('request_id', 'desc')
+                ->get(1)
+                ->getRow();
+
+            return strtolower(trim((string)($row->owner_email ?? '')));
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    /**
+     * Drop inherited/shared logo paths so each business only shows its own upload.
+     * Valid logos live under uploads/tenants/{tenant_id}/company_logo.*
+     *
+     * @return bool True when company_logo was cleared
+     */
+    public function repairInheritedCompanyLogo(): bool
+    {
+        $tenant_id = $this->getTenantId();
+        if ($tenant_id <= 0) {
+            return false;
+        }
+
+        $current = trim($this->get_value('company_logo', ''));
+        if ($current === '') {
+            return false;
+        }
+
+        if ($this->isTenantOwnedLogoPath($current, $tenant_id)) {
+            return false;
+        }
+
+        $this->writeConfigValue('company_logo', '');
+
+        return true;
+    }
+
+    /**
+     * Logo path relative to public/uploads/ that belongs only to this tenant.
+     */
+    public function tenantCompanyLogoPath(?int $tenant_id = null): string
+    {
+        $tenant_id = $tenant_id ?? $this->getTenantId();
+        $logo = trim($this->get_value('company_logo', ''));
+        if ($logo === '' || $tenant_id <= 0 || !$this->isTenantOwnedLogoPath($logo, $tenant_id)) {
+            return '';
+        }
+
+        if (!is_file(FCPATH . 'uploads/' . $logo)) {
+            return '';
+        }
+
+        return $logo;
+    }
+
+    private function isTenantOwnedLogoPath(string $logo, int $tenant_id): bool
+    {
+        if ($logo === '' || str_contains($logo, '..') || !preg_match('/^[a-zA-Z0-9_\-\.\/]+$/', $logo)) {
+            return false;
+        }
+
+        $prefix = 'tenants/' . $tenant_id . '/company_logo.';
+        if (!str_starts_with($logo, $prefix)) {
+            return false;
+        }
+
+        $ext = strtolower(pathinfo($logo, PATHINFO_EXTENSION));
+
+        return in_array($ext, ['png', 'jpg', 'jpeg', 'gif'], true);
+    }
+
+    private function writeConfigValue(string $key, string $value): void
+    {
+        $tenant_id = $this->getTenantId();
+        if ($this->usesTenantConfig() && $tenant_id > 0) {
+            $row = $this->db->table('tenant_config')
+                ->where('tenant_id', $tenant_id)
+                ->where('config_key', $key)
+                ->get(1)
+                ->getRow();
+            if ($row !== null) {
+                $this->db->table('tenant_config')
+                    ->where('tenant_id', $tenant_id)
+                    ->where('config_key', $key)
+                    ->update(['config_value' => $value]);
+            } else {
+                $this->db->table('tenant_config')->insert([
+                    'tenant_id'    => $tenant_id,
+                    'config_key'   => $key,
+                    'config_value' => $value,
+                ]);
+            }
+        }
+
+        if ($this->db->tableExists('app_config')) {
+            $exists = $this->db->table('app_config')->where('key', $key)->countAllResults() > 0;
+            if ($exists) {
+                $this->db->table('app_config')->where('key', $key)->update(['value' => $value]);
+            } else {
+                $this->db->table('app_config')->insert(['key' => $key, 'value' => $value]);
+            }
+        }
+    }
 }

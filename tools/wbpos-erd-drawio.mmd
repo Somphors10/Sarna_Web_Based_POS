@@ -1,0 +1,269 @@
+erDiagram
+    %% Paste into draw.io: right-click → Mermaid... → Insert
+    %% Clean layout: only main business relationships (no tenant_id spaghetti)
+
+    %% ===== PLATFORM =====
+    wbpos_plans ||--o{ wbpos_subscriptions : has
+    wbpos_tenants ||--o{ wbpos_subscriptions : has
+    wbpos_plans ||--o{ wbpos_subscription_requests : chosen_by
+    wbpos_platform_admins ||--o{ wbpos_subscription_requests : reviews
+    wbpos_tenants ||--o{ wbpos_tenant_config : settings
+    wbpos_tenants ||--o{ wbpos_tenant_users : members
+    wbpos_people ||--o{ wbpos_tenant_users : linked
+    wbpos_tenants ||--o{ wbpos_people : owns
+
+    %% ===== PEOPLE =====
+    wbpos_people ||--|| wbpos_employees : is
+    wbpos_people ||--|| wbpos_customers : is
+    wbpos_people ||--|| wbpos_suppliers : is
+    wbpos_employees ||--o{ wbpos_customers : registered_by
+    wbpos_people ||--o{ wbpos_giftcards : holds
+
+    %% ===== SALES =====
+    wbpos_customers ||--o{ wbpos_sales : buys
+    wbpos_employees ||--o{ wbpos_sales : sells
+    wbpos_sales ||--o{ wbpos_sales_items : contains
+    wbpos_sales ||--o{ wbpos_sales_payments : paid_by
+    wbpos_items ||--o{ wbpos_sales_items : sold_as
+    wbpos_stock_locations ||--o{ wbpos_sales_items : from_location
+    wbpos_employees ||--o{ wbpos_sales_payments : takes
+
+    %% ===== ITEMS / STOCK =====
+    wbpos_suppliers ||--o{ wbpos_items : supplies
+    wbpos_items ||--o{ wbpos_item_quantities : stocked_at
+    wbpos_stock_locations ||--o{ wbpos_item_quantities : stores
+    wbpos_items ||--o{ wbpos_inventory : logged_in
+    wbpos_employees ||--o{ wbpos_inventory : adjusts
+    wbpos_stock_locations ||--o{ wbpos_inventory : at_location
+
+    %% ===== RECEIVINGS =====
+    wbpos_suppliers ||--o{ wbpos_receivings : delivers
+    wbpos_employees ||--o{ wbpos_receivings : receives
+    wbpos_receivings ||--o{ wbpos_receivings_items : contains
+    wbpos_items ||--o{ wbpos_receivings_items : received_as
+    wbpos_stock_locations ||--o{ wbpos_receivings_items : to_location
+
+    %% ===== EXPENSES / CASH =====
+    wbpos_expense_categories ||--o{ wbpos_expenses : groups
+    wbpos_employees ||--o{ wbpos_expenses : records
+    wbpos_suppliers ||--o{ wbpos_expenses : related_to
+    wbpos_employees ||--o{ wbpos_cash_up : opens_closes
+
+    wbpos_plans {
+        BIGINT plan_id PK
+        VARCHAR plan_code
+        VARCHAR plan_name
+        DECIMAL price_monthly
+        INT max_users
+        INT max_locations
+        INT max_items
+        TINYINT is_active
+        TIMESTAMP created_at
+    }
+
+    wbpos_tenants {
+        BIGINT tenant_id PK
+        VARCHAR tenant_code
+        VARCHAR company_name
+        VARCHAR status
+        VARCHAR timezone
+        CHAR currency_code
+        VARCHAR db_name
+        VARCHAR template_version
+        DATETIME isolated_at
+        TIMESTAMP created_at
+    }
+
+    wbpos_subscriptions {
+        BIGINT subscription_id PK
+        BIGINT tenant_id FK
+        BIGINT plan_id FK
+        VARCHAR status
+        DATETIME period_start
+        DATETIME period_end
+        TINYINT cancel_at_period_end
+    }
+
+    wbpos_subscription_requests {
+        BIGINT request_id PK
+        VARCHAR company_name
+        VARCHAR tenant_code
+        VARCHAR business_type
+        VARCHAR owner_email
+        VARCHAR owner_username
+        BIGINT plan_id FK
+        VARCHAR payment_token
+        DATETIME email_verified_at
+        VARCHAR status
+        INT reviewed_by_admin_id FK
+    }
+
+    wbpos_platform_admins {
+        INT admin_id PK
+        VARCHAR username
+        VARCHAR full_name
+        VARCHAR email
+        VARCHAR status
+    }
+
+    wbpos_tenant_config {
+        BIGINT tenant_id PK
+        VARCHAR config_key PK
+        TEXT config_value
+    }
+
+    wbpos_tenant_users {
+        BIGINT tenant_id PK
+        INT person_id PK
+        VARCHAR tenant_role
+        TINYINT is_active
+    }
+
+    wbpos_people {
+        INT person_id PK
+        VARCHAR first_name
+        VARCHAR last_name
+        VARCHAR phone_number
+        VARCHAR email
+        VARCHAR address_1
+        VARCHAR city
+        VARCHAR country
+        BIGINT tenant_id FK
+    }
+
+    wbpos_employees {
+        INT person_id PK
+        VARCHAR username
+        VARCHAR password
+        TINYINT hash_version
+        VARCHAR language
+        BIGINT tenant_id FK
+    }
+
+    wbpos_customers {
+        INT person_id PK
+        VARCHAR account_number
+        TINYINT taxable
+        INT points
+        DECIMAL discount
+        INT employee_id FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_suppliers {
+        INT person_id PK
+        VARCHAR company_name
+        VARCHAR agency_name
+        VARCHAR account_number
+        BIGINT tenant_id FK
+    }
+
+    wbpos_items {
+        INT item_id PK
+        VARCHAR name
+        VARCHAR category
+        INT supplier_id FK
+        DECIMAL cost_price
+        DECIMAL unit_price
+        DECIMAL reorder_level
+        BIGINT tenant_id FK
+    }
+
+    wbpos_stock_locations {
+        INT location_id PK
+        VARCHAR location_name
+        BIGINT tenant_id FK
+    }
+
+    wbpos_item_quantities {
+        INT item_id PK
+        INT location_id PK
+        DECIMAL quantity
+        BIGINT tenant_id FK
+    }
+
+    wbpos_inventory {
+        INT trans_id PK
+        INT trans_items FK
+        INT trans_user FK
+        INT trans_location FK
+        DECIMAL trans_inventory
+        BIGINT tenant_id FK
+    }
+
+    wbpos_sales {
+        INT sale_id PK
+        TIMESTAMP sale_time
+        INT customer_id FK
+        INT employee_id FK
+        TINYINT sale_status
+        TINYINT sale_type
+        BIGINT tenant_id FK
+    }
+
+    wbpos_sales_items {
+        INT sale_id PK
+        INT item_id PK
+        INT line PK
+        DECIMAL quantity_purchased
+        DECIMAL item_unit_price
+        INT item_location FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_sales_payments {
+        INT payment_id PK
+        INT sale_id FK
+        VARCHAR payment_type
+        DECIMAL payment_amount
+        INT employee_id FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_receivings {
+        INT receiving_id PK
+        TIMESTAMP receiving_time
+        INT supplier_id FK
+        INT employee_id FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_receivings_items {
+        INT receiving_id PK
+        INT item_id PK
+        INT line PK
+        DECIMAL quantity_purchased
+        INT item_location FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_expense_categories {
+        INT expense_category_id PK
+        VARCHAR category_name
+        BIGINT tenant_id FK
+    }
+
+    wbpos_expenses {
+        INT expense_id PK
+        DECIMAL amount
+        INT expense_category_id FK
+        INT employee_id FK
+        INT supplier_id FK
+        BIGINT tenant_id FK
+    }
+
+    wbpos_cash_up {
+        INT cashup_id PK
+        INT open_employee_id FK
+        INT close_employee_id FK
+        DECIMAL closed_amount_total
+        BIGINT tenant_id FK
+    }
+
+    wbpos_giftcards {
+        INT giftcard_id PK
+        VARCHAR giftcard_number
+        DECIMAL value
+        INT person_id FK
+        BIGINT tenant_id FK
+    }

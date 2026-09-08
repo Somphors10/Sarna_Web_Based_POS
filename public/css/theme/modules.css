@@ -3,15 +3,21 @@
     background: #f8fafc;
     border: 1px solid #dbe4ee;
     border-radius: var(--neo-radius-md);
-    padding: var(--neo-panel-padding);
+    padding: 12px 16px;
 }
 
 .neo-module-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--neo-gap-sm);
-    margin-bottom: var(--neo-gap-sm);
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: nowrap;
+}
+
+.neo-module-header > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .neo-module-title {
@@ -19,6 +25,11 @@
     color: #0f172a;
     font-size: 22px;
     font-weight: 600;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
+    -webkit-hyphens: none;
 }
 
 .neo-module-subtitle {
@@ -27,58 +38,165 @@
     font-size: 12px;
 }
 
+.neo-module-subtitle:empty {
+    display: none;
+}
+
 .neo-module-actions {
     display: flex;
     align-items: center;
     gap: var(--neo-gap-xs);
+    flex-shrink: 0;
+    margin: 0 !important;
 }
 
 .neo-module-actions .btn {
     border-radius: 8px;
 }
 
+/* Active / Deleted — boxed segmented control + divider above toolbar */
 .neo-list-tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 12px;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0;
+    margin: 0;
+    padding: 10px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0; /* line above Delete / Restore */
+    border-radius: 12px 12px 0 0;
+}
+
+.neo-list-tabs__track {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: #eef2f7;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+}
+
+.neo-list-tabs:not(:has(.neo-list-tabs__track)) {
+    gap: 2px;
 }
 
 .neo-list-tab {
-    border: 1px solid #dbe4ee;
-    background: #fff;
-    color: #475569;
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    border: 0;
+    background: transparent;
+    color: #64748b;
     border-radius: 999px;
-    padding: 7px 14px;
+    padding: 7px 18px;
+    margin: 0;
+    min-width: 84px;
     font-size: 13px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: none;
+    outline: none;
+    transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.neo-list-tab::after {
+    display: none;
+    content: none;
 }
 
 .neo-list-tab:hover {
-    border-color: #c4b5fd;
-    color: #5b21b6;
+    color: #334155;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.neo-list-tab:focus,
+.neo-list-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .neo-list-tab.is-active {
-    background: #7c3aed;
-    border-color: #7c3aed;
-    color: #fff;
+    background: #fff;
+    color: #6d28d9;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.neo-list-tab.is-active[data-list="deleted"] {
+    background: #fff;
+    color: #b91c1c;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .neo-table-toolbar {
-    margin-bottom: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
 }
 
 .neo-table-toolbar .btn {
     border-radius: 8px;
 }
 
+.neo-global-content .btn-default,
+.neo-global-content .bootstrap-table .btn-default {
+    border-color: #e2e8f0;
+    color: #475569;
+    background: #fff;
+    box-shadow: none;
+}
+
 .neo-table-holder {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: var(--neo-radius-sm);
-    padding: var(--neo-gap-xs);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Same connected card style as Super Admin feature lists */
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar {
+    margin: 0;
+    padding: 10px 16px;
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-top: 0;
+    border-bottom: 0;
+}
+
+.neo-module-page > .neo-list-tabs + .neo-table-holder,
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar + .neo-table-holder {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 8px 12px 12px;
+    box-shadow: none;
+}
+
+.neo-module-page > .neo-list-tabs + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-module-header + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-module-header + .neo-table-toolbar + .neo-table-holder .bootstrap-table > .fixed-table-toolbar {
+    margin: 0 0 8px;
+    padding: 0 0 8px;
+}
+
+/* Toolbar is moved into the table by bootstrap-table — keep the card on the table only */
+.neo-module-page > .neo-module-header + .neo-table-toolbar {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.neo-module-page > .neo-module-header + .neo-table-toolbar + .neo-table-holder,
+.neo-module-page > .neo-module-header + .neo-table-holder {
+    border-radius: 12px;
 }
 
 /* Shared styling for all feature pages in content area */
@@ -91,11 +209,15 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--neo-gap-xs);
-    margin: var(--neo-gap-sm) 0 var(--neo-gap-sm);
+    gap: var(--neo-gap-xs, 8px);
+    margin: 0;
     padding: 0;
     height: auto;
     min-height: 0;
+}
+
+.neo-global-content .neo-module-header [id="title_bar"] {
+    margin: 0;
 }
 
 .neo-global-content .btn-toolbar {
@@ -587,6 +709,66 @@
 .neo-report-hbar-hint {
     margin-top: 4px;
     margin-bottom: 8px;
+}
+
+.neo-report-pie-caption {
+    max-width: 640px;
+    margin: 4px auto 10px;
+    padding: 0 14px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.neo-report-pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto 16px;
+    padding: 0 14px;
+}
+
+.neo-report-pie-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e8edf4;
+    background: #fff;
+}
+
+.neo-report-pie-legend__dot {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+}
+
+.neo-report-pie-legend__name {
+    flex: 1;
+    min-width: 0;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.neo-report-pie-legend__amount {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.neo-report-pie-legend__pct {
+    min-width: 52px;
+    text-align: right;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .neo-report-pay-item__name {

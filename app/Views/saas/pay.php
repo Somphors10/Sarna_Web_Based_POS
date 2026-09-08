@@ -9,8 +9,8 @@
 $brand_name = esc(lang('Common.software_title'));
 $company = $brand_name;
 $qr_image_exists = is_file(FCPATH . ($qr_image_path ?? 'images/payment/aba-khqr-code.png'));
-$monthly_price = saas_monthly_price((float)($request->price_monthly ?? 0));
-$plan_name = (string)($request->plan_name ?? 'POS');
+$monthly_price = saas_monthly_price((float)($request?->price_monthly ?? 0));
+$plan_name = (string)($request?->plan_name ?? 'POS');
 $field_errors = ($has_errors ?? false) ? $validation->getErrors() : [];
 $invalid = $request === null || (string)($request->status ?? '') !== 'approved';
 ?>
@@ -25,7 +25,7 @@ $invalid = $request === null || (string)($request->status ?? '') !== 'approved';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=33">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=39">
 </head>
 <body class="saas-modern saas-landing-body">
 
@@ -76,25 +76,14 @@ $invalid = $request === null || (string)($request->status ?? '') !== 'approved';
                         <span class="lp-reg__qr-badge">Step 1 · Scan to pay</span>
                         <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                     </div>
-                    <div class="lp-reg__qr-tile">
-                        <div class="lp-reg__qr-tile-inner">
-                            <div class="lp-reg__qr-khqr">KHQR</div>
-                            <?php if ($qr_image_exists): ?>
-                            <img
-                                src="<?= base_url($qr_image_path) ?>?v=4"
-                                alt="Scan this KHQR with ABA on your phone"
-                                width="512"
-                                height="512"
-                            >
-                            <?php else: ?>
-                            <div class="lp-reg__qr-missing">
-                                <p><strong>QR image not found</strong></p>
-                                <p><code>public/images/payment/aba-khqr-code.png</code></p>
-                            </div>
-                            <?php endif; ?>
+                    <?php if ($qr_image_exists): ?>
+                        <?= khqr_scan_card_markup(base_url($qr_image_path) . '?v=8') ?>
+                    <?php else: ?>
+                        <div class="lp-reg__qr-missing">
+                            <p><strong>QR image not found</strong></p>
+                            <p><code>public/images/payment/aba-khqr-code.png</code></p>
                         </div>
-                    </div>
-                    <p class="lp-reg__qr-hint">Open ABA on your phone and scan this picture. Do not type anything to pay.</p>
+                    <?php endif; ?>
                 </div>
             </aside>
 

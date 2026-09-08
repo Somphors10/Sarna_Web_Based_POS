@@ -1,0 +1,699 @@
+﻿
+Warning: PHP Startup: Unable to load dynamic library 'bcmath' (tried: C:\xampp8\php\ext\bcmath (The specified module could not be found), C:\xampp8\php\ext\php_bcmath.dll (The specified module could not be found)) in Unknown on line 0
+=== Common.php (22) ===
+missing	dashboard	Business Dashboard
+missing	dashboard_all_locations	All locations
+missing	dashboard_business_overview	Key metrics and trends for your store.
+missing	dashboard_expenses	Expenses
+missing	dashboard_inventory_value	Inventory Value
+missing	dashboard_items_to_reorder	Items at or below reorder level
+missing	dashboard_last_30_days	Last 30 days
+missing	dashboard_low_stock	Low Stock Items
+missing	dashboard_no_data	No report data available for this period.
+missing	dashboard_period	{0} to {1}
+missing	dashboard_today_sales	Today's Sales
+missing	dashboard_view_report	View full report
+missing	password_strength_label	Password strength
+missing	password_strength_weak	Too easy
+missing	password_strength_fair	Fair
+missing	password_strength_good	Good
+missing	password_strength_excellent	Excellent
+missing	view_details	View details
+missing	no	No
+missing	software_short	WBPOS
+same	website	opensourcepos.org
+missing	yes	Yes
+=== Config.php (296) ===
+missing	address_required	Company address is a required field.
+same	all_set	All file permissions are set correctly!
+missing	allow_duplicate_barcodes	Allow Duplicate Barcodes
+missing	apostrophe	apostrophe
+missing	backup_button	Backup
+missing	backup_database	Backup Database
+missing	barcode	Barcode
+missing	barcode_company	Company Name
+missing	barcode_configuration	Barcode Configuration
+missing	barcode_content	Barcode Content
+missing	barcode_first_row	Row 1
+missing	barcode_font	Font
+missing	barcode_formats	Input Formats
+missing	barcode_generate_if_empty	Generate if empty.
+missing	barcode_height	Height (px)
+missing	barcode_id	Item Id/Name
+missing	barcode_info	Barcode Configuration Information
+missing	barcode_layout	Barcode Layout
+missing	barcode_name	Name
+missing	barcode_number	Barcode
+missing	barcode_number_in_row	Number in row
+missing	barcode_page_cellspacing	Display page cellspacing.
+missing	barcode_page_width	Display page width
+missing	barcode_price	Price
+missing	barcode_second_row	Row 2
+missing	barcode_third_row	Row 3
+missing	barcode_tooltip	Warning: This feature can cause duplicate items to be imported or created. Do not use if you do not want duplicate barcodes.
+missing	barcode_type	Barcode Type
+missing	barcode_width	Width (px)
+missing	bottom	Bottom
+missing	cash_decimals	Cash Decimals
+missing	cash_decimals_tooltip	If Cash Decimals and Currency Decimals are the same then no cash triggered rounding will take place, unless Cash Rounding is set to Half Five.
+missing	cash_rounding	Cash Rounding
+missing	category_dropdown	Show Category as a dropdown
+missing	center	Center
+missing	comma	comma
+missing	company	Company Name
+missing	company_change_image	Change Image
+missing	company_logo	Company Logo
+missing	company_remove_image	Remove Image
+missing	company_required	Company name is a required field
+missing	company_select_image	Select Image
+missing	company_logo_upload_failed	Company logo upload failed. Please choose a PNG, JPG, or GIF image.
+missing	company_logo_hint	Optional. PNG, JPG, or GIF up to 2 MB. Large images are resized automatically.
+missing	company_website_url	Company website is not a valid URL (http://...).
+missing	country_codes	Country Codes
+missing	country_codes_tooltip	Comma separated list of country codes for nominatim address lookup.
+missing	currency_code	Currency Code
+missing	currency_decimals	Currency Decimals
+missing	currency_symbol	Currency Symbol
+missing	customer_reward	Reward
+missing	customer_reward_duplicate	Reward must be unique.
+missing	customer_reward_enable	Enable Customer Rewards
+missing	customer_reward_invalid_chars	Reward can not contain '_'
+missing	customer_reward_required	Reward is a required field
+missing	date_or_time_format	Date and Time Filter
+missing	datetimeformat	Date and Time Format
+missing	decimal_point	Decimal Point
+missing	default_barcode_font_size_number	Default Barcode Font Size must be a number.
+missing	default_barcode_font_size_required	Default Barcode Font Size is a required field.
+missing	default_barcode_height_number	Default Barcode Height must be a number.
+missing	default_barcode_height_required	Default Barcode Height is a required field.
+missing	default_barcode_num_in_row_number	Default Barcode Number in Row must be a number.
+missing	default_barcode_num_in_row_required	Default Barcode Number in Row is a required field.
+missing	default_barcode_page_cellspacing_number	Default Barcode Page Cellspacing must be a number.
+missing	default_barcode_page_cellspacing_required	Default Barcode Page Cellspacing is a required field.
+missing	default_barcode_page_width_number	Default Barcode Page Width must be a number.
+missing	default_barcode_page_width_required	Default Barcode Page Width is a required field.
+missing	default_barcode_width_number	Default Barcode Width must be a number.
+missing	default_barcode_width_required	Default Barcode Width is a required field.
+missing	default_item_columns	Default Visible Item Columns
+missing	default_origin_tax_code	Default Origin Tax Code
+missing	default_receivings_discount	Default Receiving Discount
+missing	default_receivings_discount_number	Default Receiving Discount must be a number.
+missing	default_receivings_discount_required	Default Receiving Discount is a required field.
+missing	default_sales_discount	Default Sales Discount
+missing	default_sales_discount_number	Default Sales Discount must be a number.
+missing	default_sales_discount_required	Default Sales Discount is a required field.
+missing	default_tax_category	Default Tax Category
+missing	default_tax_code	Default Tax Code
+missing	default_tax_jurisdiction	Default Tax Jurisdiction
+missing	default_tax_name_number	Default Tax Name must be a string.
+missing	default_tax_name_required	Default Tax Name is a required field.
+missing	default_tax_rate	Default Tax Rate %
+missing	default_tax_rate_2	Tax 2 Rate
+missing	default_tax_rate_number	Default Tax Rate must be a number.
+missing	default_tax_rate_required	Default Tax Rate is a required field.
+missing	derive_sale_quantity	Allow Derived Sale Quantity
+missing	derive_sale_quantity_tooltip	If checked then a new item type will be provided for items ordered by extended amount
+missing	dinner_table	Table
+missing	dinner_table_duplicate	Table must be unique.
+missing	dinner_table_enable	Enable Dinner Tables
+missing	dinner_table_invalid_chars	Table Name can not contain '_'.
+missing	dinner_table_required	Table is a required field.
+missing	dot	dot
+missing	email	Email
+missing	email_configuration	Email Configuration
+missing	email_mailpath	Path to Sendmail
+missing	email_protocol	Protocol
+missing	email_receipt_check_behaviour	Email Receipt checkbox
+missing	email_receipt_check_behaviour_always	Always checked
+missing	email_receipt_check_behaviour_last	Remember last selection
+missing	email_receipt_check_behaviour_never	Always unchecked
+missing	email_smtp_crypto	SMTP Encryption
+missing	email_smtp_host	SMTP Server
+missing	email_smtp_pass	SMTP Password
+missing	email_smtp_port	SMTP Port
+missing	email_smtp_timeout	SMTP Timeout (s)
+missing	email_smtp_user	SMTP Username
+missing	enforce_privacy	Enforce privacy
+missing	enforce_privacy_tooltip	Protect Customers privacy enforcing data scrambling in case of their data being deleted
+missing	fax	Fax
+missing	financial_year	Fiscal Year Start
+missing	financial_year_apr	1st of April
+missing	financial_year_aug	1st of August
+missing	financial_year_dec	1st of December
+missing	financial_year_feb	1st of February
+missing	financial_year_jan	1st of January
+missing	financial_year_jul	1st of July
+missing	financial_year_jun	1st of June
+missing	financial_year_mar	1st of March
+missing	financial_year_may	1st of May
+missing	financial_year_nov	1st of November
+missing	financial_year_oct	1st of October
+missing	financial_year_sep	1st of September
+missing	floating_labels	Floating Labels
+missing	gcaptcha_enable	Login Page reCAPTCHA
+missing	gcaptcha_secret_key	reCAPTCHA Secret Key
+missing	gcaptcha_secret_key_required	reCAPTCHA Secret Key is a required field
+missing	gcaptcha_site_key	reCAPTCHA Site Key
+missing	gcaptcha_site_key_required	reCAPTCHA Site Key is a required field
+missing	gcaptcha_tooltip	Protect the Login page with Google reCAPTCHA, click the icon for an API key pair.
+missing	general	General
+missing	general_configuration	General Configuration
+missing	giftcard_number	Gift Card Number
+missing	giftcard_random	Generate Random
+missing	giftcard_series	Generate in Series
+missing	image_allowed_file_types	Allowed file types
+missing	image_max_height_tooltip	Maximum allowed height of image uploads in pixels (px).
+missing	image_max_size_tooltip	Maximum allowed file size of image uploads in kilobytes (kb).
+missing	image_max_width_tooltip	Maximum allowed width of image uploads in pixels (px).
+missing	image_restrictions	Image Upload Restrictions
+missing	include_hsn	Include Support for HSN Codes
+missing	info	Information
+missing	info_configuration	Store Information
+missing	input_groups	Input Groups
+missing	integrations	Integrations
+missing	integrations_configuration	Third Party Integrations
+missing	invoice	Invoice
+missing	invoice_configuration	Invoice Print Settings
+missing	invoice_default_comments	Default Invoice Comments
+missing	invoice_email_message	Invoice Email Template
+missing	invoice_enable	Enable Invoicing
+missing	invoice_printer	Invoice Printer
+missing	invoice_type	Invoice Type
+missing	is_readable	is readable, but the permissions are incorrectly set. Please set it to 640 or 660 and refresh.
+missing	jsprintsetup_required	Warning: This functionality will only work if you have the FireFox jsPrintSetup addon installed. Save anyway?
+missing	language	Language
+missing	last_used_invoice_number	Last used Invoice Number
+missing	last_used_quote_number	Last used Quote Number
+missing	last_used_work_order_number	Last used W/O Number
+missing	left	Left
+missing	license	License
+missing	license_configuration	License Statement
+missing	line_sequence	Line Sequence
+missing	lines_per_page	Lines per Page
+missing	lines_per_page_number	Lines per Page must be a number.
+missing	lines_per_page_required	Lines per Page is a required field.
+missing	locale	Localization
+missing	locale_configuration	Localization Configuration
+missing	locale_info	Localization Configuration Information
+missing	location	Stock
+missing	location_configuration	Stock Locations
+missing	location_info	Location Configuration Information
+missing	login_form	Login Form Style
+missing	logout	Do you want to make a backup before logging out? Click [OK] to backup or [Cancel] to logout.
+missing	mailchimp	MailChimp
+missing	mailchimp_api_key	MailChimp API Key
+missing	mailchimp_configuration	MailChimp Configuration
+missing	mailchimp_key_successfully	API Key is valid.
+missing	mailchimp_key_unsuccessfully	API Key is invalid.
+missing	mailchimp_lists	MailChimp List(s)
+missing	mailchimp_tooltip	Click the icon for an API Key.
+missing	message	Message
+missing	message_configuration	Message Configuration
+missing	msg_msg	Saved Text Message
+missing	msg_msg_placeholder	If you wish to use a SMS template save your message here, otherwise leave the box blank.
+missing	msg_pwd	SMS-API Password
+missing	msg_pwd_required	SMS-API Password is a required field
+missing	msg_src	SMS-API Sender ID
+missing	msg_src_required	SMS-API Sender ID is a required field
+missing	msg_uid	SMS-API Username
+missing	msg_uid_required	SMS-API Username is a required field
+missing	multi_pack_enabled	Multiple Packages per Item
+same	no_risk	No security/vulnerability risks.
+missing	none	none
+missing	notify_alignment	Notification Popup Position
+missing	number_format	Number Format
+missing	number_locale	Localization
+missing	number_locale_invalid	The entered locale is invalid. Check the link in the tooltip to find a valid locale.
+missing	number_locale_required	Number Locale is a required field.
+missing	number_locale_tooltip	Find a suitable locale through this link.
+missing	os_timezone	WBPOS Timezone:
+missing	ospos_info	WBPOS Installation Info
+missing	payment_options_order	Payment Options Order
+missing	phone_required	Company Phone is a required field.
+missing	print_bottom_margin	Margin Bottom
+missing	print_bottom_margin_number	Margin Bottom must be a number.
+missing	print_bottom_margin_required	Margin Bottom is a required field.
+missing	print_delay_autoreturn	Autoreturn to Sale delay
+missing	print_delay_autoreturn_number	Autoreturn to Sale delay is a required field.
+missing	print_delay_autoreturn_required	Autoreturn to Sale delay must be a number.
+missing	print_footer	Print Browser Footer
+missing	print_header	Print Browser Header
+missing	print_left_margin	Margin Left
+missing	print_left_margin_number	Margin Left must be a number.
+missing	print_left_margin_required	Margin Left is a required field.
+missing	print_receipt_check_behaviour	Print Receipt checkbox
+missing	print_receipt_check_behaviour_always	Always checked
+missing	print_receipt_check_behaviour_last	Remember last selection
+missing	print_receipt_check_behaviour_never	Always unchecked
+missing	print_right_margin	Margin Right
+missing	print_right_margin_number	Margin Right must be a number.
+missing	print_right_margin_required	Margin Right is a required field.
+missing	print_silently	Show Print Dialog
+missing	print_top_margin	Margin Top
+missing	print_top_margin_number	Margin Top must be a number.
+missing	print_top_margin_required	Margin Top is a required field.
+missing	quantity_decimals	Quantity Decimals
+missing	quote_default_comments	Default Quote Comments
+missing	receipt	Receipt
+missing	receipt_configuration	Receipt Print Settings
+missing	receipt_default	Default
+missing	receipt_font_size	Font Size
+missing	receipt_font_size_number	Font Size must be a number.
+missing	receipt_font_size_required	Font Size is a required field.
+missing	receipt_info	Receipt Configuration Information
+missing	receipt_printer	Ticket Printer
+missing	receipt_short	Short
+missing	receipt_show_company_name	Show Company Name
+missing	receipt_show_description	Show Description
+missing	receipt_show_serialnumber	Show Serial Number
+missing	receipt_show_tax_ind	Show Tax Indicator
+missing	receipt_show_taxes	Show Taxes
+missing	receipt_show_total_discount	Show Total Discount
+missing	receipt_template	Receipt Template
+missing	receiving_calculate_average_price	Calc avg. Price (Receiving)
+missing	recv_invoice_format	Receiving Invoice Format
+missing	register_mode_default	Default Register Mode
+missing	report_an_issue	Report an issue
+missing	return_policy_required	Return policy is a required field.
+missing	reward	Reward
+missing	reward_configuration	Reward Configuration
+missing	right	Right
+missing	sales_invoice_format	Sales Invoice Format
+missing	sales_quote_format	Sales Quote Format
+missing	saved_successfully	Configuration save successful.
+missing	saved_unsuccessfully	Configuration save failed.
+same	security_issue	Security Vulnerability Warning
+same	server_notice	Please use the below info for issue reporting.
+missing	show_office_group	Show office icon
+missing	statistics	Send Statistics
+missing	statistics_tooltip	Send statistics for development and feature improvement purposes.
+missing	stock_location	Stock location
+missing	stock_location_duplicate	Stock Location must be unique.
+missing	stock_location_invalid_chars	Stock Location can not contain '_'.
+missing	stock_location_required	Stock location is a required field.
+missing	suggestions_first_column	Column 1
+missing	suggestions_layout	Search Suggestions Layout
+missing	suggestions_second_column	Column 2
+missing	suggestions_third_column	Column 3
+same	system_conf	Setup & Conf
+same	system_info	System Info
+missing	table	Table
+missing	table_configuration	Table Configuration
+missing	takings_printer	Receipt Printer
+missing	tax	Tax
+missing	tax_category	Tax Category
+missing	tax_category_duplicate	The entered tax category already exists.
+missing	tax_category_invalid_chars	The entered tax category is invalid.
+missing	tax_category_required	The tax category is required.
+missing	tax_category_used	Tax category cannot be deleted because it is being used.
+missing	tax_configuration	Tax Configuration
+missing	tax_decimals	Tax Decimals
+missing	tax_included	Tax Included
+missing	theme	Theme
+missing	theme_preview	Preview Theme:
+missing	thousands_separator	Thousands Separator
+missing	timezone	Timezone
+missing	timezone_error	WBPOS Timezone is Different from your Local Timezone.
+missing	top	Top
+missing	use_destination_based_tax	Use Destination Based Tax
+missing	user_timezone	Local Timezone:
+missing	website	Website
+missing	work_order_enable	Work Order Support
+missing	work_order_format	Work Order Format
+=== Datepicker.php (7) ===
+missing	custom	Custom
+missing	this_year	Current Year
+missing	to	To
+missing	today	Today
+missing	today_last_year	Today Last Year
+missing	weekstart	0
+missing	yesterday	Yesterday
+=== Employees.php (1) ===
+missing	password_strong	Password must be at least 8 characters and include a letter, a number, and a symbol.
+=== Expenses.php (1) ===
+missing	start_typing_supplier_name	Start Typing Supplier's name...
+=== Item_kits.php (5) ===
+missing	discount	Discount
+missing	discount_fixed	Fixed Discount
+missing	discount_type	Discount Type
+missing	item_kit_number	Barcode
+missing	item_kit_number_duplicate	Item Kit Number is already present in the database.
+=== Items.php (3) ===
+missing	cannot_be_deleted	Could not delete selected Item(s), one or more of the selected Items have sales.
+missing	default_pack_name	Each
+missing	hsn_code	Harmonized System Nomenclature
+=== Login.php (3) ===
+missing	awaiting_payment	Your shop is approved, but payment is not complete. Open the KHQR payment link we sent, enter your receipt ID, then try again.
+missing	migration_needed	A database migration to {0} will start after login.
+missing	required_username	The username field is required.
+=== Receivings.php (18) ===
+missing	select_supplier	Select Supplier (Optional)
+missing	ship_pack	Ship Pack
+missing	start_typing_supplier_name	Start Typing Supplier's name...
+missing	stock	Stock
+missing	stock_destination	Stock Destination
+missing	stock_locaiton	Stock Location
+missing	stock_source	Stock Source
+missing	successfully_deleted	You have successfully deleted
+missing	successfully_updated	Receiving successfully updated
+missing	supplier	Supplier
+missing	supplier_address	Address
+missing	supplier_email	Email
+missing	supplier_location	Location
+missing	total	Total
+missing	transaction_failed	Receiving transaction(s) failed.
+missing	unable_to_add_item	Item add to receiving failed.
+missing	unsuccessfully_updated	Receiving update failed.
+missing	update	Update
+=== Reports.php (125) ===
+missing	all	All
+missing	authority	Authority
+missing	canceled	Canceled
+missing	categories	Categories
+missing	categories_summary_report	Categories Summary Report
+missing	category	Category
+missing	code_canceled	CNL
+missing	code_invoice	INV
+missing	code_pos	POS
+missing	code_quote	Q
+missing	code_return	RET
+missing	code_type	Type
+missing	code_work_order	W/O
+missing	comments	Comments
+missing	complete	Completed Sales and Returns
+missing	completed_sales	Completed Sales
+missing	cost	Wholesale
+missing	cost_price	Wholesale Price
+missing	count	Count
+missing	customer	Customer
+missing	customers	Customers
+missing	customers_summary_report	Customers Summary Report
+missing	date	Date
+missing	date_range	Date Range
+missing	description	Description
+missing	detailed_receivings_report	Detailed Receiving Report
+missing	detailed_reports	Detailed Reports
+missing	detailed_sales_report	Detailed Transactions Report
+missing	discount	Discount
+missing	discount_fixed	Fixed Discount
+missing	discount_percent	Discount Percent
+missing	discount_type	Discount Type
+missing	discounts	Discounts
+missing	discounts_summary_report	Discounts Summary Report
+missing	earned	Points Earned
+missing	employee	Employee
+missing	employees	Employees
+missing	employees_summary_report	Employees Summary Report
+missing	expenses	Expenses
+missing	expenses_amount	Amount
+missing	expenses_categories	Expenses
+missing	expenses_categories_summary_report	Expense Categories Summary Report
+missing	expenses_category	Category
+missing	expenses_tax_amount	Tax
+missing	expenses_total_amount	Total Amount
+missing	expenses_total_tax_amount	Total Tax
+missing	graphical_reports	Graphical Reports
+missing	inventory	Inventory
+missing	inventory_low	Low Inventory
+missing	inventory_low_report	Low Inventory Report
+missing	inventory_reports	Inventory Reports
+missing	inventory_summary	Inventory Summary
+missing	inventory_summary_report	Inventory Summary Report
+missing	item_count	Filter Item Count
+missing	item_name	Item Name
+missing	item_number	Barcode
+missing	items	Items
+missing	items_purchased	Items Purchased
+missing	items_received	Items Received
+missing	items_summary_report	Items Summary Report
+missing	jurisdiction	Jurisdiction
+missing	low_sell_quantity	Low Sell Qty
+missing	more_than_zero	More than zero
+missing	name	Name
+missing	no_reports_to_display	No Items to display.
+missing	payment_type	Payment Type
+missing	payments	Payments
+missing	payments_summary_report	Payments Summary Report
+missing	profit	Profit
+missing	quantity	Quantity
+missing	quantity_purchased	Quantity Purchased
+missing	quotes	Quotes
+missing	received_by	Received By
+missing	receiving_id	Receiving ID
+missing	receiving_type	Receiving Type
+missing	reorder_level	Reorder Level
+missing	report	Report
+missing	report_input	Report Input
+missing	reports	Reports
+missing	requisitions	Requisitions
+missing	returns	Returns
+missing	sale_id	Trans. ID
+missing	sale_type	Transaction Type
+missing	sales	Transactions
+missing	sales_amount	Transactions amount
+missing	sales_summary_report	Transactions Summary Report
+missing	sales_taxes	Sales Taxes
+missing	sales_taxes_summary_report	Sales Taxes Summary Report
+missing	serial_number	Serial Number
+missing	sold_by	Sold By
+missing	sold_to	Sold To
+missing	stock_location	Stock Location
+missing	sub_total_value	Subtotal
+missing	subtotal	Subtotal
+missing	summary_reports	Summary Reports
+missing	supplied_by	Supplied by
+missing	supplier	Supplier
+missing	suppliers	Suppliers
+missing	suppliers_summary_report	Suppliers Summary Report
+missing	tax	Tax
+missing	tax_category	Tax Category
+missing	tax_name	Tax Name
+missing	tax_percent	Tax Percent
+missing	tax_rate	Tax Rate
+missing	taxes	Taxes
+missing	taxes_summary_report	Taxes Summary Report
+missing	total	Total
+missing	total_inventory_value	Total Inventory Value
+missing	total_low_sell_quantity	Total Low Sell Quantity
+same	total_quantity	Total Quantity
+same	total_retail	Total Inv. Retail Value
+missing	trans_amount	Transaction Amount
+missing	trans_due	Due
+missing	trans_group	Transaction Group
+missing	trans_nopay_sales	Sales with no payment
+missing	trans_payments	Payments
+missing	trans_refunded	Refunded
+missing	trans_sales	Sales
+missing	trans_type	Transaction Type
+missing	type	Type
+missing	unit_price	Retail Price
+missing	used	Points Used
+missing	work_orders	Work Orders
+missing	zero_and_less	Zero and less
+missing	toggle_cost_and_profit	Toggle Cost & Profit
+=== Sales.php (129) ===
+missing	customer_mailchimp_status	MailChimp Status
+missing	group_by_category	Group by Category
+missing	group_by_type	Group by Type
+missing	hsn	HSN
+missing	id	Sale ID
+missing	include_prices	Include Prices?
+missing	invoice	Invoice
+missing	invoice_confirm	This invoice will be sent to
+missing	invoice_enable	Invoice Number
+missing	invoice_filter	Invoices
+missing	invoice_no_email	This customer does not have a valid email address.
+missing	invoice_number	Invoice #
+missing	invoice_number_duplicate	Invoice Number {0} must be unique.
+missing	invoice_sent	Invoice sent to
+missing	invoice_total	Invoice Total
+missing	invoice_type_custom_invoice	Custom Invoice (custom_invoice.php)
+missing	invoice_type_custom_tax_invoice	Custom Tax Invoice (custom_tax_invoice.php)
+missing	invoice_type_invoice	Invoice (invoice.php)
+missing	invoice_type_tax_invoice	Tax Invoice (tax_invoice.php)
+missing	invoice_unsent	Invoice failed to be sent to
+missing	invoice_update	Recount
+missing	item_insufficient_of_stock	Item has insufficient stock.
+missing	item_name	Item Name
+missing	item_number	Item #
+missing	item_out_of_stock	Item is out of stock.
+missing	key_browser	Helpful Shortcuts
+same	key_cancel	Cancels Current Quote/Invoice/Sale
+same	key_customer_search	Customer Search
+same	key_finish_sale	Add Payment and Complete Invoice/Sale
+missing	key_full	Open in Full Screen Mode
+same	key_function	Function
+same	key_help	Shortcuts
+same	key_help_modal	Open Shortcuts Window
+missing	key_in	Zoom in
+same	key_item_search	Item Search
+missing	key_out	Zoom Out
+same	key_payment	Add Payment
+missing	key_print	Print Current Page
+missing	key_restore	Restore Original Display/Zoom
+missing	key_search	Search Reports Tables
+same	key_suspend	Suspend Current Sale
+same	key_suspended	Show Suspended Sales
+missing	key_system	System Shortcuts
+same	key_tendered	Edit Amount Tendered
+same	key_title	Sales Keyboard Shortcuts
+missing	mode	Register Mode
+missing	must_enter_numeric	Amount Tendered must be a number.
+missing	must_enter_numeric_giftcard	Gift Card Number must be a number.
+missing	new_customer	New Customer
+missing	new_item	New Item
+missing	no_description	No description
+missing	no_filter	All
+missing	no_items_in_cart	There are no Items in the cart.
+missing	no_sales_to_display	No Sales to display.
+missing	none_selected	You have not selected any Sale(s) to delete.
+missing	not_authorized	This action is not authorized.
+missing	one_or_multiple	Sale(s)
+missing	payment	Payment Type
+missing	payment_amount	Amount
+missing	payment_not_cover_total	Payment Amount must be greater than or equal to Total.
+missing	payment_type	Type
+missing	payments_total	Payments Total
+missing	price	Price
+missing	print_after_sale	Print after Sale
+missing	quantity	Quantity
+missing	quantity_less_than_reorder_level	Warning: Desired Quantity is below Reorder Level for that Item.
+missing	quantity_less_than_zero	Warning: Desired Quantity is insufficient. You can still process the sale, but audit your inventory.
+missing	quantity_of_items	Quantity of {0} Items
+missing	quote	Quote
+missing	quote_number	Quote Number
+missing	quote_number_duplicate	Quote Number must be unique.
+missing	quote_sent	Quote sent to
+missing	quote_unsent	Quote failed to be sent to
+missing	receipt_no_email	This customer does not have a valid email address.
+missing	receipt_number	Sale #
+missing	receipt_sent	Receipt sent to
+missing	receipt_unsent	Receipt failed to be sent to
+missing	refund	Refund Type
+missing	register	Sales Register
+missing	remove_customer	Remove Customer
+missing	return	Return
+missing	rewards	Reward Points
+missing	rewards_balance	Reward Points Balance
+missing	sale	Sale
+missing	sale_by_invoice	Sale by Invoice
+missing	sale_for_customer	Customer:
+missing	sale_time	Time
+missing	sales_tax	VAT
+missing	select_customer	Select Customer
+missing	selected_customer	Selected Customer
+missing	send_invoice	Send Invoice
+missing	send_quote	Send Quote
+missing	send_receipt	Send Receipt
+missing	send_work_order	Send Work Order
+missing	serial	Serial
+missing	show_invoice	Show Invoice
+missing	show_receipt	Show Receipt
+missing	start_typing_customer_name	Start typing customer details...
+missing	start_typing_item_name	Start typing Item Name or scan Barcode...
+missing	stock	Stock
+missing	stock_location	Stock Location
+missing	successfully_deleted	You have successfully deleted
+missing	successfully_restored	You have successfully restored
+missing	successfully_suspended_sale	Sale suspend successful.
+missing	successfully_updated	Sale update successful.
+missing	suspend_sale	Suspend
+missing	suspended_doc_id	Document
+missing	suspended_sale_id	ID
+missing	suspended_sales	Suspended
+missing	table	Table
+missing	takings	Daily Sales
+missing	tax	Tax
+missing	tax_percent	Tax %
+missing	taxed_ind	T
+missing	total_tax_exclusive	Tax excluded
+missing	transaction_failed	Sales Transaction failed.
+missing	unsuccessfully_deleted	Sale(s) delete failed.
+missing	unsuccessfully_restored	Sale(s) restore failed.
+missing	unsuccessfully_suspended_sale	Sale suspend failed.
+missing	unsuccessfully_updated	Sale update failed.
+missing	unsuspend	Unsuspend
+missing	unsuspend_and_delete	Action
+missing	update	Update
+missing	upi	UPI
+missing	work_order	Work Order
+missing	work_order_number	Work Order Number
+missing	work_order_number_duplicate	Work Order Number must be unique.
+missing	work_order_sent	Work Order sent to
+missing	work_order_unsent	Work Order failed to be sent to
+=== Taxes.php (74) ===
+missing	add_exception	Add Exception
+missing	cascade	Cascade
+missing	cascade_sequence	Cascade Sequence
+missing	code	Code
+missing	default_tax_category	Default Tax Category
+missing	default_tax_rate	Default Tax Rate
+missing	error_adding_updating	Tax Code add or update failed
+missing	group_seq	Group Seq
+missing	jurisdiction_name	Jurisdiction Name
+missing	name	Name
+missing	new	New Tax
+missing	no_taxes_to_display	No Taxes Code available to display
+missing	reporting_authority	Reporting Authority
+missing	round_half_down	Half Down
+missing	round_half_even	Half Even
+missing	round_half_odd	Half Odd
+missing	round_half_up	Half Up
+missing	rounding_code	Rounding Code
+missing	sales_tax	Sales Tax
+missing	sales_tax_by_invoice	Sales Tax by Invoice
+missing	sequence	Seq.
+missing	successful_deleted	You have successfully deleted
+missing	tax_categories	Tax Categories
+missing	tax_categories_configuration	Tax Categories Configuration
+missing	tax_categories_saved_successfully	Tax Categories changes saved
+missing	tax_categories_saved_unsuccessfully	Tax Categories changes not saved
+missing	tax_category	Tax Category
+missing	tax_category_code	Tax Category Code
+missing	tax_category_duplicate	Duplicate tax category
+missing	tax_category_invalid_chars	Invalid characters in tax category name
+missing	tax_category_name	Tax Category Name
+missing	tax_category_new	New Tax Category
+missing	tax_category_required	Tax Category is Required
+missing	tax_code	Tax Code
+missing	tax_code_cannot_be_deleted	Tax Code delete failed
+missing	tax_code_duplicate	Duplicate Tax Code
+missing	tax_code_invalid_chars	Invalid Characters in Tax Code
+missing	tax_code_name	Tax Code Name
+missing	tax_code_required	Tax Code is a required field
+missing	tax_code_successful_deleted	You have successfully deleted Tax Code
+missing	tax_code_successful_updated	You have successfully updated
+missing	tax_code_successful_updating	You have successfully updated Tax Code
+missing	tax_code_successfully_added	You have successfully added
+missing	tax_code_type	Tax Code Type
+missing	tax_codes	Tax Codes
+missing	tax_codes_configuration	Tax Codes Configuration
+missing	tax_codes_saved_successfully	Tax Code changes saved
+missing	tax_codes_saved_unsuccessfully	Tax Code changes not saved
+missing	tax_excluded	Tax excluded
+missing	tax_group	Tax Group
+missing	tax_group_not_unique	Tax Group {0} is not unique
+missing	tax_group_sequence	Tax Group Sequence
+missing	tax_included	Tax included
+missing	tax_jurisdiction	Tax Jurisdiction
+missing	tax_jurisdiction_duplicate	Duplicate Tax Jurisdiction
+missing	tax_jurisdiction_invalid_chars	Invalid Characters in Jurisdiction Name
+missing	tax_jurisdiction_required	Tax jurisdiction is required
+missing	tax_jurisdictions	Tax Jurisdictions
+missing	tax_jurisdictions_configuration	Tax Jurisdictions Configuration
+missing	tax_jurisdictions_saved_successfully	Tax Jurisdiction changes saved
+missing	tax_jurisdictions_saved_unsuccessfully	Tax Jurisdiction changes not saved
+missing	tax_rate	Tax Rate
+missing	tax_rate_configuration	Tax Rate Configuration
+missing	tax_rate_error_adding_updating	Tax Rate add or update failed
+missing	tax_rate_numeric	Tax Rate must be a number
+missing	tax_rate_required	Tax Rate is a required field
+missing	tax_rate_successful_updated	You have successfully updated
+missing	tax_rate_successfully_added	You have successfully added
+missing	tax_rates	Tax Rates
+missing	tax_rates_configuration	Tax Rates Configuration
+missing	tax_rounding	Tax Rounding
+missing	tax_type	Tax Type
+missing	update	Update Tax Rate
+missing	vat_tax	VAT Tax
+TOTAL=684

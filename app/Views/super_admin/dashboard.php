@@ -65,7 +65,9 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=42') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=45') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=3') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=2') ?>">
     <style>
         .sa-mail { display:grid; gap:16px; max-width:920px; }
         .sa-mail-hero { display:flex; gap:16px; align-items:center; padding:20px 22px; border-radius:16px; border:1px solid #e2e8f0; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.04); }
@@ -95,6 +97,198 @@ $format_relative_time = static function (?string $value): string {
         .sa-mail-help { margin:0 0 12px; color:#7c3aed; font-size:.82rem; font-weight:700; text-decoration:none; }
         .sa-mail-help:hover { text-decoration:underline; }
         .sa-mail .sa-btn { height:42px; width:100%; border-radius:10px; }
+        .sa-modal--pos-password {
+            width: min(560px, 100%);
+            border: 1px solid #e9d5ff;
+            border-radius: 10px;
+            box-shadow: 0 12px 40px rgba(124, 58, 237, 0.1);
+            overflow: hidden;
+        }
+        .sa-pos-password__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            background: #f5f3ff;
+            border-bottom: 1px solid #ddd6fe;
+        }
+        .sa-pos-password__title {
+            margin: 0;
+            color: #5b21b6;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .sa-pos-password__close {
+            border: 0;
+            background: transparent;
+            color: #7c3aed;
+            font-size: 1.5rem;
+            line-height: 1;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .sa-pos-password__close:hover,
+        .sa-pos-password__close:focus {
+            opacity: 1;
+            color: #6d28d9;
+        }
+        .sa-pos-password__body {
+            padding: 16px 18px 8px;
+            background: #fff;
+        }
+        .sa-pos-password__required {
+            margin: 0 0 14px;
+            font-style: italic;
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+        .sa-change-password__error {
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+        .sa-pos-password__row {
+            display: grid;
+            grid-template-columns: minmax(120px, 28%) minmax(0, 1fr);
+            gap: 10px 12px;
+            align-items: start;
+            margin-bottom: 14px;
+        }
+        .sa-pos-password__label {
+            padding-top: 8px;
+            text-align: right;
+            color: #334155;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .sa-pos-password__label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+        .sa-pos-input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .sa-pos-input-group:focus-within {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+        }
+        .sa-pos-input-group__addon {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            flex-shrink: 0;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            color: #475569;
+        }
+        .sa-pos-input-group__addon svg {
+            width: 16px;
+            height: 16px;
+        }
+        .sa-pos-input-group__input {
+            flex: 1 1 auto;
+            min-width: 0;
+            border: 0;
+            outline: none;
+            padding: 8px 10px;
+            font-size: 0.92rem;
+            color: #0f172a;
+            background: #fff;
+        }
+        .sa-pos-input-group__input[readonly] {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .sa-pos-password__help {
+            margin: 6px 0 0;
+            color: #64748b;
+            font-size: 0.82rem;
+        }
+        .sa-pos-password__footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-top: 1px solid #e2e8f0;
+        }
+        .sa-pos-password__submit {
+            min-width: 96px;
+            height: 38px;
+            padding: 0 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #7c3aed;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        .sa-pos-password__submit:hover,
+        .sa-pos-password__submit:focus {
+            background: #6d28d9;
+        }
+        .sa-pos-password__submit:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+        .sa-pos-input-group.input-group {
+            display: flex;
+        }
+        .sa-pos-input-group .password-toggle__addon,
+        .sa-pos-input-group > .input-group-addon.password-toggle__addon {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            flex-shrink: 0;
+            background: #f8fafc;
+            border: 0;
+            border-left: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 0;
+        }
+        .sa-pos-input-group .password-toggle__btn {
+            width: 100%;
+            height: 100%;
+            min-height: 36px;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            padding: 0;
+        }
+        .sa-pos-input-group .password-toggle__btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .sa-pos-input-group__input.form-control {
+            box-shadow: none;
+            border-radius: 0;
+            height: auto;
+        }
+        @media (max-width: 560px) {
+            .sa-pos-password__row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            .sa-pos-password__label {
+                text-align: left;
+                padding-top: 0;
+            }
+        }
         @media (max-width:860px) {
             .sa-mail-hero { align-items:flex-start; }
             .sa-mail-steps, .sa-mail-grid { grid-template-columns:1fr; }
@@ -222,6 +416,9 @@ $format_relative_time = static function (?string $value): string {
     if (service('request')->getGet('verify_sent') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'Verification email sent to the owner. They must click the link in Gmail.'];
     }
+    if (service('request')->getGet('password_changed') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Password changed successfully.'];
+    }
 
     $gmail_error = trim((string)session()->getFlashdata('gmail_error'));
     if ($gmail_error !== '') {
@@ -235,6 +432,7 @@ $format_relative_time = static function (?string $value): string {
         'verify_not_sent' => 'Could not send the verify email. Save Gmail on Email settings, then send again.',
         'tenant_or_user_exists' => 'Tenant code or owner username already exists.',
         'approve_failed' => 'Could not approve the request. Please try again.',
+        'reject_comment_required' => 'Enter a rejection reason (at least 3 characters).',
         'feature_update_failed' => 'Could not update the feature. Please try again.',
         'isolate_failed' => 'Could not create a private database for this shop. Check MySQL CREATE DATABASE privileges.',
         'feature_update_failed' => 'Could not update this feature. Try again.',
@@ -265,7 +463,7 @@ $format_relative_time = static function (?string $value): string {
 
     $notification_items = [];
     foreach ($subscription_requests as $request) {
-        $owner = trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? ''));
+        $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
         $notification_items[] = [
             'type' => 'registration',
             'id' => (int)$request['request_id'],
@@ -354,6 +552,7 @@ $format_relative_time = static function (?string $value): string {
                             </div>
                         </div>
                         <div class="sa-dropdown__menu">
+                            <a class="sa-dropdown__menu-item" href="#" id="sa_change_password_btn" role="button">Change Password</a>
                             <a class="sa-dropdown__menu-item" href="<?= site_url('super-admin/admins') ?>">Platform Admins</a>
                             <a class="sa-dropdown__menu-item js-super-admin-logout" href="<?= site_url('super-admin/logout') ?>">Logout</a>
                         </div>
@@ -496,50 +695,6 @@ $format_relative_time = static function (?string $value): string {
 
         <section class="sa-panel">
             <div class="sa-panel__head">
-                <h2 class="sa-panel__title">Architecture</h2>
-                <p class="sa-panel__subtitle">Master POS template is shared. Each shop can have a private database so sales and stock never mix.</p>
-            </div>
-            <div class="sa-panel__body">
-                <div class="sa-metrics sa-metrics--status">
-                    <div class="sa-metric sa-metric--active">
-                        <div class="sa-metric__top">
-                            <span class="sa-metric__dot"></span>
-                            <span class="sa-metric__label">Private DBs</span>
-                        </div>
-                        <div class="sa-metric__value"><?= $isolated_tenants ?></div>
-                        <div class="sa-metric__hint">Isolated shop databases</div>
-                    </div>
-                    <div class="sa-metric sa-metric--suspended">
-                        <div class="sa-metric__top">
-                            <span class="sa-metric__dot"></span>
-                            <span class="sa-metric__label">Shared fallback</span>
-                        </div>
-                        <div class="sa-metric__value"><?= $shared_tenants ?></div>
-                        <div class="sa-metric__hint">Still on the platform database</div>
-                    </div>
-                    <div class="sa-metric sa-metric--cancelled">
-                        <div class="sa-metric__top">
-                            <span class="sa-metric__dot"></span>
-                            <span class="sa-metric__label">Template</span>
-                        </div>
-                        <div class="sa-metric__value">v<?= esc($template_meta['template_version'] ?? '1') ?></div>
-                        <div class="sa-metric__hint"><?= !empty($template_meta['last_sync_at']) ? 'Last sync ' . esc($template_meta['last_sync_at']) : 'Not synced yet' ?></div>
-                    </div>
-                </div>
-                <div class="sa-template-actions">
-                    <?= form_open('super-admin/isolate-tenants') ?>
-                        <button class="sa-btn sa-btn--primary" type="submit">Create private databases for all shops</button>
-                    <?= form_close() ?>
-                    <?= form_open('super-admin/sync-template') ?>
-                        <button class="sa-btn sa-btn--ghost" type="submit">Sync / Deploy template</button>
-                    <?= form_close() ?>
-                    <a class="sa-btn sa-btn--ghost" href="<?= site_url('super-admin/plans') ?>">Assign plan features</a>
-                </div>
-            </div>
-        </section>
-
-        <section class="sa-panel">
-            <div class="sa-panel__head">
                 <h2 class="sa-panel__title">Quick Actions</h2>
                 <p class="sa-panel__subtitle">Jump to the pages you use most often.</p>
             </div>
@@ -562,16 +717,6 @@ $format_relative_time = static function (?string $value): string {
                         <span class="sa-action-card__text">
                             <strong>Manage Businesses<?= $suspended_tenants > 0 ? ' (' . $suspended_tenants . ' suspended)' : '' ?></strong>
                             <span>Update tenant status and view owner accounts.</span>
-                        </span>
-                        <span class="sa-action-card__arrow" aria-hidden="true">→</span>
-                    </a>
-                    <a class="sa-action-card" href="<?= site_url('items') ?>">
-                        <span class="sa-action-card__icon sa-action-card__icon--purple" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                        </span>
-                        <span class="sa-action-card__text">
-                            <strong>POS Features</strong>
-                            <span>Open Items, Sales, Customers, and every Admin screen.</span>
                         </span>
                         <span class="sa-action-card__arrow" aria-hidden="true">→</span>
                     </a>
@@ -622,7 +767,7 @@ $format_relative_time = static function (?string $value): string {
                             <td data-label="Shop ID"><?= esc($tenant['tenant_id']) ?></td>
                             <td data-label="Code"><?= esc($tenant['tenant_code']) ?></td>
                             <td data-label="Company"><?= esc($tenant['company_name']) ?></td>
-                            <td data-label="Owner"><?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? ''))) ?></td>
+                            <td data-label="Owner"><?= esc(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? '')) ?></td>
                             <td data-label="Username"><?= esc($tenant['username'] ?? '') ?></td>
                             <td data-label="Status"><span class="sa-status sa-status--<?= esc($status === 'awaiting_payment' ? 'pending' : $status) ?>"><?= esc($status === 'awaiting_payment' ? 'Awaiting payment' : $tenant['status']) ?></span></td>
                             <td data-label="Action">
@@ -639,7 +784,7 @@ $format_relative_time = static function (?string $value): string {
                                             data-city="<?= esc((string)($tenant['city'] ?? ''), 'attr') ?>"
                                             data-country="<?= esc((string)($tenant['country'] ?? ''), 'attr') ?>"
                                             data-tax="<?= esc((string)($tenant['tax_id'] ?? ''), 'attr') ?>"
-                                            data-owner="<?= esc(trim(($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '')), 'attr') ?>"
+                                            data-owner="<?= esc(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? ''), 'attr') ?>"
                                             data-email="<?= esc((string)($tenant['email'] ?? $tenant['owner_email'] ?? ''), 'attr') ?>"
                                             data-phone="<?= esc((string)($tenant['phone_number'] ?? $tenant['owner_phone'] ?? ''), 'attr') ?>"
                                             data-username="<?= esc((string)($tenant['username'] ?? $tenant['owner_username'] ?? ''), 'attr') ?>"
@@ -825,7 +970,7 @@ $format_relative_time = static function (?string $value): string {
                             <td><?= esc($request['request_id']) ?></td>
                             <td><?= esc($request['tenant_code']) ?></td>
                             <td><?= esc($request['company_name']) ?></td>
-                            <td><?= esc($request['owner_first_name'] . ' ' . $request['owner_last_name']) ?></td>
+                            <td><?= esc(format_person_name($request['owner_first_name'], $request['owner_last_name'])) ?></td>
                             <td><?= esc($request['owner_email']) ?></td>
                             <td><?= esc($request['plan_name'] ?? '') ?></td>
                             <td>
@@ -842,7 +987,7 @@ $format_relative_time = static function (?string $value): string {
                                             data-city="<?= esc($request['city'] ?? '', 'attr') ?>"
                                             data-country="<?= esc($request['country'] ?? '', 'attr') ?>"
                                             data-tax="<?= esc($request['tax_id'] ?? '', 'attr') ?>"
-                                            data-owner="<?= esc(trim($request['owner_first_name'] . ' ' . $request['owner_last_name']), 'attr') ?>"
+                                            data-owner="<?= esc(format_person_name($request['owner_first_name'], $request['owner_last_name']), 'attr') ?>"
                                             data-email="<?= esc($request['owner_email'], 'attr') ?>"
                                             data-phone="<?= esc($request['owner_phone'] ?? '', 'attr') ?>"
                                             data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
@@ -862,6 +1007,7 @@ $format_relative_time = static function (?string $value): string {
                                         'data-action' => 'reject',
                                         'data-context' => 'registration',
                                     ]) ?>
+                                    <input type="hidden" name="reject_comment" class="js-reject-comment-field" value="">
                                     <button class="sa-btn sa-btn--danger" type="submit">Reject</button>
                                     <?= form_close() ?>
                                 </div>
@@ -911,15 +1057,16 @@ $format_relative_time = static function (?string $value): string {
                             $history_badge = $history_status === 'rejected'
                                 ? 'cancelled'
                                 : ($history_paid ? 'active' : 'pending');
+                            $rejection_reason = saas_rejection_reason($request['notes'] ?? '');
                         ?>
                         <tr class="js-searchable-row"
                             data-group="history"
                             data-status="<?= esc($history_status) ?>"
-                            data-search="<?= esc(strtolower(trim(($request['company_name'] ?? '') . ' ' . ($request['tenant_code'] ?? '') . ' ' . ($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '') . ' ' . ($request['owner_email'] ?? '') . ' ' . ($request['plan_name'] ?? '') . ' ' . ($request['payment_reference'] ?? '') . ' ' . ($request['status'] ?? '') . ' ' . ($request['city'] ?? '') . ' ' . ($request['tax_id'] ?? '')))) ?>">
+                            data-search="<?= esc(strtolower(trim(($request['company_name'] ?? '') . ' ' . ($request['tenant_code'] ?? '') . ' ' . ($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '') . ' ' . ($request['owner_email'] ?? '') . ' ' . ($request['plan_name'] ?? '') . ' ' . ($request['payment_reference'] ?? '') . ' ' . ($request['status'] ?? '') . ' ' . ($request['city'] ?? '') . ' ' . ($request['tax_id'] ?? '') . ' ' . $rejection_reason))) ?>">
                             <td><?= esc($request['request_id']) ?></td>
                             <td><?= esc($request['tenant_code']) ?></td>
                             <td><?= esc($request['company_name']) ?></td>
-                            <td><?= esc(trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? ''))) ?></td>
+                            <td><?= esc(format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '')) ?></td>
                             <td><?= esc($request['owner_email']) ?></td>
                             <td><?= esc($request['plan_name'] ?? '') ?></td>
                             <td><?= $history_paid ? esc($request['payment_reference']) : '—' ?></td>
@@ -942,13 +1089,14 @@ $format_relative_time = static function (?string $value): string {
                                         data-city="<?= esc($request['city'] ?? '', 'attr') ?>"
                                         data-country="<?= esc($request['country'] ?? '', 'attr') ?>"
                                         data-tax="<?= esc($request['tax_id'] ?? '', 'attr') ?>"
-                                        data-owner="<?= esc(trim(($request['owner_first_name'] ?? '') . ' ' . ($request['owner_last_name'] ?? '')), 'attr') ?>"
+                                        data-owner="<?= esc(format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? ''), 'attr') ?>"
                                         data-email="<?= esc($request['owner_email'] ?? '', 'attr') ?>"
                                         data-phone="<?= esc($request['owner_phone'] ?? '', 'attr') ?>"
                                         data-username="<?= esc($request['owner_username'] ?? '', 'attr') ?>"
                                         data-plan="<?= esc($request['plan_name'] ?? '', 'attr') ?>"
                                         data-payment="<?= esc($request['payment_reference'] ?? '', 'attr') ?>"
                                         data-status="<?= esc($request['status'] ?? '', 'attr') ?>"
+                                        data-reason="<?= esc($rejection_reason, 'attr') ?>"
                                         data-created="<?= esc($format_request_date($request['created_at'] ?? ''), 'attr') ?>">
                                     View
                                 </button>
@@ -1098,10 +1246,35 @@ $format_relative_time = static function (?string $value): string {
 </div>
 
 <div id="request-action-confirm" class="sa-modal-overlay" aria-hidden="true">
-    <div class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="request-action-confirm-title">
-        <div class="sa-modal__head" id="request-action-confirm-title">Confirm action</div>
-        <div class="sa-modal__body" id="request-action-confirm-message">Are you sure?</div>
-        <div class="sa-modal__actions">
+    <div class="sa-modal sa-modal--action" role="dialog" aria-modal="true" aria-labelledby="request-action-confirm-title">
+        <div class="sa-modal__head sa-modal__head--action">
+            <div class="sa-modal__head-row">
+                <span class="sa-modal__icon sa-modal__icon--danger" id="request-action-confirm-icon" hidden aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 8v4"></path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                </span>
+                <h3 class="sa-modal__title" id="request-action-confirm-title">Confirm action</h3>
+            </div>
+        </div>
+        <div class="sa-modal__body sa-modal__body--action">
+            <p class="sa-modal__message" id="request-action-confirm-message">Are you sure?</p>
+            <div id="request-action-reject-comment-wrap" class="sa-reject-comment" hidden>
+                <label class="sa-reject-comment__label" for="request-action-reject-comment">Rejection reason</label>
+                <textarea
+                    id="request-action-reject-comment"
+                    class="sa-reject-comment__input"
+                    rows="4"
+                    maxlength="500"
+                    placeholder="Tell the owner why this signup was rejected."
+                ></textarea>
+                <p class="sa-reject-comment__helper">Required. Saved in Registration History when you click Reject.</p>
+                <p class="sa-reject-comment__hint" id="request-action-reject-comment-error" hidden>Enter at least 3 characters.</p>
+            </div>
+        </div>
+        <div class="sa-modal__actions sa-modal__actions--action">
             <button type="button" class="sa-btn sa-btn--ghost" id="request-action-confirm-cancel">Cancel</button>
             <button type="button" class="sa-btn sa-btn--primary" id="request-action-confirm-continue">Confirm</button>
         </div>
@@ -1126,6 +1299,72 @@ $format_relative_time = static function (?string $value): string {
         <div class="sa-modal__actions">
             <button type="button" class="sa-btn sa-btn--ghost" id="logout-confirm-cancel">Cancel</button>
             <button type="button" class="sa-btn sa-btn--danger-solid" id="logout-confirm-continue">Logout</button>
+        </div>
+    </div>
+</div>
+
+<div id="sa-change-password" class="sa-modal-overlay" aria-hidden="true">
+    <div class="sa-modal sa-modal--pos-password" role="dialog" aria-modal="true" aria-labelledby="sa-change-password-title">
+        <div class="sa-pos-password__header">
+            <h3 class="sa-pos-password__title" id="sa-change-password-title">Change Password</h3>
+            <button type="button" class="sa-pos-password__close" id="sa-change-password-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="sa-pos-password__body">
+            <p class="sa-pos-password__required"><?= lang('Common.fields_required_message') ?></p>
+            <p class="sa-change-password__error" id="sa-change-password-error" hidden></p>
+            <?= form_open('super-admin/changepassword', ['id' => 'sa_change_password_form', 'class' => 'sa-pos-password-form form-horizontal']) ?>
+                <div class="sa-pos-password__row">
+                    <label class="sa-pos-password__label required" for="sa_cp_username"><?= lang('Employees.username') ?></label>
+                    <div class="sa-pos-password__field">
+                        <div class="sa-pos-input-group">
+                            <span class="sa-pos-input-group__addon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </span>
+                            <input class="sa-pos-input-group__input" id="sa_cp_username" name="username" type="text" value="<?= esc($admin_username, 'attr') ?>" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sa-pos-password__row">
+                    <label class="sa-pos-password__label" for="sa_cp_current"><?= lang('Employees.current_password') ?></label>
+                    <div class="sa-pos-password__field">
+                        <div class="sa-pos-input-group input-group">
+                            <span class="sa-pos-input-group__addon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </span>
+                            <input class="sa-pos-input-group__input form-control" id="sa_cp_current" name="current_password" type="password" autocomplete="current-password" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sa-pos-password__row">
+                    <label class="sa-pos-password__label" for="sa_cp_password"><?= lang('Employees.password') ?></label>
+                    <div class="sa-pos-password__field">
+                        <div class="sa-pos-input-group input-group">
+                            <span class="sa-pos-input-group__addon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </span>
+                            <input class="sa-pos-input-group__input form-control" id="sa_cp_password" name="password" type="password" autocomplete="new-password" required>
+                        </div>
+                        <p class="sa-pos-password__help"><?= esc(lang('Common.password_strong_hint')) ?></p>
+                    </div>
+                </div>
+
+                <div class="sa-pos-password__row">
+                    <label class="sa-pos-password__label" for="sa_cp_repeat"><?= lang('Employees.repeat_password') ?></label>
+                    <div class="sa-pos-password__field">
+                        <div class="sa-pos-input-group input-group">
+                            <span class="sa-pos-input-group__addon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </span>
+                            <input class="sa-pos-input-group__input form-control" id="sa_cp_repeat" name="repeat_password" type="password" autocomplete="new-password" required>
+                        </div>
+                    </div>
+                </div>
+            <?= form_close() ?>
+        </div>
+        <div class="sa-pos-password__footer">
+            <button type="submit" form="sa_change_password_form" class="sa-pos-password__submit" id="sa-change-password-submit">Submit</button>
         </div>
     </div>
 </div>
@@ -1266,6 +1505,10 @@ $format_relative_time = static function (?string $value): string {
         const actionMessageEl = document.getElementById('request-action-confirm-message');
         const actionCancelBtn = document.getElementById('request-action-confirm-cancel');
         const actionContinueBtn = document.getElementById('request-action-confirm-continue');
+        const actionConfirmIcon = document.getElementById('request-action-confirm-icon');
+        const rejectCommentWrap = document.getElementById('request-action-reject-comment-wrap');
+        const rejectCommentInput = document.getElementById('request-action-reject-comment');
+        const rejectCommentError = document.getElementById('request-action-reject-comment-error');
         const searchInput = document.getElementById('sa_navbar_search');
         const statusFilter = document.getElementById('super_admin_status_filter');
         const notifyBtn = document.getElementById('sa_notify_btn');
@@ -1540,6 +1783,132 @@ $format_relative_time = static function (?string $value): string {
             });
         }
 
+        const changePasswordOverlay = document.getElementById('sa-change-password');
+        const changePasswordBtn = document.getElementById('sa_change_password_btn');
+        const changePasswordForm = document.getElementById('sa_change_password_form');
+        const changePasswordError = document.getElementById('sa-change-password-error');
+        const changePasswordClose = document.getElementById('sa-change-password-close');
+        const changePasswordSubmit = document.getElementById('sa-change-password-submit');
+
+        const openChangePasswordModal = function() {
+            if (!changePasswordOverlay) {
+                return;
+            }
+            closeDropdowns();
+            if (changePasswordError) {
+                changePasswordError.hidden = true;
+                changePasswordError.textContent = '';
+            }
+            if (changePasswordForm) {
+                changePasswordForm.reset();
+                const usernameField = document.getElementById('sa_cp_username');
+                if (usernameField) {
+                    usernameField.value = <?= json_encode($admin_username) ?>;
+                }
+            }
+            changePasswordOverlay.classList.add('is-open');
+            changePasswordOverlay.setAttribute('aria-hidden', 'false');
+            const currentField = document.getElementById('sa_cp_current');
+            if (currentField) {
+                currentField.focus();
+            }
+        };
+
+        const closeChangePasswordModal = function() {
+            if (!changePasswordOverlay) {
+                return;
+            }
+            changePasswordOverlay.classList.remove('is-open');
+            changePasswordOverlay.setAttribute('aria-hidden', 'true');
+        };
+
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                openChangePasswordModal();
+            });
+        }
+
+        if (changePasswordClose) {
+            changePasswordClose.addEventListener('click', closeChangePasswordModal);
+        }
+        if (changePasswordOverlay) {
+            changePasswordOverlay.addEventListener('click', function(event) {
+                if (event.target === changePasswordOverlay) {
+                    closeChangePasswordModal();
+                }
+            });
+        }
+
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (changePasswordError) {
+                    changePasswordError.hidden = true;
+                    changePasswordError.textContent = '';
+                }
+
+                const currentPassword = (document.getElementById('sa_cp_current') || {}).value || '';
+                const password = (document.getElementById('sa_cp_password') || {}).value || '';
+                const repeatPassword = (document.getElementById('sa_cp_repeat') || {}).value || '';
+
+                const showError = function(message) {
+                    if (!changePasswordError) {
+                        return;
+                    }
+                    changePasswordError.textContent = message;
+                    changePasswordError.hidden = false;
+                };
+
+                if (currentPassword.length < 8) {
+                    showError('Current password is required (at least 8 characters).');
+                    return;
+                }
+                if (password.length < 8) {
+                    showError(<?= json_encode(lang('Employees.password_minlength')) ?>);
+                    return;
+                }
+                if (password !== repeatPassword) {
+                    showError(<?= json_encode(lang('Employees.password_must_match')) ?>);
+                    return;
+                }
+                if (password === currentPassword) {
+                    showError(<?= json_encode(lang('Employees.password_not_must_match')) ?>);
+                    return;
+                }
+
+                if (changePasswordSubmit) {
+                    changePasswordSubmit.disabled = true;
+                }
+
+                fetch(changePasswordForm.action, {
+                    method: 'POST',
+                    body: new FormData(changePasswordForm),
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data && data.success) {
+                            closeChangePasswordModal();
+                            window.location.href = <?= json_encode(site_url('super-admin/overview') . '?password_changed=1') ?>;
+                            return;
+                        }
+                        showError((data && data.message) ? data.message : 'Password change failed.');
+                    })
+                    .catch(function() {
+                        showError('Password change failed. Please try again.');
+                    })
+                    .finally(function() {
+                        if (changePasswordSubmit) {
+                            changePasswordSubmit.disabled = false;
+                        }
+                    });
+            });
+        }
+
         document.addEventListener('click', function(event) {
             if (!openDropdown) {
                 return;
@@ -1553,6 +1922,11 @@ $format_relative_time = static function (?string $value): string {
         });
 
         document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && changePasswordOverlay && changePasswordOverlay.classList.contains('is-open')) {
+                closeChangePasswordModal();
+                return;
+            }
+
             if (event.key === 'Escape' && notifyPanel && notifyPanel.classList.contains('is-open')) {
                 closeNotifyPanel();
                 return;
@@ -1602,6 +1976,21 @@ $format_relative_time = static function (?string $value): string {
             actionOverlay.classList.remove('is-open');
             actionOverlay.setAttribute('aria-hidden', 'true');
             pendingActionForm = null;
+            if (actionOverlay) {
+                actionOverlay.classList.remove('is-reject');
+            }
+            if (actionConfirmIcon) {
+                actionConfirmIcon.hidden = true;
+            }
+            if (rejectCommentWrap) {
+                rejectCommentWrap.hidden = true;
+            }
+            if (rejectCommentInput) {
+                rejectCommentInput.value = '';
+            }
+            if (rejectCommentError) {
+                rejectCommentError.hidden = true;
+            }
         };
 
         const openActionModal = function(form) {
@@ -1614,6 +2003,24 @@ $format_relative_time = static function (?string $value): string {
             const isApprove = action === 'approve';
             const isResendVerify = action === 'resend-verify';
 
+            const isReject = action === 'reject';
+
+            if (actionOverlay) {
+                actionOverlay.classList.toggle('is-reject', isReject);
+            }
+            if (actionConfirmIcon) {
+                actionConfirmIcon.hidden = !isReject;
+            }
+            if (rejectCommentWrap) {
+                rejectCommentWrap.hidden = !isReject;
+            }
+            if (rejectCommentInput) {
+                rejectCommentInput.value = '';
+            }
+            if (rejectCommentError) {
+                rejectCommentError.hidden = true;
+            }
+
             if (isResendVerify) {
                 actionTitleEl.textContent = 'Send verify email';
                 actionMessageEl.textContent = 'Send the verification link to the owner’s Gmail. Super Admin does not verify for them — they must click the link.';
@@ -1623,7 +2030,7 @@ $format_relative_time = static function (?string $value): string {
                 actionTitleEl.textContent = isApprove ? 'Confirm activation' : 'Confirm rejection';
                 actionMessageEl.textContent = isApprove
                     ? 'Activate this shop and send the KHQR to the owner’s email? They cannot log in until they pay.'
-                    : 'Are you sure you want to reject this registration?';
+                    : 'Add a short reason below. It is saved in registration history.';
                 actionContinueBtn.textContent = isApprove ? 'Activate' : 'Reject';
                 actionContinueBtn.className = isApprove
                     ? 'sa-btn sa-btn--success'
@@ -1633,6 +2040,9 @@ $format_relative_time = static function (?string $value): string {
             pendingActionForm = form;
             actionOverlay.classList.add('is-open');
             actionOverlay.setAttribute('aria-hidden', 'false');
+            if (isReject && rejectCommentInput) {
+                rejectCommentInput.focus();
+            }
         };
 
         document.querySelectorAll('.js-confirm-action-form').forEach(function(form) {
@@ -1725,6 +2135,23 @@ $format_relative_time = static function (?string $value): string {
                     return;
                 }
 
+                const isReject = pendingActionForm.dataset.action === 'reject';
+                if (isReject && rejectCommentInput) {
+                    const comment = rejectCommentInput.value.trim();
+                    if (comment.length < 3) {
+                        if (rejectCommentError) {
+                            rejectCommentError.hidden = false;
+                        }
+                        rejectCommentInput.focus();
+                        return;
+                    }
+
+                    const hiddenField = pendingActionForm.querySelector('.js-reject-comment-field');
+                    if (hiddenField) {
+                        hiddenField.value = comment;
+                    }
+                }
+
                 const formToSubmit = pendingActionForm;
                 closeActionModal();
                 formToSubmit.submit();
@@ -1774,7 +2201,15 @@ $format_relative_time = static function (?string $value): string {
         const detailBodyEl = document.getElementById('sa-row-detail-body');
         const detailCloseBtn = document.getElementById('sa-row-detail-close');
         const detailCloseIconBtn = document.getElementById('sa-row-detail-close-icon');
-        const detailFieldOrder = ['id', 'company', 'code', 'type', 'address', 'city', 'country', 'tax', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'created'];
+        const detailFieldOrder = ['id', 'company', 'code', 'type', 'address', 'city', 'country', 'tax', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'reason', 'created'];
+
+        const escapeDetailHtml = function(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        };
 
         const closeDetailModal = function() {
             if (!detailOverlay) {
@@ -1815,8 +2250,11 @@ $format_relative_time = static function (?string $value): string {
                 payment: 'Payment reference',
                 tenant: 'Shop ID',
                 status: 'Status',
+                reason: 'Rejection reason',
                 created: 'Requested'
             };
+
+            const rowStatus = (button.dataset.status || '').toLowerCase();
 
             detailFieldOrder.forEach(function(key) {
                 let value = button.dataset[key];
@@ -1826,7 +2264,19 @@ $format_relative_time = static function (?string $value): string {
                 if (key === 'tenant') {
                     return;
                 }
+                if (key === 'reason' && rowStatus !== 'rejected') {
+                    return;
+                }
                 if (value && map[key]) {
+                    if (key === 'reason') {
+                        lines.push(
+                            '<div class="sa-detail-row sa-detail-row--reason">' +
+                                '<span class="sa-detail-row__label">' + map[key] + '</span>' +
+                                '<div class="sa-detail-row__value sa-reject-note">' + escapeDetailHtml(value) + '</div>' +
+                            '</div>'
+                        );
+                        return;
+                    }
                     lines.push(
                         '<div class="sa-detail-row">' +
                             '<span class="sa-detail-row__label">' + map[key] + '</span>' +
@@ -2045,5 +2495,6 @@ $format_relative_time = static function (?string $value): string {
         })();
     });
 </script>
+<script src="<?= base_url('js/password_toggle.js?v=2') ?>"></script>
 </body>
 </html>

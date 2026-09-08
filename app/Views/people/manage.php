@@ -72,8 +72,7 @@ $show_email_button = !in_array($controller_name, ['customers', 'employees', 'sup
 <section class="neo-module-page">
     <header class="neo-module-header">
         <div>
-            <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+            <h3 class="neo-module-title"><?= esc(lang('Module.' . $controller_name)) ?></h3>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions">
             <a id="new_customer_btn" class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" href="<?= "$controller_name/view" ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">

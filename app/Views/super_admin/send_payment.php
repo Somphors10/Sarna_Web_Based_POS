@@ -7,8 +7,8 @@
  * @var string $qr_image_path
  */
 $qr_exists = is_file(FCPATH . $qr_image_path);
-$price = saas_monthly_price((float)($plan->price_monthly ?? 0));
-$plan_name = (string)($plan->plan_name ?? 'POS');
+$price = saas_monthly_price((float)($plan?->price_monthly ?? 0));
+$plan_name = (string)($plan?->plan_name ?? 'POS');
 $tenant_status = strtolower((string)($tenant->status ?? ''));
 $already_paid = $tenant_status === 'active' || !empty($paid);
 $owner_email = (string)$request->owner_email;
@@ -34,7 +34,7 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
     <title>Send KHQR · <?= esc($company) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=40') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=42') ?>">
 </head>
 <body class="sa-dashboard sa-khqr">
 <main class="sa-khqr__page">
@@ -79,13 +79,9 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
                 <p class="sa-khqr-qr__plan"><?= esc($plan_name) ?></p>
             </div>
             <p class="sa-khqr-qr__price">$<?= number_format($price, 0) ?><span>/month</span></p>
-            <div class="sa-khqr-qr__frame">
-                <div class="sa-khqr-qr__khqr">KHQR</div>
-                <?php if ($qr_exists): ?>
-                    <img src="<?= base_url($qr_image_path) ?>?v=4" alt="ABA KHQR" width="512" height="512">
-                <?php endif; ?>
-            </div>
-            <p class="sa-khqr-qr__hint">QR only — no account name on the picture. Same image in the email.</p>
+            <?php if ($qr_exists): ?>
+                <?= khqr_scan_card_markup(base_url($qr_image_path) . '?v=8') ?>
+            <?php endif; ?>
         </aside>
 
         <section class="sa-khqr-card">

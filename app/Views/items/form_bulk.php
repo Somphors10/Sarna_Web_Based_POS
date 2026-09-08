@@ -108,29 +108,6 @@
         </div>
 
         <div class="form-group form-group-sm">
-            <?= form_label(lang('Items.tax_2'), 'tax_percent_2', ['class' => 'control-label col-xs-3']) ?>
-            <div class="col-xs-4">
-                <?= form_input([
-                    'name'  => 'tax_names[]',
-                    'id'    => 'tax_name_2',
-                    'class' => 'form-control input-sm',
-                    'value' => $config['default_tax_2_name']
-                ]) ?>
-            </div>
-            <div class="col-xs-4">
-                <div class="input-group input-group-sm">
-                    <?= form_input([
-                        'name'  => 'tax_percents[]',
-                        'id'    => 'tax_percent_name_2',
-                        'class' => 'form-control input-sm',
-                        'value' => to_tax_decimals($config['default_tax_2_rate'])
-                    ]) ?>
-                    <span class="input-group input-group-addon"><b>%</b></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-group form-group-sm">
             <?= form_label(lang('Items.reorder_level'), 'reorder_level', ['class' => 'control-label col-xs-3']) ?>
             <div class="col-xs-4">
                 <?= form_input([

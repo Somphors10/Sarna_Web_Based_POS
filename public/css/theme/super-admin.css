@@ -57,12 +57,17 @@ body.sa-dashboard {
     background: #f3f5f9;
 }
 
-/* Super Admin: POS module pages use the same full-width shell as subscription pages */
+/*
+ * POS Features under Super Admin must match business-owner POS (shared template).
+ * Only layout shell rules live here — module/tabs/table styles come from modules.css + components.css.
+ */
 body.sa-dashboard .sa-pos-content {
     width: 100%;
     max-width: none;
     flex: 1 1 auto;
     min-width: 0;
+    padding: 12px 16px 20px;
+    background: transparent;
 }
 
 body.sa-dashboard .sa-pos-content .container {
@@ -83,7 +88,7 @@ body.sa-dashboard .pos-topbar {
     border-bottom: 1px solid #e8edf5;
 }
 
-/* Sidebar: one size for Subscriptions + POS Features (Bootstrap on POS pages used to shrink icons) */
+/* Sidebar: one size for Subscriptions + POS Features */
 body.sa-dashboard .sa-sidebar .sa-nav-icon {
     width: 28px;
     height: 28px;
@@ -129,109 +134,40 @@ html.sidebar-collapsed body.sa-dashboard .sa-sidebar .sa-nav-icon {
     min-height: 28px;
 }
 
-body.sa-dashboard .sa-pos-content .neo-module-page {
-    width: 100%;
-    max-width: none;
-    margin-top: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    display: grid;
-    gap: 1.25rem;
-}
-
+/* Kill SA-only chrome that made POS pages look different from shops */
 body.sa-dashboard .sa-pos-content .neo-module-header {
-    background: var(--sa-surface);
-    border: 1px solid var(--sa-border);
-    border-radius: var(--sa-radius);
-    padding: 1.5rem 1.75rem;
-    box-shadow: var(--sa-shadow-sm);
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    margin: 0 0 8px;
+    overflow: visible;
 }
 
 body.sa-dashboard .sa-pos-content .neo-module-header::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--sa-gradient);
+    display: none !important;
+    content: none !important;
 }
 
 body.sa-dashboard .sa-pos-content .neo-module-title {
-    margin: 0;
-    font-size: 1.65rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--sa-text);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: #0f172a;
     line-height: 1.2;
 }
 
 body.sa-dashboard .sa-pos-content .neo-module-title::before {
-    content: "POS Features";
-    display: block;
-    margin-bottom: 0.35rem;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--sa-primary);
+    display: none !important;
+    content: none !important;
 }
 
 body.sa-dashboard .sa-pos-content .neo-module-subtitle {
-    margin: 0.45rem 0 0;
-    font-size: 0.9rem;
-    color: var(--sa-muted);
-    line-height: 1.55;
-}
-
-body.sa-dashboard .sa-pos-content .neo-list-tabs {
-    margin: 0;
-    padding: 1.15rem 1.5rem 0;
-    background: var(--sa-surface);
-    border: 1px solid var(--sa-border);
-    border-bottom: none;
-    border-radius: var(--sa-radius) var(--sa-radius) 0 0;
-}
-
-body.sa-dashboard .sa-pos-content .neo-table-toolbar {
-    margin: 0;
-    padding: 0.75rem 1.5rem;
-    background: var(--sa-surface);
-    border-left: 1px solid var(--sa-border);
-    border-right: 1px solid var(--sa-border);
-}
-
-body.sa-dashboard .sa-pos-content .neo-table-holder {
-    border: 1px solid var(--sa-border);
-    border-top: none;
-    border-radius: 0 0 var(--sa-radius) var(--sa-radius);
-    box-shadow: var(--sa-shadow-sm);
-    background: var(--sa-surface);
-    padding: 0 1.5rem 1.5rem;
-}
-
-body.sa-dashboard .sa-pos-content .neo-module-page > .neo-list-tabs:first-child {
-    border-radius: var(--sa-radius);
-    border-bottom: 1px solid var(--sa-border);
-    margin-top: 0;
-}
-
-body.sa-dashboard .sa-pos-content .neo-module-header + .neo-table-toolbar {
-    margin-top: 0;
-    padding: 1.15rem 1.5rem 0.75rem;
-    background: var(--sa-surface);
-    border: 1px solid var(--sa-border);
-    border-bottom: none;
-    border-radius: var(--sa-radius) var(--sa-radius) 0 0;
-}
-
-body.sa-dashboard .sa-pos-content .neo-module-header + .neo-table-toolbar + .neo-table-holder {
-    border-radius: 0 0 var(--sa-radius) var(--sa-radius);
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
 }
 
 body.sa-dashboard .neo-register-layout {
@@ -308,6 +244,11 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
 .sa-main-body {
     flex: 1 1 auto;
     padding: 1.25rem 1.5rem 2rem;
+}
+
+/* POS feature pages: same content padding as business POS, not subscription dashboard padding */
+body.sa-dashboard .sa-main-body.sa-pos-content {
+    padding: 12px 16px 20px;
 }
 
 /* ── Top navbar ── */
@@ -450,45 +391,7 @@ html.sidebar-collapsed body.sa-dashboard .neo-sidebar-logout {
     height: auto;
 }
 
-.sa-profile-btn:hover,
-.sa-profile-btn:focus-visible {
-    outline: none;
-}
-
-.sa-profile-btn:hover .sa-profile-avatar,
-.sa-profile-btn:focus-visible .sa-profile-avatar {
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.sa-profile-avatar,
-.sa-profile-card__avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-}
-
-.sa-dropdown {
-    position: absolute;
-    top: calc(100% + 0.45rem);
-    right: 0;
-    z-index: 1100;
-    min-width: 18rem;
-    background: #fff;
-    border: 1px solid var(--sa-border);
-    border-radius: var(--sa-radius-sm);
-    box-shadow: var(--sa-shadow-lg);
-    overflow: hidden;
-}
+/* Profile menu visuals live in css/theme/profile-menu.css */
 
 /* ── Notification side panel ── */
 
@@ -772,60 +675,7 @@ body.sa-notify-open {
     text-decoration: underline;
 }
 
-.sa-profile-card {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 1rem;
-    border-bottom: 1px solid var(--sa-border-soft);
-}
-
-.sa-profile-card__copy {
-    min-width: 0;
-    display: grid;
-    gap: 0.15rem;
-}
-
-.sa-profile-card__copy strong {
-    font-size: 0.9rem;
-    color: var(--sa-text);
-}
-
-.sa-profile-card__copy span {
-    font-size: 0.78rem;
-    color: var(--sa-muted);
-    word-break: break-word;
-}
-
-.sa-profile-card__role {
-    margin-top: 0.15rem;
-    font-size: 0.72rem !important;
-    font-weight: 600;
-    color: var(--sa-primary) !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.sa-dropdown__menu {
-    padding: 0.35rem;
-}
-
-.sa-dropdown__menu-item {
-    display: block;
-    padding: 0.65rem 0.75rem;
-    border-radius: 8px;
-    color: var(--sa-text);
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: background 0.15s ease;
-}
-
-.sa-dropdown__menu-item:hover,
-.sa-dropdown__menu-item:focus-visible {
-    background: #f1f5f9;
-    outline: none;
-}
+/* Profile menu visuals live in css/theme/profile-menu.css */
 
 /* ── Page header ── */
 
@@ -2075,9 +1925,167 @@ a.sa-metric:focus-visible .sa-metric__hint {
     word-break: break-word;
 }
 
+.sa-detail-row--reason {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    background: #fffafb;
+}
+
+.sa-detail-row--reason .sa-detail-row__label {
+    color: #991b1b;
+}
+
+.sa-detail-row--reason .sa-detail-row__value {
+    text-align: left;
+    font-weight: 500;
+}
+
+.sa-detail-row--reason .sa-reject-note {
+    font-weight: 500;
+}
+
 .sa-modal__actions--detail {
     background: #fff;
     padding-top: 0.75rem;
+}
+
+/* Action confirm modal (approve / reject / resend verify) */
+
+.sa-modal--action {
+    width: min(440px, 100%);
+}
+
+.sa-modal-overlay.is-reject .sa-modal--action {
+    width: min(520px, 100%);
+}
+
+.sa-modal__head--action {
+    padding: 1.15rem 1.35rem 0.5rem;
+}
+
+.sa-modal__head-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sa-modal__icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sa-modal__icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.sa-modal__icon--danger {
+    background: #fef2f2;
+    color: var(--sa-danger);
+    border: 1px solid #fecaca;
+}
+
+.sa-modal__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--sa-text);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.sa-modal__body--action {
+    padding-top: 0.35rem;
+}
+
+.sa-modal__message {
+    margin: 0;
+    color: #475569;
+    line-height: 1.55;
+    font-size: 0.9rem;
+}
+
+.sa-modal__actions--action {
+    background: #f8fafc;
+}
+
+.sa-reject-comment {
+    margin-top: 1rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid #fecaca;
+    border-radius: var(--sa-radius-sm);
+    background: #fffafb;
+}
+
+.sa-reject-comment__label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.sa-reject-comment__input {
+    display: block;
+    width: 100%;
+    min-height: 5.5rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--sa-text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sa-reject-comment__input::placeholder {
+    color: #94a3b8;
+    font-family: inherit;
+}
+
+.sa-reject-comment__input:focus {
+    outline: none;
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+}
+
+.sa-reject-comment__helper {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    color: var(--sa-muted);
+    line-height: 1.45;
+}
+
+.sa-reject-comment__hint {
+    margin: 0.45rem 0 0;
+    font-size: 0.78rem;
+    color: var(--sa-danger);
+    font-weight: 600;
+}
+
+.sa-reject-note {
+    display: block;
+    padding: 0.4rem 0.55rem;
+    border-radius: 8px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: normal;
+    text-align: left;
 }
 
 @media (max-width: 480px) {
@@ -2334,39 +2342,49 @@ body.sa-khqr {
     color: #94a3b8;
 }
 
-.sa-khqr-qr__frame {
-    display: grid;
-    place-items: center;
-    padding: 0 18px 18px;
-    background: #fff;
-    border: 1px solid #eef2f7;
-    border-radius: 16px;
-    overflow: hidden;
+.sa-khqr-qr .khqr-scan-card {
+    margin-top: 8px;
 }
 
-.sa-khqr-qr__khqr {
-    width: calc(100% + 36px);
-    margin: 0 -18px 16px;
-    padding: 11px 12px;
+body.sa-khqr .khqr-scan-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e8edf5;
+    box-shadow:
+        0 2px 6px rgba(15, 23, 42, 0.05),
+        0 12px 28px rgba(15, 23, 42, 0.08);
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+body.sa-khqr .khqr-scan-card__bar {
     background: #e11d2e;
     color: #fff;
+    text-align: center;
+    padding: 11px 12px;
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.16em;
 }
 
-.sa-khqr-qr__frame img {
-    display: block;
-    width: min(220px, 100%);
-    height: auto;
-    aspect-ratio: 1;
-    object-fit: contain;
+body.sa-khqr .khqr-scan-card__rule {
+    border-bottom: 2px dashed #e2e8f0;
+    margin: 0 16px;
 }
 
-.sa-khqr-qr__hint {
-    margin: 14px 0 0;
-    color: #64748b;
-    font-size: 0.8rem;
+body.sa-khqr .khqr-scan-card__code {
+    padding: 18px 16px 20px;
+    text-align: center;
+    background: #fff;
+}
+
+body.sa-khqr .khqr-scan-card__code img {
+    display: block;
+    width: min(240px, 100%);
+    height: auto;
+    margin: 0 auto;
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .sa-khqr-card {

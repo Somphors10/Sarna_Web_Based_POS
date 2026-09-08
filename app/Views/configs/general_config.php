@@ -16,7 +16,7 @@
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="general_error_message_box" class="error_message_box"></ul>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.theme'), 'theme', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-sm-10">
                     <div class="form-group form-group-sm row">
@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.login_form'), 'login_form', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_dropdown(
@@ -83,7 +83,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.default_receivings_discount'), 'default_receivings_discount', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-xs-2">
                     <div class="input-group">
@@ -113,7 +113,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.enforce_privacy'), 'enforce_privacy', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -153,7 +153,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.notify_alignment'), 'notify_horizontal_position', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-sm-10">
                     <div class="form-group form-group-sm row">
@@ -184,7 +184,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.image_restrictions'), 'image_restrictions', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-sm-10">
                     <div class="form-group form-group-sm row">
@@ -265,7 +265,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.gcaptcha_enable'), 'gcaptcha_enable', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -282,7 +282,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.gcaptcha_site_key'), 'config_gcaptcha_site_key', ['class' => 'required control-label col-xs-2', 'id' => 'config_gcaptcha_site_key']) ?>
                 <div class="col-xs-4">
                     <?= form_input([
@@ -294,7 +294,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.gcaptcha_secret_key'), 'config_gcaptcha_secret_key', ['class' => 'required control-label col-xs-2', 'id' => 'config_gcaptcha_secret_key']) ?>
                 <div class="col-xs-4">
                     <?= form_input([
@@ -364,7 +364,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.giftcard_number'), 'giftcard_number', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-8">
                     <label class="radio-inline">
@@ -386,7 +386,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.derive_sale_quantity'), 'derive_sale_quantity', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -402,7 +402,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.show_office_group'), 'show_office_group', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -414,7 +414,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.multi_pack_enabled'), 'multi_pack_enabled', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -426,7 +426,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.include_hsn'), 'include_hsn', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([

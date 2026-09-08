@@ -65,7 +65,6 @@ helper('url');
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
     </header>
 
@@ -136,7 +135,7 @@ helper('url');
                     <span class="ui-helper-hidden-accessible" role="status"></span>
                 </li>
                 <li class="pull-right">
-                    <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_item") ?>">
+                    <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/view" ?>" title="<?= lang(ucfirst($controller_name) . ".new_item") ?>">
                         <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new_item") ?>
                     </button>
                 </li>

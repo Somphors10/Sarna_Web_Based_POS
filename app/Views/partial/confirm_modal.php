@@ -24,7 +24,6 @@ $label_cancel = lang('Datepicker.cancel') ?: 'Cancel';
     justify-content: center;
     z-index: 99999;
     padding: 1rem;
-    font-family: "Khmer OS Siemreap", "Khmer OS", Siemreap, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 #pos-confirm.pos-modal-overlay.is-open {

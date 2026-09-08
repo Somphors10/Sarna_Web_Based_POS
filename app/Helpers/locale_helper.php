@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Employee;
 use Config\OSPOS;
 
 function locale_intl_available(): bool
@@ -19,27 +18,86 @@ function locale_fmt_currency(): int
 }
 
 /**
+ * POS UI languages supported in the profile menu.
+ *
+ * @return array<string, string>
+ */
+function pos_ui_language_codes(): array
+{
+    return [
+        'en' => 'english',
+        'km' => 'centralkhmer',
+    ];
+}
+
+/**
+ * Normalize a language code to a supported POS UI language.
+ */
+function pos_normalize_language_code(?string $language_code, ?string $fallback = null): string
+{
+    $allowed = array_keys(pos_ui_language_codes());
+    $language_code = strtolower(trim((string)$language_code));
+
+    if (in_array($language_code, $allowed, true)) {
+        return $language_code;
+    }
+
+    if ($fallback !== null) {
+        $fallback = strtolower(trim($fallback));
+        if (in_array($fallback, $allowed, true)) {
+            return $fallback;
+        }
+    }
+
+    return DEFAULT_LANGUAGE_CODE;
+}
+
+/**
+ * Resolve the active POS UI language for the current request.
+ */
+function resolve_ui_language_code(): string
+{
+    $session = session();
+    $session_code = $session->get('ui_language_code');
+    if (is_string($session_code) && $session_code !== '') {
+        return pos_normalize_language_code($session_code);
+    }
+
+    $person_id = (int)($session->get('person_id') ?? 0);
+    if ($person_id > 0) {
+        $employee = model(\App\Models\Employee::class);
+        $info = $employee->get_info($person_id);
+        $employee_code = pos_normalize_language_code($info->language_code ?? '', null);
+        if (in_array($employee_code, array_keys(pos_ui_language_codes()), true)) {
+            $session->set('ui_language_code', $employee_code);
+
+            return $employee_code;
+        }
+    }
+
+    $config = config(OSPOS::class)->settings;
+    $shop_code = pos_normalize_language_code($config['language_code'] ?? '', DEFAULT_LANGUAGE_CODE);
+    $session->set('ui_language_code', $shop_code);
+
+    return $shop_code;
+}
+
+/**
  * Returns the currently configured language code.
  *
- * @param bool $load_system_language When true, the system language is returned.
+ * @param bool $load_system_language When true, the shop default language is returned.
  * @return string Returns the default language code if a language code is not configured.
  */
 function current_language_code(bool $load_system_language = false): string
 {
-    $employee = model(Employee::class);
-    $config = config(OSPOS::class)->settings;
+    if ($load_system_language) {
+        $config = config(OSPOS::class)->settings;
+        $language_code = $config['language_code'] ?? '';
 
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
-
-        if (property_exists($employee_info, 'language_code') && !empty($employee_info->language_code)) {
-            return $employee_info->language_code;
-        }
+        return empty($language_code) ? DEFAULT_LANGUAGE_CODE : $language_code;
     }
 
-    $language_code = $config['language_code'] ?? '';
-
-    return empty($language_code) ? DEFAULT_LANGUAGE_CODE : $language_code;
+    return resolve_ui_language_code();
 }
 
 /**
@@ -48,18 +106,7 @@ function current_language_code(bool $load_system_language = false): string
  */
 function current_language(bool $load_system_language = false): string
 {
-    $employee = model(Employee::class);
     $config = config(OSPOS::class)->settings;
-
-    // Returns the language of the employee if set or system language if not
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
-
-        if (property_exists($employee_info, 'language') && !empty($employee_info->language)) {
-            return $employee_info->language;
-        }
-    }
-
     $language = $config['language'] ?? '';
 
     return empty($language) ? DEFAULT_LANGUAGE : $language;
@@ -82,7 +129,7 @@ function get_languages(): array
         'de-CH:german'                => 'German (Switzerland)',
         'de-DE:german'                => 'German (Germany)',
         'el:greek'                    => 'Greek',
-        'en:english'                  => 'English (United States)',
+        'en:english'                  => 'English',
         'en-GB:english'               => 'English (United Kingdom)',
         'es-ES:spanish'               => 'Spanish (Spain)',
         'es-MX:spanish'               => 'Spanish (Mexico)',
@@ -195,6 +242,7 @@ function get_timezones(): array
         'Asia/Novosibirsk'               => '(GMT+06:00) Novosibirsk',
         'Asia/Rangoon'                   => '(GMT+06:30) Yangon (Rangoon)',
         'Asia/Bangkok'                   => '(GMT+07:00) Bangkok, Hanoi, Jakarta',
+        'Asia/Phnom_Penh'                => '(GMT+07:00) Phnom Penh',
         'Asia/Krasnoyarsk'               => '(GMT+07:00) Krasnoyarsk',
         'Asia/Hong_Kong'                 => '(GMT+08:00) Beijing, Chongqing, Hong Kong, Urumqi',
         'Asia/Irkutsk'                   => '(GMT+08:00) Irkutsk, Ulaan Bataar',
@@ -346,6 +394,44 @@ function tax_decimals(): int
 {
     $config = config(OSPOS::class)->settings;
     return $config['tax_decimals'] ?? 0;
+}
+
+/**
+ * Display a person name in Cambodia order: Last Name then First Name.
+ */
+function format_person_name(?string $first_name, ?string $last_name, bool $short = false): string
+{
+    $family = trim((string) $last_name);
+    $given = trim((string) $first_name);
+
+    if ($short) {
+        $initial = $given !== '' ? mb_substr($given, 0, 1) : '';
+        return trim($family . ($initial !== '' ? ' ' . $initial : ''));
+    }
+
+    return trim($family . ' ' . $given);
+}
+
+/**
+ * Format Cambodia-style location from person address fields
+ * (zip=Province, state=District, city=Commune, address_2=Village).
+ */
+function format_person_location(
+    ?string $address_2 = '',
+    ?string $city = '',
+    ?string $state = '',
+    ?string $zip = '',
+    ?string $country = ''
+): string {
+    $parts = array_filter([
+        trim((string) $address_2),
+        trim((string) $city),
+        trim((string) $state),
+        trim((string) $zip),
+        trim((string) $country),
+    ], static fn(string $part): bool => $part !== '');
+
+    return implode(', ', $parts);
 }
 
 /**

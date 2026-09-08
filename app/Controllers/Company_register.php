@@ -76,7 +76,7 @@ class Company_register extends BaseController
             'tenant_code' => $tenant_code,
             'company_name' => $company_name,
             'status' => 'active',
-            'timezone' => 'UTC',
+            'timezone' => 'Asia/Phnom_Penh',
             'currency_code' => 'USD'
         ];
 
@@ -105,7 +105,7 @@ class Company_register extends BaseController
             'city' => '',
             'state' => '',
             'zip' => '',
-            'country' => '',
+            'country' => 'Cambodia',
             'comments' => '',
             'tenant_id' => $tenant_id
         ]);
@@ -154,7 +154,9 @@ class Company_register extends BaseController
         // Tenant config defaults
         $db->table('tenant_config')->insertBatch([
             ['tenant_id' => $tenant_id, 'config_key' => 'company', 'config_value' => $company_name],
-            ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'UTC'],
+            ['tenant_id' => $tenant_id, 'config_key' => 'email', 'config_value' => strtolower($email)],
+            ['tenant_id' => $tenant_id, 'config_key' => 'company_logo', 'config_value' => ''],
+            ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'Asia/Phnom_Penh'],
             ['tenant_id' => $tenant_id, 'config_key' => 'currency_code', 'config_value' => 'USD']
         ]);
 
@@ -186,7 +188,7 @@ class Company_register extends BaseController
             $tenant_id,
             $person_id,
             $username,
-            trim($first_name . ' ' . $last_name),
+            format_person_name($first_name, $last_name),
             true
         );
 

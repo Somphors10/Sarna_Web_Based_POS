@@ -44,7 +44,7 @@ return [
     "successful_deleted"         => "Expense delete successful",
     "successful_updating"        => "Expense update successful",
     "supplier_name"              => "Supplier",
-    "supplier_tax_code"          => "VAT No",
+    "supplier_tax_code"          => "VAT TIN",
     "tax_amount"                 => "Tax",
     "tax_amount_number"          => "",
     "update"                     => "Update Expense",

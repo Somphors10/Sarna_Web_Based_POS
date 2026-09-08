@@ -102,20 +102,19 @@
                 <?= form_label(lang('Config.phone'), 'phone', ['class' => 'control-label col-xs-12 col-sm-2 required']) ?>
                 <div class="col-xs-12 col-sm-10">
                     <div class="input-group">
-                        <span class="input-group-addon input-sm">
-                            <span class="glyphicon glyphicon-phone-alt"></span>
-                        </span>
+                        <span class="input-group-addon input-sm">+855</span>
                         <?= form_input([
                             'name'  => 'phone',
                             'id'    => 'phone',
                             'class' => 'form-control input-sm required',
-                            'value' => $config['phone']
+                            'value' => $config['phone'],
+                            'placeholder' => '12 345 678'
                         ]) ?>
                     </div>
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.fax'), 'fax', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
                 <div class="col-xs-12 col-sm-10">
                     <div class="input-group">

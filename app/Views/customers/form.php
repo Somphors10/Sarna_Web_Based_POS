@@ -108,18 +108,6 @@
                     </div>
                 </div>
 
-                <div class="form-group form-group-sm">
-                    <?= form_label(lang('Customers.tax_id'), 'tax_id', ['class' => 'control-label col-xs-3']) ?>
-                    <div class="col-xs-4">
-                        <?= form_input([
-                            'name'  => 'tax_id',
-                            'id'    => 'tax_id',
-                            'class' => 'form-control input-sm',
-                            'value' => $person_info->tax_id
-                        ]) ?>
-                    </div>
-                </div>
-
                 <?php if ($config['customer_reward_enable']): ?>
                     <div class="form-group form-group-sm">
                         <?= form_label(lang('Customers.rewards_package'), 'rewards', ['class' => 'control-label col-xs-3']) ?>
@@ -181,7 +169,7 @@
                                 'name'     => 'date',
                                 'id'       => 'datetime',
                                 'class'    => 'form-control input-sm',
-                                'value'    => to_datetime(strtotime($person_info->date)),
+                                'value'    => to_date(strtotime($person_info->date)),
                                 'readonly' => 'true'
                             ]) ?>
                         </div>

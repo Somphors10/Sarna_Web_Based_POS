@@ -205,7 +205,7 @@ class Employee extends Person
 
         if ($success) {
             $username = (string)($employee_data['username'] ?? '');
-            $display = trim(($person_data['first_name'] ?? '') . ' ' . ($person_data['last_name'] ?? ''));
+            $display = format_person_name($person_data['first_name'] ?? '', $person_data['last_name'] ?? '');
             (new \App\Libraries\PlatformArchitecture())->upsertTenantLogin(
                 $tenant_id,
                 (int)$employee_id,
@@ -281,7 +281,7 @@ class Employee extends Person
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
-        $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
+        $builder->orLike('CONCAT(last_name, " ", first_name)', $search);
         $builder->groupEnd();
 
         if (!$unique) {
@@ -291,7 +291,7 @@ class Employee extends Person
         $builder->orderBy('last_name', 'asc');
 
         foreach ($builder->get()->getResult() as $row) {
-            $suggestions[] = ['value' => $row->person_id, 'label' => $row->first_name . ' ' . $row->last_name];
+            $suggestions[] = ['value' => $row->person_id, 'label' => format_person_name($row->first_name, $row->last_name)];
         }
 
         $builder = $this->db->table('employees');
@@ -384,7 +384,7 @@ class Employee extends Person
         $builder->orLike('email', $search);
         $builder->orLike('phone_number', $search);
         $builder->orLike('username', $search);
-        $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
+        $builder->orLike('CONCAT(last_name, " ", first_name)', $search);
         $builder->groupEnd();
         $builder->where('employees.deleted', $deleted);
         if (function_exists('super_admin_pos_username')) {
@@ -520,6 +520,11 @@ class Employee extends Person
         (new TenantContext())->applyRuntimeConnection($resolved_tenant_id);
         model(\App\Models\Appconfig::class)->ensureCompleteConfig($resolved_tenant_id);
         config(\Config\OSPOS::class)->update_settings();
+        helper('locale');
+        $this->session->set(
+            'ui_language_code',
+            pos_normalize_language_code($row->language_code ?? '', current_language_code(true))
+        );
 
         return true;
     }

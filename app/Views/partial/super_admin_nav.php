@@ -29,10 +29,6 @@ $pos_modules = $pos_modules ?? super_admin_pos_nav_modules();
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt=""></span>
     <span>Platform Admins</span>
 </a>
-<a class="neo-global-menu-item <?= in_array($sa_active, ['features', 'plans', 'feature'], true) ? 'is-active' : '' ?>" href="<?= site_url('super-admin/plans') ?>" title="Plans &amp; Template">
-    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/nav/config.svg') ?>" alt=""></span>
-    <span>Plans &amp; Sync</span>
-</a>
 
 <p class="sa-nav-group">POS Features</p>
 <?php foreach ($pos_modules as $nav_feature): ?>

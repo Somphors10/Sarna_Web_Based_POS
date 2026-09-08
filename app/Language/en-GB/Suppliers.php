@@ -20,6 +20,6 @@ return [
     "successful_updating"   => "You have successfully updated Supplier",
     "supplier"              => "Supplier",
     "supplier_id"           => "ID",
-    "tax_id"                => "Tax Id",
+    "tax_id"                => "VAT TIN",
     "update"                => "Update Supplier",
 ];

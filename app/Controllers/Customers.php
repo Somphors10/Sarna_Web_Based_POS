@@ -156,7 +156,7 @@ class Customers extends Persons
         }
 
         $employee_info = $this->employee->get_info($info->employee_id);
-        $data['employee'] = $employee_info->first_name . ' ' . $employee_info->last_name;
+        $data['employee'] = format_person_name($employee_info->first_name, $employee_info->last_name);
 
         $tax_code_info = $this->tax_code->get_info($info->sales_tax_code_id);
 
@@ -277,7 +277,6 @@ class Customers extends Persons
         $customer_data = [
             'consent'           => $this->request->getPost('consent') != null,
             'account_number'    => $this->request->getPost('account_number') == '' ? null : $this->request->getPost('account_number'),
-            'tax_id'            => $this->request->getPost('tax_id') ?? '',
             'company_name'      => $this->request->getPost('company_name') == '' ? null : $this->request->getPost('company_name'),
             'discount'          => $discount,
             'discount_type'     => $this->request->getPost('discount_type') == null ? PERCENT : $this->request->getPost('discount_type', FILTER_SANITIZE_NUMBER_INT),
@@ -304,20 +303,20 @@ class Customers extends Persons
             if ($customer_id == NEW_ENTRY) {
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Customers.successful_adding') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Customers.successful_adding') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $customer_data['person_id']
                 ]);
             } else { // Existing customer
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Customers.successful_updating') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Customers.successful_updating') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $customer_id
                 ]);
             }
         } else { // Failure
             echo json_encode([
                 'success' => false,
-                'message' => lang('Customers.error_adding_updating') . ' ' . $first_name . ' ' . $last_name,
+                'message' => lang('Customers.error_adding_updating') . ' ' . format_person_name($first_name, $last_name),
                 'id'      => NEW_ENTRY
             ]);
         }
@@ -450,8 +449,8 @@ class Customers extends Persons
                     if (sizeof($data) >= 16 && $consent) {
                         $email = strtolower($data[4]);
                         $person_data = [
-                            'first_name'   => $data[0],
-                            'last_name'    => $data[1],
+                            'last_name'    => $data[0],
+                            'first_name'   => $data[1],
                             'gender'       => $data[2],
                             'email'        => $email,
                             'phone_number' => $data[5],
@@ -460,7 +459,7 @@ class Customers extends Persons
                             'city'         => $data[8],
                             'state'        => $data[9],
                             'zip'          => $data[10],
-                            'country'      => $data[11],
+                            'country'      => $data[11] !== '' ? $data[11] : 'Cambodia',
                             'comments'     => $data[12]
                         ];
 

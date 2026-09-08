@@ -116,7 +116,7 @@ function transform_headers_readonly(array $headers): string
 /**
  * Basic tabular headers function
  */
-function transform_headers(array $headers, bool $readonly = false, bool $editable = true): string    // TODO: $array needs to be refactored to a new name.  Perhaps $headers?
+function transform_headers(array $headers, bool $readonly = false, bool $editable = true, bool $include_view = true): string    // TODO: $array needs to be refactored to a new name.  Perhaps $headers?
 {
     $result = [];
 
@@ -125,7 +125,9 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
     }
 
     if ($editable) {
-        $headers[] = ['view' => '', 'sortable' => false, 'escape' => false];
+        if ($include_view) {
+            $headers[] = ['view' => '', 'sortable' => false, 'escape' => false];
+        }
         $headers[] = ['edit' => ''];
     }
 
@@ -210,7 +212,7 @@ function get_sales_manage_table_headers(): string
 
     $headers[] = ['receipt' => '', 'sortable' => false, 'escape' => false];
 
-    return transform_headers($headers);
+    return transform_headers($headers, false, true, false);
 }
 
 /**
@@ -249,11 +251,10 @@ function get_sale_data_row(object $sale): array
     $row['receipt'] = anchor(
         "$controller/receipt/$sale->sale_id",
         '<span class="glyphicon glyphicon-usd"></span>',
-        ['title' => lang('Sales.show_receipt')]
-    );
-    $row['view'] = view_record_anchor(
-        "$controller/receipt/$sale->sale_id",
-        lang('Sales.show_receipt')
+        [
+            'class' => 'modal-dlg modal-dlg-wide ospos-view-only',
+            'title' => lang('Sales.show_receipt'),
+        ]
     );
     $row['edit'] = anchor(
         "$controller/edit/$sale->sale_id",
@@ -376,7 +377,6 @@ function customer_headers(): array
         ['first_name'       => lang('Common.first_name')],
         ['email'            => lang('Common.email')],
         ['phone_number'     => lang('Common.phone_number')],
-        ['tax_id'           => lang('Customers.tax_id')],
         ['date'             => lang('Customers.date')],
         ['total'            => lang('Common.total_spent'), 'sortable' => false]
     ];
@@ -411,7 +411,6 @@ function get_customer_data_row(object $person, object $stats): array
         'first_name'       => $person->first_name,
         'email'            => empty($person->email) ? '' : mailto($person->email, $person->email),
         'phone_number'     => $person->phone_number,
-        'tax_id'           => $person->tax_id,
         'date'             => empty($person->date) ? '' : date('Y-m-d H:i', strtotime($person->date)),
         'total'            => to_currency($stats->total),
         'view'             => view_record_anchor("$controller/view/$person->person_id"),
@@ -928,7 +927,7 @@ function get_expenses_data_row(object $expense): array
         'payment_type'      => $expense->payment_type,
         'category_name'     => $expense->category_name,
         'description'       => $expense->description,
-        'created_by'        => $expense->first_name . ' ' . $expense->last_name,
+        'created_by'        => format_person_name($expense->first_name, $expense->last_name),
         'view'              => view_record_anchor("$controller/view/$expense->expense_id"),
         'edit'              => anchor(
             "$controller/view/$expense->expense_id",
@@ -1025,11 +1024,11 @@ function get_cash_up_data_row(object $cash_up): array
         'cashup_id_key'        => (int)$cash_up->cashup_id,
         'cashup_id'            => $tenant_cashup_seq,
         'open_date'            => to_datetime(strtotime($cash_up->open_date)),
-        'open_employee_id'     => $cash_up->open_first_name . ' ' . $cash_up->open_last_name,
+        'open_employee_id'     => format_person_name($cash_up->open_first_name, $cash_up->open_last_name),
         'open_amount_cash'     => to_currency($cash_up->open_amount_cash),
         'transfer_amount_cash' => to_currency($cash_up->transfer_amount_cash),
         'close_date'           => to_datetime(strtotime($cash_up->close_date)),
-        'close_employee_id'    => $cash_up->close_first_name . ' ' . $cash_up->close_last_name,
+        'close_employee_id'    => format_person_name($cash_up->close_first_name, $cash_up->close_last_name),
         'closed_amount_cash'   => to_currency($cash_up->closed_amount_cash),
         'note'                 => $cash_up->note ? '<span class="glyphicon glyphicon-ok"></span>' : '<span class="glyphicon glyphicon-remove"></span>',
         'closed_amount_due'    => to_currency($cash_up->closed_amount_due),

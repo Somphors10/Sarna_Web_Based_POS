@@ -10,7 +10,7 @@
     "expenses": true,
     "cashups": true,
     "reports": true,
-    "taxes": true,
+    "taxes": false,
     "config": true,
     "attributes": true
 }

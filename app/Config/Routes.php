@@ -45,6 +45,8 @@ $routes->post('super-admin/features/(:segment)/toggle', 'Super_admin::postToggle
 $routes->get('super-admin/login', 'Super_admin::login');
 $routes->post('super-admin/login', 'Super_admin::login');
 $routes->get('super-admin/logout', 'Super_admin::logout');
+$routes->get('super-admin/changepassword', 'Super_admin::getChangePassword');
+$routes->post('super-admin/changepassword', 'Super_admin::postChangePassword');
 $routes->get('home', 'Home::getIndex');
 $routes->group('home', static function ($routes) {
     $routes->get('/', 'Home::getIndex');

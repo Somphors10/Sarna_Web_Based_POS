@@ -325,13 +325,55 @@ class TenantDatabaseProvisioner
             }
         }
 
-        $company = $admin->real_escape_string((string)($this->tenantCompany($tenant_id) ?? ''));
+        // Never inherit another shop's public profile (demo email, phone, address, logo, etc.).
         $config_table = $prefix . 'tenant_config';
-        if ($company !== '' && $this->tableExistsIn($admin, $dest, $config_table)) {
+        if ($this->tableExistsIn($admin, $dest, $config_table)) {
+            $owned = [
+                'company_logo',
+                'company',
+                'address',
+                'phone',
+                'email',
+                'fax',
+                'website',
+                'return_policy',
+                'tax_id',
+            ];
+            $owned_sql = "'" . implode("','", $owned) . "'";
             $this->exec(
                 $admin,
-                "UPDATE `{$dest}`.`{$config_table}` SET config_value = '{$company}' WHERE config_key = 'company' AND tenant_id = " . (int)$tenant_id
+                "UPDATE `{$dest}`.`{$config_table}`
+                 SET config_value = ''
+                 WHERE tenant_id = " . (int)$tenant_id . "
+                   AND config_key IN ({$owned_sql})"
             );
+
+            $company = $admin->real_escape_string((string)($this->tenantCompany($tenant_id) ?? ''));
+            if ($company !== '') {
+                $this->exec(
+                    $admin,
+                    "UPDATE `{$dest}`.`{$config_table}` SET config_value = '{$company}' WHERE config_key = 'company' AND tenant_id = " . (int)$tenant_id
+                );
+            }
+        }
+
+        // Also clear demo placeholders in app_config (used if tenant_config is incomplete).
+        $app_config = $prefix . 'app_config';
+        if ($this->tableExistsIn($admin, $dest, $app_config)) {
+            foreach (['email', 'phone', 'address', 'fax', 'website', 'company_logo', 'tax_id'] as $key) {
+                $safe = $admin->real_escape_string($key);
+                $this->exec(
+                    $admin,
+                    "UPDATE `{$dest}`.`{$app_config}` SET `value` = '' WHERE `key` = '{$safe}'"
+                );
+            }
+            $company = $admin->real_escape_string((string)($this->tenantCompany($tenant_id) ?? ''));
+            if ($company !== '') {
+                $this->exec(
+                    $admin,
+                    "UPDATE `{$dest}`.`{$app_config}` SET `value` = '{$company}' WHERE `key` = 'company'"
+                );
+            }
         }
 
         $this->exec($admin, 'SET FOREIGN_KEY_CHECKS=1');
@@ -384,13 +426,36 @@ class TenantDatabaseProvisioner
             ]);
         }
 
+        $company = (string)($owner['company_name'] ?? '');
+        $address = trim((string)($owner['address'] ?? ''));
+        $city = trim((string)($owner['city'] ?? ''));
+        $country = trim((string)($owner['country'] ?? ''));
+        $full_address = trim($address . ($city !== '' ? "\n" . $city : '') . ($country !== '' ? "\n" . $country : ''));
+        $profile = [
+            'company'      => $company,
+            'email'        => strtolower((string)($owner['email'] ?? '')),
+            'phone'        => (string)($owner['phone'] ?? ''),
+            'address'      => $full_address,
+            'company_logo' => '', // each shop starts with no logo
+        ];
+
+        // Shop contact shown on receipts — must be registration email, not demo template.
         if ($db->tableExists('tenant_config')) {
-            $company = (string)($owner['company_name'] ?? '');
-            $db->table('tenant_config')->replace([
-                'tenant_id' => $tenant_id,
-                'config_key' => 'company',
-                'config_value' => $company,
-            ]);
+            foreach ($profile as $config_key => $config_value) {
+                $db->table('tenant_config')->replace([
+                    'tenant_id'    => $tenant_id,
+                    'config_key'   => $config_key,
+                    'config_value' => $config_value,
+                ]);
+            }
+        }
+        if ($db->tableExists('app_config')) {
+            foreach ($profile as $key => $value) {
+                $db->table('app_config')->replace([
+                    'key'   => $key,
+                    'value' => $value,
+                ]);
+            }
         }
 
         return $person_id;

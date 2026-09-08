@@ -29,7 +29,7 @@ return [
     "date"                                    => "Date",
     "date_range"                              => "Date Range",
     "description"                             => "Description",
-    "detailed_receivings_report"              => "Detailed Purchase Report",
+    "detailed_receivings_report"              => "Detailed Receiving Report",
     "detailed_receivings_report_input"        => "",
     "detailed_reports"                        => "Detailed Reports",
     "detailed_requisition_report"             => "",
@@ -85,7 +85,7 @@ return [
     "received_by"                             => "Received By",
     "receiving_id"                            => "Receiving ID",
     "receiving_type"                          => "Receiving Type",
-    "receivings"                              => "Purchase",
+    "receivings"                              => "Receiving",
     "reorder_level"                           => "Reorder Level",
     "report"                                  => "Report",
     "report_input"                            => "Report Input",
@@ -147,4 +147,5 @@ return [
     "work_orders"                             => "Work Orders",
     "zero_and_less"                           => "Zero and Less",
     "toggle_cost_and_profit"                  => "Toggle Cost & Profit",
+    "graphical_pie_legend_hint"               => "Every colour is listed below, so small slices are easy to read without hovering.",
 ];

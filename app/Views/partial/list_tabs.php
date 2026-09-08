@@ -15,6 +15,8 @@ if ($tab_deleted_label === 'Common.tab_deleted') {
 }
 ?>
 <div class="neo-list-tabs" role="tablist" data-hide-when-deleted="<?= esc($hide_when_deleted) ?>" aria-label="<?= esc($tab_active_label . ' / ' . $tab_deleted_label) ?>">
-    <button type="button" class="neo-list-tab is-active" data-list="active" role="tab" aria-selected="true"><?= esc($tab_active_label) ?></button>
-    <button type="button" class="neo-list-tab" data-list="deleted" role="tab" aria-selected="false"><?= esc($tab_deleted_label) ?></button>
+    <div class="neo-list-tabs__track">
+        <button type="button" class="neo-list-tab is-active" data-list="active" role="tab" aria-selected="true"><?= esc($tab_active_label) ?></button>
+        <button type="button" class="neo-list-tab" data-list="deleted" role="tab" aria-selected="false"><?= esc($tab_deleted_label) ?></button>
+    </div>
 </div>

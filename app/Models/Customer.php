@@ -43,6 +43,23 @@ class Customer extends Person
     }
 
     /**
+     * Pad CUST-* codes to CUST-00001 format; leave other account numbers unchanged.
+     */
+    private function normalize_customer_account_number(?string $account_number): ?string
+    {
+        if ($account_number === null || $account_number === '') {
+            return null;
+        }
+
+        $account_number = trim($account_number);
+        if (preg_match('/^CUST-(\d+)$/i', $account_number, $matches) === 1) {
+            return sprintf('CUST-%05d', (int)$matches[1]);
+        }
+
+        return $account_number;
+    }
+
+    /**
      * Generates the next tenant-scoped customer code.
      * Example: CUST-00001, CUST-00002
      */
@@ -302,6 +319,8 @@ class Customer extends Person
         // Ensure every tenant gets its own readable customer ID series.
         if (($customer_id == NEW_ENTRY || !$customer_id) && empty($customer_data['account_number'])) {
             $customer_data['account_number'] = $this->generate_tenant_customer_code($tenant_id);
+        } elseif (!empty($customer_data['account_number'])) {
+            $customer_data['account_number'] = $this->normalize_customer_account_number($customer_data['account_number']);
         }
 
         $this->db->transStart();
@@ -396,7 +415,7 @@ class Customer extends Person
         $builder->groupStart();
         $builder->like('first_name', $search);
         $builder->orLike('last_name', $search);
-        $builder->orLike('CONCAT(first_name, " ", last_name)', $search);
+        $builder->orLike('CONCAT(last_name, " ", first_name)', $search);
 
         if ($unique) {
             $builder->orLike('email', $search);
@@ -410,7 +429,7 @@ class Customer extends Person
         foreach ($builder->get()->getResult() as $row) {
             $suggestions[] = [
                 'value' => $row->person_id,
-                'label' => $row->first_name . ' ' . $row->last_name . (!empty($row->company_name) ? ' [' . $row->company_name . ']' : '') . (!empty($row->phone_number) ? ' [' . $row->phone_number . ']' : '')
+                'label' => format_person_name($row->first_name, $row->last_name) . (!empty($row->company_name) ? ' [' . $row->company_name . ']' : '') . (!empty($row->phone_number) ? ' [' . $row->phone_number . ']' : '')
             ];
         }
 
@@ -517,7 +536,7 @@ class Customer extends Person
         $builder->orLike('phone_number', $search);
         $builder->orLike('account_number', $search);
         $builder->orLike('company_name', $search);
-        $builder->orLike('CONCAT(first_name, " ", last_name)', $search);    // TODO: Duplicated code.
+        $builder->orLike('CONCAT(last_name, " ", first_name)', $search);    // TODO: Duplicated code.
         $builder->groupEnd();
         $builder->where('customers.deleted', $deleted);
 

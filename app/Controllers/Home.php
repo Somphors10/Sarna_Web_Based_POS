@@ -63,13 +63,13 @@ class Home extends Secure_Controller
             $sales_rows = $summary_sales->getData($sale_inputs);
 
             $kpis[] = [
-                'label'      => lang('Reports.revenue'),
+                'label'      => lang('Common.dashboard_revenue'),
                 'value'      => to_currency($period_summary['total'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
             ];
             $kpis[] = [
-                'label'      => lang('Reports.profit'),
+                'label'      => lang('Common.dashboard_profit'),
                 'value'      => to_currency($period_summary['profit'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
@@ -93,8 +93,8 @@ class Home extends Secure_Controller
             }
 
             $charts[] = [
-                'title'         => 'Sales Trend',
-                'subtitle'      => 'Daily revenue over the last 30 days',
+                'title'         => lang('Common.dashboard_sales_trend'),
+                'subtitle'      => lang('Common.dashboard_sales_trend_hint'),
                 'chart_id'      => 'home_sales_chart',
                 'chart_var'     => 'homeSalesChart',
                 'chart_type'    => 'home/charts/area',
@@ -126,8 +126,8 @@ class Home extends Secure_Controller
 
             if (!empty($payment_series)) {
                 $charts[] = [
-                    'title'         => 'Payment Methods',
-                    'subtitle'      => 'How customers paid during this period',
+                    'title'         => lang('Common.dashboard_payment_methods'),
+                    'subtitle'      => lang('Common.dashboard_payment_methods_hint'),
                     'chart_id'      => 'home_payments_chart',
                     'chart_var'     => 'homePaymentsChart',
                     'chart_type'    => 'home/charts/hbar',
@@ -237,9 +237,15 @@ class Home extends Secure_Controller
             return redirect()->back();
         }
 
+        $this->session->set('ui_language_code', $language_code);
         Services::language()->setLocale($language_code);
 
-        return redirect()->to('home');
+        $redirect = redirect()->back();
+        if ($redirect->getHeaderLine('Location') === '') {
+            return redirect()->to('home');
+        }
+
+        return $redirect;
     }
 
     /**

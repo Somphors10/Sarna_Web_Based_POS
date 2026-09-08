@@ -29,7 +29,7 @@ return [
     "date"                                    => "Date",
     "date_range"                              => "Date Range",
     "description"                             => "Description",
-    "detailed_receivings_report"              => "Detailed Purchase Report",
+    "detailed_receivings_report"              => "Detailed Receiving Report",
     "detailed_receivings_report_input"        => "",
     "detailed_reports"                        => "Detailed Reports",
     "detailed_requisition_report"             => "",
@@ -85,7 +85,7 @@ return [
     "received_by"                             => "Received By",
     "receiving_id"                            => "Receiving ID",
     "receiving_type"                          => "Receiving Type",
-    "receivings"                              => "Purchase",
+    "receivings"                              => "Receiving",
     "reorder_level"                           => "Reorder Level",
     "report"                                  => "Report",
     "report_input"                            => "Report Input",
@@ -153,4 +153,5 @@ return [
     "graphical_no_customer_chart_data_hint"   => "Select a customer on the Sales register before completing a sale. Totals below still include walk-in sales.",
     "graphical_hbar_caption"                  => "Each row is one {0}. The bar and amount show {1} for this period.",
     "graphical_hbar_total_hint"               => "The totals under the list are for all sales in this period, including walk-in sales and rows not shown here.",
+    "graphical_pie_legend_hint"               => "Every color is listed below, so small slices are easy to read without hovering.",
 ];

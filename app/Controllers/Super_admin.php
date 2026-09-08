@@ -579,7 +579,7 @@ class Super_admin extends BaseController
             'tenant_code' => $request->tenant_code,
             'company_name' => $request->company_name,
             'status' => 'awaiting_payment',
-            'timezone' => 'UTC',
+            'timezone' => 'Asia/Phnom_Penh',
             'currency_code' => 'USD'
         ];
         if ($db->fieldExists('db_name', 'tenants')) {
@@ -755,6 +755,9 @@ class Super_admin extends BaseController
             ['tenant_id' => $tenant_id, 'config_key' => 'company', 'config_value' => (string)($owner['company_name'] ?? '')],
             ['tenant_id' => $tenant_id, 'config_key' => 'address', 'config_value' => $full_address],
             ['tenant_id' => $tenant_id, 'config_key' => 'phone', 'config_value' => (string)($owner['phone'] ?? '')],
+            ['tenant_id' => $tenant_id, 'config_key' => 'email', 'config_value' => strtolower((string)($owner['email'] ?? ''))],
+            // Never inherit another shop's logo — owner uploads their own after login.
+            ['tenant_id' => $tenant_id, 'config_key' => 'company_logo', 'config_value' => ''],
             ['tenant_id' => $tenant_id, 'config_key' => 'tax_id', 'config_value' => (string)($owner['tax_id'] ?? '')],
             ['tenant_id' => $tenant_id, 'config_key' => 'country_codes', 'config_value' => $country_codes[$country] ?? 'kh'],
             ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'Asia/Phnom_Penh'],
@@ -870,15 +873,132 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/login');
         }
 
-        db_connect('platform')->table('subscription_requests')
+        $reject_comment = trim((string)$this->request->getPost('reject_comment'));
+        if ($reject_comment === '' || mb_strlen($reject_comment) < 3) {
+            return redirect()->to('super-admin/requests?error=reject_comment_required');
+        }
+
+        $db = db_connect('platform');
+        $request = $db->table('subscription_requests')
+            ->where('request_id', $request_id)
+            ->where('status', 'pending')
+            ->get(1)
+            ->getRow();
+
+        if ($request === null) {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+
+        $existing_notes = trim((string)($request->notes ?? ''));
+        $notes = $existing_notes !== ''
+            ? $existing_notes . "\nRejected: " . $reject_comment
+            : 'Rejected: ' . $reject_comment;
+
+        $db->table('subscription_requests')
             ->where('request_id', $request_id)
             ->where('status', 'pending')
             ->update([
                 'status' => 'rejected',
+                'notes' => $notes,
                 'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
-                'reviewed_at' => date('Y-m-d H:i:s')
+                'reviewed_at' => date('Y-m-d H:i:s'),
             ]);
 
         return redirect()->to('super-admin/history?request_rejected=1');
+    }
+
+    /**
+     * Change-password form for modal (same fields as shop admin).
+     */
+    public function getChangePassword(): string|RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $admin = $platform_admin->get_logged_in_admin();
+        if ($admin === null) {
+            return redirect()->to('super-admin/login');
+        }
+
+        return view('super_admin/form_change_password', [
+            'admin' => $admin,
+        ]);
+    }
+
+    /**
+     * Save Super Admin password change (JSON, like Home::postSave).
+     */
+    public function postChangePassword()
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please log in again.',
+            ]);
+        }
+
+        $admin = $platform_admin->get_logged_in_admin();
+        if ($admin === null) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please log in again.',
+            ]);
+        }
+
+        $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $current_password = (string)$this->request->getPost('current_password');
+        $plain_password = (string)$this->request->getPost('password');
+        $repeat_password = (string)$this->request->getPost('repeat_password');
+
+        if ($username === '' || $username !== (string)$admin->username) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Username does not match the logged-in account.',
+            ]);
+        }
+
+        if ($current_password === '' || !$platform_admin->check_password($username, $current_password)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.current_password_invalid'),
+            ]);
+        }
+
+        if ($plain_password !== $repeat_password) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_must_match'),
+            ]);
+        }
+
+        if ($plain_password === $current_password) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_not_must_match'),
+            ]);
+        }
+
+        helper('password');
+        if (!is_strong_password($plain_password)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_strong'),
+            ]);
+        }
+
+        if ($platform_admin->change_password((int)$admin->admin_id, $plain_password)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => lang('Employees.successful_change_password'),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => lang('Employees.unsuccessful_change_password'),
+        ]);
     }
 }

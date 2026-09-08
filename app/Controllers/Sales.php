@@ -675,7 +675,7 @@ class Sales extends Secure_Controller
         $data['comments'] = $this->sale_lib->get_comment();
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
         $employee_info = $this->employee->get_info($employee_id);
-        $data['employee'] = $employee_info->first_name . ' ' . mb_substr($employee_info->last_name, 0, 1);
+        $data['employee'] = format_person_name($employee_info->first_name, $employee_info->last_name, true);
 
         $data['company_info'] = implode("\n", [$this->config['address'], $this->config['phone']]);
 
@@ -704,7 +704,6 @@ class Sales extends Secure_Controller
 
         if ($customer_info != null) {
             $data["customer_comments"] = $customer_info->comments;
-            $data['tax_id'] = $customer_info->tax_id;
         }
         $tax_details = $this->tax_lib->get_taxes($data['cart']);    // TODO: Duplicated code
         $data['taxes'] = $tax_details[0];
@@ -978,7 +977,7 @@ class Sales extends Secure_Controller
             if (!empty($customer_info->company_name)) {
                 $data['customer'] = $customer_info->company_name;
             } else {
-                $data['customer'] = $customer_info->first_name . ' ' . $customer_info->last_name;
+                $data['customer'] = format_person_name($customer_info->first_name, $customer_info->last_name);
             }
 
             $data['first_name'] = $customer_info->first_name;
@@ -986,11 +985,13 @@ class Sales extends Secure_Controller
             $data['customer_email'] = $customer_info->email;
             $data['customer_address'] = $customer_info->address_1;
 
-            if (!empty($customer_info->zip) || !empty($customer_info->city)) {
-                $data['customer_location'] = $customer_info->zip . ' ' . $customer_info->city . "\n" . $customer_info->state;
-            } else {
-                $data['customer_location'] = '';
-            }
+            $data['customer_location'] = format_person_location(
+                $customer_info->address_2,
+                $customer_info->city,
+                $customer_info->state,
+                $customer_info->zip,
+                $customer_info->country
+            );
 
             $data['customer_account_number'] = $customer_info->account_number;
             $data['customer_discount'] = $customer_info->discount;
@@ -1019,11 +1020,6 @@ class Sales extends Secure_Controller
             if ($data['customer_account_number']) {
                 $data['customer_info'] .= "\n" . lang('Sales.account_number') . ": " . $data['customer_account_number'];
             }
-
-            if ($customer_info->tax_id != '') {
-                $data['customer_info'] .= "\n" . lang('Sales.tax_id') . ": " . $customer_info->tax_id;
-            }
-            $data['tax_id'] = $customer_info->tax_id;
         }
 
         return $customer_info;
@@ -1079,7 +1075,7 @@ class Sales extends Secure_Controller
         $data['amount_change'] = $data['amount_due'] * -1;
 
         $employee_info = $this->employee->get_info($this->sale_lib->get_employee());
-        $data['employee'] = $employee_info->first_name . ' ' . mb_substr($employee_info->last_name, 0, 1);
+        $data['employee'] = format_person_name($employee_info->first_name, $employee_info->last_name, true);
         $this->_load_customer_data($this->sale_lib->get_customer(), $data);
 
         $data['sale_id_num'] = $sale_id;
@@ -1248,7 +1244,8 @@ class Sales extends Secure_Controller
     public function getReceipt(int $sale_id): void
     {
         $data = $this->_load_sale_data($sale_id);
-        echo view('sales/receipt', $data);
+        $view = $this->request->isAJAX() ? 'sales/receipt_modal' : 'sales/receipt';
+        echo view($view, $data);
         $this->sale_lib->clear_all();
     }
 
@@ -1277,7 +1274,7 @@ class Sales extends Secure_Controller
         $data['selected_customer_name'] = $sale_info['customer_name'];
         $employee_info = $this->employee->get_info($sale_info['employee_id']);
         $data['selected_employee_id'] = $sale_info['employee_id'];
-        $data['selected_employee_name'] = $employee_info->first_name . ' ' . $employee_info->last_name;
+        $data['selected_employee_name'] = format_person_name($employee_info->first_name, $employee_info->last_name);
         $data['sale_info'] = $sale_info;
         $balance_due = round($sale_info['amount_due'] - $sale_info['amount_tendered'] + $sale_info['cash_refund'], totals_decimals(), PHP_ROUND_HALF_UP);
 

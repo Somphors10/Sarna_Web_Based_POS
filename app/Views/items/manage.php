@@ -26,21 +26,7 @@ use App\Models\Employee;
 
         init_select_controls();
 
-        var itemListView = 'active';
-
-        var setItemListView = function(view) {
-            itemListView = view;
-            $('.neo-list-tab').removeClass('is-active').attr('aria-selected', 'false');
-            $('.neo-list-tab[data-list="' + view + '"]').addClass('is-active').attr('aria-selected', 'true');
-            $('#delete').toggleClass('hidden', view === 'deleted');
-            $('#restore').toggleClass('hidden', view !== 'deleted');
-            $('#bulk_edit, #generate_barcodes').toggleClass('hidden', view === 'deleted');
-            table_support.refresh();
-        };
-
-        $(document).on('click', '.neo-list-tab', function() {
-            setItemListView($(this).data('list'));
-        });
+        <?= view('partial/soft_delete_list_script', ['hide_when_deleted' => '#bulk_edit, #generate_barcodes']) ?>
 
         $('#generate_barcodes').click(function() {
             window.open(
@@ -84,22 +70,11 @@ use App\Models\Employee;
             pageSize: <?= table_page_size($config['lines_per_page']) ?>,
             uniqueId: 'item_id',
             queryParams: function() {
-                var selectedFilters = $("#filters").val() || [];
-                if (!Array.isArray(selectedFilters)) {
-                    selectedFilters = selectedFilters ? [selectedFilters] : [];
-                }
-                selectedFilters = selectedFilters.filter(function(filter) {
-                    return filter && filter !== 'is_deleted';
-                });
-                if (itemListView === 'deleted') {
-                    selectedFilters.push('is_deleted');
-                }
-
                 return $.extend(arguments[0], {
                     "start_date": start_date,
                     "end_date": end_date,
                     "stock_location": $("#stock_location").val(),
-                    "filters": selectedFilters
+                    "filters": mergeDeletedTableFilters($("#filters").val() || [])
                 });
             },
             onLoadSuccess: function(response) {
@@ -149,19 +124,15 @@ use App\Models\Employee;
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
-            <button class="btn btn-primary btn-sm modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+            <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </button>
         </div>
     </header>
 
-    <div class="neo-list-tabs" role="tablist" aria-label="<?= esc(lang('Items.tab_active') . ' / ' . lang('Items.tab_deleted')) ?>">
-        <button type="button" class="neo-list-tab is-active" data-list="active" role="tab" aria-selected="true"><?= lang('Items.tab_active') ?></button>
-        <button type="button" class="neo-list-tab" data-list="deleted" role="tab" aria-selected="false"><?= lang('Items.tab_deleted') ?></button>
-    </div>
+    <?= view('partial/list_tabs', ['hide_when_deleted' => '#bulk_edit, #generate_barcodes']) ?>
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">

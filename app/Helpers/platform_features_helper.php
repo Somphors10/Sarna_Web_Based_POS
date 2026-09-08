@@ -28,8 +28,8 @@ function platform_pos_features(): array
             'description' => 'Add, edit, delete, and search suppliers.',
         ],
         'receivings' => [
-            'label' => 'Purchase',
-            'description' => 'Buy stock from suppliers and add it to inventory.',
+            'label' => 'Receiving',
+            'description' => 'Receive stock from suppliers and add it to inventory.',
         ],
         'employees' => [
             'label' => 'Employees',
@@ -53,7 +53,7 @@ function platform_pos_features(): array
         ],
         'taxes' => [
             'label' => 'Taxes',
-            'description' => 'Configure tax codes, rates, and categories.',
+            'description' => 'Advanced tax codes, jurisdictions, categories, and rates (usually not needed for simple VAT).',
         ],
         'config' => [
             'label' => 'Configuration',
@@ -75,7 +75,8 @@ function platform_feature_states(): array
 {
     $defaults = [];
     foreach (array_keys(platform_pos_features()) as $id) {
-        $defaults[$id] = true;
+        // Advanced Taxes module is off by default; shops use item VAT / Config tax instead.
+        $defaults[$id] = ($id !== 'taxes');
     }
 
     $file = platform_features_file();
@@ -130,12 +131,14 @@ function tenant_feature_enabled(string $module_id): bool
         return true;
     }
 
-    if (function_exists('is_platform_super_admin') && is_platform_super_admin()) {
-        return true;
-    }
-
+    // Platform-wide off applies to shops and Super Admin POS shell.
     if (!platform_feature_enabled($module_id)) {
         return false;
+    }
+
+    // Super Admin ignores per-plan limits (can still open enabled platform features).
+    if (function_exists('is_platform_super_admin') && is_platform_super_admin()) {
+        return true;
     }
 
     $plan_id = tenant_plan_id();
@@ -193,18 +196,100 @@ function platform_set_feature_enabled(string $module_id, bool $enabled): bool
     return file_put_contents($file, json_encode($states, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) !== false;
 }
 
+/**
+ * Same sidebar icon path used by shop POS and Super Admin POS Features.
+ * Prefers the round nav icons, then classic menubar icons.
+ */
+function pos_module_nav_icon(string $module_id): string
+{
+    $module_id = preg_replace('/[^a-z0-9_]/', '', strtolower($module_id)) ?: 'office';
+    $candidates = [
+        'images/nav/' . $module_id . '.svg',
+        'images/menubar/' . $module_id . '.svg',
+        'images/nav/office.svg',
+        'images/menubar/office.svg',
+    ];
+
+    foreach ($candidates as $path) {
+        if (is_file(FCPATH . $path)) {
+            return $path;
+        }
+    }
+
+    return 'images/nav/office.svg';
+}
+
+/**
+ * KHQR card HTML — red bar, dashed line, QR image (no merchant name on the picture).
+ */
+function khqr_scan_card_markup(string $qr_url, string $wrapper_class = ''): string
+{
+    $url = esc($qr_url, 'attr');
+    $extra = trim($wrapper_class) !== '' ? ' ' . esc(trim($wrapper_class), 'attr') : '';
+
+    return '<div class="khqr-scan-card' . $extra . '">'
+        . '<div class="khqr-scan-card__bar">KHQR</div>'
+        . '<div class="khqr-scan-card__rule" aria-hidden="true"></div>'
+        . '<div class="khqr-scan-card__code">'
+        . '<img src="' . $url . '" alt="ABA KHQR" width="240" height="240" loading="lazy">'
+        . '</div></div>';
+}
+
+/**
+ * Module order from the POS modules table (same as shop sidebar).
+ *
+ * @return list<string>
+ */
+function pos_sidebar_module_order(): array
+{
+    $db = db_connect();
+    if (!$db->tableExists('modules')) {
+        return array_keys(platform_pos_features());
+    }
+
+    $module = model(\App\Models\Module::class);
+    $module->ensure_module_catalog();
+
+    $order = [];
+    foreach ($module->get_all_modules()->getResult() as $row) {
+        $order[] = (string)$row->module_id;
+    }
+
+    return $order;
+}
+
 function platform_features_for_view(): array
 {
     $states = platform_feature_states();
+    $features = platform_pos_features();
     $rows = [];
-    foreach (platform_pos_features() as $id => $feature) {
-        $icon = 'images/nav/' . $id . '.svg';
+
+    foreach (pos_sidebar_module_order() as $id) {
+        if (!array_key_exists($id, $features)) {
+            continue;
+        }
+
+        $feature = $features[$id];
         $rows[] = [
             'id' => $id,
             'label' => $feature['label'],
             'description' => $feature['description'],
             'enabled' => !empty($states[$id]),
-            'icon' => is_file(FCPATH . $icon) ? $icon : 'images/nav/office.svg',
+            'icon' => pos_module_nav_icon($id),
+        ];
+    }
+
+    foreach ($features as $id => $feature) {
+        if (in_array($id, pos_sidebar_module_order(), true)) {
+            continue;
+        }
+
+        $rows[] = [
+            'id' => $id,
+            'label' => $feature['label'],
+            'description' => $feature['description'],
+            'enabled' => !empty($states[$id]),
+            'icon' => pos_module_nav_icon($id),
         ];
     }
 
@@ -214,6 +299,62 @@ function platform_features_for_view(): array
 function is_platform_super_admin(): bool
 {
     return (int) session()->get('platform_admin_id') > 0;
+}
+
+/**
+ * Profile dropdown header copy for the POS top bar (matches Super Admin card layout).
+ *
+ * @return array{display_name: string, username: string, email: string, role_label: string}
+ */
+function pos_profile_card_context(object $user_info): array
+{
+    $display_name = format_person_name(
+        (string) ($user_info->first_name ?? ''),
+        (string) ($user_info->last_name ?? '')
+    );
+    $username = trim((string) ($user_info->username ?? ''));
+    $email = trim((string) ($user_info->email ?? ''));
+    $role_label = 'Team Member';
+
+    if (is_platform_super_admin()) {
+        $platform_admin = model(\App\Models\Platform_admin::class);
+        $admin = $platform_admin->get_logged_in_admin();
+        if ($admin) {
+            $display_name = trim((string) ($admin->full_name ?? '')) ?: 'Platform Super Admin';
+            $username = trim((string) ($admin->username ?? $username));
+            $email = trim((string) ($admin->email ?? $email));
+        } else {
+            $display_name = 'Platform Super Admin';
+            $username = super_admin_pos_username();
+        }
+        $role_label = $platform_admin->is_owner() ? 'Platform Owner' : 'Platform Admin';
+    } else {
+        $tenant_id = (int) (session()->get('tenant_id') ?? 0);
+        $person_id = (int) ($user_info->person_id ?? 0);
+        if ($tenant_id > 0 && $person_id > 0) {
+            $role_row = db_connect()->table('tenant_users')
+                ->where('tenant_id', $tenant_id)
+                ->where('person_id', $person_id)
+                ->get(1)
+                ->getRow();
+            $roles = [
+                'owner' => 'Shop Owner',
+                'admin' => 'Shop Admin',
+                'manager' => 'Manager',
+                'cashier' => 'Cashier',
+            ];
+            if ($role_row && isset($roles[$role_row->tenant_role])) {
+                $role_label = $roles[$role_row->tenant_role];
+            }
+        }
+    }
+
+    return [
+        'display_name' => $display_name,
+        'username' => $username,
+        'email' => $email,
+        'role_label' => $role_label,
+    ];
 }
 
 function super_admin_pos_username(): string
@@ -228,20 +369,30 @@ function super_admin_pos_username(): string
  */
 function super_admin_pos_nav_modules(): array
 {
-    $home_icon = is_file(FCPATH . 'images/nav/home.svg') ? 'images/nav/home.svg' : 'images/nav/office.svg';
+    $features = platform_pos_features();
+    $hidden = array_merge(['messages', 'migrate', 'office'], platform_disabled_feature_ids());
     $rows = [[
         'id' => 'home',
         'label' => 'Home',
-        'icon' => $home_icon,
+        'icon' => pos_module_nav_icon('home'),
         'url' => site_url('home'),
     ]];
 
-    foreach (platform_features_for_view() as $feature) {
+    foreach (pos_sidebar_module_order() as $module_id) {
+        if ($module_id === 'home' || in_array($module_id, $hidden, true)) {
+            continue;
+        }
+
+        if (!array_key_exists($module_id, $features)) {
+            continue;
+        }
+
+        $feature = $features[$module_id];
         $rows[] = [
-            'id' => $feature['id'],
+            'id' => $module_id,
             'label' => $feature['label'],
-            'icon' => $feature['icon'],
-            'url' => site_url($feature['id']),
+            'icon' => pos_module_nav_icon($module_id),
+            'url' => site_url($module_id),
         ];
     }
 
@@ -478,4 +629,21 @@ function saas_business_type_label(?string $type): string
     $key = strtolower(trim((string)$type));
 
     return $types[$key] ?? (string)$type;
+}
+
+/**
+ * Extract Super Admin rejection comment from subscription request notes.
+ */
+function saas_rejection_reason(?string $notes): string
+{
+    $notes = trim((string)$notes);
+    if ($notes === '') {
+        return '';
+    }
+
+    if (preg_match('/Rejected:\s*(.+)$/s', $notes, $matches)) {
+        return trim($matches[1]);
+    }
+
+    return '';
 }

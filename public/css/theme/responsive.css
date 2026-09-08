@@ -170,17 +170,20 @@
         width: 100%;
     }
 
+    /* Keep toolbar on one line; only shrink search */
     .neo-global-content .bootstrap-table .fixed-table-toolbar {
-        flex-wrap: wrap;
+        flex-wrap: nowrap !important;
+        gap: 6px;
+        padding: 8px 10px;
     }
 
     .neo-global-content .bootstrap-table .fixed-table-toolbar .search,
     .neo-global-content .bootstrap-table .fixed-table-toolbar .search.input-group {
-        flex: 1 1 100%;
-        width: 100%;
-        max-width: 100%;
-        margin-left: 0;
-        order: 0;
+        flex: 0 1 160px;
+        width: 160px;
+        max-width: 160px;
+        margin-left: 0 !important;
+        order: 2;
     }
 
     .neo-info-grid {
@@ -197,12 +200,15 @@
     }
 
     .neo-module-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
     }
 
     .neo-module-actions {
-        width: 100%;
+        width: auto;
+        margin-left: auto;
     }
 
     .pos-topbar-clock {

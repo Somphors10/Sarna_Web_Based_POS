@@ -9,9 +9,9 @@
  */
 
 $summary_labels = [
-    'total'                  => 'Total',
-    'profit'                 => lang('Reports.profit'),
-    'expenses_total_amount'  => 'Total',
+    'total'                  => lang('Common.dashboard_total'),
+    'profit'                 => lang('Common.dashboard_profit'),
+    'expenses_total_amount'  => lang('Common.dashboard_total'),
 ];
 
 ?>
@@ -28,7 +28,7 @@ $summary_labels = [
     <div class="neo-main">
         <header class="neo-dash-header">
             <div>
-                <h2 class="neo-dash-header__title">Business Dashboard</h2>
+                <h2 class="neo-dash-header__title"><?= esc(lang('Common.dashboard')) ?></h2>
                 <p class="neo-dash-header__subtitle"><?= esc($period_label) ?></p>
             </div>
         </header>
@@ -52,7 +52,7 @@ $summary_labels = [
         <?php endif; ?>
 
         <?php if (!empty($charts)): ?>
-            <h3 class="neo-section-title">Reports Overview</h3>
+            <h3 class="neo-section-title"><?= esc(lang('Common.dashboard_reports_overview')) ?></h3>
 
             <div class="neo-chart-grid">
                 <?php foreach ($charts as $chart): ?>
@@ -87,7 +87,7 @@ $summary_labels = [
                                     <h4 class="neo-chart-card__title"><?= esc($chart['title']) ?></h4>
                                     <?php if ($chart_total > 0): ?>
                                         <div class="neo-chart-card__total">
-                                            <span>Total</span>
+                                            <span><?= esc(lang('Common.dashboard_total')) ?></span>
                                             <strong><?= to_currency($chart_total) ?></strong>
                                         </div>
                                     <?php endif; ?>

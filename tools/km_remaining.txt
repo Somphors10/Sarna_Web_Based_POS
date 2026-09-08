@@ -1,0 +1,16 @@
+﻿
+Warning: PHP Startup: Unable to load dynamic library 'bcmath' (tried: C:\xampp8\php\ext\bcmath (The specified module could not be found), C:\xampp8\php\ext\php_bcmath.dll (The specified module could not be found)) in Unknown on line 0
+=== Common.php (2) ===
+same	software_short	WBPOS
+same	website	opensourcepos.org
+=== Config.php (1) ===
+same	mailchimp	MailChimp
+=== Reports.php (4) ===
+same	code_canceled	CNL
+same	code_invoice	INV
+same	code_pos	POS
+same	code_return	RET
+=== Sales.php (2) ===
+same	hsn	HSN
+same	upi	UPI
+TOTAL=9

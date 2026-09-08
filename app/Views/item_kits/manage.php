@@ -40,7 +40,6 @@
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions">
             <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">

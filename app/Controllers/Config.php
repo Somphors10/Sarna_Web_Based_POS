@@ -218,6 +218,23 @@ class Config extends Secure_Controller
      */
     public function getIndex(): void
     {
+        // Force repair + refresh so Information tab never shows demo email / other shop logos.
+        try {
+            $repaired_email = $this->appconfig->repairPlaceholderShopEmail();
+            $repaired_logo = $this->appconfig->repairInheritedCompanyLogo();
+            if ($repaired_email !== null || $repaired_logo) {
+                config(OSPOS::class)->update_settings();
+            }
+            // Always reload settings into controller + shared view data (cache may have been stale).
+            $this->config = config(OSPOS::class)->settings;
+            $safe_logo = $this->appconfig->tenantCompanyLogoPath();
+            $this->config['company_logo'] = $safe_logo;
+            $this->global_view_data['config'] = $this->config;
+            view('viewData', ['config' => $this->config]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Config profile repair failed: ' . $e->getMessage());
+        }
+
         $data['stock_locations'] = $this->stock_location->get_all()->getResultArray();
         $data['dinner_tables'] = $this->dinner_table->get_all()->getResultArray();
         $data['customer_rewards'] = $this->customer_rewards->get_all()->getResultArray();
@@ -348,30 +365,33 @@ class Config extends Secure_Controller
         }
 
         $filename = $file->getClientName();
-        $info = pathinfo($filename);
         $extension = strtolower($file->getClientExtension() ?: (string)$file->guessExtension());
 
         if ($extension === '') {
             return ['error' => lang('Config.company_logo_upload_failed')];
         }
 
-        $file_info = [
-            'orig_name' => $filename,
-            'raw_name'  => $info['filename'],
-            'file_ext'  => $extension,
-        ];
+        $tenant_id = (int)session()->get('tenant_id');
+        if ($tenant_id <= 0) {
+            return ['error' => lang('Config.company_logo_upload_failed')];
+        }
 
-        $upload_dir = FCPATH . 'uploads/';
+        $upload_dir = FCPATH . 'uploads/tenants/' . $tenant_id . '/';
         if (!is_dir($upload_dir) && !mkdir($upload_dir, 0755, true) && !is_dir($upload_dir)) {
             return ['error' => lang('Config.company_logo_upload_failed')];
         }
 
-        $stored_name = $file_info['raw_name'] . '.' . $file_info['file_ext'];
+        $stored_name = 'company_logo.' . $extension;
+        $this->deleteTenantLogoFiles($upload_dir);
         $target_path = $upload_dir . $stored_name;
         $file->move($upload_dir, $stored_name, true);
         $this->resizeLogoIfNeeded($target_path, 800, 680);
 
-        return $file_info;
+        return [
+            'orig_name' => $filename,
+            'raw_name'  => 'tenants/' . $tenant_id . '/company_logo',
+            'file_ext'  => $extension,
+        ];
     }
 
     /**
@@ -850,13 +870,12 @@ class Config extends Secure_Controller
     public function postSaveTax(): void
     {
         $default_tax_1_rate = $this->request->getPost('default_tax_1_rate');
-        $default_tax_2_rate = $this->request->getPost('default_tax_2_rate');
 
         $batch_save_data = [
             'default_tax_1_rate'        => parse_tax(filter_var($default_tax_1_rate, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)),
             'default_tax_1_name'        => $this->request->getPost('default_tax_1_name'),
-            'default_tax_2_rate'        => parse_tax(filter_var($default_tax_2_rate, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)),
-            'default_tax_2_name'        => $this->request->getPost('default_tax_2_name'),
+            'default_tax_2_rate'        => '',
+            'default_tax_2_name'        => '',
             'tax_included'              => $this->request->getPost('tax_included') != null,
             'use_destination_based_tax' => $this->request->getPost('use_destination_based_tax') != null,
             'default_tax_code'          => $this->request->getPost('default_tax_code'),
@@ -1040,9 +1059,29 @@ class Config extends Secure_Controller
      */
     private function company_logo_exists(): bool
     {
-        $logo = trim((string)($this->config['company_logo'] ?? ''));
+        $logo = $this->company_logo_relative_path();
 
         return $logo !== '' && is_file(FCPATH . 'uploads/' . $logo);
+    }
+
+    /**
+     * Stored logo path relative to public/uploads/, only for this tenant.
+     */
+    private function company_logo_relative_path(): string
+    {
+        return $this->appconfig->tenantCompanyLogoPath((int)session()->get('tenant_id'));
+    }
+
+    /**
+     * Remove any previous logo files for this tenant before saving a new one.
+     */
+    private function deleteTenantLogoFiles(string $upload_dir): void
+    {
+        foreach (glob($upload_dir . 'company_logo.*') ?: [] as $existing_logo) {
+            if (is_file($existing_logo)) {
+                unlink($existing_logo);
+            }
+        }
     }
 
     /**
@@ -1054,6 +1093,19 @@ class Config extends Secure_Controller
      */
     public function postRemoveLogo(): void
     {
+        $logo = $this->company_logo_relative_path();
+        if ($logo !== '') {
+            $logo_path = FCPATH . 'uploads/' . $logo;
+            if (is_file($logo_path)) {
+                unlink($logo_path);
+            }
+        }
+
+        $tenant_id = (int)session()->get('tenant_id');
+        if ($tenant_id > 0) {
+            $this->deleteTenantLogoFiles(FCPATH . 'uploads/tenants/' . $tenant_id . '/');
+        }
+
         $success = $this->appconfig->save(['company_logo' => '']);
 
         echo json_encode(['success' => $success]);

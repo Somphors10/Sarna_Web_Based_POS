@@ -26,7 +26,7 @@ return [
     "show_in_items_visibility"         => "Items",
     "show_in_receipt"                  => "Show in receipt",
     "show_in_receivings"               => "Show in purchase",
-    "show_in_receivings_visibility"    => "Purchase",
+    "show_in_receivings_visibility"    => "Receiving",
     "show_in_sales"                    => "Show in sales",
     "show_in_sales_visibility"         => "Sales",
     "update"                           => "Update Attribute",

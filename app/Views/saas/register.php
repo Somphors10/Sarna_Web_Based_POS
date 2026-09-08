@@ -121,16 +121,16 @@ $show_register_aside = false; // set true to show “What happens next” again
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="tax_id">Tax ID / VAT TIN <span class="lp-field-optional">optional</span></label>
+                        <label class="lp-field-label" for="tax_id">VAT TIN <span class="lp-field-optional">optional</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('tax_id') ?>" id="tax_id" name="tax_id" placeholder="e.g. K001-901234567" value="<?= set_value('tax_id') ?>" maxlength="64">
                         <span class="lp-field-hint">Cambodia VAT number. Leave blank if you do not have one yet. You can add it later in POS settings. Printed on receipts if filled.</span>
                     </div>
                     <div class="col-12">
-                        <label class="lp-field-label" for="address">Store address <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('address') ?>" id="address" name="address" placeholder="Street, building, or village" value="<?= set_value('address') ?>" required aria-required="true">
+                        <label class="lp-field-label" for="address">House No. / Street <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('address') ?>" id="address" name="address" placeholder="e.g. #12, St. 271, Village, Sangkat" value="<?= set_value('address') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="city">City / Province <span class="lp-field-required">*</span></label>
+                        <label class="lp-field-label" for="city">Province / City <span class="lp-field-required">*</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('city') ?>" id="city" name="city" placeholder="e.g. Phnom Penh" value="<?= set_value('city') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
@@ -150,20 +150,20 @@ $show_register_aside = false; // set true to show “What happens next” again
                 </div>
                 <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_first_name">First name <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('owner_first_name') ?>" id="owner_first_name" name="owner_first_name" value="<?= set_value('owner_first_name') ?>" required aria-required="true">
-                    </div>
-                    <div class="col-md-6">
                         <label class="lp-field-label" for="owner_last_name">Last name <span class="lp-field-required">*</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('owner_last_name') ?>" id="owner_last_name" name="owner_last_name" value="<?= set_value('owner_last_name') ?>" required aria-required="true">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="lp-field-label" for="owner_first_name">First name <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_first_name') ?>" id="owner_first_name" name="owner_first_name" value="<?= set_value('owner_first_name') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_email">Email <span class="lp-field-required">*</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('owner_email') ?>" type="email" id="owner_email" name="owner_email" value="<?= set_value('owner_email') ?>" required aria-required="true">
                     </div>
                     <div class="col-md-6">
-                        <label class="lp-field-label" for="owner_phone">Phone <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('owner_phone') ?>" type="tel" id="owner_phone" name="owner_phone" placeholder="e.g. 012 345 678" value="<?= set_value('owner_phone') ?>" required aria-required="true" minlength="8">
+                        <label class="lp-field-label" for="owner_phone">Phone (+855) <span class="lp-field-required">*</span></label>
+                        <input class="lp-field-input<?= $field_invalid_class('owner_phone') ?>" type="tel" id="owner_phone" name="owner_phone" placeholder="12 345 678" value="<?= set_value('owner_phone') ?>" required aria-required="true" minlength="8">
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="owner_username">POS username <span class="lp-field-required">*</span></label>

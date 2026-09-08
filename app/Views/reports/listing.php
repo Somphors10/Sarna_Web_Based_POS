@@ -45,7 +45,6 @@ $detailed_reports = [
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= lang('Module.reports') ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
     </header>
 

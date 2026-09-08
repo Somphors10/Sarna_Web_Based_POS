@@ -1,6 +1,6 @@
 <?php
 /**
- * Gmail-safe KHQR payment email. QR only — no merchant name on the picture.
+ * Gmail-safe KHQR payment email.
  *
  * @var object $request
  * @var string $pay_url
@@ -38,30 +38,29 @@ $has_qr = !empty($qr_cid);
                 <tr>
                     <td style="padding:24px 28px 8px;font-family:Arial,Helvetica,sans-serif;color:#0f172a;font-size:15px;line-height:1.55;">
                         <p style="margin:0 0 10px;">Hello <?= $first ?>,</p>
-                        <p style="margin:0;">Your shop <strong><?= $company ?></strong> is activated. Pay with ABA KHQR, then Super Admin will open your login.</p>
+                        <p style="margin:0 0 10px;">Your shop <strong><?= $company ?></strong> is activated.</p>
+                        <p style="margin:0;">Pay <strong>$<?= $amount ?> / month</strong> with ABA, then Super Admin will open your login.</p>
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding:16px 28px 8px;">
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #f1f5f9;border-radius:12px;overflow:hidden;">
+                    <td align="center" style="padding:8px 28px 20px;">
+                        <table role="presentation" width="280" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:280px;border:1px solid #e8edf5;border-radius:16px;overflow:hidden;background:#ffffff;">
                             <tr>
-                                <td align="center" bgcolor="#e11d2e" style="background:#e11d2e;padding:12px 16px;">
-                                    <span style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:15px;font-weight:800;letter-spacing:0.16em;">KHQR</span>
+                                <td align="center" bgcolor="#e11d2e" style="background:#e11d2e;padding:11px 12px;">
+                                    <span style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;font-size:13px;font-weight:800;letter-spacing:0.16em;">KHQR</span>
                                 </td>
                             </tr>
                             <tr>
-                                <td align="center" style="padding:16px 16px 4px;font-family:Arial,Helvetica,sans-serif;">
-                                    <p style="margin:0;font-size:12px;color:#64748b;letter-spacing:0.04em;text-transform:uppercase;">Monthly plan</p>
-                                    <p style="margin:6px 0 0;font-size:32px;line-height:1;font-weight:800;color:#0f172a;">$<?= $amount ?><span style="font-size:14px;font-weight:600;color:#94a3b8;"> / month</span></p>
-                                    <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:#0f172a;"><?= $company ?></p>
+                                <td style="padding:0 16px;">
+                                    <div style="border-bottom:2px dashed #e2e8f0;line-height:0;font-size:0;">&nbsp;</div>
                                 </td>
                             </tr>
                             <tr>
-                                <td align="center" style="padding:16px 20px 22px;">
+                                <td align="center" style="padding:18px 16px 20px;background:#ffffff;">
                                     <?php if ($has_qr): ?>
-                                        <img src="cid:wbpos-khqr" width="220" height="220" alt="ABA KHQR" style="display:block;border:0;width:220px;height:220px;">
+                                        <img src="cid:wbpos-khqr" width="240" height="240" alt="ABA KHQR" style="display:block;border:0;width:240px;height:240px;margin:0 auto;">
                                     <?php else: ?>
-                                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;">Open the attached KHQR picture and scan it in ABA.</p>
+                                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#64748b;">Open the KHQR image in this email and scan it in ABA.</p>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -69,8 +68,8 @@ $has_qr = !empty($qr_cid);
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding:8px 28px 24px;font-family:Arial,Helvetica,sans-serif;color:#475569;font-size:14px;line-height:1.55;">
-                        <p style="margin:0 0 10px;">Open the <strong>ABA</strong> app on your phone and scan the QR above. There is no name on the picture — only the code.</p>
+                    <td style="padding:4px 28px 24px;font-family:Arial,Helvetica,sans-serif;color:#475569;font-size:14px;line-height:1.55;">
+                        <p style="margin:0 0 10px;">Open the <strong>ABA</strong> app and scan the QR code above.</p>
                         <p style="margin:0 0 10px;">Company code: <strong style="color:#0f172a;"><?= $code ?></strong></p>
                         <p style="margin:0;">After you pay, tell Super Admin. They will open your POS login.</p>
                         <?php if ($pay_url !== ''): ?>

@@ -171,7 +171,7 @@ return [
     "sale_by_invoice"                  => "Sale by Invoice",
     "sale_for_customer"                => "Customer:",
     "sale_time"                        => "Time",
-    "sales_tax"                        => "Sales Tax",
+    "sales_tax"                        => "VAT",
     "sales_total"                      => "",
     "select_customer"                  => "Select Customer",
     "selected_customer"                => "Selected Customer",

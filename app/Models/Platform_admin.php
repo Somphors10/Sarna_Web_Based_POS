@@ -87,6 +87,30 @@ class Platform_admin extends Model
             ->getResultArray();
     }
 
+    public function check_password(string $username, string $password): bool
+    {
+        $row = $this->db->table('platform_admins')
+            ->where('username', $username)
+            ->where('status', 'active')
+            ->get(1)
+            ->getRow();
+
+        return $row !== null && password_verify($password, $row->password_hash);
+    }
+
+    public function change_password(int $admin_id, string $plain_password): bool
+    {
+        if ($admin_id <= 0 || $plain_password === '') {
+            return false;
+        }
+
+        return $this->db->table('platform_admins')
+            ->where('admin_id', $admin_id)
+            ->update([
+                'password_hash' => password_hash($plain_password, PASSWORD_DEFAULT),
+            ]);
+    }
+
     public function logout(): void
     {
         session()->remove('platform_admin_id');

@@ -49,15 +49,21 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=62">
-        <link rel="stylesheet" href="css/forms.css?v=8">
+        <link rel="stylesheet" href="css/dashboard.css?v=80">
+        <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
+        <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=42">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=52">
         <?php endif; ?>
+        <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
+            <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
+        <?php } ?>
+        <link rel="stylesheet" href="css/theme/profile-menu.css?v=3">
+        <link rel="stylesheet" href="css/theme/modals.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
         <script src="resources/js/jquery-4fa896f615.form.js"></script>
@@ -99,20 +105,23 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=62">
-        <link rel="stylesheet" href="css/forms.css?v=8">
+        <link rel="stylesheet" href="css/dashboard.css?v=80">
+        <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
+        <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=42">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=52">
         <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
         <?php } ?>
+        <link rel="stylesheet" href="css/theme/profile-menu.css?v=3">
+        <link rel="stylesheet" href="css/theme/modals.css?v=1">
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
         <script src="resources/opensourcepos-04102e27be.min.js"></script>
@@ -263,7 +272,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                 });
 
                 document.addEventListener('click', function(event) {
-                    if (event.target.closest('.pos-profile-dropdown-wrap')) {
+                    if (event.target.closest('.pos-profile-dropdown-wrap, .sa-dropdown-wrap')) {
                         return;
                     }
                     closeDropdown();
@@ -303,14 +312,8 @@ $is_sa_pos_shell = is_platform_super_admin();
                             $sidebar_modules = array_values(array_filter($allowed_modules ?? [], static fn($module) => !in_array($module->module_id, $hidden_sidebar_modules, true)));
                         ?>
                         <?php foreach ($sidebar_modules as $module): ?>
-                            <?php
-                                $nav_icon_file = 'images/nav/' . $module->module_id . '.svg';
-                                $nav_icon_url = is_file(FCPATH . $nav_icon_file)
-                                    ? base_url($nav_icon_file)
-                                    : base_url('images/menubar/' . $module->module_id . '.svg');
-                            ?>
                             <a class="neo-global-menu-item <?= $module->module_id == $request->getUri()->getSegment(1) ? 'is-active' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>">
-                                <img class="neo-nav__icon" src="<?= $nav_icon_url ?>" alt="">
+                                <img class="neo-nav__icon" src="<?= base_url(pos_module_nav_icon((string) $module->module_id)) ?>" alt="">
                                 <span><?= lang('Module.' . $module->module_id) ?></span>
                             </a>
                         <?php endforeach; ?>
@@ -353,60 +356,77 @@ $is_sa_pos_shell = is_platform_super_admin();
 
                         <div class="navbar-right pos-topbar-user">
                             <?php
-                                helper('locale');
+                                helper('platform_features');
                                 $profile_initials = strtoupper(
                                     substr((string)($user_info->first_name ?? ''), 0, 1)
                                     . substr((string)($user_info->last_name ?? ''), 0, 1)
                                 );
-                                $active_language = current_language_code();
+                                if ($profile_initials === '' && is_platform_super_admin()) {
+                                    $profile_initials = 'PS';
+                                }
+                                $profile_card = pos_profile_card_context($user_info);
                                 $label_or = static function (string $key, string $fallback): string {
                                     $line = lang($key);
                                     return ($line === $key || $line === '') ? $fallback : $line;
                                 };
                                 $label_profile = $label_or('Common.profile', 'Profile');
-                                $label_edit_profile = $label_or('Common.edit_profile', 'Edit Profile');
-                                $label_english = $label_or('Common.language_english', 'English');
-                                $label_khmer = $label_or('Common.language_khmer', 'Khmer');
+                                $label_change_password = $label_or('Employees.change_password', 'Change Password');
+                                $ui_language = current_language_code();
                             ?>
-                            <div class="pos-profile-dropdown-wrap">
+                            <div class="sa-dropdown-wrap pos-profile-dropdown-wrap">
                                 <button
                                     type="button"
-                                    class="pos-profile-btn"
+                                    class="sa-profile-btn"
                                     id="pos_profile_btn"
                                     aria-label="<?= esc($label_profile) ?>"
                                     aria-expanded="false"
                                     aria-haspopup="true"
                                 >
-                                    <span class="pos-profile-avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
+                                    <span class="sa-profile-avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
                                 </button>
-                                <div class="pos-profile-dropdown" id="pos_profile_dropdown" hidden>
-                                    <div class="pos-profile-card">
-                                        <span class="pos-profile-card__avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
-                                        <div class="pos-profile-card__copy">
-                                            <strong><?= esc(trim($user_info->first_name . ' ' . $user_info->last_name)) ?></strong>
-                                            <span><?= esc($label_profile) ?></span>
+                                <div class="sa-dropdown sa-dropdown--profile" id="pos_profile_dropdown" hidden>
+                                    <div class="sa-profile-card">
+                                        <span class="sa-profile-card__avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
+                                        <div class="sa-profile-card__copy">
+                                            <strong><?= esc($profile_card['display_name']) ?></strong>
+                                            <?php if ($profile_card['email'] !== ''): ?>
+                                                <span><?= esc($profile_card['email']) ?></span>
+                                            <?php endif; ?>
+                                            <span class="sa-profile-card__role"><?= esc($profile_card['role_label']) ?></span>
                                         </div>
                                     </div>
-                                    <div class="pos-profile-dropdown__menu">
-                                        <?= anchor(
-                                            "home/changepassword/$user_info->person_id",
-                                            $label_edit_profile,
-                                            [
-                                                'class'           => 'pos-profile-dropdown__item modal-dlg',
-                                                'data-btn-submit' => lang('Common.submit'),
-                                                'title'           => lang('Employees.change_password'),
-                                            ]
-                                        ) ?>
+                                    <div class="sa-dropdown__menu">
                                         <a
-                                            class="pos-profile-dropdown__item<?= $active_language === 'en' ? ' is-active' : '' ?>"
+                                            class="sa-dropdown__menu-item<?= $ui_language === 'en' ? ' is-active' : '' ?>"
                                             href="<?= site_url('home/language/en') ?>"
-                                        ><?= esc($label_english) ?></a>
+                                        ><?= esc($label_or('Common.language_english', 'English')) ?></a>
                                         <a
-                                            class="pos-profile-dropdown__item<?= $active_language === 'km' ? ' is-active' : '' ?>"
+                                            class="sa-dropdown__menu-item<?= $ui_language === 'km' ? ' is-active' : '' ?>"
                                             href="<?= site_url('home/language/km') ?>"
-                                        ><?= esc($label_khmer) ?></a>
+                                        ><?= esc($label_or('Common.language_khmer', 'Khmer')) ?></a>
+                                        <?php if (is_platform_super_admin()): ?>
+                                            <?= anchor(
+                                                'super-admin/changepassword',
+                                                $label_change_password,
+                                                [
+                                                    'class'           => 'sa-dropdown__menu-item modal-dlg',
+                                                    'data-btn-submit' => lang('Common.submit'),
+                                                    'title'           => $label_change_password,
+                                                ]
+                                            ) ?>
+                                        <?php else: ?>
+                                            <?= anchor(
+                                                "home/changepassword/$user_info->person_id",
+                                                $label_change_password,
+                                                [
+                                                    'class'           => 'sa-dropdown__menu-item modal-dlg',
+                                                    'data-btn-submit' => lang('Common.submit'),
+                                                    'title'           => $label_change_password,
+                                                ]
+                                            ) ?>
+                                        <?php endif; ?>
                                         <a
-                                            class="pos-profile-dropdown__item pos-profile-dropdown__item--logout <?= is_platform_super_admin() ? 'js-super-admin-logout' : 'js-pos-logout' ?>"
+                                            class="sa-dropdown__menu-item <?= is_platform_super_admin() ? 'js-super-admin-logout' : 'js-pos-logout' ?>"
                                             href="<?= is_platform_super_admin() ? site_url('super-admin/logout') : site_url('home/logout') ?>"
                                             data-logout-url="<?= is_platform_super_admin() ? site_url('super-admin/logout') : site_url('home/logout') ?>"
                                             onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"

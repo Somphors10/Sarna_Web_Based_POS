@@ -38,7 +38,6 @@ if (isset($success)) {
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
     </header>
 
@@ -100,7 +99,7 @@ if (isset($success)) {
             </li>
 
             <li class="pull-right">
-                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-btn-new="<?= lang('Common.new') ?>" data-href="<?= "items/view" ?>" title="<?= lang('Sales.new_item') ?>">
+                <button id="new_item_button" class="btn btn-info btn-sm pull-right modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/view" ?>" title="<?= lang('Sales.new_item') ?>">
                     <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang('Sales.new_item') ?>
                 </button>
             </li>
