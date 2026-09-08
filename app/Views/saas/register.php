@@ -27,7 +27,7 @@ $show_register_aside = false; // set true to show “What happens next” again
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=37">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=38">
     <link rel="stylesheet" href="css/password-toggle.css?v=4">
 </head>
 <body class="saas-modern saas-landing-body">
@@ -108,17 +108,19 @@ $show_register_aside = false; // set true to show “What happens next” again
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="tenant_code">Company code <span class="lp-field-required">*</span></label>
-                        <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="my-store" value="<?= set_value('tenant_code') ?>" required aria-required="true">
-                        <span class="lp-field-hint">Short unique code (letters, numbers, dash).</span>
+                        <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="mystore" value="<?= set_value('tenant_code') ?>" maxlength="50" required aria-required="true">
+                        <span class="lp-field-hint">Short unique code for your shop. Write it simply — no special format required.</span>
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="business_type">Business type <span class="lp-field-required">*</span></label>
-                        <select class="lp-field-input<?= $field_invalid_class('business_type') ?>" id="business_type" name="business_type" required aria-required="true">
-                            <option value="">Select type</option>
-                            <?php foreach (($business_types ?? []) as $type_id => $type_label): ?>
-                                <option value="<?= esc($type_id) ?>" <?= set_select('business_type', $type_id) ?>><?= esc($type_label) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="lp-search-select" data-lp-search-select>
+                            <select class="lp-field-input lp-search-select__native<?= $field_invalid_class('business_type') ?>" id="business_type" name="business_type" required aria-required="true">
+                                <option value="">Select type</option>
+                                <?php foreach (($business_types ?? []) as $type_id => $type_label): ?>
+                                    <option value="<?= esc($type_id) ?>" <?= set_select('business_type', $type_id) ?>><?= esc($type_label) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="tax_id">VAT TIN <span class="lp-field-optional">optional</span></label>
@@ -246,7 +248,7 @@ $show_register_aside = false; // set true to show “What happens next” again
 </script>
 <?php endif; ?>
 <script src="<?= base_url('js/password_strength.js?v=4') ?>"></script>
-<script src="<?= base_url('js/saas_register.js?v=9') ?>"></script>
+<script src="<?= base_url('js/saas_register.js?v=10') ?>"></script>
 
 </body>
 </html>

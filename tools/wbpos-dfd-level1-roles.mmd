@@ -1,0 +1,62 @@
+%% WBPOS DFD Level 1 — Important Roles
+%% External entities = roles. Processes = major system work.
+
+flowchart LR
+  %% ===== Roles (external entities) =====
+  R1["New Shop Registrant"]
+  R2["Super Admin"]
+  R3["Shop Owner"]
+  R4["Employee / Cashier"]
+  R5["Customer"]
+
+  %% ===== Level 1 processes =====
+  P1["1.0\nRegistration and Onboarding"]
+  P2["2.0\nPlatform Administration"]
+  P3["3.0\nLogin and Access Control"]
+  P4["4.0\nShop POS Operations"]
+  P5["5.0\nSales and Payment at Counter"]
+
+  %% ===== Data stores =====
+  D1[("D1\nPlatform Database")]
+  D2[("D2\nShop Tenant Database")]
+
+  %% Registrant
+  R1 -->|"Register / verify email / pay KHQR"| P1
+  P1 -->|"Verify link / payment status"| R1
+  P1 -->|"Subscription request, tokens, tenant meta"| D1
+  D1 -->|"Request status"| P1
+
+  %% Super Admin
+  R2 -->|"Approve / reject / send KHQR / manage shops"| P2
+  P2 -->|"Request list / shop status"| R2
+  P2 -->|"Update tenants, payments, Gmail settings"| D1
+  D1 -->|"Pending requests / tenants"| P2
+  P2 -->|"Provision shop DB on approve"| D2
+
+  %% Login (Owner + Employee)
+  R3 -->|"Username + password"| P3
+  R4 -->|"Username + password"| P3
+  P3 -->|"Session / home access"| R3
+  P3 -->|"Session / home access"| R4
+  P3 -->|"Lookup tenant_logins"| D1
+  P3 -->|"Check employees + grants"| D2
+  D1 -->|"tenant_id / plan"| P3
+  D2 -->|"Employee auth + permissions"| P3
+
+  %% Shop Owner ops
+  R3 -->|"Config / employees / items / reports"| P4
+  P4 -->|"Settings / staff / catalogs"| R3
+  P4 -->|"Read-write shop data"| D2
+  D2 -->|"Shop records"| P4
+
+  %% Cashier sales
+  R4 -->|"Ring up sale / receipt"| P5
+  P5 -->|"Receipt / change"| R4
+  R5 -->|"Buy goods / pay"| P5
+  P5 -->|"Receipt"| R5
+  P5 -->|"Save sales / stock"| D2
+  D2 -->|"Items / prices / stock"| P5
+
+  %% Cross links
+  P1 -.->|"After paid + active"| P3
+  P2 -.->|"Creates / activates shop"| P1

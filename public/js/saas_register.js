@@ -9,7 +9,7 @@
     const messages = {
         required: 'This field is required.',
         company_name: 'Enter at least 2 characters.',
-        tenant_code: 'Use letters, numbers, or dashes (min 3 characters).',
+        tenant_code: 'Enter a company code.',
         owner_first_name: 'Enter at least 2 characters.',
         owner_last_name: 'Enter at least 2 characters.',
         owner_email: 'Enter a valid email address.',
@@ -96,7 +96,7 @@
                 valid = value.length >= 2;
                 break;
             case 'tenant_code':
-                valid = /^[a-zA-Z0-9_-]+$/.test(value) && value.length >= 3;
+                valid = value.length >= 1 && value.length <= 50;
                 break;
             case 'owner_email':
                 valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -196,8 +196,14 @@
         if (!allValid) {
             event.preventDefault();
             if (firstInvalid) {
-                firstInvalid.focus();
-                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const searchWrap = firstInvalid.closest('[data-lp-search-select]');
+                const focusTarget = searchWrap
+                    ? searchWrap.querySelector('.lp-search-select__trigger')
+                    : firstInvalid;
+                if (focusTarget) {
+                    focusTarget.focus();
+                    focusTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             }
         }
     });
@@ -247,4 +253,147 @@
     if (captchaRefresh) {
         captchaRefresh.addEventListener('click', reloadCaptcha);
     }
+
+    const initSearchSelect = function (wrap) {
+        const select = wrap.querySelector('select');
+        if (!select || wrap.querySelector('.lp-search-select__trigger')) {
+            return;
+        }
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'lp-search-select__trigger lp-field-input';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const panel = document.createElement('div');
+        panel.className = 'lp-search-select__panel';
+        panel.hidden = true;
+
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'lp-search-select__search';
+        search.placeholder = 'Search type…';
+        search.setAttribute('autocomplete', 'off');
+        search.setAttribute('aria-label', 'Search business type');
+
+        const list = document.createElement('ul');
+        list.className = 'lp-search-select__list';
+        list.setAttribute('role', 'listbox');
+
+        panel.appendChild(search);
+        panel.appendChild(list);
+        wrap.appendChild(trigger);
+        wrap.appendChild(panel);
+        select.classList.add('lp-search-select__native');
+
+        const selectedLabel = function () {
+            const opt = select.options[select.selectedIndex];
+            if (!opt || !opt.value) {
+                return 'Select type';
+            }
+            return opt.textContent;
+        };
+
+        const syncTrigger = function () {
+            trigger.textContent = selectedLabel();
+            trigger.classList.toggle('is-placeholder', !select.value);
+            if (select.classList.contains('is-invalid')) {
+                trigger.classList.add('is-invalid');
+            } else {
+                trigger.classList.remove('is-invalid');
+            }
+        };
+
+        const buildList = function (query) {
+            const q = (query || '').trim().toLowerCase();
+            list.innerHTML = '';
+            Array.prototype.forEach.call(select.options, function (opt) {
+                if (!opt.value) {
+                    return;
+                }
+                const label = opt.textContent;
+                if (q && label.toLowerCase().indexOf(q) === -1 && String(opt.value).toLowerCase().indexOf(q) === -1) {
+                    return;
+                }
+                const li = document.createElement('li');
+                li.className = 'lp-search-select__option';
+                li.setAttribute('role', 'option');
+                li.setAttribute('data-value', opt.value);
+                li.textContent = label;
+                if (opt.selected) {
+                    li.classList.add('is-active');
+                    li.setAttribute('aria-selected', 'true');
+                }
+                li.addEventListener('click', function () {
+                    select.value = opt.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncTrigger();
+                    closePanel();
+                    clearFieldError(select);
+                    trigger.focus();
+                });
+                list.appendChild(li);
+            });
+            if (!list.children.length) {
+                const empty = document.createElement('li');
+                empty.className = 'lp-search-select__empty';
+                empty.textContent = 'No matches';
+                list.appendChild(empty);
+            }
+        };
+
+        const openPanel = function () {
+            panel.hidden = false;
+            trigger.setAttribute('aria-expanded', 'true');
+            wrap.classList.add('is-open');
+            search.value = '';
+            buildList('');
+            window.setTimeout(function () {
+                search.focus();
+            }, 0);
+        };
+
+        const closePanel = function () {
+            panel.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+            wrap.classList.remove('is-open');
+        };
+
+        trigger.addEventListener('click', function () {
+            if (panel.hidden) {
+                openPanel();
+            } else {
+                closePanel();
+            }
+        });
+
+        search.addEventListener('input', function () {
+            buildList(search.value);
+        });
+
+        search.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closePanel();
+                trigger.focus();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!wrap.contains(event.target)) {
+                closePanel();
+            }
+        });
+
+        select.addEventListener('invalid', function () {
+            syncTrigger();
+        });
+
+        const observer = new MutationObserver(syncTrigger);
+        observer.observe(select, { attributes: true, attributeFilter: ['class'] });
+
+        syncTrigger();
+    };
+
+    form.querySelectorAll('[data-lp-search-select]').forEach(initSearchSelect);
 })();

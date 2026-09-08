@@ -122,7 +122,7 @@ class Saas extends BaseController
 
         $rules = [
             'company_name' => 'required|min_length[2]|max_length[255]',
-            'tenant_code' => 'required|alpha_dash|min_length[3]|max_length[50]',
+            'tenant_code' => 'required|min_length[1]|max_length[50]',
             'business_type' => 'required|max_length[64]',
             'address' => 'required|min_length[5]|max_length[255]',
             'city' => 'required|min_length[2]|max_length[120]',
@@ -175,7 +175,7 @@ class Saas extends BaseController
         }
 
         $db = db_connect('platform');
-        $tenant_code = strtolower((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $tenant_code = strtolower(trim((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         $owner_username = (string)$this->request->getPost('owner_username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
         $tenant_exists = $db->table('tenants')->where('tenant_code', $tenant_code)->countAllResults();
@@ -360,7 +360,7 @@ class Saas extends BaseController
     {
         (new PlatformArchitecture())->ensure();
         $validation = service('validation');
-        $tenant_code = strtolower((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $tenant_code = strtolower(trim((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         $owner_email = strtolower(trim((string)$this->request->getPost('owner_email', FILTER_SANITIZE_EMAIL)));
         $view = [
             'config' => config(OSPOS::class)->settings,
@@ -370,7 +370,7 @@ class Saas extends BaseController
         ];
 
         if (!$this->validate([
-            'tenant_code' => 'required|alpha_dash|min_length[3]|max_length[50]',
+            'tenant_code' => 'required|min_length[1]|max_length[50]',
             'owner_email' => 'required|valid_email',
         ])) {
             return view('saas/checkout', $view + ['has_errors' => true, 'status_message' => '']);

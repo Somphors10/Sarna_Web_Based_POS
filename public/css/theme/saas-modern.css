@@ -2672,6 +2672,100 @@ select.lp-field-input {
     padding-right: 40px;
 }
 
+.lp-search-select {
+    position: relative;
+}
+
+.lp-search-select__native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.lp-search-select__trigger {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.lp-search-select__trigger.is-placeholder {
+    color: #94a3b8;
+}
+
+.lp-search-select.is-open .lp-search-select__trigger {
+    border-color: #a5b4fc;
+}
+
+.lp-search-select__panel {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--saas-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.lp-search-select__search {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--saas-text);
+    border: 0;
+    border-bottom: 1px solid var(--saas-border);
+    outline: none;
+}
+
+.lp-search-select__list {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.lp-search-select__option {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--saas-text);
+}
+
+.lp-search-select__option:hover,
+.lp-search-select__option.is-active {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.lp-search-select__empty {
+    padding: 12px;
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+}
+
 .lp-field-required {
     color: #dc2626;
     font-weight: 700;
