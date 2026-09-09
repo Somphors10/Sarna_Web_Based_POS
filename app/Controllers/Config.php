@@ -289,6 +289,24 @@ class Config extends Secure_Controller
 
         $data['mailchimp']['lists'] = $this->_mailchimp();
 
+        $tenant_id = (int)(session()->get('tenant_id') ?? 0);
+        $data['shop_subscription'] = (
+            $tenant_id > 0
+            && function_exists('saas_shop_subscription_dates')
+            && !(function_exists('is_platform_super_admin') && is_platform_super_admin())
+        )
+            ? saas_shop_subscription_dates($tenant_id)
+            : [
+                'request_date' => null,
+                'expires_date' => null,
+                'request_label' => '—',
+                'expires_label' => '—',
+                'days_left' => null,
+                'is_expired' => false,
+                'is_warning' => false,
+                'has_data' => false,
+            ];
+
         echo view('configs/manage', $data);
     }
 

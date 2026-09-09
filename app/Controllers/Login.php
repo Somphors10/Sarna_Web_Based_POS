@@ -28,6 +28,17 @@ class Login extends BaseController
     public function index(): string|RedirectResponse
     {
         $this->employee = model(Employee::class);
+
+        // Shop "Log in" must never silently restore a Super Admin session
+        // (browser often keeps the cookie even after the window is closed).
+        if ($this->request->getMethod() !== 'POST' && (int)session()->get('platform_admin_id') > 0) {
+            model(\App\Models\Platform_admin::class)->logout();
+            if (function_exists('logout_super_admin_pos_session')) {
+                logout_super_admin_pos_session();
+            }
+            (new TenantContext())->clearTenantDatabaseSession();
+        }
+
         if (!$this->employee->is_logged_in()) {
             // Login must always start from neutral DB context.
             // Stale tenant DB session overrides can break auth and render Whoops.

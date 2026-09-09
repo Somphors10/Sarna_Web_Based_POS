@@ -46,6 +46,27 @@
                         <?= esc($error) ?>
                     </div>
                 <?php endforeach; ?>
+            <?php elseif (service('request')->getGet('expired') === '1'): ?>
+                <div class="login-alert login-alert--danger">
+                    <?= esc(lang('Login.subscription_expired')) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            $show_renew_cta = service('request')->getGet('expired') === '1';
+            if (!$show_renew_cta && $has_errors) {
+                foreach (($validation?->getErrors() ?? []) as $error) {
+                    if (stripos((string)$error, 'expired') !== false || stripos((string)$error, 'ផុតកំណត់') !== false) {
+                        $show_renew_cta = true;
+                        break;
+                    }
+                }
+            }
+            ?>
+            <?php if ($show_renew_cta): ?>
+                <p class="login-forgot" style="margin-top:0;margin-bottom:1rem;">
+                    <a href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                </p>
             <?php endif; ?>
 
             <?php if (!$is_latest): ?>
@@ -117,6 +138,8 @@
             <?= form_close() ?>
 
             <p class="login-card__footer">
+                <a class="login-card__link" href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                <span aria-hidden="true"> · </span>
                 <a class="login-card__link" href="<?= site_url() ?>">View our services</a>
             </p>
         </div>

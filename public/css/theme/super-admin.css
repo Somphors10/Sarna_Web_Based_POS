@@ -1456,6 +1456,27 @@ a.sa-metric:focus-visible .sa-metric__hint {
     color: #b91c1c;
 }
 
+.sa-status--expired {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+}
+
+.sa-expiry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+}
+
+.sa-expiry strong {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.sa-muted {
+    color: #94a3b8;
+}
+
 .sa-status--owner {
     background: rgba(124, 58, 237, 0.1);
     color: var(--sa-primary-dark);

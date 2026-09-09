@@ -30,6 +30,43 @@
                 </div>
             </div>
 
+            <?php
+            $shop_subscription = $shop_subscription ?? [];
+            $show_subscription_dates = !empty($shop_subscription['has_data']);
+            ?>
+            <?php if ($show_subscription_dates): ?>
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Config.subscription_request_date'), 'subscription_request_date', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
+                    <p class="form-control-static" id="subscription_request_date" style="padding-top:7px;margin:0;">
+                        <?= esc($shop_subscription['request_label'] ?? '—') ?>
+                    </p>
+                    <span class="help-block" style="margin-bottom:0;"><?= lang('Config.subscription_request_date_hint') ?></span>
+                </div>
+            </div>
+
+            <div class="form-group form-group-sm">
+                <?= form_label(lang('Config.subscription_expires_date'), 'subscription_expires_date', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
+                <div class="col-xs-12 col-sm-10">
+                    <p class="form-control-static" id="subscription_expires_date" style="padding-top:7px;margin:0;">
+                        <?= esc($shop_subscription['expires_label'] ?? '—') ?>
+                        <?php if (!empty($shop_subscription['is_expired'])): ?>
+                            <span class="label label-danger" style="margin-left:8px;"><?= lang('Config.subscription_status_expired') ?></span>
+                        <?php elseif (!empty($shop_subscription['is_warning'])): ?>
+                            <span class="label label-warning" style="margin-left:8px;">
+                                <?= lang('Config.subscription_days_left', [(string)max(0, (int)($shop_subscription['days_left'] ?? 0))]) ?>
+                            </span>
+                        <?php elseif (isset($shop_subscription['days_left']) && $shop_subscription['days_left'] !== null): ?>
+                            <span class="label label-success" style="margin-left:8px;">
+                                <?= lang('Config.subscription_days_left', [(string)max(0, (int)$shop_subscription['days_left'])]) ?>
+                            </span>
+                        <?php endif; ?>
+                    </p>
+                    <span class="help-block" style="margin-bottom:0;"><?= lang('Config.subscription_expires_date_hint') ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <div class="form-group form-group-sm">
                 <?= form_label(lang('Config.company_logo'), 'company_logo', ['class' => 'control-label col-xs-12 col-sm-2']) ?>
                 <div class="col-xs-12 col-sm-10">

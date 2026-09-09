@@ -591,6 +591,311 @@ function saas_monthly_price(?float $stored = null): float
 }
 
 /**
+ * Days before period_end when shops see an in-POS renewal warning.
+ */
+function saas_subscription_warning_days(): int
+{
+    return 7;
+}
+
+/**
+ * @return array{period_end:?string,days_left:?int,is_expired:bool,is_warning:bool,has_period:bool}
+ */
+function saas_tenant_subscription_info(int $tenant_id): array
+{
+    $empty = [
+        'period_end' => null,
+        'days_left' => null,
+        'is_expired' => false,
+        'is_warning' => false,
+        'has_period' => false,
+    ];
+
+    if ($tenant_id <= 0) {
+        return $empty;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('subscriptions') || !$db->fieldExists('period_end', 'subscriptions')) {
+            return $empty;
+        }
+
+        $row = $db->table('subscriptions')
+            ->select('period_end')
+            ->where('tenant_id', $tenant_id)
+            ->orderBy('subscription_id', 'DESC')
+            ->get(1)
+            ->getRow();
+
+        if ($row === null || trim((string)($row->period_end ?? '')) === '') {
+            return $empty;
+        }
+
+        $end = strtotime((string)$row->period_end);
+        if ($end === false) {
+            return $empty;
+        }
+
+        $now = time();
+        $is_expired = $end < $now;
+        $days_left = (int)floor(($end - $now) / 86400);
+
+        return [
+            'period_end' => date('Y-m-d H:i:s', $end),
+            'days_left' => $days_left,
+            'is_expired' => $is_expired,
+            'is_warning' => !$is_expired && $days_left <= saas_subscription_warning_days(),
+            'has_period' => true,
+        ];
+    } catch (Throwable $e) {
+        return $empty;
+    }
+}
+
+/**
+ * True when the shop may use POS (subscription period not past end, or no period configured).
+ */
+function saas_tenant_subscription_usable(int $tenant_id): bool
+{
+    $info = saas_tenant_subscription_info($tenant_id);
+    if (!$info['has_period']) {
+        return true;
+    }
+
+    return !$info['is_expired'];
+}
+
+/**
+ * Whether tenant is currently paid and does not need renewal yet
+ * (more than 7 days left). Used by pay/checkout "already paid".
+ */
+function saas_tenant_is_currently_paid(?object $tenant): bool
+{
+    if ($tenant === null) {
+        return false;
+    }
+
+    $status = strtolower((string)($tenant->status ?? ''));
+    if ($status !== 'active') {
+        return false;
+    }
+
+    $tenant_id = (int)($tenant->tenant_id ?? 0);
+    if ($tenant_id <= 0) {
+        return false;
+    }
+
+    // Allow renew during warning window or after expiry.
+    if (saas_tenant_needs_renewal($tenant_id)) {
+        return false;
+    }
+
+    return saas_tenant_subscription_usable($tenant_id);
+}
+
+/**
+ * True when the shop should renew now (expired, or within the 7-day warning window).
+ */
+function saas_tenant_needs_renewal(int $tenant_id): bool
+{
+    if ($tenant_id <= 0) {
+        return false;
+    }
+
+    $info = saas_tenant_subscription_info($tenant_id);
+    if (!$info['has_period']) {
+        return false;
+    }
+
+    return !empty($info['is_expired']) || !empty($info['is_warning']);
+}
+
+/**
+ * Extend subscription by N months from max(now, current period_end). Activates subscription row.
+ */
+function saas_extend_tenant_subscription(int $tenant_id, int $months = 1): void
+{
+    if ($tenant_id <= 0 || $months < 1) {
+        return;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('subscriptions')) {
+            return;
+        }
+
+        $row = $db->table('subscriptions')
+            ->where('tenant_id', $tenant_id)
+            ->orderBy('subscription_id', 'DESC')
+            ->get(1)
+            ->getRow();
+
+        $now = time();
+        $base = $now;
+        if ($row !== null && trim((string)($row->period_end ?? '')) !== '') {
+            $current_end = strtotime((string)$row->period_end);
+            if ($current_end !== false && $current_end > $base) {
+                $base = $current_end;
+            }
+        }
+
+        $period_start = date('Y-m-d H:i:s', $now);
+        $period_end = date('Y-m-d H:i:s', strtotime('+' . $months . ' month', $base));
+
+        $payload = [
+            'status' => 'active',
+            'period_start' => $period_start,
+            'period_end' => $period_end,
+        ];
+
+        if ($db->fieldExists('expiry_mail_stage', 'subscriptions')) {
+            $payload['expiry_mail_stage'] = null;
+            $payload['expiry_mail_period_end'] = null;
+        }
+
+        if ($row !== null) {
+            $db->table('subscriptions')
+                ->where('subscription_id', (int)$row->subscription_id)
+                ->update($payload);
+        }
+    } catch (Throwable $e) {
+        // Ignore — activation still sets tenant status.
+    }
+}
+
+/**
+ * First payment: keep remaining period if still valid and not in warning.
+ * Renew (warning or expired): add one month from max(now, period_end).
+ */
+function saas_activate_or_renew_subscription(int $tenant_id): void
+{
+    if ($tenant_id <= 0) {
+        return;
+    }
+
+    $info = saas_tenant_subscription_info($tenant_id);
+    if (!$info['has_period'] || !empty($info['is_expired']) || !empty($info['is_warning'])) {
+        saas_extend_tenant_subscription($tenant_id, 1);
+
+        return;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if ($db->tableExists('subscriptions')) {
+            $db->table('subscriptions')
+                ->where('tenant_id', $tenant_id)
+                ->update(['status' => 'active']);
+        }
+    } catch (Throwable $e) {
+        // Ignore.
+    }
+}
+
+function saas_format_period_end(?string $period_end): string
+{
+    $period_end = trim((string)$period_end);
+    if ($period_end === '') {
+        return '—';
+    }
+
+    $ts = strtotime($period_end);
+    if ($ts === false) {
+        return $period_end;
+    }
+
+    return date('d M Y', $ts);
+}
+
+/**
+ * Request + expiry dates for a shop (Configuration Information tab).
+ *
+ * @return array{
+ *   request_date:?string,
+ *   expires_date:?string,
+ *   request_label:string,
+ *   expires_label:string,
+ *   days_left:?int,
+ *   is_expired:bool,
+ *   is_warning:bool,
+ *   has_data:bool
+ * }
+ */
+function saas_shop_subscription_dates(int $tenant_id): array
+{
+    $empty = [
+        'request_date' => null,
+        'expires_date' => null,
+        'request_label' => '—',
+        'expires_label' => '—',
+        'days_left' => null,
+        'is_expired' => false,
+        'is_warning' => false,
+        'has_data' => false,
+    ];
+
+    if ($tenant_id <= 0) {
+        return $empty;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('tenants')) {
+            return $empty;
+        }
+
+        $tenant = $db->table('tenants')
+            ->select('tenant_code, created_at')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRow();
+
+        if ($tenant === null) {
+            return $empty;
+        }
+
+        $request_date = trim((string)($tenant->created_at ?? ''));
+        $tenant_code = strtolower(trim((string)($tenant->tenant_code ?? '')));
+
+        if (
+            $tenant_code !== ''
+            && $db->tableExists('subscription_requests')
+            && $db->fieldExists('created_at', 'subscription_requests')
+        ) {
+            $request = $db->table('subscription_requests')
+                ->select('created_at')
+                ->where('tenant_code', $tenant_code)
+                ->orderBy('request_id', 'ASC')
+                ->get(1)
+                ->getRow();
+            if ($request !== null && trim((string)($request->created_at ?? '')) !== '') {
+                $request_date = (string)$request->created_at;
+            }
+        }
+
+        $sub = saas_tenant_subscription_info($tenant_id);
+        $expires_date = $sub['period_end'] ?? null;
+
+        $has_data = ($request_date !== '' && $request_date !== null) || !empty($sub['has_period']);
+
+        return [
+            'request_date' => $request_date !== '' ? $request_date : null,
+            'expires_date' => $expires_date,
+            'request_label' => saas_format_period_end($request_date),
+            'expires_label' => saas_format_period_end($expires_date),
+            'days_left' => $sub['days_left'] ?? null,
+            'is_expired' => !empty($sub['is_expired']),
+            'is_warning' => !empty($sub['is_warning']),
+            'has_data' => $has_data,
+        ];
+    } catch (Throwable $e) {
+        return $empty;
+    }
+}
+
+/**
  * @return array<string, string>
  */
 function saas_business_types(): array

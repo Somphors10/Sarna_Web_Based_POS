@@ -49,7 +49,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=80">
+        <link rel="stylesheet" href="css/dashboard.css?v=84">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -57,7 +57,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=52">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=53">
         <?php endif; ?>
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
@@ -105,7 +105,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=80">
+        <link rel="stylesheet" href="css/dashboard.css?v=84">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -113,7 +113,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=52">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=53">
         <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
@@ -437,6 +437,32 @@ $is_sa_pos_shell = is_platform_super_admin();
                         </div>
                     </div>
                 </div>
+                <?php
+                $subscription_banner = null;
+                if (!$is_sa_pos_shell) {
+                    $banner_tenant_id = (int)(session()->get('tenant_id') ?? 0);
+                    if ($banner_tenant_id > 0) {
+                        $sub_info = saas_tenant_subscription_info($banner_tenant_id);
+                        if (!empty($sub_info['is_warning']) && !empty($sub_info['period_end'])) {
+                            $subscription_banner = lang(
+                                'Login.subscription_warning',
+                                [
+                                    saas_format_period_end($sub_info['period_end']),
+                                    (string)max(0, (int)$sub_info['days_left']),
+                                ]
+                            );
+                        }
+                    }
+                }
+                ?>
+                <?php if ($subscription_banner !== null): ?>
+                <div class="pos-subscription-alert" role="status">
+                    <div class="pos-subscription-alert__inner">
+                        <span class="pos-subscription-alert__text"><?= esc($subscription_banner) ?></span>
+                        <a class="pos-subscription-alert__link" href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <?php if ($is_sa_pos_shell): ?>
                 <div class="sa-main-body sa-pos-content">
                 <?php else: ?>

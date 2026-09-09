@@ -176,12 +176,17 @@ class Saas extends BaseController
 
         $db = db_connect('platform');
         $tenant_code = strtolower(trim((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
-        $owner_username = (string)$this->request->getPost('owner_username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $owner_username = trim((string)$this->request->getPost('owner_username', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
 
-        $tenant_exists = $db->table('tenants')->where('tenant_code', $tenant_code)->countAllResults();
+        $tenant_exists = $db->table('tenants')->where('tenant_code', $tenant_code)->countAllResults() > 0;
         $username_exists = (new PlatformArchitecture())->usernameExists($owner_username);
-        if ($tenant_exists > 0 || $username_exists) {
-            $validation->setError('tenant_code', 'Company code or owner username already exists.');
+
+        if ($tenant_exists) {
+            $validation->setError('tenant_code', 'This company code is already used. Choose another code.');
+            return view('saas/register', $register_view_data + ['has_errors' => true]);
+        }
+        if ($username_exists) {
+            $validation->setError('owner_username', 'This POS username is already used. Choose another username.');
             return view('saas/register', $register_view_data + ['has_errors' => true]);
         }
 
@@ -397,11 +402,11 @@ class Saas extends BaseController
         }
 
         $tenant = db_connect('platform')->table('tenants')
-            ->select('status')
+            ->select('tenant_id, status')
             ->where('tenant_code', (string)$request->tenant_code)
             ->get(1)
             ->getRow();
-        if ($tenant !== null && strtolower((string)$tenant->status) === 'active') {
+        if (saas_tenant_is_currently_paid($tenant)) {
             return view('saas/pay', $this->payViewData($request, (string)$request->payment_token) + ['already_paid' => true]);
         }
 
@@ -437,10 +442,11 @@ class Saas extends BaseController
         }
 
         $tenant = db_connect('platform')->table('tenants')
+            ->select('tenant_id, status')
             ->where('tenant_code', (string)$request->tenant_code)
             ->get(1)
             ->getRow();
-        if ($tenant !== null && strtolower((string)$tenant->status) === 'active') {
+        if (saas_tenant_is_currently_paid($tenant)) {
             return view('saas/pay', $view_data + ['already_paid' => true]);
         }
 
@@ -462,14 +468,13 @@ class Saas extends BaseController
      */
     private function payViewData(?object $request, string $token, $validation = null): array
     {
-        $tenant_status = '';
+        $tenant = null;
         if ($request !== null) {
             $tenant = db_connect('platform')->table('tenants')
-                ->select('status')
+                ->select('tenant_id, status')
                 ->where('tenant_code', (string)$request->tenant_code)
                 ->get(1)
                 ->getRow();
-            $tenant_status = strtolower((string)($tenant->status ?? ''));
         }
 
         return [
@@ -478,7 +483,10 @@ class Saas extends BaseController
             'token' => $token,
             'validation' => $validation ?? service('validation'),
             'has_errors' => false,
-            'already_paid' => $tenant_status === 'active',
+            'already_paid' => saas_tenant_is_currently_paid($tenant),
+            'is_renewal' => $tenant !== null
+                && strtolower((string)($tenant->status ?? '')) === 'active'
+                && saas_tenant_needs_renewal((int)$tenant->tenant_id),
             'qr_image_path' => 'images/payment/aba-khqr-code.png',
         ];
     }
@@ -495,15 +503,12 @@ class Saas extends BaseController
             return;
         }
 
+        $tenant_id = (int)$tenant->tenant_id;
         $db->table('tenants')
-            ->where('tenant_id', (int)$tenant->tenant_id)
+            ->where('tenant_id', $tenant_id)
             ->update(['status' => 'active']);
 
-        if ($db->tableExists('subscriptions')) {
-            $db->table('subscriptions')
-                ->where('tenant_id', (int)$tenant->tenant_id)
-                ->update(['status' => 'active']);
-        }
+        saas_activate_or_renew_subscription($tenant_id);
     }
 
     public function captchaImage()

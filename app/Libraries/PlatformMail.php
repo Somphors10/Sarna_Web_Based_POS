@@ -82,6 +82,51 @@ class PlatformMail
     }
 
     /**
+     * Subscription expiry / renew reminder to shop owner Gmail.
+     *
+     * @param array{
+     *   to:string,
+     *   company_name:string,
+     *   owner_name:string,
+     *   expires_label:string,
+     *   stage:string,
+     *   pay_url:string,
+     *   days_left:int,
+     *   tenant_id?:int
+     * } $payload
+     * @return array{ok:bool, error:string}
+     */
+    public function sendExpiryReminder(array $payload): array
+    {
+        $to = strtolower(trim((string)($payload['to'] ?? '')));
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'error' => 'Owner email is missing or invalid.'];
+        }
+
+        $stage = (string)($payload['stage'] ?? '7');
+        $company = (string)($payload['company_name'] ?? 'Your shop');
+        $html = view('saas/email_expiry', [
+            'company_name' => $company,
+            'owner_name' => (string)($payload['owner_name'] ?? ''),
+            'expires_label' => (string)($payload['expires_label'] ?? ''),
+            'stage' => $stage,
+            'pay_url' => (string)($payload['pay_url'] ?? site_url('saas/checkout')),
+            'days_left' => (int)($payload['days_left'] ?? 0),
+        ]);
+
+        $this->writeOutbox((int)($payload['tenant_id'] ?? 0), $to, $html, '');
+
+        $subject = match ($stage) {
+            'expired' => 'Action needed: ' . $company . ' subscription expired',
+            '1' => 'Reminder: ' . $company . ' subscription ends tomorrow',
+            '3' => 'Reminder: ' . $company . ' subscription ends in a few days',
+            default => 'Reminder: ' . $company . ' subscription ends in 7 days',
+        };
+
+        return $this->deliver($to, $subject, $html);
+    }
+
+    /**
      * @return array{ok:bool, error:string}
      */
     public function sendTest(string $to): array

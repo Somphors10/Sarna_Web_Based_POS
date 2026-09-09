@@ -276,14 +276,11 @@ class Super_admin extends BaseController
 
         $tenant = $db->table('tenants')->where('tenant_code', (string)$request->tenant_code)->get(1)->getRow();
         if ($tenant !== null) {
+            $tenant_id = (int)$tenant->tenant_id;
             $db->table('tenants')
-                ->where('tenant_id', (int)$tenant->tenant_id)
+                ->where('tenant_id', $tenant_id)
                 ->update(['status' => 'active']);
-            if ($db->tableExists('subscriptions')) {
-                $db->table('subscriptions')
-                    ->where('tenant_id', (int)$tenant->tenant_id)
-                    ->update(['status' => 'active']);
-            }
+            saas_activate_or_renew_subscription($tenant_id);
         }
 
         return redirect()->to('super-admin/send-payment/' . $request_id . '?paid=1');
@@ -422,6 +419,7 @@ class Super_admin extends BaseController
 
         $tenants = $tenant_model->get_with_owner_summary();
         $this->attachPaymentLinks($tenants);
+        $this->attachSubscriptionPeriods($tenants);
 
         return view('super_admin/dashboard', [
             'tenants' => $tenants,
@@ -459,27 +457,34 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/businesses');
         }
 
+        $db = db_connect('platform');
+        $previous = $db->table('tenants')
+            ->select('status, tenant_code')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRow();
+        $previous_status = strtolower((string)($previous->status ?? ''));
+
         model(Tenant::class)->set_status($tenant_id, $status);
         if ($status === 'active') {
-            $db = db_connect('platform');
-            if ($db->tableExists('subscriptions')) {
-                $db->table('subscriptions')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+            $info = saas_tenant_subscription_info($tenant_id);
+            if (!$info['has_period'] || $info['is_expired'] || $previous_status !== 'active') {
+                saas_activate_or_renew_subscription($tenant_id);
+            } elseif ($db->tableExists('subscriptions')) {
+                $db->table('subscriptions')
+                    ->where('tenant_id', $tenant_id)
+                    ->update(['status' => 'active']);
             }
 
-            $tenant = $db->table('tenants')
-                ->select('tenant_code')
-                ->where('tenant_id', $tenant_id)
-                ->get(1)
-                ->getRow();
-
+            $tenant_code = (string)($previous->tenant_code ?? '');
             if (
-                $tenant !== null
+                $tenant_code !== ''
                 && $db->tableExists('subscription_requests')
                 && $db->fieldExists('payment_reference', 'subscription_requests')
             ) {
                 $request = $db->table('subscription_requests')
                     ->select('request_id, payment_reference')
-                    ->where('tenant_code', (string)$tenant->tenant_code)
+                    ->where('tenant_code', $tenant_code)
                     ->where('status', 'approved')
                     ->orderBy('request_id', 'DESC')
                     ->get(1)
@@ -502,6 +507,9 @@ class Super_admin extends BaseController
     {
         model(Platform_admin::class)->logout();
         logout_super_admin_pos_session();
+        (new TenantContext())->clearTenantDatabaseSession();
+        session()->destroy();
+
         return redirect()->to('super-admin/login');
     }
 
@@ -862,6 +870,77 @@ class Super_admin extends BaseController
             $tenant['business_type'] = (string)($by_code[$code]['business_type'] ?? '');
             $tenant['plan_name'] = (string)($by_code[$code]['plan_name'] ?? '');
             $tenant['registered_at'] = (string)($by_code[$code]['created_at'] ?? '');
+        }
+        unset($tenant);
+    }
+
+    /**
+     * Attach subscription period_end and billing flags for Super Admin businesses UI.
+     *
+     * @param list<array<string, mixed>> $tenants
+     */
+    private function attachSubscriptionPeriods(array &$tenants): void
+    {
+        $db = db_connect('platform');
+        if ($tenants === [] || !$db->tableExists('subscriptions') || !$db->fieldExists('period_end', 'subscriptions')) {
+            return;
+        }
+
+        $ids = [];
+        foreach ($tenants as $tenant) {
+            $id = (int)($tenant['tenant_id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return;
+        }
+
+        $rows = $db->table('subscriptions')
+            ->select('subscription_id, tenant_id, period_end, status')
+            ->whereIn('tenant_id', $ids)
+            ->orderBy('subscription_id', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        $by_tenant = [];
+        foreach ($rows as $row) {
+            $tid = (int)$row['tenant_id'];
+            if (!isset($by_tenant[$tid])) {
+                $by_tenant[$tid] = $row;
+            }
+        }
+
+        $now = time();
+        $warn_days = saas_subscription_warning_days();
+        foreach ($tenants as &$tenant) {
+            $tid = (int)($tenant['tenant_id'] ?? 0);
+            $sub = $by_tenant[$tid] ?? null;
+            $period_end = $sub !== null ? trim((string)($sub['period_end'] ?? '')) : '';
+            $tenant['period_end'] = $period_end;
+            $tenant['billing'] = 'none';
+            $tenant['days_left'] = null;
+
+            if ($period_end === '') {
+                continue;
+            }
+
+            $end = strtotime($period_end);
+            if ($end === false) {
+                continue;
+            }
+
+            $days_left = (int)floor(($end - $now) / 86400);
+            $tenant['days_left'] = $days_left;
+            if ($end < $now) {
+                $tenant['billing'] = 'expired';
+            } elseif ($days_left <= $warn_days) {
+                $tenant['billing'] = 'warning';
+            } else {
+                $tenant['billing'] = 'ok';
+            }
         }
         unset($tenant);
     }

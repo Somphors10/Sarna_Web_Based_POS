@@ -109,7 +109,6 @@ $show_register_aside = false; // set true to show “What happens next” again
                     <div class="col-md-6">
                         <label class="lp-field-label" for="tenant_code">Company code <span class="lp-field-required">*</span></label>
                         <input class="lp-field-input<?= $field_invalid_class('tenant_code') ?>" id="tenant_code" name="tenant_code" placeholder="mystore" value="<?= set_value('tenant_code') ?>" maxlength="50" required aria-required="true">
-                        <span class="lp-field-hint">Short unique code for your shop. Write it simply — no special format required.</span>
                     </div>
                     <div class="col-md-6">
                         <label class="lp-field-label" for="business_type">Business type <span class="lp-field-required">*</span></label>

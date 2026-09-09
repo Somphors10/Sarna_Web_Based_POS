@@ -64,9 +64,13 @@ class OSPOSRules
         $password = $data['password'];
         if (!$employee->login($username, $password)) {
             $reason = $employee->tenant_login_block_reason($username);
-            $error = $reason === 'awaiting_payment'
-                ? lang('Login.awaiting_payment')
-                : lang('Login.invalid_username_and_password');
+            if ($reason === 'awaiting_payment') {
+                $error = lang('Login.awaiting_payment');
+            } elseif ($reason === 'subscription_expired') {
+                $error = lang('Login.subscription_expired');
+            } else {
+                $error = lang('Login.invalid_username_and_password');
+            }
 
             return false;
         }

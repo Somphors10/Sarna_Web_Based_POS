@@ -321,6 +321,8 @@ $format_relative_time = static function (?string $value): string {
     $suspended_tenants = 0;
     $cancelled_tenants = 0;
     $awaiting_payment_tenants = 0;
+    $expired_tenants = 0;
+    $expiring_soon_tenants = 0;
     $isolated_tenants = 0;
     $shared_tenants = 0;
     $platform_db_name = (string)(config('Database')->platform['database'] ?? 'wbpos');
@@ -331,6 +333,7 @@ $format_relative_time = static function (?string $value): string {
     };
     foreach ($tenants as $tenant) {
         $status = strtolower((string)($tenant['status'] ?? ''));
+        $billing = strtolower((string)($tenant['billing'] ?? 'none'));
         if ($status === 'active') {
             $active_tenants++;
         } elseif ($status === 'suspended') {
@@ -339,6 +342,11 @@ $format_relative_time = static function (?string $value): string {
             $cancelled_tenants++;
         } elseif ($status === 'awaiting_payment') {
             $awaiting_payment_tenants++;
+        }
+        if ($billing === 'expired') {
+            $expired_tenants++;
+        } elseif ($billing === 'warning') {
+            $expiring_soon_tenants++;
         }
         if ($tenant_is_isolated($tenant)) {
             $isolated_tenants++;
@@ -577,6 +585,8 @@ $format_relative_time = static function (?string $value): string {
                     <option value="awaiting_payment">Awaiting payment</option>
                     <option value="suspended">Suspended</option>
                     <option value="cancelled">Cancelled</option>
+                    <option value="expired">Expired period</option>
+                    <option value="expiring_soon">Expiring soon</option>
                 </select>
                 <?php elseif ($active_page === 'history'): ?>
                 <select id="super_admin_status_filter" class="sa-select">
@@ -689,6 +699,22 @@ $format_relative_time = static function (?string $value): string {
                         <div class="sa-metric__value"><?= $awaiting_payment_tenants ?></div>
                         <div class="sa-metric__hint">View unpaid activations →</div>
                     </a>
+                    <a class="sa-metric sa-metric--cancelled" href="<?= site_url('super-admin/businesses?status=expired') ?>" title="View shops with expired period">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Expired</span>
+                        </div>
+                        <div class="sa-metric__value"><?= $expired_tenants ?></div>
+                        <div class="sa-metric__hint">Period ended →</div>
+                    </a>
+                    <a class="sa-metric sa-metric--suspended" href="<?= site_url('super-admin/businesses?status=expiring_soon') ?>" title="View shops expiring within 7 days">
+                        <div class="sa-metric__top">
+                            <span class="sa-metric__dot"></span>
+                            <span class="sa-metric__label">Expiring soon</span>
+                        </div>
+                        <div class="sa-metric__value"><?= $expiring_soon_tenants ?></div>
+                        <div class="sa-metric__hint">Within 7 days →</div>
+                    </a>
                 </div>
             </div>
         </section>
@@ -739,7 +765,7 @@ $format_relative_time = static function (?string $value): string {
         <section class="sa-panel">
             <div class="sa-panel__head">
                 <h2 class="sa-panel__title">All Businesses</h2>
-                <p class="sa-panel__subtitle">Shop ID is from the businesses table. Match shops by company code.</p>
+                <p class="sa-panel__subtitle">Shop ID is from the businesses table. Expiry comes from each shop’s subscription period.</p>
             </div>
             <div class="sa-table-wrap sa-table-wrap--stack">
                 <table class="sa-table">
@@ -750,25 +776,46 @@ $format_relative_time = static function (?string $value): string {
                         <th>Company</th>
                         <th>Owner</th>
                         <th>Username</th>
+                        <th>Expires</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php if (empty($tenants)): ?>
-                        <tr><td colspan="7" class="sa-empty">No businesses yet.</td></tr>
+                        <tr><td colspan="8" class="sa-empty">No businesses yet.</td></tr>
                     <?php else: ?>
                     <?php foreach ($tenants as $tenant): ?>
-                        <?php $status = strtolower((string)($tenant['status'] ?? '')); ?>
+                        <?php
+                            $status = strtolower((string)($tenant['status'] ?? ''));
+                            $billing = strtolower((string)($tenant['billing'] ?? 'none'));
+                            $period_end = (string)($tenant['period_end'] ?? '');
+                            $days_left = $tenant['days_left'] ?? null;
+                        ?>
                         <tr class="js-searchable-row"
                             data-group="tenant"
                             data-status="<?= esc($status) ?>"
+                            data-billing="<?= esc($billing) ?>"
                             data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '') . ' ' . ($tenant['email'] ?? '') . ' ' . ($tenant['owner_email'] ?? '') . ' ' . ($tenant['phone_number'] ?? '')))) ?>">
                             <td data-label="Shop ID"><?= esc($tenant['tenant_id']) ?></td>
                             <td data-label="Code"><?= esc($tenant['tenant_code']) ?></td>
                             <td data-label="Company"><?= esc($tenant['company_name']) ?></td>
                             <td data-label="Owner"><?= esc(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? '')) ?></td>
                             <td data-label="Username"><?= esc($tenant['username'] ?? '') ?></td>
+                            <td data-label="Expires">
+                                <?php if ($period_end === ''): ?>
+                                    <span class="sa-muted">—</span>
+                                <?php else: ?>
+                                    <div class="sa-expiry">
+                                        <strong><?= esc(saas_format_period_end($period_end)) ?></strong>
+                                        <?php if ($billing === 'expired'): ?>
+                                            <span class="sa-status sa-status--expired">Expired</span>
+                                        <?php elseif ($billing === 'warning'): ?>
+                                            <span class="sa-status sa-status--pending"><?= (int)$days_left ?>d left</span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td data-label="Status"><span class="sa-status sa-status--<?= esc($status === 'awaiting_payment' ? 'pending' : $status) ?>"><?= esc($status === 'awaiting_payment' ? 'Awaiting payment' : $tenant['status']) ?></span></td>
                             <td data-label="Action">
                                 <div class="sa-row-actions">
@@ -790,6 +837,7 @@ $format_relative_time = static function (?string $value): string {
                                             data-username="<?= esc((string)($tenant['username'] ?? $tenant['owner_username'] ?? ''), 'attr') ?>"
                                             data-plan="<?= esc((string)($tenant['plan_name'] ?? ''), 'attr') ?>"
                                             data-payment="<?= esc((string)($tenant['payment_reference'] ?? ''), 'attr') ?>"
+                                            data-expires="<?= esc(saas_format_period_end($period_end), 'attr') ?>"
                                             data-status="<?= esc((string)$tenant['status'], 'attr') ?>"
                                             data-created="<?= esc($format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')), 'attr') ?>">
                                         View
@@ -2067,10 +2115,20 @@ $format_relative_time = static function (?string $value): string {
                 const haystack = (row.dataset.search || '').toLowerCase();
                 const rowGroup = row.dataset.group || '';
                 const rowStatus = (row.dataset.status || '').toLowerCase();
+                const rowBilling = (row.dataset.billing || '').toLowerCase();
 
                 const queryMatch = query === '' || haystack.indexOf(query) !== -1;
                 const usesStatusFilter = rowGroup === 'tenant' || rowGroup === 'history';
-                const statusMatch = !usesStatusFilter || status === '' || rowStatus === status;
+                let statusMatch = true;
+                if (usesStatusFilter && status !== '') {
+                    if (status === 'expired') {
+                        statusMatch = rowBilling === 'expired';
+                    } else if (status === 'expiring_soon') {
+                        statusMatch = rowBilling === 'warning';
+                    } else {
+                        statusMatch = rowStatus === status;
+                    }
+                }
                 row.style.display = queryMatch && statusMatch ? '' : 'none';
             });
         };
@@ -2089,7 +2147,7 @@ $format_relative_time = static function (?string $value): string {
 
             const params = new URLSearchParams(window.location.search);
             const status = (params.get('status') || '').toLowerCase();
-            const allowed = ['active', 'suspended', 'cancelled', 'awaiting_payment', 'approved', 'rejected'];
+            const allowed = ['active', 'suspended', 'cancelled', 'awaiting_payment', 'approved', 'rejected', 'expired', 'expiring_soon'];
 
             if (allowed.indexOf(status) !== -1) {
                 statusFilter.value = status;
@@ -2201,7 +2259,7 @@ $format_relative_time = static function (?string $value): string {
         const detailBodyEl = document.getElementById('sa-row-detail-body');
         const detailCloseBtn = document.getElementById('sa-row-detail-close');
         const detailCloseIconBtn = document.getElementById('sa-row-detail-close-icon');
-        const detailFieldOrder = ['id', 'company', 'code', 'type', 'address', 'city', 'country', 'tax', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'tenant', 'status', 'reason', 'created'];
+        const detailFieldOrder = ['id', 'company', 'code', 'type', 'address', 'city', 'country', 'tax', 'owner', 'name', 'email', 'phone', 'username', 'plan', 'payment', 'expires', 'tenant', 'status', 'reason', 'created'];
 
         const escapeDetailHtml = function(text) {
             return String(text)
@@ -2248,6 +2306,7 @@ $format_relative_time = static function (?string $value): string {
                 username: 'Username',
                 plan: 'Plan',
                 payment: 'Payment reference',
+                expires: 'Expires',
                 tenant: 'Shop ID',
                 status: 'Status',
                 reason: 'Rejection reason',

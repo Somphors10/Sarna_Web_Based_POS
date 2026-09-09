@@ -511,6 +511,8 @@ class Employee extends Person
 
         $resolved_tenant_id = $tenant_id > 0 ? $tenant_id : 1;
         $plan_id = (new \App\Libraries\PlatformArchitecture())->getTenantPlanId($resolved_tenant_id);
+        // Shop POS login must not keep a leftover Super Admin session.
+        $this->session->remove(['platform_admin_id', 'super_admin_pos']);
         $this->session->set('person_id', $row->person_id);
         $this->session->set('tenant_id', $resolved_tenant_id);
         if ($plan_id !== null) {
@@ -705,7 +707,15 @@ class Employee extends Person
                 return false;
             }
 
-            return ((string)($row->status ?? 'active')) === 'active';
+            if (((string)($row->status ?? 'active')) !== 'active') {
+                return false;
+            }
+
+            if (function_exists('saas_tenant_subscription_usable')) {
+                return saas_tenant_subscription_usable($tenant_id);
+            }
+
+            return true;
         } catch (Throwable $e) {
             // Fail open to avoid blocking authentication if platform DB
             // is temporarily unavailable during migration setup.
@@ -729,14 +739,33 @@ class Employee extends Person
                 return null;
             }
 
+            $tenant_id = (int)$login->tenant_id;
             $row = $platform_db->table('tenants')
                 ->select('status')
-                ->where('tenant_id', (int)$login->tenant_id)
+                ->where('tenant_id', $tenant_id)
                 ->get(1)
                 ->getRow();
             $status = strtolower((string)($row->status ?? ''));
 
-            return $status === 'awaiting_payment' ? 'awaiting_payment' : null;
+            if ($status === 'awaiting_payment') {
+                return 'awaiting_payment';
+            }
+
+            if (
+                $status === 'active'
+                && function_exists('saas_tenant_subscription_usable')
+                && !saas_tenant_subscription_usable($tenant_id)
+            ) {
+                try {
+                    (new \App\Libraries\SubscriptionExpiryNotifier())->notifyTenant($tenant_id);
+                } catch (Throwable $e) {
+                    // Non-blocking: login error still shown.
+                }
+
+                return 'subscription_expired';
+            }
+
+            return null;
         } catch (Throwable $e) {
             return null;
         }

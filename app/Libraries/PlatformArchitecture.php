@@ -38,9 +38,40 @@ class PlatformArchitecture
         }
 
         $this->ensureTables($db);
+        $this->ensureSubscriptionExpiryMailColumns($db);
         $this->ensurePlans($db);
         $this->ensurePlanFeatures($db);
         $this->ensureTemplateMeta($db);
+    }
+
+    /**
+     * Track which expiry Gmail reminder was already sent for the current period.
+     *
+     * @param object $db
+     */
+    private function ensureSubscriptionExpiryMailColumns($db): void
+    {
+        if (!$db->tableExists('subscriptions')) {
+            return;
+        }
+
+        $prefix = $db->getPrefix();
+        $columns = [
+            'expiry_mail_stage' => "ALTER TABLE `{$prefix}subscriptions` ADD COLUMN `expiry_mail_stage` VARCHAR(16) NULL",
+            'expiry_mail_period_end' => "ALTER TABLE `{$prefix}subscriptions` ADD COLUMN `expiry_mail_period_end` DATETIME NULL",
+        ];
+
+        foreach ($columns as $column => $sql) {
+            if ($db->fieldExists($column, 'subscriptions')) {
+                continue;
+            }
+            try {
+                $db->query($sql);
+                $db->resetDataCache();
+            } catch (Throwable $e) {
+                $db->resetDataCache();
+            }
+        }
     }
 
     /**

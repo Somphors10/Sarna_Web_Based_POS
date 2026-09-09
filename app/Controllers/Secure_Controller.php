@@ -98,6 +98,30 @@ class Secure_Controller extends BaseController
             }
             $this->session->set('tenant_id', $tenant_id);
         }
+
+        // Mid-session: warn by email (Gmail), then block shops whose period ended.
+        if (!$is_super_admin && $tenant_id > 0) {
+            if (
+                function_exists('saas_tenant_needs_renewal')
+                && saas_tenant_needs_renewal($tenant_id)
+            ) {
+                try {
+                    (new \App\Libraries\SubscriptionExpiryNotifier())->notifyTenant($tenant_id);
+                } catch (Throwable $e) {
+                    log_message('error', 'Expiry email on POS load failed: ' . $e->getMessage());
+                }
+            }
+
+            if (
+                function_exists('saas_tenant_subscription_usable')
+                && !saas_tenant_subscription_usable($tenant_id)
+            ) {
+                $this->employee->logout();
+                header('Location:' . base_url('login') . '?expired=1');
+                exit();
+            }
+        }
+
         (new TenantContext())->applyRuntimeConnection($tenant_id);
 
         // After tenant is known: drop inherited demo email / other-shop logos.
