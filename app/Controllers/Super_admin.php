@@ -281,6 +281,12 @@ class Super_admin extends BaseController
                 ->where('tenant_id', $tenant_id)
                 ->update(['status' => 'active']);
             saas_activate_or_renew_subscription($tenant_id);
+            saas_record_subscription_payment(
+                $tenant_id,
+                'aba_khqr_manual',
+                $reference,
+                saas_monthly_price()
+            );
         }
 
         return redirect()->to('super-admin/send-payment/' . $request_id . '?paid=1');
@@ -553,7 +559,159 @@ class Super_admin extends BaseController
 
     public function postCreateAdmin(): RedirectResponse
     {
-        return redirect()->to('super-admin?error=admin_creation_disabled');
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+        if (!$platform_admin->is_owner()) {
+            return redirect()->to('super-admin/admins?error=admin_not_allowed');
+        }
+
+        $username = strtolower(trim((string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
+        $full_name = trim((string)$this->request->getPost('full_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $email = trim((string)$this->request->getPost('email', FILTER_SANITIZE_EMAIL));
+        $password = (string)$this->request->getPost('password');
+
+        if ($username === '' || !preg_match('/^[a-z0-9._-]{3,40}$/', $username)) {
+            return redirect()->to('super-admin/admins?error=admin_invalid');
+        }
+        if ($full_name === '' || strlen($password) < 8) {
+            return redirect()->to('super-admin/admins?error=admin_invalid');
+        }
+        if ($platform_admin->username_exists($username)) {
+            return redirect()->to('super-admin/admins?error=admin_exists');
+        }
+
+        if (!$platform_admin->create_admin($username, $password, $full_name, $email !== '' ? $email : null)) {
+            return redirect()->to('super-admin/admins?error=admin_create_failed');
+        }
+
+        return redirect()->to('super-admin/admins?admin_created=1');
+    }
+
+    public function postToggleAdminStatus(int $admin_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+        if (!$platform_admin->is_owner()) {
+            return redirect()->to('super-admin/admins?error=admin_not_allowed');
+        }
+
+        $status = (string)$this->request->getPost('status', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if (!in_array($status, ['active', 'disabled'], true)) {
+            return redirect()->to('super-admin/admins');
+        }
+
+        $self_id = (int)($platform_admin->get_logged_in_admin()->admin_id ?? 0);
+        if ($admin_id === $self_id) {
+            return redirect()->to('super-admin/admins?error=admin_self');
+        }
+
+        $target = $platform_admin->get_all_admins();
+        foreach ($target as $row) {
+            if ((int)$row['admin_id'] === $admin_id && (string)$row['username'] === 'superadmin') {
+                return redirect()->to('super-admin/admins?error=admin_owner_locked');
+            }
+        }
+
+        if (!$platform_admin->set_status($admin_id, $status)) {
+            return redirect()->to('super-admin/admins?error=admin_update_failed');
+        }
+
+        return redirect()->to('super-admin/admins?admin_updated=1');
+    }
+
+    public function postExtendSubscription(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $months = (int)$this->request->getPost('months');
+        if ($months < 1) {
+            $months = 1;
+        }
+        if ($months > 24) {
+            $months = 24;
+        }
+
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        saas_extend_tenant_subscription($tenant_id, $months);
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+
+        return redirect()->to('super-admin/businesses?extended=1');
+    }
+
+    public function postSetExpiry(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $period_end = trim((string)$this->request->getPost('period_end', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        if (!saas_set_tenant_period_end($tenant_id, $period_end)) {
+            return redirect()->to('super-admin/businesses?error=expiry_invalid');
+        }
+
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+
+        return redirect()->to('super-admin/businesses?expiry_set=1');
+    }
+
+    public function postConfirmRenewal(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        $reference = trim((string)$this->request->getPost('payment_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        if ($reference === '') {
+            $reference = 'Renewal confirmed by Super Admin ' . date('Y-m-d H:i');
+        }
+
+        $tenant_code = (string)$tenant->tenant_code;
+        if ($db->tableExists('subscription_requests')) {
+            $request = $db->table('subscription_requests')
+                ->select('request_id')
+                ->where('tenant_code', $tenant_code)
+                ->where('status', 'approved')
+                ->orderBy('request_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            if ($request !== null) {
+                $db->table('subscription_requests')
+                    ->where('request_id', (int)$request->request_id)
+                    ->update(['payment_reference' => $reference]);
+            }
+        }
+
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+        saas_activate_or_renew_subscription($tenant_id);
+        saas_record_subscription_payment($tenant_id, 'aba_khqr_manual', $reference, saas_monthly_price());
+
+        return redirect()->to('super-admin/businesses?renewed=1');
     }
 
     public function postApproveRequest(int $request_id): RedirectResponse

@@ -71,7 +71,7 @@ class Suppliers extends Persons
     public function getSuggest(): void
     {
         $search = $this->request->getGet('term');
-        $suggestions = $this->supplier->get_search_suggestions($search, true);
+        $suggestions = $this->supplier->get_search_suggestions($search, 25, true);
 
         echo json_encode($suggestions);
     }
@@ -82,7 +82,7 @@ class Suppliers extends Persons
     public function suggest_search(): void
     {
         $search = $this->request->getPost('term');
-        $suggestions = $this->supplier->get_search_suggestions($search, false);
+        $suggestions = $this->supplier->get_search_suggestions($search, 25, false);
 
         echo json_encode($suggestions);
     }

@@ -101,6 +101,82 @@ class Inventory extends Model
     }
 
     /**
+     * Reverse legacy soft-delete stock wipes (when delete zeroed quantity).
+     * No-op if stock was preserved on delete or already non-zero.
+     */
+    public function restore_quantity_after_undelete(int $item_id): bool
+    {
+        $delete_comments = array_values(array_unique(array_filter([
+            lang('Items.is_deleted'),
+            'Deleted',
+            'បានលុប',
+            'Item is deleted',
+            'Item dihapus',
+        ], static fn($comment) => $comment !== '' && $comment !== 'Items.is_deleted')));
+
+        if ($delete_comments === []) {
+            return true;
+        }
+
+        $builder = $this->db->table('inventory');
+        $this->scopeTenant($builder, 'inventory.tenant_id');
+        $builder->select('trans_location, SUM(trans_inventory) AS sum_deleted');
+        $builder->where('trans_items', $item_id);
+        $builder->whereIn('trans_comment', $delete_comments);
+        $builder->groupBy('trans_location');
+
+        $rows = $builder->get()->getResultArray();
+        if ($rows === []) {
+            return true;
+        }
+
+        $item_quantity = model(Item_quantity::class);
+        $employee = model(Employee::class);
+        $employee_id = $employee->get_logged_in_employee_info()->person_id;
+        $restore_comment = lang('Items.successful_restored');
+
+        foreach ($rows as $row) {
+            $sum_deleted = (float) ($row['sum_deleted'] ?? 0);
+            // Delete adjustments are negative; reverse with a positive inventory row.
+            if ($sum_deleted >= 0) {
+                continue;
+            }
+
+            $location_id = (int) $row['trans_location'];
+            $restore_qty = -1 * $sum_deleted;
+            $current = $item_quantity->get_item_quantity($item_id, $location_id);
+
+            // Stock already present (new soft-delete keeps qty) — leave as-is.
+            if ((float) $current->quantity !== 0.0) {
+                continue;
+            }
+
+            $inserted = $this->insert([
+                'trans_inventory' => $restore_qty,
+                'trans_items'     => $item_id,
+                'trans_location'  => $location_id,
+                'trans_comment'   => $restore_comment,
+                'trans_user'      => $employee_id,
+                'tenant_id'       => $this->getTenantId(),
+            ]);
+
+            if ($inserted === false) {
+                return false;
+            }
+
+            if (!$item_quantity->save_value([
+                'item_id'     => $item_id,
+                'location_id' => $location_id,
+                'quantity'    => $restore_qty,
+            ], $item_id, $location_id)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param int $item_id
      * @return array
      */

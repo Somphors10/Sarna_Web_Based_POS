@@ -29,6 +29,18 @@ $pos_modules = $pos_modules ?? super_admin_pos_nav_modules();
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt=""></span>
     <span>Platform Admins</span>
 </a>
+<a class="neo-global-menu-item <?= $sa_active === 'email' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/email') ?>" title="Email">
+    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
+    <span>Email</span>
+</a>
+<a class="neo-global-menu-item <?= $sa_active === 'plans' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/plans') ?>" title="Plans">
+    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
+    <span>Plans</span>
+</a>
+<a class="neo-global-menu-item <?= $sa_active === 'features' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/features') ?>" title="Features">
+    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
+    <span>Features</span>
+</a>
 
 <p class="sa-nav-group">POS Features</p>
 <?php foreach ($pos_modules as $nav_feature): ?>

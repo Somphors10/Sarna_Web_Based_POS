@@ -66,16 +66,26 @@
     background: linear-gradient(90deg, var(--wbpos-primary), var(--wbpos-primary-light));
 }
 
-.neo-kpi-card:nth-child(2)::before {
+.neo-kpi-card--revenue::before {
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.neo-kpi-card--profit::before {
     background: linear-gradient(90deg, var(--wbpos-primary), var(--wbpos-primary-light));
 }
 
+.neo-kpi-card--today::before,
 .neo-kpi-card:nth-child(3)::before {
     background: linear-gradient(90deg, #10b981, #34d399);
 }
 
+.neo-kpi-card--expenses::before,
 .neo-kpi-card:nth-child(4)::before {
     background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.neo-kpi-card:nth-child(2)::before {
+    background: linear-gradient(90deg, var(--wbpos-primary), var(--wbpos-primary-light));
 }
 
 .neo-kpi-card:hover {

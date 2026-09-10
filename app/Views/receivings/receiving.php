@@ -34,12 +34,14 @@ if (isset($success)) {
 }
 ?>
 
-<section class="neo-module-page">
+<section class="neo-module-page recv-page">
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
         </div>
     </header>
+
+<div class="neo-register-layout">
 
 <div id="register_wrapper">
 
@@ -53,7 +55,7 @@ if (isset($success)) {
                 <label class="control-label"><?= lang(ucfirst($controller_name) . '.mode') ?></label>
             </li>
             <li class="pull-left">
-                <?= form_dropdown('mode', $modes, $mode, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'auto']) ?>
+                <?= form_dropdown('mode', $modes, $mode, ['onchange' => "$('#mode_form').submit();", 'class' => 'form-control input-sm pos-native-select']) ?>
             </li>
 
             <?php if ($show_stock_locations) { ?>
@@ -61,7 +63,7 @@ if (isset($success)) {
                     <label class="control-label"><?= lang(ucfirst($controller_name) . '.stock_source') ?></label>
                 </li>
                 <li class="pull-left">
-                    <?= form_dropdown('stock_source', $stock_locations, $stock_source, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'auto']) ?>
+                    <?= form_dropdown('stock_source', $stock_locations, $stock_source, ['onchange' => "$('#mode_form').submit();", 'class' => 'form-control input-sm pos-native-select']) ?>
                 </li>
 
                 <?php if ($mode == 'requisition') { ?>
@@ -69,7 +71,7 @@ if (isset($success)) {
                         <label class="control-label"><?= lang(ucfirst($controller_name) . '.stock_destination') ?></label>
                     </li>
                     <li class="pull-left">
-                        <?= form_dropdown('stock_destination', $stock_locations, $stock_destination, ['onchange' => "$('#mode_form').submit();", 'class' => 'selectpicker show-menu-arrow', 'data-style' => 'btn-default btn-sm', 'data-width' => 'auto']) ?>
+                        <?= form_dropdown('stock_destination', $stock_locations, $stock_destination, ['onchange' => "$('#mode_form').submit();", 'class' => 'form-control input-sm pos-native-select']) ?>
                     </li>
             <?php
                 }
@@ -110,6 +112,7 @@ if (isset($success)) {
 
     <!-- Receiving Items List -->
 
+    <div class="neo-register-table-scroll">
     <table class="sales_table_100" id="register">
         <thead>
             <tr>
@@ -142,9 +145,20 @@ if (isset($success)) {
                     <tr>
                         <td><?= anchor("$controller_name/deleteItem/$line", '<span class="glyphicon glyphicon-trash"></span>') ?></td>
                         <td><?= esc($item['item_number']) ?></td>
-                        <td style="text-align: center;">
-                            <?= esc($item['name'] . ' ' . implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']])) ?><br>
-                            <?= '[' . to_quantity_decimals($item['in_stock']) . ' in ' . $item['stock_name'] . ']' ?>
+                        <td style="text-align: center;" class="recv-item-cell">
+                            <div class="recv-item-name"><?= esc($item['name'] . ' ' . implode(' ', [$item['attribute_values'], $item['attribute_dtvalues']])) ?></div>
+                            <?php
+                            $in_stock_qty = (float) $item['in_stock'];
+                            $stock_badge_class = 'recv-stock';
+                            if ($in_stock_qty < 0) {
+                                $stock_badge_class .= ' recv-stock--neg';
+                            } elseif ($in_stock_qty == 0.0) {
+                                $stock_badge_class .= ' recv-stock--zero';
+                            }
+                            ?>
+                            <span class="<?= esc($stock_badge_class, 'attr') ?>">
+                                <?= to_quantity_decimals($item['in_stock']) ?> in <?= esc($item['stock_name']) ?>
+                            </span>
                             <?= form_hidden('location', (string)$item['item_location']) ?>
                         </td>
 
@@ -244,56 +258,44 @@ if (isset($success)) {
             ?>
         </tbody>
     </table>
+    </div>
 </div>
-</section>
 
 <!-- Overall Receiving -->
 
-<div id="overall_sale" class="panel panel-default">
+<div id="overall_sale" class="panel panel-default recv-overall">
     <div class="panel-body">
         <?php if (isset($supplier)) { ?>
 
-            <table class="sales_table_100">
-                <tr>
-                    <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier') ?></th>
-                    <th style="width: 45%; text-align: right;"><?= esc($supplier) ?></th>
-                </tr>
+            <div class="recv-supplier-card">
+                <div class="recv-supplier-card__label"><?= lang(ucfirst($controller_name) . '.supplier') ?></div>
+                <div class="recv-supplier-card__name"><?= esc($supplier) ?></div>
                 <?php if (!empty($supplier_email)) { ?>
-                    <tr>
-                        <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_email') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= esc($supplier_email) ?></th>
-                    </tr>
+                    <div class="recv-supplier-card__meta"><?= esc($supplier_email) ?></div>
                 <?php } ?>
                 <?php if (!empty($supplier_address)) { ?>
-                    <tr>
-                        <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_address') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= esc($supplier_address) ?></th>
-                    </tr>
+                    <div class="recv-supplier-card__meta"><?= esc($supplier_address) ?></div>
                 <?php } ?>
                 <?php if (!empty($supplier_location)) { ?>
-                    <tr>
-                        <th style="width: 55%;"><?= lang(ucfirst($controller_name) . '.supplier_location') ?></th>
-                        <th style="width: 45%; text-align: right;"><?= esc($supplier_location) ?></th>
-                    </tr>
+                    <div class="recv-supplier-card__meta"><?= esc($supplier_location) ?></div>
                 <?php } ?>
-            </table>
-
-            <?= anchor(
-                "$controller_name/removeSupplier",
-                '<span class="glyphicon glyphicon-remove">&nbsp;</span>' . lang('Common.remove') . ' ' . lang('Suppliers.supplier'),
-                [
-                    'class' => 'btn btn-danger btn-sm',
-                    'id'    => 'remove_supplier_button',
-                    'title' => lang('Common.remove') . ' ' . lang('Suppliers.supplier')
-                ]
-            ) ?>
+                <?= anchor(
+                    "$controller_name/removeSupplier",
+                    '<span class="glyphicon glyphicon-remove">&nbsp;</span>' . lang('Common.remove') . ' ' . lang('Suppliers.supplier'),
+                    [
+                        'class' => 'btn btn-danger btn-sm recv-supplier-card__remove',
+                        'id'    => 'remove_supplier_button',
+                        'title' => lang('Common.remove') . ' ' . lang('Suppliers.supplier')
+                    ]
+                ) ?>
+            </div>
 
         <?php } else { ?>
 
             <?= form_open("$controller_name/selectSupplier", ['id' => 'select_supplier_form', 'class' => 'form-horizontal']) ?>
 
             <div class="form-group" id="select_customer">
-                <label id="supplier_label" for="supplier" class="control-label" style="margin-bottom: 1em; margin-top: -1em;">
+                <label id="supplier_label" for="supplier" class="control-label">
                     <?= lang(ucfirst($controller_name) . '.select_supplier') ?>
                 </label>
                 <?= form_input([
@@ -303,7 +305,7 @@ if (isset($success)) {
                     'value' => lang(ucfirst($controller_name) . '.start_typing_supplier_name')
                 ]) ?>
 
-                <button id="new_supplier_button" class="btn btn-info btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "suppliers/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
+                <button id="new_supplier_button" class="btn btn-default btn-sm modal-dlg recv-new-supplier" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "suppliers/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new_supplier') ?>">
                     <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new_supplier') ?>
                 </button>
 
@@ -313,17 +315,14 @@ if (isset($success)) {
 
         <?php } ?>
 
-        <table class="sales_table_100" id="sale_totals">
-            <tr>
-                <?php if ($mode != 'requisition') { ?>
-                    <th style="width: 55%;"><?= lang('Sales.total') ?></th>
-                    <th style="width: 45%; text-align: right;"><?= to_currency($total) ?></th>
-                <?php } else { ?>
-                    <th style="width: 55%;"></th>
-                    <th style="width: 45%; text-align: right;"></th>
-                <?php } ?>
-            </tr>
-        </table>
+        <?php if ($mode != 'requisition') { ?>
+            <div class="recv-total" id="sale_totals">
+                <span class="recv-total__label"><?= lang('Sales.total') ?></span>
+                <span class="recv-total__amount"><?= to_currency($total) ?></span>
+            </div>
+        <?php } else { ?>
+            <div id="sale_totals" class="recv-total recv-total--empty"></div>
+        <?php } ?>
 
         <?php if (count($cart) > 0) { ?>
             <div id="finish_sale">
@@ -338,14 +337,16 @@ if (isset($success)) {
                             'id'    => 'comment',
                             'class' => 'form-control input-sm',
                             'value' => $comment,
-                            'rows'  => '4'
+                            'rows'  => '3'
                         ]) ?>
 
-                        <div class="btn btn-sm btn-danger pull-left" id="cancel_receiving_button">
-                            <span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
-                        </div>
-                        <div class="btn btn-sm btn-success pull-right" id="finish_receiving_button">
-                            <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_receiving') ?>
+                        <div class="recv-finish-actions">
+                            <div class="btn btn-sm btn-danger" id="cancel_receiving_button">
+                                <span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
+                            </div>
+                            <div class="btn btn-sm btn-success" id="finish_receiving_button">
+                                <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_receiving') ?>
+                            </div>
                         </div>
                     </div>
 
@@ -355,78 +356,71 @@ if (isset($success)) {
 
                     <?= form_open("$controller_name/complete", ['id' => 'finish_receiving_form', 'class' => 'form-horizontal']) ?>
 
-                    <div class="form-group form-group-sm">
+                    <div class="form-group form-group-sm recv-checkout">
                         <label id="comment_label" for="comment"><?= lang('Common.comments') ?></label>
                         <?= form_textarea([
                             'name'  => 'comment',
                             'id'    => 'comment',
                             'class' => 'form-control input-sm',
                             'value' => $comment,
-                            'rows'  => '4'
+                            'rows'  => '2'
                         ]) ?>
-                        <div id="payment_details">
-                            <table class="sales_table_100">
-                                <tr>
-                                    <td><?= lang(ucfirst($controller_name) . '.print_after_sale') ?></td>
-                                    <td>
-                                        <?= form_checkbox([
-                                            'name'    => 'recv_print_after_sale',
-                                            'id'      => 'recv_print_after_sale',
-                                            'class'   => 'checkbox',
-                                            'value'   => 1,
-                                            'checked' => $print_after_sale == 1
-                                        ]) ?>
-                                    </td>
-                                </tr>
-                                <?php if ($mode == "receive") { ?>
-                                    <tr>
-                                        <td><?= lang(ucfirst($controller_name) . '.reference') ?></td>
-                                        <td>
-                                            <?= form_input([
-                                                'name'  => 'recv_reference',
-                                                'id'    => 'recv_reference',
-                                                'class' => 'form-control input-sm',
-                                                'value' => $reference,
-                                                'size'  => 5
-                                            ]) ?>
-                                        </td>
-                                    </tr>
-                                <?php } ?>
-                                <tr>
-                                    <td><?= lang('Sales.payment') ?></td>
-                                    <td>
-                                        <?= form_dropdown(
-                                            'payment_type',
-                                            $payment_options,
-                                            [],
-                                            [
-                                                'id'         => 'payment_types',
-                                                'class'      => 'selectpicker show-menu-arrow',
-                                                'data-style' => 'btn-default btn-sm',
-                                                'data-width' => 'auto'
-                                            ]
-                                        ) ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><?= lang('Sales.amount_tendered') ?></td>
-                                    <td>
-                                        <?= form_input([
-                                            'name'  => 'amount_tendered',
-                                            'value' => '',
-                                            'class' => 'form-control input-sm',
-                                            'size'  => '5'
-                                        ]) ?>
-                                    </td>
-                                </tr>
-                            </table>
+
+                        <div id="payment_details" class="recv-fields">
+                            <label class="recv-check" for="recv_print_after_sale">
+                                <?= form_checkbox([
+                                    'name'    => 'recv_print_after_sale',
+                                    'id'      => 'recv_print_after_sale',
+                                    'class'   => 'checkbox',
+                                    'value'   => 1,
+                                    'checked' => $print_after_sale == 1
+                                ]) ?>
+                                <span><?= lang(ucfirst($controller_name) . '.print_after_sale') ?></span>
+                            </label>
+
+                            <?php if ($mode == "receive") { ?>
+                                <div class="recv-field">
+                                    <label for="recv_reference"><?= lang(ucfirst($controller_name) . '.reference') ?></label>
+                                    <?= form_input([
+                                        'name'  => 'recv_reference',
+                                        'id'    => 'recv_reference',
+                                        'class' => 'form-control input-sm',
+                                        'value' => $reference
+                                    ]) ?>
+                                </div>
+                            <?php } ?>
+
+                            <div class="recv-field">
+                                <label for="payment_types"><?= lang('Sales.payment') ?></label>
+                                <?= form_dropdown(
+                                    'payment_type',
+                                    $payment_options,
+                                    [],
+                                    [
+                                        'id'    => 'payment_types',
+                                        'class' => 'form-control input-sm'
+                                    ]
+                                ) ?>
+                            </div>
+
+                            <div class="recv-field">
+                                <label for="amount_tendered"><?= lang('Sales.amount_tendered') ?></label>
+                                <?= form_input([
+                                    'name'  => 'amount_tendered',
+                                    'id'    => 'amount_tendered',
+                                    'value' => '',
+                                    'class' => 'form-control input-sm'
+                                ]) ?>
+                            </div>
                         </div>
 
-                        <div class="btn btn-sm btn-danger pull-left" id="cancel_receiving_button">
-                            <span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
-                        </div>
-                        <div class="btn btn-sm btn-success pull-right" id="finish_receiving_button">
-                            <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_receiving') ?>
+                        <div class="recv-finish-actions">
+                            <div class="btn btn-sm btn-danger" id="cancel_receiving_button">
+                                <span class="glyphicon glyphicon-remove">&nbsp;</span><?= lang(ucfirst($controller_name) . '.cancel_receiving') ?>
+                            </div>
+                            <div class="btn btn-sm btn-success" id="finish_receiving_button">
+                                <span class="glyphicon glyphicon-ok">&nbsp;</span><?= lang(ucfirst($controller_name) . '.complete_receiving') ?>
+                            </div>
                         </div>
                     </div>
 
@@ -437,6 +431,9 @@ if (isset($success)) {
         <?php } ?>
     </div>
 </div>
+
+</div>
+</section>
 
 <script type="text/javascript">
     $(document).ready(function() {

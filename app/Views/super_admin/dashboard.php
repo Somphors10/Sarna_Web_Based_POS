@@ -65,7 +65,7 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=45') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=56') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=3') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=2') ?>">
     <style>
@@ -370,7 +370,7 @@ $format_relative_time = static function (?string $value): string {
         ],
         'requests' => [
             'title' => 'Pending Requests',
-            'subtitle' => 'Owners verify by Gmail first. Then you Activate and send KHQR.',
+            'subtitle' => 'Activate a shop, then send KHQR so they can pay and log in.',
         ],
         'email' => [
             'title' => 'Email',
@@ -427,6 +427,21 @@ $format_relative_time = static function (?string $value): string {
     if (service('request')->getGet('password_changed') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'Password changed successfully.'];
     }
+    if (service('request')->getGet('admin_created') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Platform admin created.'];
+    }
+    if (service('request')->getGet('admin_updated') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Platform admin status updated.'];
+    }
+    if (service('request')->getGet('extended') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Subscription extended.'];
+    }
+    if (service('request')->getGet('expiry_set') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Subscription expiry date saved.'];
+    }
+    if (service('request')->getGet('renewed') === '1') {
+        $flash_messages[] = ['type' => 'success', 'text' => 'Payment confirmed and subscription renewed. Invoice recorded.'];
+    }
 
     $gmail_error = trim((string)session()->getFlashdata('gmail_error'));
     if ($gmail_error !== '') {
@@ -443,7 +458,15 @@ $format_relative_time = static function (?string $value): string {
         'reject_comment_required' => 'Enter a rejection reason (at least 3 characters).',
         'feature_update_failed' => 'Could not update the feature. Please try again.',
         'isolate_failed' => 'Could not create a private database for this shop. Check MySQL CREATE DATABASE privileges.',
-        'feature_update_failed' => 'Could not update this feature. Try again.',
+        'admin_not_allowed' => 'Only the owner Super Admin can manage platform admins.',
+        'admin_invalid' => 'Enter a valid username (3–40 chars), full name, and password (8+ chars).',
+        'admin_exists' => 'That admin username already exists.',
+        'admin_create_failed' => 'Could not create the admin. Please try again.',
+        'admin_self' => 'You cannot disable your own account.',
+        'admin_owner_locked' => 'The owner Super Admin account cannot be disabled.',
+        'admin_update_failed' => 'Could not update admin status.',
+        'tenant_not_found' => 'Shop not found.',
+        'expiry_invalid' => 'Enter a valid expiry date (YYYY-MM-DD).',
     ];
     if ($error_code !== '' && isset($error_messages[$error_code])) {
         $flash_messages[] = ['type' => 'error', 'text' => $error_messages[$error_code]];
@@ -762,20 +785,24 @@ $format_relative_time = static function (?string $value): string {
         <?php endif; ?>
 
         <?php if ($active_page === 'businesses'): ?>
-        <section class="sa-panel">
+        <?php
+            $sa_display_text = static function (?string $value): string {
+                $value = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+                return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+            };
+        ?>
+        <section class="sa-panel sa-panel--businesses">
             <div class="sa-panel__head">
                 <h2 class="sa-panel__title">All Businesses</h2>
-                <p class="sa-panel__subtitle">Shop ID is from the businesses table. Expiry comes from each shop’s subscription period.</p>
+                <p class="sa-panel__subtitle"><?= (int) $total_tenants ?> shops · expiry from each shop’s subscription period</p>
             </div>
             <div class="sa-table-wrap sa-table-wrap--stack">
-                <table class="sa-table">
+                <table class="sa-table sa-table--businesses">
                     <thead>
                     <tr>
-                        <th>Shop ID</th>
-                        <th>Code</th>
-                        <th>Company</th>
+                        <th>Business</th>
                         <th>Owner</th>
-                        <th>Username</th>
                         <th>Expires</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -783,7 +810,7 @@ $format_relative_time = static function (?string $value): string {
                     </thead>
                     <tbody>
                     <?php if (empty($tenants)): ?>
-                        <tr><td colspan="8" class="sa-empty">No businesses yet.</td></tr>
+                        <tr><td colspan="5" class="sa-empty">No businesses yet.</td></tr>
                     <?php else: ?>
                     <?php foreach ($tenants as $tenant): ?>
                         <?php
@@ -791,17 +818,32 @@ $format_relative_time = static function (?string $value): string {
                             $billing = strtolower((string)($tenant['billing'] ?? 'none'));
                             $period_end = (string)($tenant['period_end'] ?? '');
                             $days_left = $tenant['days_left'] ?? null;
+                            $company_name = $sa_display_text($tenant['company_name'] ?? '');
+                            $owner_name = $sa_display_text(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? ''));
+                            $username = trim((string)($tenant['username'] ?? ''));
+                            $tenant_code = trim((string)($tenant['tenant_code'] ?? ''));
+                            $status_label = $status === 'awaiting_payment' ? 'Awaiting payment' : (string)($tenant['status'] ?? '');
+                            $status_class = $status === 'awaiting_payment' ? 'pending' : $status;
                         ?>
-                        <tr class="js-searchable-row"
+                        <tr class="js-searchable-row<?= $billing === 'expired' ? ' sa-biz-row--expired' : ($billing === 'warning' ? ' sa-biz-row--warning' : '') ?>"
                             data-group="tenant"
                             data-status="<?= esc($status) ?>"
                             data-billing="<?= esc($billing) ?>"
-                            data-search="<?= esc(strtolower(trim(($tenant['tenant_code'] ?? '') . ' ' . ($tenant['company_name'] ?? '') . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . ($tenant['username'] ?? '') . ' ' . ($tenant['email'] ?? '') . ' ' . ($tenant['owner_email'] ?? '') . ' ' . ($tenant['phone_number'] ?? '')))) ?>">
-                            <td data-label="Shop ID"><?= esc($tenant['tenant_id']) ?></td>
-                            <td data-label="Code"><?= esc($tenant['tenant_code']) ?></td>
-                            <td data-label="Company"><?= esc($tenant['company_name']) ?></td>
-                            <td data-label="Owner"><?= esc(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? '')) ?></td>
-                            <td data-label="Username"><?= esc($tenant['username'] ?? '') ?></td>
+                            data-search="<?= esc(strtolower(trim($tenant_code . ' ' . $company_name . ' ' . ($tenant['first_name'] ?? '') . ' ' . ($tenant['last_name'] ?? '') . ' ' . $username . ' ' . ($tenant['email'] ?? '') . ' ' . ($tenant['owner_email'] ?? '') . ' ' . ($tenant['phone_number'] ?? '')))) ?>">
+                            <td data-label="Business">
+                                <div class="sa-biz-cell">
+                                    <strong class="sa-biz-cell__title"><?= esc($company_name !== '' ? $company_name : 'Untitled shop') ?></strong>
+                                    <span class="sa-biz-cell__sub"><?= esc($tenant_code) ?> · #<?= esc($tenant['tenant_id']) ?></span>
+                                </div>
+                            </td>
+                            <td data-label="Owner">
+                                <div class="sa-biz-cell">
+                                    <strong class="sa-biz-cell__title"><?= esc($owner_name !== '' ? $owner_name : '—') ?></strong>
+                                    <?php if ($username !== ''): ?>
+                                        <span class="sa-biz-cell__sub">@<?= esc($username) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
                             <td data-label="Expires">
                                 <?php if ($period_end === ''): ?>
                                     <span class="sa-muted">—</span>
@@ -816,25 +858,27 @@ $format_relative_time = static function (?string $value): string {
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td data-label="Status"><span class="sa-status sa-status--<?= esc($status === 'awaiting_payment' ? 'pending' : $status) ?>"><?= esc($status === 'awaiting_payment' ? 'Awaiting payment' : $tenant['status']) ?></span></td>
+                            <td data-label="Status">
+                                <span class="sa-status sa-status--<?= esc($status_class) ?>"><?= esc($status_label) ?></span>
+                            </td>
                             <td data-label="Action">
                                 <div class="sa-row-actions">
                                     <button type="button"
                                             class="sa-btn sa-btn--ghost js-sa-view-detail"
                                             data-kind="business"
-                                            data-title="<?= esc($tenant['company_name'] ?: ('Business #' . (int)$tenant['tenant_id']), 'attr') ?>"
+                                            data-title="<?= esc($company_name !== '' ? $company_name : ('Business #' . (int)$tenant['tenant_id']), 'attr') ?>"
                                             data-id="<?= esc((string)$tenant['tenant_id'], 'attr') ?>"
-                                            data-company="<?= esc($tenant['company_name'], 'attr') ?>"
-                                            data-code="<?= esc($tenant['tenant_code'], 'attr') ?>"
+                                            data-company="<?= esc($company_name, 'attr') ?>"
+                                            data-code="<?= esc($tenant_code, 'attr') ?>"
                                             data-type="<?= esc(saas_business_type_label($tenant['business_type'] ?? ''), 'attr') ?>"
-                                            data-address="<?= esc((string)($tenant['address'] ?? $tenant['address_1'] ?? ''), 'attr') ?>"
-                                            data-city="<?= esc((string)($tenant['city'] ?? ''), 'attr') ?>"
-                                            data-country="<?= esc((string)($tenant['country'] ?? ''), 'attr') ?>"
+                                            data-address="<?= esc($sa_display_text((string)($tenant['address'] ?? $tenant['address_1'] ?? '')), 'attr') ?>"
+                                            data-city="<?= esc($sa_display_text((string)($tenant['city'] ?? '')), 'attr') ?>"
+                                            data-country="<?= esc($sa_display_text((string)($tenant['country'] ?? '')), 'attr') ?>"
                                             data-tax="<?= esc((string)($tenant['tax_id'] ?? ''), 'attr') ?>"
-                                            data-owner="<?= esc(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? ''), 'attr') ?>"
+                                            data-owner="<?= esc($owner_name, 'attr') ?>"
                                             data-email="<?= esc((string)($tenant['email'] ?? $tenant['owner_email'] ?? ''), 'attr') ?>"
                                             data-phone="<?= esc((string)($tenant['phone_number'] ?? $tenant['owner_phone'] ?? ''), 'attr') ?>"
-                                            data-username="<?= esc((string)($tenant['username'] ?? $tenant['owner_username'] ?? ''), 'attr') ?>"
+                                            data-username="<?= esc($username !== '' ? $username : (string)($tenant['owner_username'] ?? ''), 'attr') ?>"
                                             data-plan="<?= esc((string)($tenant['plan_name'] ?? ''), 'attr') ?>"
                                             data-payment="<?= esc((string)($tenant['payment_reference'] ?? ''), 'attr') ?>"
                                             data-expires="<?= esc(saas_format_period_end($period_end), 'attr') ?>"
@@ -843,13 +887,13 @@ $format_relative_time = static function (?string $value): string {
                                         View
                                     </button>
                                     <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form sa-row-actions__form']) ?>
-                                    <select class="sa-select--sm" name="status">
+                                    <select class="sa-select--sm" name="status" aria-label="Status">
                                         <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>Active</option>
                                         <option value="awaiting_payment" <?= $tenant['status'] === 'awaiting_payment' ? 'selected' : '' ?>>Awaiting payment</option>
                                         <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
                                         <option value="cancelled" <?= $tenant['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
                                     </select>
-                                    <input type="hidden" name="tenant_code" value="<?= esc($tenant['tenant_code']) ?>">
+                                    <input type="hidden" name="tenant_code" value="<?= esc($tenant_code) ?>">
                                     <button class="sa-btn sa-btn--primary" type="submit">Save</button>
                                     <?= form_close() ?>
                                 </div>
@@ -885,26 +929,44 @@ $format_relative_time = static function (?string $value): string {
                         <tr><td colspan="5" class="sa-empty">No platform admins.</td></tr>
                     <?php else: ?>
                     <?php foreach ($platform_admins as $admin): ?>
-                        <?php $admin_status = strtolower((string)($admin['status'] ?? '')); ?>
+                        <?php
+                            $admin_status = strtolower((string)($admin['status'] ?? ''));
+                            $is_owner_row = (string)($admin['username'] ?? '') === 'superadmin';
+                            $self_id = (int)($logged_in_admin->admin_id ?? 0);
+                            $row_id = (int)($admin['admin_id'] ?? 0);
+                        ?>
                         <tr class="js-searchable-row"
                             data-group="admin"
                             data-search="<?= esc(strtolower(trim(($admin['username'] ?? '') . ' ' . ($admin['full_name'] ?? '') . ' ' . ($admin['email'] ?? '')))) ?>">
-                            <td><?= esc($admin['username']) ?></td>
+                            <td><?= esc($admin['username']) ?><?= $is_owner_row ? ' <span class="sa-status sa-status--owner">Owner</span>' : '' ?></td>
                             <td><?= esc($admin['full_name']) ?></td>
                             <td><?= esc($admin['email'] ?? '') ?></td>
-                            <td><span class="sa-status sa-status--<?= esc($admin_status) ?>"><?= esc($admin['status']) ?></span></td>
+                            <td><span class="sa-status sa-status--<?= esc($admin_status === 'disabled' ? 'cancelled' : $admin_status) ?>"><?= esc($admin['status']) ?></span></td>
                             <td>
-                                <button type="button"
-                                        class="sa-btn sa-btn--ghost js-sa-view-detail"
-                                        data-title="<?= esc($admin['username'], 'attr') ?>"
-                                        data-kind="admin"
-                                        data-id="<?= esc((string)$admin['admin_id'], 'attr') ?>"
-                                        data-username="<?= esc($admin['username'], 'attr') ?>"
-                                        data-name="<?= esc($admin['full_name'], 'attr') ?>"
-                                        data-email="<?= esc($admin['email'] ?? '', 'attr') ?>"
-                                        data-status="<?= esc($admin['status'], 'attr') ?>">
-                                    View
-                                </button>
+                                <div class="sa-row-actions">
+                                    <button type="button"
+                                            class="sa-btn sa-btn--ghost js-sa-view-detail"
+                                            data-title="<?= esc($admin['username'], 'attr') ?>"
+                                            data-kind="admin"
+                                            data-id="<?= esc((string)$admin['admin_id'], 'attr') ?>"
+                                            data-username="<?= esc($admin['username'], 'attr') ?>"
+                                            data-name="<?= esc($admin['full_name'], 'attr') ?>"
+                                            data-email="<?= esc($admin['email'] ?? '', 'attr') ?>"
+                                            data-status="<?= esc($admin['status'], 'attr') ?>">
+                                        View
+                                    </button>
+                                    <?php if (!empty($is_owner) && !$is_owner_row && $row_id !== $self_id): ?>
+                                        <?= form_open('super-admin/toggle-admin/' . $row_id, ['class' => 'sa-row-actions__form']) ?>
+                                        <?php if ($admin_status === 'active'): ?>
+                                            <input type="hidden" name="status" value="disabled">
+                                            <button class="sa-btn sa-btn--danger" type="submit">Disable</button>
+                                        <?php else: ?>
+                                            <input type="hidden" name="status" value="active">
+                                            <button class="sa-btn sa-btn--success" type="submit">Enable</button>
+                                        <?php endif; ?>
+                                        <?= form_close() ?>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -992,7 +1054,7 @@ $format_relative_time = static function (?string $value): string {
         <section class="sa-panel">
             <div class="sa-panel__head">
                 <h2 class="sa-panel__title">Ready to activate</h2>
-                <p class="sa-panel__subtitle">Owners appear here only after they click the verify link in their email. Activate then emails KHQR. They cannot log in until they pay.</p>
+                <p class="sa-panel__subtitle">Activate then emails KHQR. They cannot log in until they pay.</p>
             </div>
             <div class="sa-table-wrap">
                 <table class="sa-table">
@@ -1009,7 +1071,7 @@ $format_relative_time = static function (?string $value): string {
                     </thead>
                     <tbody>
                     <?php if (empty($subscription_requests)): ?>
-                        <tr><td colspan="7" class="sa-empty">No verified requests yet.</td></tr>
+                        <tr><td colspan="7" class="sa-empty">No pending requests.</td></tr>
                     <?php else: ?>
                     <?php foreach ($subscription_requests as $request): ?>
                         <tr class="js-searchable-row"
@@ -2109,7 +2171,7 @@ $format_relative_time = static function (?string $value): string {
 
         const applyRowFilters = function() {
             const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-            const status = statusFilter && !statusFilter.hidden ? statusFilter.value.toLowerCase() : '';
+            const status = statusFilter ? statusFilter.value.toLowerCase() : '';
 
             document.querySelectorAll('.js-searchable-row').forEach(function(row) {
                 const haystack = (row.dataset.search || '').toLowerCase();

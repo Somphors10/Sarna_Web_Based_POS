@@ -67,18 +67,21 @@ class Home extends Secure_Controller
                 'value'      => to_currency($period_summary['total'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
+                'accent'     => 'revenue',
             ];
             $kpis[] = [
                 'label'      => lang('Common.dashboard_profit'),
                 'value'      => to_currency($period_summary['profit'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
+                'accent'     => 'profit',
             ];
             $kpis[] = [
                 'label'      => lang('Common.dashboard_today_sales'),
                 'value'      => to_currency($today_summary['total'] ?? 0),
                 'hint'       => to_date(strtotime($today)),
                 'report_url' => site_url("reports/detailed_sales/$today/$today/complete/all"),
+                'accent'     => 'today',
             ];
 
             $sales_labels = [];
@@ -112,33 +115,50 @@ class Home extends Secure_Controller
             $payment_rows = $summary_payments->getData($sale_inputs);
             $payment_summary = $summary_payments->getSummaryData($sale_inputs);
 
-            $payment_labels = [];
-            $payment_series = [];
+            $amounts_by_type = [];
             foreach ($payment_rows as $row) {
-                if ($row['trans_group'] == lang('Reports.trans_payments') && !empty($row['trans_amount'])) {
-                    $payment_labels[] = $row['trans_type'];
-                    $payment_series[] = [
-                        'meta'  => $row['trans_type'] . ' ' . round($row['trans_amount'] / max($payment_summary['total'], 1) * 100, 2) . '%',
-                        'value' => $row['trans_amount'],
-                    ];
+                if ($row['trans_group'] == lang('Reports.trans_payments')) {
+                    $type = canonicalize_payment_type((string) ($row['trans_type'] ?? ''));
+                    if ($type === '') {
+                        continue;
+                    }
+                    $amounts_by_type[$type] = ($amounts_by_type[$type] ?? 0.0) + (float) ($row['trans_amount'] ?? 0);
                 }
             }
 
-            if (!empty($payment_series)) {
-                $charts[] = [
-                    'title'         => lang('Common.dashboard_payment_methods'),
-                    'subtitle'      => lang('Common.dashboard_payment_methods_hint'),
-                    'chart_id'      => 'home_payments_chart',
-                    'chart_var'     => 'homePaymentsChart',
-                    'chart_type'    => 'home/charts/hbar',
-                    'labels_1'      => $payment_labels,
-                    'series_data_1' => $payment_series,
-                    'show_currency' => true,
-                    'has_data'      => true,
-                    'summary'       => $payment_summary,
-                    'summary_keys'  => ['total'],
+            $payment_types = array_values(get_payment_options());
+            foreach (array_keys($amounts_by_type) as $type) {
+                if (!in_array($type, $payment_types, true)) {
+                    $payment_types[] = $type;
+                }
+            }
+
+            $payment_total = (float) ($payment_summary['total'] ?? 0);
+            $payment_labels = [];
+            $payment_series = [];
+            foreach ($payment_types as $type) {
+                $amount = (float) ($amounts_by_type[$type] ?? 0);
+                $pct = $payment_total > 0 ? round($amount / $payment_total * 100, 2) : 0.0;
+                $payment_labels[] = $type;
+                $payment_series[] = [
+                    'meta'  => $type . ' ' . $pct . '%',
+                    'value' => $amount,
                 ];
             }
+
+            $charts[] = [
+                'title'         => lang('Common.dashboard_payment_methods'),
+                'subtitle'      => lang('Common.dashboard_payment_methods_hint'),
+                'chart_id'      => 'home_payments_chart',
+                'chart_var'     => 'homePaymentsChart',
+                'chart_type'    => 'home/charts/hbar',
+                'labels_1'      => $payment_labels,
+                'series_data_1' => $payment_series,
+                'show_currency' => true,
+                'has_data'      => true,
+                'summary'       => $payment_summary,
+                'summary_keys'  => ['total'],
+            ];
         }
 
         if ($this->employee->has_grant('reports_expenses_categories', $person_id)) {
@@ -156,6 +176,7 @@ class Home extends Secure_Controller
                 'value'      => to_currency($expense_summary['expenses_total_amount'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_expenses_categories/$start_date/$end_date/complete"),
+                'accent'     => 'expenses',
             ];
         }
         } catch (\Throwable $e) {

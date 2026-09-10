@@ -509,6 +509,7 @@ class Saas extends BaseController
             ->update(['status' => 'active']);
 
         saas_activate_or_renew_subscription($tenant_id);
+        saas_record_subscription_payment($tenant_id, 'owner_checkout', $payment_reference, saas_monthly_price());
     }
 
     public function captchaImage()

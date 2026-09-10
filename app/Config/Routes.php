@@ -61,6 +61,11 @@ $routes->group('home', static function ($routes) {
 });
 $routes->get('super-admin/notifications/poll', 'Super_admin::getNotificationPoll');
 $routes->post('super-admin/toggle-status/(:num)', 'Super_admin::postToggleStatus/$1');
+$routes->post('super-admin/extend-subscription/(:num)', 'Super_admin::postExtendSubscription/$1');
+$routes->post('super-admin/set-expiry/(:num)', 'Super_admin::postSetExpiry/$1');
+$routes->post('super-admin/confirm-renewal/(:num)', 'Super_admin::postConfirmRenewal/$1');
+$routes->post('super-admin/create-admin', 'Super_admin::postCreateAdmin');
+$routes->post('super-admin/toggle-admin/(:num)', 'Super_admin::postToggleAdminStatus/$1');
 $routes->get('super-admin/email', 'Super_admin::index/email');
 $routes->post('super-admin/save-gmail', 'Super_admin::postSaveGmailSettings');
 $routes->post('super-admin/test-gmail', 'Super_admin::postTestGmail');

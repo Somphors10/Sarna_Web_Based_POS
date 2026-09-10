@@ -545,41 +545,35 @@ class Item extends Model
     }
 
     /**
-     * Deletes one item
+     * Soft-deletes one item. Stock quantities are preserved so restore can bring the item back intact.
      */
     public function delete($item_id = null, bool $purge = false): bool|int|string
     {
-        $this->db->transStart();
-
-        // Set to 0 quantities
-        $item_quantity = model(Item_quantity::class);
-        $item_quantity->reset_quantity($item_id);
-
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
         $this->scopeTenant($builder, 'items.tenant_id');
-        $success = $builder->update(['deleted' => 1]);
 
-        $inventory = model(Inventory::class);
-        $success &= $inventory->reset_quantity($item_id);
-
-        $this->db->transComplete();
-
-        $success &= $this->db->transStatus();
-
-        return $success;
+        return $builder->update(['deleted' => 1]);
     }
 
     /**
-     * Undeletes one item
+     * Undeletes one item and restores stock if a prior soft-delete zeroed inventory.
      */
     public function undelete(int $item_id): bool
     {
+        $this->db->transStart();
+
         $builder = $this->db->table('items');
         $builder->where('item_id', $item_id);
         $this->scopeTenant($builder, 'items.tenant_id');
+        $success = $builder->update(['deleted' => 0]);
 
-        return $builder->update(['deleted' => 0]);
+        $inventory = model(Inventory::class);
+        $success &= $inventory->restore_quantity_after_undelete($item_id);
+
+        $this->db->transComplete();
+
+        return $success && $this->db->transStatus();
     }
 
     /**
@@ -587,41 +581,33 @@ class Item extends Model
      */
     public function undelete_list(array $item_ids): bool
     {
-        $builder = $this->db->table('items');
-        $builder->whereIn('item_id', $item_ids);
-        $this->scopeTenant($builder, 'items.tenant_id');
-
-        return $builder->update(['deleted' => 0]);
-    }
-
-    /**
-     * Deletes a list of items
-     */
-    public function delete_list(array $item_ids): bool
-    {
-        // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
 
-        // Set to 0 quantities
-        $item_quantity = model(Item_quantity::class);
-        $item_quantity->reset_quantity_list($item_ids);
-
         $builder = $this->db->table('items');
         $builder->whereIn('item_id', $item_ids);
         $this->scopeTenant($builder, 'items.tenant_id');
-        $success = $builder->update(['deleted' => 1]);
+        $success = $builder->update(['deleted' => 0]);
 
         $inventory = model(Inventory::class);
-
         foreach ($item_ids as $item_id) {
-            $success &= $inventory->reset_quantity($item_id);
+            $success &= $inventory->restore_quantity_after_undelete((int) $item_id);
         }
 
         $this->db->transComplete();
 
-        $success &= $this->db->transStatus();
+        return $success && $this->db->transStatus();
+    }
 
-        return $success;
+    /**
+     * Soft-deletes a list of items. Stock quantities are preserved for restore.
+     */
+    public function delete_list(array $item_ids): bool
+    {
+        $builder = $this->db->table('items');
+        $builder->whereIn('item_id', $item_ids);
+        $this->scopeTenant($builder, 'items.tenant_id');
+
+        return $builder->update(['deleted' => 1]);
     }
 
     /**

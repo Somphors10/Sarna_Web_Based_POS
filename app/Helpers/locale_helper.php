@@ -341,6 +341,79 @@ function get_payment_options(): array
 }
 
 /**
+ * Maps a stored payment_type label (any language) onto the current-language label.
+ * Gift-card values with a number suffix ("Gift Card:12") collapse to the giftcard label.
+ */
+function canonicalize_payment_type(string $stored_type): string
+{
+    $stored_type = trim($stored_type);
+    if ($stored_type === '') {
+        return $stored_type;
+    }
+
+    static $alias_map = null;
+    if ($alias_map === null) {
+        $keys = [
+            'cash',
+            'debit',
+            'credit',
+            'due',
+            'check',
+            'giftcard',
+            'rewards',
+            'upi',
+            'cash_adjustment',
+            'cash_deposit',
+        ];
+
+        // Known historical labels (en + km) plus whatever the current locale uses.
+        $known = [
+            'cash'             => ['Cash', 'ប្រាក់'],
+            'debit'            => ['Debit Card', 'Debit', 'កាត ធនាគារ'],
+            'credit'           => ['Credit Card', 'Credit', 'បណ្ណ័មូលបត្របំណុល'],
+            'due'              => ['Due', 'ដល់ពេល'],
+            'check'            => ['Check', 'Cheque', 'ឆែក'],
+            'giftcard'         => ['Gift Card', 'Giftcard', 'កាតអំណោយ'],
+            'rewards'          => ['Reward Points', 'Rewards', 'ពិន្ទុរង្វាន់'],
+            'upi'              => ['UPI'],
+            'cash_adjustment'  => ['Cash Adjustment'],
+            'cash_deposit'     => ['Cash Deposit', 'ប្រាក់កក់'],
+        ];
+
+        $alias_map = [];
+        foreach ($keys as $key) {
+            $current = lang('Sales.' . $key);
+            if ($current === '' || $current === 'Sales.' . $key) {
+                continue;
+            }
+
+            $variants = $known[$key] ?? [];
+            $variants[] = $current;
+            foreach ($variants as $variant) {
+                $variant = trim((string) $variant);
+                if ($variant !== '') {
+                    $alias_map[mb_strtolower($variant)] = $current;
+                }
+            }
+        }
+    }
+
+    $lower = mb_strtolower($stored_type);
+    if (isset($alias_map[$lower])) {
+        return $alias_map[$lower];
+    }
+
+    // Gift card payments are stored as "Label:number"
+    foreach ($alias_map as $alias => $canonical) {
+        if (str_starts_with($lower, $alias . ':')) {
+            return $canonical;
+        }
+    }
+
+    return $stored_type;
+}
+
+/**
  * Determines if the current currency symbol is on the right side of the amount
  *
  * @return bool true is returned when the symbol should be displayed to the right of the amount. False otherwise.

@@ -131,7 +131,7 @@ input#amount_tendered:disabled {
     margin-bottom: 5px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
     #register_wrapper,
     #overall_sale {
         float: none;

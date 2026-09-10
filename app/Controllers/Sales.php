@@ -1348,7 +1348,7 @@ class Sales extends Secure_Controller
      * @param bool $update_inventory
      * @return void
      */
-    public function restore(int $sale_id = NEW_ENTRY, bool $update_inventory = true): void
+    public function postRestore(int $sale_id = NEW_ENTRY, bool $update_inventory = true): void
     {
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
         $has_grant = $this->employee->has_grant('sales_delete', $employee_id);
@@ -1359,7 +1359,7 @@ class Sales extends Secure_Controller
             $sale_ids = $sale_id == NEW_ENTRY ? normalize_post_ids($this->request->getPost('ids')) : [$sale_id];
 
             if (empty($sale_ids)) {
-                echo json_encode(['success' => false, 'message' => lang('Sales.unsuccessfully_deleted')]);
+                echo json_encode(['success' => false, 'message' => lang('Sales.unsuccessfully_restored')]);
                 return;
             }
 

@@ -15,17 +15,6 @@ use App\Models\Employee;
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var init_select_controls = function() {
-            if ($.fn.selectpicker) {
-                $('.selectpicker').selectpicker();
-                $('#toolbar').addClass('items-selectpicker-ready');
-            } else {
-                $('#toolbar').removeClass('items-selectpicker-ready');
-            }
-        };
-
-        init_select_controls();
-
         <?= view('partial/soft_delete_list_script', ['hide_when_deleted' => '#bulk_edit, #generate_barcodes']) ?>
 
         $('#generate_barcodes').click(function() {
@@ -33,15 +22,6 @@ use App\Models\Employee;
                 'index.php/items/generateBarcodes/' + table_support.selected_ids().join(':'),
                 '_blank'
             );
-        });
-
-        // When filter selection changes, refresh table.
-        $('#filters').on('change', function() {
-            table_support.refresh();
-        });
-        // Bootstrap-select compatibility (if plugin is active elsewhere)
-        $('#filters').on('hidden.bs.select', function(e) {
-            table_support.refresh();
         });
 
         // Load the preset daterange picker
@@ -74,7 +54,7 @@ use App\Models\Employee;
                     "start_date": start_date,
                     "end_date": end_date,
                     "stock_location": $("#stock_location").val(),
-                    "filters": mergeDeletedTableFilters($("#filters").val() || [])
+                    "filters": mergeDeletedTableFilters([])
                 });
             },
             onLoadSuccess: function(response) {
@@ -149,11 +129,6 @@ use App\Models\Employee;
                 <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
             </button>
             <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-            <?= form_multiselect('filters[]', $filters, [''], [
-                'id'                        => 'filters',
-                'class'                     => 'form-control input-sm pos-items-filter-select',
-                'size'                      => 1
-            ]) ?>
             <?php
             if (count($stock_locations) > 1) {
                 echo form_dropdown(
@@ -161,8 +136,8 @@ use App\Models\Employee;
                     $stock_locations,
                     $stock_location,
                     [
-                        'id'         => 'stock_location',
-                        'class'      => 'form-control input-sm'
+                        'id'    => 'stock_location',
+                        'class' => 'form-control input-sm pos-native-select'
                     ]
                 );
             }

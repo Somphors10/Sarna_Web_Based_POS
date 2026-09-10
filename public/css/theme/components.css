@@ -719,3 +719,180 @@ html.lang-km .neo-global-content .bootstrap-table .table thead > tr > th {
     outline: none !important;
     box-shadow: none !important;
 }
+
+/* =========================================================
+   POS selects — native style (same as Stock Source)
+   ========================================================= */
+.neo-global-content select.form-control,
+.neo-global-content select,
+.bootstrap-dialog select.form-control,
+.bootstrap-dialog select,
+.modal select.form-control,
+.modal select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid #d0d7e2;
+    border-radius: 8px;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding: 6px 32px 6px 10px;
+    min-height: 34px;
+    color: #0f172a;
+    box-shadow: none;
+    line-height: 1.35;
+    vertical-align: middle;
+}
+
+.neo-global-content select.form-control:focus,
+.neo-global-content select:focus,
+.bootstrap-dialog select.form-control:focus,
+.bootstrap-dialog select:focus,
+.modal select.form-control:focus,
+.modal select:focus {
+    border-color: #94a3b8;
+    box-shadow: none;
+    outline: none;
+}
+
+.neo-global-content select.input-sm,
+.bootstrap-dialog select.input-sm,
+.modal select.input-sm,
+.neo-global-content select.pos-native-select {
+    min-height: 34px;
+    height: 34px;
+    font-size: 13px;
+    width: auto;
+    max-width: 100%;
+    display: inline-block;
+}
+
+#mode_form select.pos-native-select,
+#add_item_form select.pos-native-select,
+#toolbar select.pos-native-select,
+#toolbar select#stock_location {
+    min-width: 140px;
+}
+
+/* Multi-select filters only: keep bootstrap-select compact + no search */
+.neo-global-content .bootstrap-select,
+.bootstrap-dialog .bootstrap-select,
+.modal .bootstrap-select {
+    vertical-align: middle;
+    width: auto !important;
+    max-width: 240px;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle,
+.modal .bootstrap-select > .dropdown-toggle {
+    border: 1px solid #d0d7e2 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 6px 28px 6px 10px !important;
+    font-weight: 500;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle:hover,
+.neo-global-content .bootstrap-select > .dropdown-toggle:focus,
+.neo-global-content .bootstrap-select.open > .dropdown-toggle,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle:hover,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle:focus,
+.modal .bootstrap-select > .dropdown-toggle:hover,
+.modal .bootstrap-select > .dropdown-toggle:focus {
+    border-color: #94a3b8 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-toggle .caret,
+.neo-global-content .bootstrap-select .dropdown-toggle .bs-caret,
+.bootstrap-dialog .bootstrap-select .dropdown-toggle .caret,
+.bootstrap-dialog .bootstrap-select .dropdown-toggle .bs-caret,
+.modal .bootstrap-select .dropdown-toggle .caret,
+.modal .bootstrap-select .dropdown-toggle .bs-caret {
+    display: none !important;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 14px !important;
+}
+
+.bootstrap-select > .dropdown-menu {
+    border: 1px solid #c5cdd8 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+    padding: 0 !important;
+    margin: 1px 0 0 !important;
+    background: #ffffff !important;
+    overflow: hidden;
+}
+
+.bootstrap-select .dropdown-menu.inner {
+    position: static !important;
+    float: none !important;
+    top: auto !important;
+    left: auto !important;
+    max-height: 220px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow-y: auto !important;
+}
+
+.bootstrap-select .dropdown-menu > li > a,
+.bootstrap-select .dropdown-menu.inner > li > a {
+    border-radius: 0 !important;
+    padding: 8px 12px !important;
+    color: #0f172a !important;
+    font-size: 13px;
+}
+
+.bootstrap-select .dropdown-menu > li > a:hover,
+.bootstrap-select .dropdown-menu > li > a:focus,
+.bootstrap-select .dropdown-menu > li.selected > a,
+.bootstrap-select .dropdown-menu > li.active > a,
+.bootstrap-select .dropdown-menu.inner > li > a:hover,
+.bootstrap-select .dropdown-menu.inner > li > a:focus,
+.bootstrap-select .dropdown-menu.inner > li.selected > a,
+.bootstrap-select .dropdown-menu.inner > li.active > a {
+    background: #1d68d4 !important;
+    color: #ffffff !important;
+}
+
+.bootstrap-select .dropdown-menu > li.selected > a .text,
+.bootstrap-select .dropdown-menu > li.active > a .text,
+.bootstrap-select .dropdown-menu > li > a:hover .text {
+    color: inherit !important;
+}
+
+.bootstrap-select .bs-searchbox {
+    display: none !important;
+}
+
+.neo-global-content #register_wrapper #mode_form,
+.neo-global-content #register_wrapper #add_item_form {
+    overflow: visible;
+    position: relative;
+    z-index: 30;
+}
+
+.recv-page #register_wrapper,
+.sale-page #register_wrapper {
+    overflow: visible;
+}
+

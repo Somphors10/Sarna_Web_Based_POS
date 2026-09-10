@@ -794,6 +794,148 @@ function saas_activate_or_renew_subscription(int $tenant_id): void
     }
 }
 
+/**
+ * Set an exact subscription period_end (YYYY-MM-DD or datetime). Activates the subscription row.
+ */
+function saas_set_tenant_period_end(int $tenant_id, string $period_end): bool
+{
+    if ($tenant_id <= 0) {
+        return false;
+    }
+
+    $period_end = trim($period_end);
+    if ($period_end === '') {
+        return false;
+    }
+
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $period_end) === 1) {
+        $period_end .= ' 23:59:59';
+    }
+
+    $ts = strtotime($period_end);
+    if ($ts === false) {
+        return false;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('subscriptions')) {
+            return false;
+        }
+
+        $row = $db->table('subscriptions')
+            ->where('tenant_id', $tenant_id)
+            ->orderBy('subscription_id', 'DESC')
+            ->get(1)
+            ->getRow();
+
+        $payload = [
+            'status'      => 'active',
+            'period_end'  => date('Y-m-d H:i:s', $ts),
+            'period_start'=> date('Y-m-d H:i:s'),
+        ];
+
+        if ($db->fieldExists('expiry_mail_stage', 'subscriptions')) {
+            $payload['expiry_mail_stage'] = null;
+            $payload['expiry_mail_period_end'] = null;
+        }
+
+        if ($row === null) {
+            $payload['tenant_id'] = $tenant_id;
+            if ($db->fieldExists('plan_id', 'subscriptions')) {
+                $plan = $db->table('plans')->select('plan_id')->where('status', 'active')->orderBy('plan_id', 'ASC')->get(1)->getRow();
+                if ($plan !== null) {
+                    $payload['plan_id'] = (int)$plan->plan_id;
+                }
+            }
+
+            return (bool)$db->table('subscriptions')->insert($payload);
+        }
+
+        return (bool)$db->table('subscriptions')
+            ->where('subscription_id', (int)$row->subscription_id)
+            ->update($payload);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Write a paid invoice + payment row for a subscription charge (KHQR / manual confirm).
+ */
+function saas_record_subscription_payment(
+    int $tenant_id,
+    string $provider = 'aba_khqr_manual',
+    ?string $provider_payment_id = null,
+    ?float $amount = null
+): bool {
+    if ($tenant_id <= 0) {
+        return false;
+    }
+
+    $amount = $amount ?? saas_monthly_price();
+    if ($amount <= 0) {
+        return false;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('invoices') || !$db->tableExists('invoice_payments') || !$db->tableExists('subscriptions')) {
+            return false;
+        }
+
+        $sub = $db->table('subscriptions')
+            ->where('tenant_id', $tenant_id)
+            ->orderBy('subscription_id', 'DESC')
+            ->get(1)
+            ->getRow();
+
+        if ($sub === null) {
+            return false;
+        }
+
+        $subscription_id = (int)$sub->subscription_id;
+        $invoice_number = 'INV-' . $tenant_id . '-' . date('YmdHis') . '-' . random_int(100, 999);
+        $paid_at = date('Y-m-d H:i:s');
+        $amount_str = number_format($amount, 2, '.', '');
+
+        $inserted = $db->table('invoices')->insert([
+            'tenant_id'       => $tenant_id,
+            'subscription_id' => $subscription_id,
+            'invoice_number'  => $invoice_number,
+            'currency_code'   => 'USD',
+            'subtotal'        => $amount_str,
+            'tax_amount'      => '0.00',
+            'total_amount'    => $amount_str,
+            'status'          => 'paid',
+            'due_date'        => date('Y-m-d'),
+            'paid_at'         => $paid_at,
+        ]);
+
+        if (!$inserted) {
+            return false;
+        }
+
+        $invoice_id = (int)$db->insertID();
+        if ($invoice_id <= 0) {
+            return false;
+        }
+
+        return (bool)$db->table('invoice_payments')->insert([
+            'tenant_id'            => $tenant_id,
+            'invoice_id'           => $invoice_id,
+            'provider'             => substr($provider, 0, 40),
+            'provider_payment_id'  => $provider_payment_id !== null && $provider_payment_id !== ''
+                ? substr($provider_payment_id, 0, 191)
+                : null,
+            'amount'               => $amount_str,
+            'paid_at'              => $paid_at,
+        ]);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function saas_format_period_end(?string $period_end): string
 {
     $period_end = trim((string)$period_end);

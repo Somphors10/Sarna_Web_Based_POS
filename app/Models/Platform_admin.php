@@ -78,6 +78,17 @@ class Platform_admin extends Model
         ]);
     }
 
+    public function set_status(int $admin_id, string $status): bool
+    {
+        if ($admin_id <= 0 || !in_array($status, ['active', 'disabled'], true)) {
+            return false;
+        }
+
+        return $this->db->table('platform_admins')
+            ->where('admin_id', $admin_id)
+            ->update(['status' => $status]);
+    }
+
     public function get_all_admins(): array
     {
         return $this->db->table('platform_admins')
