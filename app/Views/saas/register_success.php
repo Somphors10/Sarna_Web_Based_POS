@@ -116,8 +116,8 @@ $mailhog = $delivery_mode === 'mailhog' && \App\Libraries\PlatformMail::isLocalD
                     <span class="lp-success__step-dot">3</span>
                     <div class="lp-success__step-body">
                         <span class="lp-success__step-label">Step 3</span>
-                        <strong>Activate, pay, log in</strong>
-                        <p>Super Admin activates, then emails KHQR. After they confirm your ABA payment, you can log in.</p>
+                        <strong>Approve, pay, log in</strong>
+                        <p>Super Admin approves, then emails KHQR. After your ABA payment is confirmed, you can log in.</p>
                     </div>
                 </div>
             </div>

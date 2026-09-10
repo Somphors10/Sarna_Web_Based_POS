@@ -52,11 +52,11 @@ $show_register_aside = false; // set true to show “What happens next” again
     <div class="lp-reg__header saas-shell">
         <p class="lp-label">POS Subscription</p>
         <h1 class="lp-reg__title">Register your POS</h1>
-        <p class="lp-reg__subtitle">$<?= number_format($monthly_price, 0) ?>/month · all features. You pay after Super Admin activates — not on this form.</p>
+        <p class="lp-reg__subtitle">$<?= number_format($monthly_price, 0) ?>/month · all features. You pay after Super Admin approves — not on this form.</p>
         <ol class="lp-reg__flow" aria-label="Registration steps">
             <li class="is-now"><strong>1</strong><span>Register</span></li>
             <li><strong>2</strong><span>Verify</span></li>
-            <li><strong>3</strong><span>Activate</span></li>
+            <li><strong>3</strong><span>Approve</span></li>
             <li><strong>4</strong><span>Pay KHQR</span></li>
             <li><strong>5</strong><span>Log in</span></li>
         </ol>

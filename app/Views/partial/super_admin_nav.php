@@ -17,9 +17,9 @@ $pos_modules = $pos_modules ?? super_admin_pos_nav_modules();
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/businesses.svg') ?>" alt=""></span>
     <span>Businesses</span>
 </a>
-<a class="neo-global-menu-item <?= $sa_active === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>" title="Pending Requests">
+<a class="neo-global-menu-item <?= $sa_active === 'requests' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/requests') ?>" title="New shop applications">
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/pending.svg') ?>" alt=""></span>
-    <span>Requests</span>
+    <span>Applications</span>
 </a>
 <a class="neo-global-menu-item <?= $sa_active === 'history' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/history') ?>" title="Request History">
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
@@ -28,18 +28,6 @@ $pos_modules = $pos_modules ?? super_admin_pos_nav_modules();
 <a class="neo-global-menu-item <?= $sa_active === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>" title="Platform Admins">
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt=""></span>
     <span>Platform Admins</span>
-</a>
-<a class="neo-global-menu-item <?= $sa_active === 'email' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/email') ?>" title="Email">
-    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
-    <span>Email</span>
-</a>
-<a class="neo-global-menu-item <?= $sa_active === 'plans' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/plans') ?>" title="Plans">
-    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
-    <span>Plans</span>
-</a>
-<a class="neo-global-menu-item <?= $sa_active === 'features' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/features') ?>" title="Features">
-    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
-    <span>Features</span>
 </a>
 
 <p class="sa-nav-group">POS Features</p>

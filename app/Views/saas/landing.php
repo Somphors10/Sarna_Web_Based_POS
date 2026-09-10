@@ -45,7 +45,7 @@ $contact_address = 'Street 299, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Pen
 
         <div class="lp-nav__actions">
             <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
-            <a class="lp-btn lp-btn--primary" href="<?= site_url('saas/register') ?>">Get started</a>
+            <a class="lp-btn lp-btn--primary" href="<?= site_url('saas/register') ?>">Apply for WBPOS</a>
             <button class="lp-nav__toggle" id="lp-nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
                 <span></span><span></span><span></span>
             </button>
@@ -261,7 +261,7 @@ $contact_address = 'Street 299, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Pen
                     <li>Private shop database</li>
                     <li>Pay after Super Admin activates</li>
                 </ul>
-                <a class="lp-pricing__cta" href="<?= esc(site_url('saas/register'), 'attr') ?>">Subscribe now</a>
+                <a class="lp-pricing__cta" href="<?= esc(site_url('saas/register'), 'attr') ?>">Apply for WBPOS</a>
             </article>
             <?php endforeach; ?>
         </div>

@@ -42,12 +42,12 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
         <a class="sa-khqr__back" href="<?= site_url('super-admin/requests') ?>">← Requests</a>
         <div class="sa-khqr__hero-row">
             <div>
-                <p class="sa-khqr__eyebrow">Super Admin · Activate</p>
+                <p class="sa-khqr__eyebrow">Super Admin · Payment</p>
                 <h1>Send KHQR to the owner</h1>
-                <p class="sa-khqr__lead">Shop is activated. Email the ABA QR, then confirm payment so they can log in.</p>
+                <p class="sa-khqr__lead">Shop is approved. Email the ABA QR, then mark $20 received so they can log in.</p>
             </div>
             <span class="sa-khqr__status <?= $already_paid ? 'is-paid' : 'is-wait' ?>">
-                <?= $already_paid ? 'Paid · login allowed' : 'Awaiting payment' ?>
+                <?= $already_paid ? 'Paid · login allowed' : 'Approved · waiting $20' ?>
             </span>
         </div>
     </header>
@@ -104,7 +104,7 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
                 <li class="is-done">
                     <span>2</span>
                     <div>
-                        <strong>Activated</strong>
+                        <strong>Approved</strong>
                         <em>You approved the shop</em>
                     </div>
                 </li>
@@ -118,7 +118,7 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
                 <li class="<?= $already_paid ? 'is-done' : '' ?>">
                     <span>4</span>
                     <div>
-                        <strong>Confirm payment</strong>
+                        <strong>Mark $20 received (unlock login)</strong>
                         <em>Then they can log in to POS</em>
                     </div>
                 </li>

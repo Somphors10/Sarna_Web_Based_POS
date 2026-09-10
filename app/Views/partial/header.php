@@ -49,7 +49,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=96">
+        <link rel="stylesheet" href="css/dashboard.css?v=98">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -105,7 +105,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=96">
+        <link rel="stylesheet" href="css/dashboard.css?v=98">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">

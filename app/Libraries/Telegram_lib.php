@@ -144,7 +144,7 @@ class Telegram_lib
         $qr_path = (string)($data['qr_path'] ?? '');
 
         $lines = [
-            $this->field_line('✅', 'Activated — send KHQR to owner', '', false, true),
+            $this->field_line('✅', 'Approved — send KHQR to owner', '', false, true),
             '',
             $this->field_line('🏢', 'Company', $company),
             $this->field_line('🔖', 'Code', $code, true),

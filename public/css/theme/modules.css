@@ -763,6 +763,7 @@
     width: 12px;
     height: 12px;
     border-radius: 999px;
+    box-sizing: border-box;
 }
 
 .neo-report-pie-legend__name {
@@ -830,6 +831,24 @@
     max-height: 320px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.neo-report-chart--pie-slide {
+    max-width: 300px;
+    max-height: 300px;
+    aspect-ratio: 1 / 1;
+    padding: 12px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.neo-report-chart--pie-slide svg {
+    overflow: visible;
+}
+
+.neo-report-chart--pie-slide .ct-slice-pie {
+    stroke-linejoin: round;
 }
 
 .neo-form-submit {

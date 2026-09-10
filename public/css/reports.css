@@ -47,6 +47,17 @@
 
 .ct-chart {}
 
+.neo-report-chart--pie-slide.ct-chart {
+    width: 280px;
+    height: 280px;
+    max-width: 100%;
+    margin: 8px auto 16px;
+}
+
+.neo-report-chart--pie-slide.ct-golden-section:before {
+    display: none;
+}
+
 .ct-label.ct-horizontal {
     -webkit-transform: rotate(-45deg);
     -moz-transform: rotate(-45deg);

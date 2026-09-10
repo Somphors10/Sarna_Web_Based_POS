@@ -369,8 +369,8 @@ $format_relative_time = static function (?string $value): string {
             'subtitle' => 'Accounts allowed to operate this platform dashboard.',
         ],
         'requests' => [
-            'title' => 'Pending Requests',
-            'subtitle' => 'Activate a shop, then send KHQR so they can pay and log in.',
+            'title' => 'New shop applications',
+            'subtitle' => 'Approve → send KHQR → owner pays → then login.',
         ],
         'email' => [
             'title' => 'Email',
@@ -398,7 +398,7 @@ $format_relative_time = static function (?string $value): string {
 
     $flash_messages = [];
     if (service('request')->getGet('request_approved') === '1') {
-        $flash_messages[] = ['type' => 'success', 'text' => 'Registration activated. The shop cannot log in until they pay via KHQR.'];
+        $flash_messages[] = ['type' => 'success', 'text' => 'Shop approved. Owner still cannot log in until paid.'];
     }
     if (service('request')->getGet('request_rejected') === '1') {
         $flash_messages[] = ['type' => 'success', 'text' => 'Registration request rejected.'];
@@ -605,7 +605,7 @@ $format_relative_time = static function (?string $value): string {
                 <select id="super_admin_status_filter" class="sa-select">
                     <option value="">All Status</option>
                     <option value="active">Active</option>
-                    <option value="awaiting_payment">Awaiting payment</option>
+                    <option value="awaiting_payment">Approved · waiting $20</option>
                     <option value="suspended">Suspended</option>
                     <option value="cancelled">Cancelled</option>
                     <option value="expired">Expired period</option>
@@ -666,7 +666,7 @@ $format_relative_time = static function (?string $value): string {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/></svg>
                 </div>
                 <div class="sa-stat-card__body">
-                    <p class="sa-stat-card__label">Pending Requests</p>
+                    <p class="sa-stat-card__label">New applications</p>
                     <p class="sa-stat-card__value" id="sa_pending_stat_value"><?= $pending_count ?></p>
                     <p class="sa-stat-card__hint">View pending requests →</p>
                 </div>
@@ -717,7 +717,7 @@ $format_relative_time = static function (?string $value): string {
                     <a class="sa-metric sa-metric--suspended" href="<?= site_url('super-admin/businesses?status=awaiting_payment') ?>" title="View shops waiting to pay">
                         <div class="sa-metric__top">
                             <span class="sa-metric__dot"></span>
-                            <span class="sa-metric__label">Awaiting payment</span>
+                            <span class="sa-metric__label">Approved · waiting $20</span>
                         </div>
                         <div class="sa-metric__value"><?= $awaiting_payment_tenants ?></div>
                         <div class="sa-metric__hint">View unpaid activations →</div>
@@ -822,7 +822,7 @@ $format_relative_time = static function (?string $value): string {
                             $owner_name = $sa_display_text(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? ''));
                             $username = trim((string)($tenant['username'] ?? ''));
                             $tenant_code = trim((string)($tenant['tenant_code'] ?? ''));
-                            $status_label = $status === 'awaiting_payment' ? 'Awaiting payment' : (string)($tenant['status'] ?? '');
+                            $status_label = $status === 'awaiting_payment' ? 'Approved · waiting $20' : (string)($tenant['status'] ?? '');
                             $status_class = $status === 'awaiting_payment' ? 'pending' : $status;
                         ?>
                         <tr class="js-searchable-row<?= $billing === 'expired' ? ' sa-biz-row--expired' : ($billing === 'warning' ? ' sa-biz-row--warning' : '') ?>"
@@ -889,7 +889,7 @@ $format_relative_time = static function (?string $value): string {
                                     <?= form_open('super-admin/toggle-status/' . (int)$tenant['tenant_id'], ['class' => 'js-tenant-status-form sa-row-actions__form']) ?>
                                     <select class="sa-select--sm" name="status" aria-label="Status">
                                         <option value="active" <?= $tenant['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                                        <option value="awaiting_payment" <?= $tenant['status'] === 'awaiting_payment' ? 'selected' : '' ?>>Awaiting payment</option>
+                                        <option value="awaiting_payment" <?= $tenant['status'] === 'awaiting_payment' ? 'selected' : '' ?>>Approved · waiting $20</option>
                                         <option value="suspended" <?= $tenant['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
                                         <option value="cancelled" <?= $tenant['status'] === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
                                     </select>
@@ -1015,7 +1015,7 @@ $format_relative_time = static function (?string $value): string {
                 <li>
                     <span>3</span>
                     <strong>Owner clicks Verify</strong>
-                    <em>Then Super Admin can Activate</em>
+                    <em>Then Super Admin can Approve &amp; send KHQR</em>
                 </li>
             </ol>
 
@@ -1053,8 +1053,8 @@ $format_relative_time = static function (?string $value): string {
         <?php if ($active_page === 'requests'): ?>
         <section class="sa-panel">
             <div class="sa-panel__head">
-                <h2 class="sa-panel__title">Ready to activate</h2>
-                <p class="sa-panel__subtitle">Activate then emails KHQR. They cannot log in until they pay.</p>
+                <h2 class="sa-panel__title">Waiting for your approve</h2>
+                <p class="sa-panel__subtitle">Approve &amp; send KHQR. They cannot log in until they pay.</p>
             </div>
             <div class="sa-table-wrap">
                 <table class="sa-table">
@@ -1110,7 +1110,7 @@ $format_relative_time = static function (?string $value): string {
                                         'data-action' => 'approve',
                                         'data-context' => 'registration',
                                     ]) ?>
-                                    <button class="sa-btn sa-btn--success" type="submit">Activate</button>
+                                    <button class="sa-btn sa-btn--success" type="submit">Approve &amp; send KHQR</button>
                                     <?= form_close() ?>
                                     <?= form_open('super-admin/reject-request/' . (int)$request['request_id'], [
                                         'class' => 'js-confirm-action-form sa-row-actions__form',
@@ -1162,7 +1162,7 @@ $format_relative_time = static function (?string $value): string {
                             $history_status = strtolower((string)($request['status'] ?? ''));
                             $history_paid = trim((string)($request['payment_reference'] ?? '')) !== '';
                             $history_label = $history_status === 'approved'
-                                ? ($history_paid ? 'Paid' : 'Awaiting payment')
+                                ? ($history_paid ? 'Paid' : 'Approved · waiting $20')
                                 : $request['status'];
                             $history_badge = $history_status === 'rejected'
                                 ? 'cancelled'
@@ -2137,11 +2137,11 @@ $format_relative_time = static function (?string $value): string {
                 actionContinueBtn.textContent = 'Send verify email';
                 actionContinueBtn.className = 'sa-btn sa-btn--success';
             } else {
-                actionTitleEl.textContent = isApprove ? 'Confirm activation' : 'Confirm rejection';
+                actionTitleEl.textContent = isApprove ? 'Confirm approve' : 'Confirm rejection';
                 actionMessageEl.textContent = isApprove
-                    ? 'Activate this shop and send the KHQR to the owner’s email? They cannot log in until they pay.'
+                    ? 'Approve this shop and send the KHQR to the owner’s email? They cannot log in until they pay.'
                     : 'Add a short reason below. It is saved in registration history.';
-                actionContinueBtn.textContent = isApprove ? 'Activate' : 'Reject';
+                actionContinueBtn.textContent = isApprove ? 'Approve & send KHQR' : 'Reject';
                 actionContinueBtn.className = isApprove
                     ? 'sa-btn sa-btn--success'
                     : 'sa-btn sa-btn--danger-solid';

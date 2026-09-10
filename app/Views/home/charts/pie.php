@@ -18,7 +18,7 @@ if (empty($series_data_1)) {
 
 <script type="text/javascript">
     (function () {
-        var palette = ['#6366f1', '#22d3ee', '#34d399', '#fbbf24', '#fb7185', '#a78bfa', '#38bdf8', '#94a3b8'];
+        var palette = ['#60a5fa', '#fbbf24', '#fb7185', '#c4b5fd', '#34d399', '#38bdf8', '#f97316', '#94a3b8'];
 
         var data = {
             labels: <?= json_encode($labels_1, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
@@ -28,8 +28,7 @@ if (empty($series_data_1)) {
         var options = {
             width: '100%',
             height: '100%',
-            donut: true,
-            donutWidth: 52,
+            donut: false,
             startAngle: 270,
             chartPadding: 8,
             labelPosition: 'outside',
@@ -61,7 +60,7 @@ if (empty($series_data_1)) {
                 var color = palette[ctx.index % palette.length];
 
                 ctx.element.attr({
-                    style: 'fill: ' + color + '; stroke: #ffffff; stroke-width: 3px;'
+                    style: 'fill: ' + color + '; stroke: ' + color + '; stroke-width: 1px;'
                 });
 
                 ctx.element.animate({

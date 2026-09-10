@@ -35,7 +35,7 @@ $chart_view_data = [
 
 <?= view('partial/header') ?>
 
-<link rel="stylesheet" href="css/reports.css?v=3">
+<link rel="stylesheet" href="css/reports.css?v=5">
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
