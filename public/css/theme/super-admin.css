@@ -616,6 +616,26 @@ body.sa-notify-open {
     color: #16a34a;
 }
 
+.sa-notify-card__icon--payment {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+.sa-notify-card__icon--expired {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.sa-notify-card__icon--warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+}
+
+.sa-notify-card__icon--renewed {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+}
+
 .sa-notify-card__icon--password_reset {
     background: rgba(245, 158, 11, 0.14);
     color: #d97706;
@@ -1005,6 +1025,11 @@ html.sidebar-collapsed .sa-nav-group {
     opacity: 0;
     transform: translateY(-6px);
     transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.sa-toast--payment {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
 }
 
 .sa-toast__body strong {

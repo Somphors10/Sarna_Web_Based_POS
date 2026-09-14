@@ -936,6 +936,175 @@ function saas_record_subscription_payment(
     }
 }
 
+/**
+ * Ensure Super Admin alert table exists (created on first use).
+ */
+function saas_ensure_platform_alerts_table(): bool
+{
+    try {
+        $db = db_connect('platform');
+        if ($db->tableExists('platform_alerts')) {
+            return true;
+        }
+
+        $prefix = (string)($db->getPrefix() ?? '');
+        $table = $prefix . 'platform_alerts';
+        $db->query(
+            "CREATE TABLE IF NOT EXISTS `{$table}` (
+                `alert_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `alert_type` VARCHAR(40) NOT NULL,
+                `tenant_id` INT NULL,
+                `company_name` VARCHAR(191) NOT NULL DEFAULT '',
+                `tenant_code` VARCHAR(80) NOT NULL DEFAULT '',
+                `title` VARCHAR(191) NOT NULL,
+                `body` TEXT NULL,
+                `meta` VARCHAR(191) NULL,
+                `link_path` VARCHAR(191) NULL,
+                `dedupe_key` VARCHAR(120) NOT NULL,
+                `created_at` DATETIME NOT NULL,
+                PRIMARY KEY (`alert_id`),
+                UNIQUE KEY `uq_platform_alerts_dedupe` (`dedupe_key`),
+                KEY `idx_platform_alerts_created` (`created_at`),
+                KEY `idx_platform_alerts_type` (`alert_type`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+        );
+
+        return $db->tableExists('platform_alerts');
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Push a Super Admin bell alert (registration paid, renewal, etc.).
+ *
+ * @param array{
+ *   type:string,
+ *   title:string,
+ *   body?:string,
+ *   meta?:string,
+ *   link_path?:string,
+ *   tenant_id?:int,
+ *   company_name?:string,
+ *   tenant_code?:string,
+ *   dedupe_key:string
+ * } $alert
+ */
+function saas_push_platform_alert(array $alert): bool
+{
+    if (!saas_ensure_platform_alerts_table()) {
+        return false;
+    }
+
+    $dedupe = trim((string)($alert['dedupe_key'] ?? ''));
+    if ($dedupe === '') {
+        return false;
+    }
+
+    try {
+        $db = db_connect('platform');
+        $existing = $db->table('platform_alerts')
+            ->select('alert_id')
+            ->where('dedupe_key', substr($dedupe, 0, 120))
+            ->get(1)
+            ->getRow();
+        if ($existing !== null) {
+            return true;
+        }
+
+        return (bool)$db->table('platform_alerts')->insert([
+            'alert_type'   => substr((string)($alert['type'] ?? 'info'), 0, 40),
+            'tenant_id'    => !empty($alert['tenant_id']) ? (int)$alert['tenant_id'] : null,
+            'company_name' => substr((string)($alert['company_name'] ?? ''), 0, 191),
+            'tenant_code'  => substr((string)($alert['tenant_code'] ?? ''), 0, 80),
+            'title'        => substr((string)($alert['title'] ?? 'Alert'), 0, 191),
+            'body'         => (string)($alert['body'] ?? ''),
+            'meta'         => substr((string)($alert['meta'] ?? ''), 0, 191),
+            'link_path'    => substr((string)($alert['link_path'] ?? 'super-admin/businesses'), 0, 191),
+            'dedupe_key'   => substr($dedupe, 0, 120),
+            'created_at'   => date('Y-m-d H:i:s'),
+        ]);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Recent Super Admin alerts for the bell panel.
+ *
+ * @return list<array<string, mixed>>
+ */
+function saas_get_platform_alerts(int $days = 30, int $limit = 50): array
+{
+    if (!saas_ensure_platform_alerts_table()) {
+        return [];
+    }
+
+    try {
+        $db = db_connect('platform');
+        $since = date('Y-m-d H:i:s', strtotime('-' . max(1, $days) . ' days'));
+
+        return $db->table('platform_alerts')
+            ->where('created_at >=', $since)
+            ->orderBy('created_at', 'DESC')
+            ->limit(max(1, $limit))
+            ->get()
+            ->getResultArray();
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Notify Super Admin that a shop paid / renewed.
+ */
+function saas_notify_shop_paid(
+    int $tenant_id,
+    string $payment_reference,
+    string $source = 'owner_checkout',
+    bool $is_renewal = false
+): void {
+    if ($tenant_id <= 0) {
+        return;
+    }
+
+    try {
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')
+            ->select('tenant_id, company_name, tenant_code')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRowArray();
+        if ($tenant === null) {
+            return;
+        }
+
+        $company = trim((string)($tenant['company_name'] ?? ''));
+        $code = trim((string)($tenant['tenant_code'] ?? ''));
+        $ref = trim($payment_reference);
+        $amount = number_format(saas_monthly_price(), 2, '.', '');
+        $title = $is_renewal ? 'Shop renewed' : 'Shop paid';
+        $body = ($code !== '' ? $code . ' · ' : '')
+            . 'Paid $' . $amount
+            . ($ref !== '' ? ' · Ref: ' . $ref : '')
+            . '. ' . ($is_renewal ? 'Subscription renewed — still using WBPOS.' : 'First payment received — shop is active.');
+
+        saas_push_platform_alert([
+            'type'         => 'renewed',
+            'title'        => $title,
+            'body'         => $body,
+            'meta'         => $source,
+            'link_path'    => 'super-admin/businesses',
+            'tenant_id'    => $tenant_id,
+            'company_name' => $company !== '' ? $company : ('Shop #' . $tenant_id),
+            'tenant_code'  => $code,
+            'dedupe_key'   => 'paid-' . $tenant_id . '-' . md5($ref . '|' . $source . '|' . date('Y-m-d-H')),
+        ]);
+    } catch (Throwable $e) {
+        // Ignore alert failures — payment itself already succeeded.
+    }
+}
+
 function saas_format_period_end(?string $period_end): string
 {
     $period_end = trim((string)$period_end);

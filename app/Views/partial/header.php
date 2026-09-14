@@ -57,7 +57,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=53">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=55">
         <?php endif; ?>
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
@@ -113,7 +113,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=53">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=55">
         <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->

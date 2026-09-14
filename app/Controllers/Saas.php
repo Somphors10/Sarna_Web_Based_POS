@@ -504,12 +504,16 @@ class Saas extends BaseController
         }
 
         $tenant_id = (int)$tenant->tenant_id;
+        $prior_status = strtolower((string)($tenant->status ?? ''));
+        $is_renewal = $prior_status === 'active' || saas_tenant_needs_renewal($tenant_id);
+
         $db->table('tenants')
             ->where('tenant_id', $tenant_id)
             ->update(['status' => 'active']);
 
         saas_activate_or_renew_subscription($tenant_id);
         saas_record_subscription_payment($tenant_id, 'owner_checkout', $payment_reference, saas_monthly_price());
+        saas_notify_shop_paid($tenant_id, $payment_reference, 'owner_checkout', $is_renewal);
     }
 
     public function captchaImage()

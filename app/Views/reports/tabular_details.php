@@ -57,16 +57,13 @@
         <?= view('partial/visibility_js') ?>
 
         var init_dialog = function () {
-            <?php if (isset($editable)) { ?>
-                table_support.submit_handler('<?= esc(site_url("reports/get_detailed_$editable" . '_row')) ?>');
-                dialog_support.init("a.modal-dlg");
-            <?php } ?>
+            dialog_support.init("a.modal-dlg");
         };
 
         $('#table')
             .addClass("table-striped")
             .bootstrapTable({
-                columns: applyColumnVisibility(<?= transform_headers(esc($headers['summary']), true) ?>),
+                columns: applyColumnVisibility(<?= transform_headers(esc($headers['summary']), true, false) ?>),
                 pageSize: <?= table_page_size($config['lines_per_page']) ?>,
                 pageList: <?= json_encode(table_page_list()) ?>,
                 pagination: true,

@@ -5,6 +5,9 @@
  * @var bool $is_owner
  * @var array $subscription_requests
  * @var array $subscription_request_history
+ * @var array $recent_payments
+ * @var array $platform_alerts
+ * @var array $tenants
  * @var object|null $logged_in_admin
  * @var string $active_page
  */
@@ -492,22 +495,142 @@ $format_relative_time = static function (?string $value): string {
         $admin_initials = 'SA';
     }
 
+    $recent_payments = $recent_payments ?? [];
+    $platform_alerts = $platform_alerts ?? [];
+
     $notification_items = [];
+
+    // Paid / renewed first — so Super Admin sees who continues using the system.
+    foreach ($platform_alerts as $alert) {
+        $type = (string)($alert['alert_type'] ?? 'renewed');
+        if ($type === '') {
+            $type = 'renewed';
+        }
+        $created = (string)($alert['created_at'] ?? '');
+        $link = trim((string)($alert['link_path'] ?? 'super-admin/businesses'));
+        if ($link !== '' && strpos($link, 'http') !== 0) {
+            $link = site_url(ltrim($link, '/'));
+        }
+        $notification_items[] = [
+            'type' => $type === 'renewed' || $type === 'payment' ? 'renewed' : $type,
+            'id' => (int)($alert['alert_id'] ?? 0),
+            'key' => 'alert-' . (string)($alert['dedupe_key'] ?? ($alert['alert_id'] ?? uniqid('a', true))),
+            'title' => (string)($alert['title'] ?? 'Payment received'),
+            'subtitle' => (string)($alert['company_name'] ?? 'Shop'),
+            'body' => (string)($alert['body'] ?? ''),
+            'meta' => (string)($alert['meta'] ?? ''),
+            'created_at' => $format_request_date($created),
+            'relative_time' => $format_relative_time($created),
+            'review_url' => $link !== '' ? $link : site_url('super-admin/businesses'),
+        ];
+    }
+
     foreach ($subscription_requests as $request) {
         $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
         $notification_items[] = [
             'type' => 'registration',
             'id' => (int)$request['request_id'],
             'key' => 'registration-' . (int)$request['request_id'],
-            'title' => 'New company registration',
+            'title' => 'New registration',
             'subtitle' => (string)($request['company_name'] ?? 'New registration'),
-            'body' => 'Tenant code: ' . ($request['tenant_code'] ?? '') . '. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
+            'body' => 'Needs Approve & send KHQR. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
             'meta' => (string)($request['owner_email'] ?? ''),
             'created_at' => $format_request_date($request['created_at'] ?? ''),
             'relative_time' => $format_relative_time($request['created_at'] ?? ''),
             'review_url' => site_url('super-admin/requests'),
         ];
     }
+
+    foreach ($tenants as $tenant) {
+        $status = strtolower((string)($tenant['status'] ?? ''));
+        $billing = strtolower((string)($tenant['billing'] ?? 'none'));
+        $company = trim((string)($tenant['company_name'] ?? ''));
+        if ($company === '') {
+            $company = 'Shop #' . (int)($tenant['tenant_id'] ?? 0);
+        }
+        $code = trim((string)($tenant['tenant_code'] ?? ''));
+        $tid = (int)($tenant['tenant_id'] ?? 0);
+        $period_end = (string)($tenant['period_end'] ?? '');
+        $days_left = $tenant['days_left'] ?? null;
+
+        if ($status === 'awaiting_payment') {
+            $notification_items[] = [
+                'type' => 'payment',
+                'id' => $tid,
+                'key' => 'awaiting-payment-' . $tid,
+                'title' => 'Waiting for $20 payment',
+                'subtitle' => $company,
+                'body' => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
+                'meta' => (string)($tenant['email'] ?? $tenant['owner_email'] ?? ''),
+                'created_at' => $format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
+                'relative_time' => $format_relative_time((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
+                'review_url' => site_url('super-admin/businesses?status=awaiting_payment'),
+            ];
+        }
+
+        if ($billing === 'expired' && !in_array($status, ['cancelled', 'suspended'], true)) {
+            $notification_items[] = [
+                'type' => 'expired',
+                'id' => $tid,
+                'key' => 'expired-' . $tid . '-' . $period_end,
+                'title' => 'Subscription expired',
+                'subtitle' => $company,
+                'body' => ($code !== '' ? $code . ' · ' : '') . 'Period ended ' . saas_format_period_end($period_end) . '. Account still open — needs renew or suspend.',
+                'meta' => '',
+                'created_at' => $period_end,
+                'relative_time' => $period_end !== '' ? ('Ended ' . saas_format_period_end($period_end)) : '',
+                'review_url' => site_url('super-admin/businesses?status=expired'),
+            ];
+        } elseif ($billing === 'warning' && $status === 'active') {
+            $notification_items[] = [
+                'type' => 'warning',
+                'id' => $tid,
+                'key' => 'expiring-' . $tid . '-' . $period_end,
+                'title' => 'Expiring soon',
+                'subtitle' => $company,
+                'body' => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',
+                'meta' => '',
+                'created_at' => $period_end,
+                'relative_time' => (int)$days_left . 'd left',
+                'review_url' => site_url('super-admin/businesses?status=expiring_soon'),
+            ];
+        }
+    }
+
+    // Fallback: invoice_payments not already represented by platform_alerts.
+    $alert_keys = [];
+    foreach ($platform_alerts as $alert) {
+        $alert_keys[(string)($alert['dedupe_key'] ?? '')] = true;
+        $alert_keys['paid-invoice-' . (int)($alert['alert_id'] ?? 0)] = true;
+    }
+    foreach ($recent_payments as $payment) {
+        $pay_id = (int)($payment['payment_id'] ?? 0);
+        $dedupe = 'paid-invoice-' . $pay_id;
+        if (isset($alert_keys[$dedupe]) || $pay_id <= 0) {
+            continue;
+        }
+        $company = trim((string)($payment['company_name'] ?? ''));
+        if ($company === '') {
+            $company = 'Shop #' . (int)($payment['tenant_id'] ?? 0);
+        }
+        $code = trim((string)($payment['tenant_code'] ?? ''));
+        $ref = trim((string)($payment['provider_payment_id'] ?? ''));
+        $amount = $payment['amount'] ?? '';
+        $notification_items[] = [
+            'type' => 'renewed',
+            'id' => $pay_id,
+            'key' => 'payment-' . $pay_id,
+            'title' => 'Payment received',
+            'subtitle' => $company,
+            'body' => ($code !== '' ? $code . ' · ' : '') . 'Paid $' . (string)$amount . ($ref !== '' ? ' · Ref: ' . $ref : '') . '. Shop continues on the system.',
+            'meta' => (string)($payment['provider'] ?? ''),
+            'created_at' => $format_request_date((string)($payment['paid_at'] ?? '')),
+            'relative_time' => $format_relative_time((string)($payment['paid_at'] ?? '')),
+            'review_url' => site_url('super-admin/businesses'),
+        ];
+    }
+
+    $notify_count = count($notification_items);
 ?>
 <div class="neo-layout sa-layout">
     <aside class="neo-global-sidebar sa-sidebar">
@@ -562,7 +685,7 @@ $format_relative_time = static function (?string $value): string {
                             <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="sa-notify-badge<?= $pending_count > 0 ? '' : ' sa-notify-badge--hidden' ?>" id="sa_navbar_badge"><?= $pending_count ?></span>
+                        <span class="sa-notify-badge<?= $notify_count > 0 ? '' : ' sa-notify-badge--hidden' ?>" id="sa_navbar_badge"><?= $notify_count ?></span>
                     </button>
                 <div class="sa-dropdown-wrap">
                     <button type="button" class="sa-profile-btn" id="sa_profile_btn" aria-label="Super admin profile" aria-expanded="false" aria-haspopup="true">
@@ -822,8 +945,30 @@ $format_relative_time = static function (?string $value): string {
                             $owner_name = $sa_display_text(format_person_name($tenant['first_name'] ?? '', $tenant['last_name'] ?? ''));
                             $username = trim((string)($tenant['username'] ?? ''));
                             $tenant_code = trim((string)($tenant['tenant_code'] ?? ''));
-                            $status_label = $status === 'awaiting_payment' ? 'Approved · waiting $20' : (string)($tenant['status'] ?? '');
-                            $status_class = $status === 'awaiting_payment' ? 'pending' : $status;
+
+                            // Account status + billing period — avoid "Active" alone when period expired.
+                            if ($status === 'awaiting_payment') {
+                                $status_label = 'Waiting payment';
+                                $status_class = 'pending';
+                            } elseif ($status === 'suspended') {
+                                $status_label = 'Suspended';
+                                $status_class = 'suspended';
+                            } elseif ($status === 'cancelled') {
+                                $status_label = 'Cancelled';
+                                $status_class = 'cancelled';
+                            } elseif ($status === 'active' && $billing === 'expired') {
+                                $status_label = 'Active · Expired';
+                                $status_class = 'expired';
+                            } elseif ($status === 'active' && $billing === 'warning') {
+                                $status_label = 'Active · Expiring soon';
+                                $status_class = 'pending';
+                            } elseif ($status === 'active') {
+                                $status_label = 'Active';
+                                $status_class = 'active';
+                            } else {
+                                $status_label = (string)($tenant['status'] ?? '—');
+                                $status_class = $status !== '' ? $status : 'pending';
+                            }
                         ?>
                         <tr class="js-searchable-row<?= $billing === 'expired' ? ' sa-biz-row--expired' : ($billing === 'warning' ? ' sa-biz-row--warning' : '') ?>"
                             data-group="tenant"
@@ -1485,7 +1630,7 @@ $format_relative_time = static function (?string $value): string {
         <div class="sa-notify-panel__title-row">
             <div class="sa-notify-panel__title-wrap">
                 <h2 id="sa_notify_panel_title">Notifications</h2>
-                <span class="sa-notify-panel__count<?= $pending_count > 0 ? '' : ' sa-notify-panel__count--hidden' ?>" id="sa_notify_panel_count"><?= $pending_count ?></span>
+                <span class="sa-notify-panel__count<?= $notify_count > 0 ? '' : ' sa-notify-panel__count--hidden' ?>" id="sa_notify_panel_count"><?= $notify_count ?></span>
             </div>
             <button type="button" class="sa-notify-panel__close" id="sa_notify_close" aria-label="Close notifications">&times;</button>
         </div>
@@ -1519,7 +1664,7 @@ $format_relative_time = static function (?string $value): string {
                 </li>
             <?php endforeach; ?>
         </ul>
-        <p class="sa-notify-panel__empty<?= empty($notification_items) ? '' : ' sa-notify-panel__empty--hidden' ?>" id="sa_notify_empty">No pending requests.</p>
+        <p class="sa-notify-panel__empty<?= empty($notification_items) ? '' : ' sa-notify-panel__empty--hidden' ?>" id="sa_notify_empty">No alerts right now.</p>
     </div>
 </aside>
 
@@ -2490,19 +2635,27 @@ $format_relative_time = static function (?string $value): string {
         (function initRegistrationAlerts() {
             const pollUrl = <?= json_encode(site_url('super-admin/notifications/poll')) ?>;
             const requestsUrl = <?= json_encode(site_url('super-admin/requests')) ?>;
+            const businessesUrl = <?= json_encode(site_url('super-admin/businesses')) ?>;
             const latestRegistrationId = <?= (int)($latest_registration_request_id ?? 0) ?>;
+            const latestAlertIdBoot = <?= (int)(!empty($platform_alerts[0]['alert_id']) ? $platform_alerts[0]['alert_id'] : 0) ?>;
             const activePage = <?= json_encode($active_page) ?>;
             const storageKey = 'sa_last_registration_request_id';
+            const alertStorageKey = 'sa_last_platform_alert_id';
             const toastStack = document.getElementById('sa_toast_stack');
             const pendingBadge = document.getElementById('sa_navbar_badge');
             const pendingStatValue = document.getElementById('sa_pending_stat_value');
             const pollIntervalMs = 30000;
 
             let lastSeenRegistrationId = parseInt(localStorage.getItem(storageKey) || '0', 10);
+            let lastSeenAlertId = parseInt(localStorage.getItem(alertStorageKey) || '0', 10);
 
             if (activePage === 'requests' || lastSeenRegistrationId === 0) {
                 lastSeenRegistrationId = latestRegistrationId;
                 localStorage.setItem(storageKey, String(lastSeenRegistrationId));
+            }
+            if (lastSeenAlertId === 0 && latestAlertIdBoot > 0) {
+                lastSeenAlertId = latestAlertIdBoot;
+                localStorage.setItem(alertStorageKey, String(lastSeenAlertId));
             }
 
             const escapeHtml = function(value) {
@@ -2518,20 +2671,20 @@ $format_relative_time = static function (?string $value): string {
                 syncNotifyCountsFromVisible();
             };
 
-            const showRegistrationToast = function(registration) {
+            const showToast = function(options) {
                 if (!toastStack) {
                     return;
                 }
 
                 const toast = document.createElement('div');
-                toast.className = 'sa-toast sa-toast--registration';
+                toast.className = 'sa-toast ' + (options.toastClass || 'sa-toast--registration');
                 toast.innerHTML =
                     '<div class="sa-toast__body">' +
-                        '<strong>New company registration</strong>' +
-                        '<p>' + escapeHtml(registration.company_name) + ' (' + escapeHtml(registration.tenant_code) + ')</p>' +
-                        '<p class="sa-toast__meta">' + escapeHtml(registration.owner_username) + ' · ' + escapeHtml(registration.owner_email) + '</p>' +
+                        '<strong>' + escapeHtml(options.title || 'Alert') + '</strong>' +
+                        '<p>' + escapeHtml(options.line1 || '') + '</p>' +
+                        (options.line2 ? '<p class="sa-toast__meta">' + escapeHtml(options.line2) + '</p>' : '') +
                     '</div>' +
-                    '<a class="sa-toast__action" href="' + escapeHtml(registration.review_url || requestsUrl) + '">Review</a>' +
+                    '<a class="sa-toast__action" href="' + escapeHtml(options.href || businessesUrl) + '">' + escapeHtml(options.actionLabel || 'View') + '</a>' +
                     '<button type="button" class="sa-toast__close" aria-label="Dismiss">&times;</button>';
 
                 toast.querySelector('.sa-toast__close').addEventListener('click', function() {
@@ -2546,6 +2699,28 @@ $format_relative_time = static function (?string $value): string {
                         toast.remove();
                     }, 300);
                 }, 12000);
+            };
+
+            const showRegistrationToast = function(registration) {
+                showToast({
+                    toastClass: 'sa-toast--registration',
+                    title: 'New company registration',
+                    line1: (registration.company_name || '') + ' (' + (registration.tenant_code || '') + ')',
+                    line2: (registration.owner_username || '') + ' · ' + (registration.owner_email || ''),
+                    href: registration.review_url || requestsUrl,
+                    actionLabel: 'Review'
+                });
+            };
+
+            const showPaymentToast = function(payment) {
+                showToast({
+                    toastClass: 'sa-toast--payment',
+                    title: payment.title || 'Shop paid',
+                    line1: (payment.company_name || '') + (payment.tenant_code ? ' (' + payment.tenant_code + ')' : ''),
+                    line2: payment.body || '',
+                    href: payment.review_url || businessesUrl,
+                    actionLabel: 'View'
+                });
             };
 
             const notifyBrowser = function(registration) {
@@ -2565,10 +2740,15 @@ $format_relative_time = static function (?string $value): string {
             };
 
             const pollNotifications = function() {
-                fetch(pollUrl + '?since=' + encodeURIComponent(String(lastSeenRegistrationId)), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    credentials: 'same-origin'
-                })
+                fetch(
+                    pollUrl
+                        + '?since=' + encodeURIComponent(String(lastSeenRegistrationId))
+                        + '&since_alert=' + encodeURIComponent(String(lastSeenAlertId)),
+                    {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin'
+                    }
+                )
                     .then(function(response) {
                         if (!response.ok) {
                             throw new Error('poll failed');
@@ -2584,23 +2764,37 @@ $format_relative_time = static function (?string $value): string {
                         updatePendingBadge(parseInt(data.pending_total, 10) || 0);
 
                         const newRegistrations = Array.isArray(data.new_registrations) ? data.new_registrations : [];
-                        if (newRegistrations.length > 0) {
+                        const newPayments = Array.isArray(data.new_payments) ? data.new_payments : [];
+                        if (newRegistrations.length > 0 || newPayments.length > 0) {
                             sessionStorage.removeItem('sa_notifications_marked_read');
                         }
 
-                        const newRegistrationsList = newRegistrations;
-                        if (newRegistrationsList.length === 0) {
-                            return;
-                        }
-
-                        newRegistrationsList.forEach(function(registration) {
+                        newRegistrations.forEach(function(registration) {
                             showRegistrationToast(registration);
                             notifyBrowser(registration);
                         });
 
-                        const latestId = parseInt(data.latest_registration_request_id, 10) || lastSeenRegistrationId;
-                        lastSeenRegistrationId = latestId;
-                        localStorage.setItem(storageKey, String(lastSeenRegistrationId));
+                        newPayments.forEach(function(payment) {
+                            showPaymentToast(payment);
+                        });
+
+                        if (newRegistrations.length > 0) {
+                            const latestId = parseInt(data.latest_registration_request_id, 10) || lastSeenRegistrationId;
+                            lastSeenRegistrationId = latestId;
+                            localStorage.setItem(storageKey, String(lastSeenRegistrationId));
+                        }
+
+                        const latestAlert = parseInt(data.latest_alert_id, 10) || 0;
+                        if (latestAlert > lastSeenAlertId) {
+                            lastSeenAlertId = latestAlert;
+                            localStorage.setItem(alertStorageKey, String(lastSeenAlertId));
+                            // Refresh page list so paid cards appear without full reload of other state.
+                            if (newPayments.length > 0 && notifyList) {
+                                window.setTimeout(function() {
+                                    window.location.reload();
+                                }, 1500);
+                            }
+                        }
                     })
                     .catch(function() {
                         /* ignore transient network errors */

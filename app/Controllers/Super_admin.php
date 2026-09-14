@@ -277,6 +277,7 @@ class Super_admin extends BaseController
         $tenant = $db->table('tenants')->where('tenant_code', (string)$request->tenant_code)->get(1)->getRow();
         if ($tenant !== null) {
             $tenant_id = (int)$tenant->tenant_id;
+            $prior_status = strtolower((string)($tenant->status ?? ''));
             $db->table('tenants')
                 ->where('tenant_id', $tenant_id)
                 ->update(['status' => 'active']);
@@ -286,6 +287,12 @@ class Super_admin extends BaseController
                 'aba_khqr_manual',
                 $reference,
                 saas_monthly_price()
+            );
+            saas_notify_shop_paid(
+                $tenant_id,
+                $reference,
+                'aba_khqr_manual',
+                $prior_status === 'active'
             );
         }
 
@@ -426,6 +433,9 @@ class Super_admin extends BaseController
         $tenants = $tenant_model->get_with_owner_summary();
         $this->attachPaymentLinks($tenants);
         $this->attachSubscriptionPeriods($tenants);
+        $recent_payments = $this->getRecentSubscriptionPayments(30);
+        $this->backfillPaidAlertsFromRequests($tenants);
+        $platform_alerts = saas_get_platform_alerts(30, 50);
 
         return view('super_admin/dashboard', [
             'tenants' => $tenants,
@@ -436,6 +446,8 @@ class Super_admin extends BaseController
             'unverified_requests' => $unverified_requests,
             'mail_delivery' => PlatformMail::deliveryInfo(),
             'subscription_request_history' => $subscription_request_history,
+            'recent_payments' => $recent_payments,
+            'platform_alerts' => $platform_alerts,
             'latest_registration_request_id' => $request_model->get_latest_pending_id(),
             'active_page' => $page,
             'system_features' => $system_features,
@@ -549,11 +561,51 @@ class Super_admin extends BaseController
             ];
         }
 
+        $since_alert_id = (int)($this->request->getGet('since_alert') ?? 0);
+        $new_payments = [];
+        if (saas_ensure_platform_alerts_table()) {
+            $db = db_connect('platform');
+            $builder = $db->table('platform_alerts')
+                ->whereIn('alert_type', ['renewed', 'payment'])
+                ->orderBy('alert_id', 'DESC')
+                ->limit(20);
+            if ($since_alert_id > 0) {
+                $builder->where('alert_id >', $since_alert_id);
+            } else {
+                $builder->where('created_at >=', date('Y-m-d H:i:s', strtotime('-2 minutes')));
+            }
+            foreach ($builder->get()->getResultArray() as $row) {
+                $new_payments[] = [
+                    'alert_id'     => (int)$row['alert_id'],
+                    'title'        => (string)($row['title'] ?? 'Shop paid'),
+                    'company_name' => (string)($row['company_name'] ?? ''),
+                    'tenant_code'  => (string)($row['tenant_code'] ?? ''),
+                    'body'         => (string)($row['body'] ?? ''),
+                    'created_at'   => (string)($row['created_at'] ?? ''),
+                    'review_url'   => site_url(ltrim((string)($row['link_path'] ?? 'super-admin/businesses'), '/')),
+                ];
+            }
+        }
+
+        $latest_alert_id = 0;
+        if ($new_payments !== []) {
+            $latest_alert_id = (int)$new_payments[0]['alert_id'];
+        } elseif (saas_ensure_platform_alerts_table()) {
+            $latest = db_connect('platform')->table('platform_alerts')
+                ->select('alert_id')
+                ->orderBy('alert_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            $latest_alert_id = $latest !== null ? (int)$latest->alert_id : 0;
+        }
+
         return $this->response->setJSON([
             'pending_registrations'            => $pending_registrations,
             'pending_total'                    => $pending_registrations,
             'latest_registration_request_id'   => $request_model->get_latest_pending_id(),
             'new_registrations'                => $mapped,
+            'new_payments'                     => $new_payments,
+            'latest_alert_id'                  => $latest_alert_id,
         ]);
     }
 
@@ -710,6 +762,7 @@ class Super_admin extends BaseController
         $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
         saas_activate_or_renew_subscription($tenant_id);
         saas_record_subscription_payment($tenant_id, 'aba_khqr_manual', $reference, saas_monthly_price());
+        saas_notify_shop_paid($tenant_id, $reference, 'aba_khqr_manual', true);
 
         return redirect()->to('super-admin/businesses?renewed=1');
     }
@@ -1101,6 +1154,101 @@ class Super_admin extends BaseController
             }
         }
         unset($tenant);
+    }
+
+    /**
+     * Recent paid invoices so Super Admin can see renewals / continued use.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function getRecentSubscriptionPayments(int $days = 7): array
+    {
+        $db = db_connect('platform');
+        if (!$db->tableExists('invoice_payments') || !$db->tableExists('tenants')) {
+            return [];
+        }
+
+        $since = date('Y-m-d H:i:s', strtotime('-' . max(1, $days) . ' days'));
+        $builder = $db->table('invoice_payments ip')
+            ->select('ip.payment_id, ip.tenant_id, ip.amount, ip.paid_at, ip.provider, ip.provider_payment_id, t.company_name, t.tenant_code')
+            ->join('tenants t', 't.tenant_id = ip.tenant_id', 'left')
+            ->where('ip.paid_at >=', $since)
+            ->orderBy('ip.paid_at', 'DESC')
+            ->limit(30);
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Create missing "Shop paid" alerts for active shops that already have a payment reference.
+     *
+     * @param list<array<string, mixed>> $tenants
+     */
+    private function backfillPaidAlertsFromRequests(array $tenants): void
+    {
+        $db = db_connect('platform');
+        if (!$db->tableExists('subscription_requests') || !saas_ensure_platform_alerts_table()) {
+            return;
+        }
+
+        foreach ($tenants as $tenant) {
+            $tid = (int)($tenant['tenant_id'] ?? 0);
+            $status = strtolower((string)($tenant['status'] ?? ''));
+            $billing = strtolower((string)($tenant['billing'] ?? 'none'));
+            $ref = trim((string)($tenant['payment_reference'] ?? ''));
+            if ($tid <= 0 || $ref === '' || $status !== 'active') {
+                continue;
+            }
+            // Only surface healthy / recently paid shops — skip long-expired noise.
+            if ($billing === 'expired') {
+                continue;
+            }
+
+            $company = trim((string)($tenant['company_name'] ?? ''));
+            $code = trim((string)($tenant['tenant_code'] ?? ''));
+            $days_left = $tenant['days_left'] ?? null;
+            $is_renewal = is_int($days_left) || is_numeric($days_left);
+
+            saas_push_platform_alert([
+                'type'         => 'renewed',
+                'title'        => 'Shop paid',
+                'body'         => ($code !== '' ? $code . ' · ' : '')
+                    . 'Paid · Ref: ' . $ref
+                    . '. Shop is active on WBPOS.',
+                'meta'         => 'backfill',
+                'link_path'    => 'super-admin/businesses',
+                'tenant_id'    => $tid,
+                'company_name' => $company !== '' ? $company : ('Shop #' . $tid),
+                'tenant_code'  => $code,
+                'dedupe_key'   => 'paid-backfill-' . $tid . '-' . md5($ref),
+            ]);
+        }
+
+        // Also backfill from invoice_payments if present.
+        foreach ($this->getRecentSubscriptionPayments(30) as $payment) {
+            $tid = (int)($payment['tenant_id'] ?? 0);
+            if ($tid <= 0) {
+                continue;
+            }
+            $ref = trim((string)($payment['provider_payment_id'] ?? ''));
+            $company = trim((string)($payment['company_name'] ?? ''));
+            $code = trim((string)($payment['tenant_code'] ?? ''));
+            $amount = (string)($payment['amount'] ?? '');
+            saas_push_platform_alert([
+                'type'         => 'renewed',
+                'title'        => 'Payment received',
+                'body'         => ($code !== '' ? $code . ' · ' : '')
+                    . 'Paid $' . $amount
+                    . ($ref !== '' ? ' · Ref: ' . $ref : '')
+                    . '. Shop continues on the system.',
+                'meta'         => (string)($payment['provider'] ?? ''),
+                'link_path'    => 'super-admin/businesses',
+                'tenant_id'    => $tid,
+                'company_name' => $company !== '' ? $company : ('Shop #' . $tid),
+                'tenant_code'  => $code,
+                'dedupe_key'   => 'paid-invoice-' . (int)($payment['payment_id'] ?? 0),
+            ]);
+        }
     }
 
     public function postRejectRequest(int $request_id): RedirectResponse
