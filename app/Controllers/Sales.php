@@ -430,6 +430,7 @@ class Sales extends Secure_Controller
                     $amount_tendered = min($this->sale_lib->get_amount_due(), $giftcard->get_giftcard_value($giftcard_num));
 
                     $this->sale_lib->add_payment($payment_type, $amount_tendered);
+                    $this->sale_lib->set_payment_type(lang('Sales.giftcard'));
                 }
             } elseif ($payment_type === lang('Sales.rewards')) {
                 $customer_id = $this->sale_lib->get_customer();
@@ -453,6 +454,7 @@ class Sales extends Secure_Controller
                         $amount_tendered = min($this->sale_lib->get_amount_due(), $points);
 
                         $this->sale_lib->add_payment($payment_type, $amount_tendered);
+                        $this->sale_lib->set_payment_type($payment_type);
                     }
                 }
             } elseif ($payment_type === lang('Sales.cash')) {
@@ -460,6 +462,7 @@ class Sales extends Secure_Controller
                 $sales_total = $this->sale_lib->get_total(false);
                 $amount_tendered = parse_decimals($this->request->getPost('amount_tendered'));
                 $this->sale_lib->add_payment($payment_type, $amount_tendered);
+                $this->sale_lib->set_payment_type($payment_type);
                 $cash_adjustment_amount = $amount_due - $sales_total;
                 if ($cash_adjustment_amount <> 0) {
                     $this->session->set('cash_mode', CASH_MODE_TRUE);
@@ -468,6 +471,7 @@ class Sales extends Secure_Controller
             } else {
                 $amount_tendered = parse_decimals($this->request->getPost('amount_tendered'));
                 $this->sale_lib->add_payment($payment_type, $amount_tendered);
+                $this->sale_lib->set_payment_type($payment_type);
             }
         }
 

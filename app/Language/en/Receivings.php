@@ -29,7 +29,7 @@ return [
     "mode"                         => "Receiving Mode",
     "new_supplier"                 => "New Supplier",
     "one_or_multiple"              => "receiving(s)",
-    "print_after_sale"             => "Print After Sale",
+    "print_after_sale"             => "Print after receiving",
     "quantity"                     => "Qty.",
     "receipt"                      => "Receiving Receipt",
     "receipt_number"               => "Receiving #",

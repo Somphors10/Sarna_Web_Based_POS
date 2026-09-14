@@ -29,7 +29,7 @@ return [
     'mode'                          => 'របៀបទទួល',
     'new_supplier'                  => 'អ្នកផ្គត់ផ្គង់ថ្មី',
     'one_or_multiple'               => 'ការទទួល',
-    'print_after_sale'              => 'បោះពុម្ពបន្ទាប់ពីការលក់',
+    'print_after_sale'              => 'បោះពុម្ពបន្ទាប់ពីការទទួលទំនិញ',
     'quantity'                      => 'ចំនួន',
     'receipt'                       => 'បង្កាន់ដៃទទួល',
     'receipt_number'                => 'លេខទទួល',

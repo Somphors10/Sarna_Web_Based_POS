@@ -12,28 +12,39 @@
 
 <?= view('partial/header') ?>
 
-<div id="page_title"><?= esc($title) ?></div>
+<link rel="stylesheet" href="css/reports.css?v=8">
 
-<div id="page_subtitle"><?= esc($subtitle) ?></div>
+<script type="text/javascript">
+    dialog_support.init("a.modal-dlg");
+</script>
 
-<div id="toolbar">
-    <div class="pull-left form-inline" role="toolbar">
-        <!-- Toggle Button -->
-        <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
-            <?php echo lang('Reports.toggle_cost_and_profit'); ?>
-        </button>
+<section class="neo-module-page neo-report-page">
+    <?= view('reports/partial/report_header', [
+        'title'    => $title,
+        'subtitle' => $subtitle ?? '',
+    ]) ?>
+
+    <div id="toolbar" class="neo-table-toolbar">
+        <div class="form-inline" role="toolbar">
+            <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
+                <?= lang('Reports.toggle_cost_and_profit') ?>
+            </button>
+        </div>
     </div>
-</div>
 
-<div id="table_holder">
-    <table id="table"></table>
-</div>
+    <div id="table_holder" class="neo-table-holder neo-report-table-holder">
+        <table id="table"></table>
+    </div>
 
-<div id="report_summary">
-    <?php foreach ($overall_summary_data as $name => $value) { ?>
-        <div class="summary_row"><?= lang("Reports.$name") . ': ' . to_currency($value) ?></div>
-    <?php } ?>
-</div>
+    <div id="report_summary" class="neo-report-summary neo-report-summary--cards">
+        <?php foreach ($overall_summary_data as $name => $value) { ?>
+            <div class="neo-report-summary__item summary_row" data-summary="<?= esc((string) $name, 'attr') ?>">
+                <span class="neo-report-summary__label"><?= esc(lang("Reports.$name")) ?></span>
+                <strong class="neo-report-summary__value"><?= to_currency($value) ?></strong>
+            </div>
+        <?php } ?>
+    </div>
+</section>
 
 <script type="text/javascript">
     $(document).ready(function () {
@@ -54,7 +65,6 @@
 
         $('#table')
             .addClass("table-striped")
-            .addClass("table-bordered")
             .bootstrapTable({
                 columns: applyColumnVisibility(<?= transform_headers(esc($headers['summary']), true) ?>),
                 pageSize: <?= table_page_size($config['lines_per_page']) ?>,
@@ -76,20 +86,32 @@
                 detailView: true,
                 escape: true,
                 search: true,
+                toolbar: '#toolbar',
                 onPageChange: init_dialog,
                 onPostBody: function () {
                     dialog_support.init("a.modal-dlg");
                     table_support.fix_toolbar_dropdowns($('#table'));
+                    $('#table').closest('.bootstrap-table').find('a.detail-icon').each(function () {
+                        var $btn = $(this);
+                        $btn.attr('data-label-open', <?= json_encode(lang('Reports.row_show_items')) ?>);
+                        $btn.attr('data-label-close', <?= json_encode(lang('Reports.row_hide_items')) ?>);
+                        $btn.attr('title', <?= json_encode(lang('Reports.row_show_items')) ?>);
+                    });
                 },
                 onExpandRow: function (index, row, $detail) {
-                    $detail.html('<table></table>').find("table").bootstrapTable({
+                    $detail.html(
+                        '<div class="neo-report-line-items">' +
+                            '<div class="neo-report-line-items__title"><?= esc(lang('Reports.line_items_title'), 'js') ?></div>' +
+                            '<table></table>' +
+                        '</div>'
+                    ).find('table').bootstrapTable({
                         columns: <?= transform_headers_readonly(esc($headers['details'])) ?>,
                         data: details_data[(!isNaN(row.id) && row.id) || $(row[0] || row.id).text().replace(
                             /(POS|RECV)\s*/g, '')]
                     });
 
                     <?php if ($config['customer_reward_enable'] && !empty($details_data_rewards)) { ?>
-                        $detail.append('<table></table>').find("table").bootstrapTable({
+                        $detail.find('.neo-report-line-items').append('<table></table>').find('table').last().bootstrapTable({
                             columns: <?= transform_headers_readonly(esc($headers['details_rewards'])) ?>,
                             data: details_data_rewards[(!isNaN(row.id) && row.id) || $(row[0] || row.id).text().replace(
                                 /(POS|RECV)\s*/g, '')]
@@ -102,5 +124,7 @@
         table_support.fix_toolbar_dropdowns($('#table'));
     });
 </script>
+
+<script src="<?= base_url('js/hide_cost_profit.js') ?>"></script>
 
 <?= view('partial/footer') ?>

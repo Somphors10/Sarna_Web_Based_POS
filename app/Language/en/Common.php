@@ -24,6 +24,7 @@ return [
     "dashboard_inventory_value"      => "Inventory Value",
     "dashboard_items_to_reorder"     => "Items at or below reorder level",
     "dashboard_last_30_days"         => "Last 30 days",
+    "dashboard_year_to_date"         => "This year",
     "dashboard_low_stock"            => "Low Stock Items",
     "dashboard_no_data"              => "No report data available for this period.",
     "dashboard_payment_methods"      => "Payment Methods",

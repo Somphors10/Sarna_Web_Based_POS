@@ -83,6 +83,49 @@
     background: #eef2f7;
 }
 
+/* All Delete toolbar / danger buttons — light red bg, red text/icon */
+.neo-global-content #delete,
+.wrapper #delete,
+.neo-global-content .btn-danger,
+.wrapper .btn-danger,
+.neo-global-content .tax-rates-btn--danger,
+.wrapper .tax-rates-btn--danger {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+
+.neo-global-content #delete:hover,
+.neo-global-content #delete:focus,
+.wrapper #delete:hover,
+.wrapper #delete:focus,
+.neo-global-content .btn-danger:hover,
+.neo-global-content .btn-danger:focus,
+.wrapper .btn-danger:hover,
+.wrapper .btn-danger:focus,
+.neo-global-content .tax-rates-btn--danger:hover,
+.neo-global-content .tax-rates-btn--danger:focus,
+.wrapper .tax-rates-btn--danger:hover,
+.wrapper .tax-rates-btn--danger:focus {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+}
+
+.neo-global-content #delete .glyphicon,
+.wrapper #delete .glyphicon,
+.neo-global-content .btn-danger .glyphicon,
+.wrapper .btn-danger .glyphicon {
+    color: #dc2626 !important;
+}
+
+.neo-global-content #delete:hover .glyphicon,
+.wrapper #delete:hover .glyphicon,
+.neo-global-content .btn-danger:hover .glyphicon,
+.wrapper .btn-danger:hover .glyphicon {
+    color: #b91c1c !important;
+}
+
 .neo-global-content .btn-primary,
 .wrapper .btn-primary {
     background: var(--wbpos-primary);

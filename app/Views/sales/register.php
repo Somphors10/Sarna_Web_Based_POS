@@ -718,9 +718,27 @@ helper('url');
         });
 
         $('#cancel_sale_button').click(function() {
-            if (confirm("<?= lang(ucfirst($controller_name) . '.confirm_cancel_sale') ?>")) {
+            var doCancel = function() {
                 $('#buttons_form').attr('action', "<?= site_url("$controller_name/cancel") ?>");
                 $('#buttons_form').submit();
+            };
+
+            if (typeof window.osposConfirm === 'function') {
+                window.osposConfirm({
+                    title: <?= json_encode(lang(ucfirst($controller_name) . '.cancel_sale') ?: 'Cancel sale') ?>,
+                    message: <?= json_encode(lang(ucfirst($controller_name) . '.confirm_cancel_sale')) ?>,
+                    confirmLabel: 'Clear',
+                    action: 'delete'
+                }, function(ok) {
+                    if (ok) {
+                        doCancel();
+                    }
+                });
+                return;
+            }
+
+            if (confirm(<?= json_encode(lang(ucfirst($controller_name) . '.confirm_cancel_sale')) ?>)) {
+                doCancel();
             }
         });
 

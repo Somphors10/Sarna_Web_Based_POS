@@ -103,19 +103,35 @@ $label_cancel = lang('Datepicker.cancel') ?: 'Cancel';
 #pos-confirm .pos-modal-btn--danger-solid {
     background: #dc2626;
     color: #fff;
+    border: 1px solid #dc2626;
+    outline: none;
+    box-shadow: none;
 }
 
-#pos-confirm .pos-modal-btn--danger-solid:hover {
+#pos-confirm .pos-modal-btn--danger-solid:hover,
+#pos-confirm .pos-modal-btn--danger-solid:focus,
+#pos-confirm .pos-modal-btn--danger-solid:focus-visible {
     filter: brightness(1.05);
+    outline: none;
+    box-shadow: none;
+    border-color: #dc2626;
 }
 
 #pos-confirm .pos-modal-btn--primary-solid {
     background: #2563eb;
     color: #fff;
+    border: 1px solid #2563eb;
+    outline: none;
+    box-shadow: none;
 }
 
-#pos-confirm .pos-modal-btn--primary-solid:hover {
+#pos-confirm .pos-modal-btn--primary-solid:hover,
+#pos-confirm .pos-modal-btn--primary-solid:focus,
+#pos-confirm .pos-modal-btn--primary-solid:focus-visible {
     filter: brightness(1.05);
+    outline: none;
+    box-shadow: none;
+    border-color: #2563eb;
 }
 </style>
 

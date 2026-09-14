@@ -525,12 +525,13 @@
 }
 
 .neo-global-content .neo-report-breadcrumb a {
-    color: #0f172a;
+    color: var(--wbpos-primary, #7c3aed);
     text-decoration: none;
     font-weight: 600;
 }
 
 .neo-global-content .neo-report-breadcrumb a:hover {
+    color: #6d28d9;
     text-decoration: underline;
 }
 
@@ -635,16 +636,50 @@
 }
 
 .neo-report-card__title {
-    margin: 0 0 10px;
+    margin: 0 0 4px;
     color: #0f172a;
     font-size: 15px;
     font-weight: 700;
+}
+
+.neo-report-card__hint {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .neo-report-card__links {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.neo-report-card--advanced {
+    grid-column: 1 / -1;
+    background: #ffffff;
+}
+
+.neo-report-card__links--grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 10px;
+}
+
+.neo-report-card__links--grid .neo-report-link {
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .neo-report-card__links--grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .neo-report-card__links--grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .neo-global-content a.neo-report-link {
@@ -676,6 +711,182 @@
 
 .neo-report-summary {
     margin-top: 12px;
+}
+
+.neo-report-page .neo-module-title {
+    white-space: normal;
+}
+
+.neo-report-page .neo-report-table-holder {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.neo-report-page .neo-report-table-holder .fixed-table-toolbar {
+    padding: 10px 12px 0;
+}
+
+.neo-report-page .neo-report-table-holder .bootstrap-table .table > thead > tr > th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+    border-bottom-color: #e2e8f0;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    min-width: 0;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbe4ee;
+    color: #334155 !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:hover,
+.neo-report-page .neo-report-table-holder .detail-icon:focus {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a !important;
+    text-decoration: none !important;
+    outline: none;
+}
+
+/* Hide default +/- glyph; use text label + simple chevron */
+.neo-report-page .neo-report-table-holder .detail-icon .glyphicon,
+.neo-report-page .neo-report-table-holder .detail-icon i {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+    order: 2;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon .glyphicon::before,
+.neo-report-page .neo-report-table-holder .detail-icon i::before {
+    content: "" !important;
+    position: absolute;
+    left: 1px;
+    top: 0;
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg); /* ▼ show more */
+    color: #64748b;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon::after {
+    content: attr(data-label-open);
+    order: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: inherit;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus)::after,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon::after {
+    content: attr(data-label-close);
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus) .glyphicon::before,
+.neo-report-page .neo-report-table-holder .detail-icon:has(.icon-minus)::before,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon .glyphicon::before,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon i::before {
+    top: 2px;
+    transform: rotate(-135deg); /* ▲ hide */
+    color: var(--wbpos-primary, #7c3aed);
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus),
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    color: var(--wbpos-primary, #7c3aed) !important;
+}
+
+/* Nested line-items panel — card under the sale, not another main table */
+.neo-report-page .neo-report-table-holder tr.detail-view > td {
+    background: #f8fafc !important;
+    padding: 10px 14px 14px 18px !important;
+    border-top: none !important;
+    box-shadow: inset 3px 0 0 var(--wbpos-primary, #7c3aed);
+}
+
+.neo-report-page .neo-report-line-items {
+    max-width: 100%;
+}
+
+.neo-report-page .neo-report-line-items__title {
+    margin: 0 0 8px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.neo-report-page .neo-report-line-items .bootstrap-table,
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table {
+    margin: 0;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table > thead > tr > th {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom-color: #e2e8f0;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table > tbody > tr > td {
+    color: #334155;
+    font-size: 13px;
+    background: #fff;
+}
+
+.neo-report-page #report_summary.neo-report-summary--cards {
+    justify-content: center;
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.neo-report-page #report_summary.neo-report-summary--cards .neo-report-summary__item {
+    min-width: 120px;
+    border: none;
+    background: transparent;
+    padding: 4px 12px;
+    text-align: center;
 }
 
 .neo-report-chart {
@@ -831,6 +1042,83 @@
     max-height: 320px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.neo-report-chart-panel {
+    margin: 0 0 16px;
+}
+
+.neo-report-chart-panel--line {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    padding: 16px 12px 8px;
+}
+
+.neo-report-chart--line.ct-chart {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    height: 320px;
+    margin: 0;
+}
+
+.neo-report-chart--line .ct-point,
+.neo-report-chart--line .ct-tooltip-point {
+    fill: #6366f1;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.neo-report-chart--line .ct-line {
+    stroke: #6366f1;
+    stroke-width: 3px;
+}
+
+.neo-report-chart--line .ct-label {
+    fill: #64748b;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.neo-report-chart-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.neo-report-summary--cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    text-align: left;
+}
+
+.neo-report-summary__item {
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.neo-report-summary__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.neo-report-summary__value {
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .neo-report-chart--pie-slide {
@@ -1497,6 +1785,29 @@
 .recv-page .recv-supplier-card__remove {
     margin-top: 10px;
     width: 100%;
+}
+
+/* Delete actions: always red (Receiving + Sales cart) */
+.recv-page #register a[href*="deleteItem"],
+.recv-page #register a[href*="deleteItem"] .glyphicon,
+.sale-page #register a[href*="deleteItem"],
+.sale-page #register a[href*="deleteItem"] .glyphicon,
+.sale-page #register a[href*="deletePayment"],
+.sale-page #register a[href*="deletePayment"] .glyphicon,
+.neo-global-content #overall_sale a[href*="deletePayment"],
+.neo-global-content #overall_sale a[href*="deletePayment"] .glyphicon {
+    color: #dc2626 !important;
+}
+
+.recv-page #register a[href*="deleteItem"]:hover,
+.recv-page #register a[href*="deleteItem"]:focus,
+.sale-page #register a[href*="deleteItem"]:hover,
+.sale-page #register a[href*="deleteItem"]:focus,
+.sale-page #register a[href*="deletePayment"]:hover,
+.sale-page #register a[href*="deletePayment"]:focus,
+.neo-global-content #overall_sale a[href*="deletePayment"]:hover,
+.neo-global-content #overall_sale a[href*="deletePayment"]:focus {
+    color: #b91c1c !important;
 }
 
 .recv-page .recv-total {

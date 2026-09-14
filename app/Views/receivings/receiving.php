@@ -505,9 +505,27 @@ if (isset($success)) {
         });
 
         $("#cancel_receiving_button").click(function() {
-            if (confirm('<?= lang(ucfirst($controller_name) . '.confirm_cancel_receiving') ?>')) {
+            var doCancel = function() {
                 $('#finish_receiving_form').attr('action', '<?= esc("$controller_name/cancelReceiving") ?>');
                 $('#finish_receiving_form').submit();
+            };
+
+            if (typeof window.osposConfirm === 'function') {
+                window.osposConfirm({
+                    title: <?= json_encode(lang(ucfirst($controller_name) . '.cancel_receiving') ?: 'Cancel receiving') ?>,
+                    message: <?= json_encode(lang(ucfirst($controller_name) . '.confirm_cancel_receiving')) ?>,
+                    confirmLabel: 'Clear',
+                    action: 'delete'
+                }, function(ok) {
+                    if (ok) {
+                        doCancel();
+                    }
+                });
+                return;
+            }
+
+            if (confirm(<?= json_encode(lang(ucfirst($controller_name) . '.confirm_cancel_receiving')) ?>)) {
+                doCancel();
             }
         });
 
