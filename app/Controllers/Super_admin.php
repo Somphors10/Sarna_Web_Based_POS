@@ -282,13 +282,7 @@ class Super_admin extends BaseController
                 ->where('tenant_id', $tenant_id)
                 ->update(['status' => 'active']);
             saas_activate_or_renew_subscription($tenant_id);
-            saas_record_subscription_payment(
-                $tenant_id,
-                'aba_khqr_manual',
-                $reference,
-                saas_monthly_price()
-            );
-            saas_notify_shop_paid(
+            saas_complete_shop_payment(
                 $tenant_id,
                 $reference,
                 'aba_khqr_manual',
@@ -309,7 +303,7 @@ class Super_admin extends BaseController
         (new PlatformArchitecture())->ensure();
         refresh_super_admin_pos_session();
 
-        $allowed_pages = ['overview', 'businesses', 'admins', 'requests', 'history', 'features', 'plans', 'email'];
+        $allowed_pages = ['overview', 'businesses', 'admins', 'requests', 'history', 'payments', 'features', 'plans', 'email'];
         if (!in_array($page, $allowed_pages, true)) {
             return redirect()->to('super-admin/overview');
         }
@@ -435,7 +429,9 @@ class Super_admin extends BaseController
         $this->attachSubscriptionPeriods($tenants);
         $recent_payments = $this->getRecentSubscriptionPayments(30);
         $this->backfillPaidAlertsFromRequests($tenants);
+        $this->backfillPlatformPayments($tenants, $recent_payments);
         $platform_alerts = saas_get_platform_alerts(30, 50);
+        $platform_payments = saas_list_platform_payments(200);
 
         return view('super_admin/dashboard', [
             'tenants' => $tenants,
@@ -448,6 +444,7 @@ class Super_admin extends BaseController
             'subscription_request_history' => $subscription_request_history,
             'recent_payments' => $recent_payments,
             'platform_alerts' => $platform_alerts,
+            'platform_payments' => $platform_payments,
             'latest_registration_request_id' => $request_model->get_latest_pending_id(),
             'active_page' => $page,
             'system_features' => $system_features,
@@ -761,8 +758,7 @@ class Super_admin extends BaseController
 
         $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
         saas_activate_or_renew_subscription($tenant_id);
-        saas_record_subscription_payment($tenant_id, 'aba_khqr_manual', $reference, saas_monthly_price());
-        saas_notify_shop_paid($tenant_id, $reference, 'aba_khqr_manual', true);
+        saas_complete_shop_payment($tenant_id, $reference, 'aba_khqr_manual', true);
 
         return redirect()->to('super-admin/businesses?renewed=1');
     }
@@ -1187,44 +1183,23 @@ class Super_admin extends BaseController
     private function backfillPaidAlertsFromRequests(array $tenants): void
     {
         $db = db_connect('platform');
-        if (!$db->tableExists('subscription_requests') || !saas_ensure_platform_alerts_table()) {
+        if (!saas_ensure_platform_alerts_table()) {
             return;
         }
 
-        foreach ($tenants as $tenant) {
-            $tid = (int)($tenant['tenant_id'] ?? 0);
-            $status = strtolower((string)($tenant['status'] ?? ''));
-            $billing = strtolower((string)($tenant['billing'] ?? 'none'));
-            $ref = trim((string)($tenant['payment_reference'] ?? ''));
-            if ($tid <= 0 || $ref === '' || $status !== 'active') {
-                continue;
-            }
-            // Only surface healthy / recently paid shops — skip long-expired noise.
-            if ($billing === 'expired') {
-                continue;
-            }
-
-            $company = trim((string)($tenant['company_name'] ?? ''));
-            $code = trim((string)($tenant['tenant_code'] ?? ''));
-            $days_left = $tenant['days_left'] ?? null;
-            $is_renewal = is_int($days_left) || is_numeric($days_left);
-
-            saas_push_platform_alert([
-                'type'         => 'renewed',
-                'title'        => 'Shop paid',
-                'body'         => ($code !== '' ? $code . ' · ' : '')
-                    . 'Paid · Ref: ' . $ref
-                    . '. Shop is active on WBPOS.',
-                'meta'         => 'backfill',
-                'link_path'    => 'super-admin/businesses',
-                'tenant_id'    => $tid,
-                'company_name' => $company !== '' ? $company : ('Shop #' . $tid),
-                'tenant_code'  => $code,
-                'dedupe_key'   => 'paid-backfill-' . $tid . '-' . md5($ref),
-            ]);
+        // Remove false "Shop paid" alerts created from old signup refs.
+        try {
+            $db->table('platform_alerts')
+                ->groupStart()
+                    ->where('meta', 'backfill')
+                    ->orLike('dedupe_key', 'paid-backfill-', 'after')
+                ->groupEnd()
+                ->delete();
+        } catch (Throwable $e) {
+            // Ignore.
         }
 
-        // Also backfill from invoice_payments if present.
+        // Only import real invoice payment alerts.
         foreach ($this->getRecentSubscriptionPayments(30) as $payment) {
             $tid = (int)($payment['tenant_id'] ?? 0);
             if ($tid <= 0) {
@@ -1242,12 +1217,77 @@ class Super_admin extends BaseController
                     . ($ref !== '' ? ' · Ref: ' . $ref : '')
                     . '. Shop continues on the system.',
                 'meta'         => (string)($payment['provider'] ?? ''),
-                'link_path'    => 'super-admin/businesses',
+                'link_path'    => 'super-admin/payments',
                 'tenant_id'    => $tid,
                 'company_name' => $company !== '' ? $company : ('Shop #' . $tid),
                 'tenant_code'  => $code,
                 'dedupe_key'   => 'paid-invoice-' . (int)($payment['payment_id'] ?? 0),
             ]);
+        }
+    }
+
+    /**
+     * Import only real invoice payment rows into the ledger.
+     * Do NOT invent payments from old signup payment_reference fields.
+     *
+     * @param list<array<string, mixed>> $tenants
+     * @param list<array<string, mixed>> $recent_payments
+     */
+    private function backfillPlatformPayments(array $tenants, array $recent_payments): void
+    {
+        if (!saas_ensure_platform_payments_table()) {
+            return;
+        }
+
+        $db = db_connect('platform');
+
+        // Remove false rows created by the old "every active shop with a ref" backfill.
+        try {
+            $db->table('platform_payments')
+                ->groupStart()
+                    ->where('source', 'backfill')
+                    ->orWhere('provider', 'backfill')
+                    ->orLike('dedupe_key', 'pay-backfill-', 'after')
+                ->groupEnd()
+                ->delete();
+        } catch (Throwable $e) {
+            // Ignore cleanup errors.
+        }
+
+        foreach ($recent_payments as $payment) {
+            $tid = (int)($payment['tenant_id'] ?? 0);
+            $pay_id = (int)($payment['payment_id'] ?? 0);
+            if ($tid <= 0 || $pay_id <= 0) {
+                continue;
+            }
+            $ref = trim((string)($payment['provider_payment_id'] ?? ''));
+            $dedupe = 'pay-invoice-' . $pay_id;
+            try {
+                $exists = $db->table('platform_payments')
+                    ->select('payment_id')
+                    ->where('dedupe_key', substr($dedupe, 0, 120))
+                    ->get(1)
+                    ->getRow();
+                if ($exists !== null) {
+                    continue;
+                }
+                $db->table('platform_payments')->insert([
+                    'tenant_id'         => $tid,
+                    'company_name'      => substr(trim((string)($payment['company_name'] ?? '')), 0, 191),
+                    'tenant_code'       => substr(trim((string)($payment['tenant_code'] ?? '')), 0, 80),
+                    'payment_kind'      => 'renew',
+                    'amount'            => number_format((float)($payment['amount'] ?? saas_monthly_price()), 2, '.', ''),
+                    'currency_code'     => 'USD',
+                    'provider'          => substr((string)($payment['provider'] ?? 'invoice'), 0, 40),
+                    'payment_reference' => $ref !== '' ? substr($ref, 0, 191) : null,
+                    'period_end'        => null,
+                    'source'            => substr((string)($payment['provider'] ?? 'invoice'), 0, 40),
+                    'paid_at'           => (string)($payment['paid_at'] ?? date('Y-m-d H:i:s')),
+                    'dedupe_key'        => substr($dedupe, 0, 120),
+                ]);
+            } catch (Throwable $e) {
+                // Ignore.
+            }
         }
     }
 

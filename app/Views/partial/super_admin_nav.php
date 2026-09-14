@@ -22,8 +22,12 @@ $pos_modules = $pos_modules ?? super_admin_pos_nav_modules();
     <span>Applications</span>
 </a>
 <a class="neo-global-menu-item <?= $sa_active === 'history' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/history') ?>" title="Request History">
-    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/overview.svg') ?>" alt=""></span>
+    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/history.svg') ?>" alt=""></span>
     <span>History</span>
+</a>
+<a class="neo-global-menu-item <?= $sa_active === 'payments' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/payments') ?>" title="Subscription payments">
+    <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/payments.svg') ?>" alt=""></span>
+    <span>Payments</span>
 </a>
 <a class="neo-global-menu-item <?= $sa_active === 'admins' ? 'is-active' : '' ?>" href="<?= site_url('super-admin/admins') ?>" title="Platform Admins">
     <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/admins.svg') ?>" alt=""></span>

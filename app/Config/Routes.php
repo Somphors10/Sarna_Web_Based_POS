@@ -34,6 +34,7 @@ $routes->get('super-admin/businesses', 'Super_admin::index/businesses');
 $routes->get('super-admin/admins', 'Super_admin::index/admins');
 $routes->get('super-admin/requests', 'Super_admin::index/requests');
 $routes->get('super-admin/history', 'Super_admin::index/history');
+$routes->get('super-admin/payments', 'Super_admin::index/payments');
 $routes->get('super-admin/plans', 'Super_admin::index/plans');
 $routes->post('super-admin/plans/(:num)/feature', 'Super_admin::postTogglePlanFeature/$1');
 $routes->post('super-admin/sync-template', 'Super_admin::postSyncTemplate');

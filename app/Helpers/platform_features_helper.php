@@ -891,7 +891,16 @@ function saas_record_subscription_payment(
             ->getRow();
 
         if ($sub === null) {
-            return false;
+            // Create a minimal subscription row so invoice FK can succeed.
+            saas_extend_tenant_subscription($tenant_id, 1);
+            $sub = $db->table('subscriptions')
+                ->where('tenant_id', $tenant_id)
+                ->orderBy('subscription_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            if ($sub === null) {
+                return false;
+            }
         }
 
         $subscription_id = (int)$sub->subscription_id;
@@ -933,6 +942,178 @@ function saas_record_subscription_payment(
         ]);
     } catch (Throwable $e) {
         return false;
+    }
+}
+
+/**
+ * Dedicated payment ledger for Super Admin (new + renew). Always preferred over invoices alone.
+ */
+function saas_ensure_platform_payments_table(): bool
+{
+    try {
+        $db = db_connect('platform');
+        if ($db->tableExists('platform_payments')) {
+            return true;
+        }
+
+        $prefix = (string)($db->getPrefix() ?? '');
+        $table = $prefix . 'platform_payments';
+        $db->query(
+            "CREATE TABLE IF NOT EXISTS `{$table}` (
+                `payment_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `tenant_id` INT NOT NULL,
+                `company_name` VARCHAR(191) NOT NULL DEFAULT '',
+                `tenant_code` VARCHAR(80) NOT NULL DEFAULT '',
+                `payment_kind` VARCHAR(20) NOT NULL DEFAULT 'new',
+                `amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                `currency_code` VARCHAR(3) NOT NULL DEFAULT 'USD',
+                `provider` VARCHAR(40) NOT NULL DEFAULT 'aba_khqr',
+                `payment_reference` VARCHAR(191) NULL,
+                `period_end` DATETIME NULL,
+                `source` VARCHAR(40) NOT NULL DEFAULT 'owner_checkout',
+                `paid_at` DATETIME NOT NULL,
+                `dedupe_key` VARCHAR(120) NOT NULL,
+                `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`payment_id`),
+                UNIQUE KEY `uq_platform_payments_dedupe` (`dedupe_key`),
+                KEY `idx_platform_payments_tenant` (`tenant_id`),
+                KEY `idx_platform_payments_paid` (`paid_at`),
+                KEY `idx_platform_payments_kind` (`payment_kind`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+        );
+
+        return $db->tableExists('platform_payments');
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Store one subscription payment (new or renew) in the platform ledger.
+ *
+ * @return int Payment id (0 on failure)
+ */
+function saas_record_platform_payment(
+    int $tenant_id,
+    string $payment_reference,
+    string $source = 'owner_checkout',
+    bool $is_renewal = false,
+    ?float $amount = null
+): int {
+    if ($tenant_id <= 0 || !saas_ensure_platform_payments_table()) {
+        return 0;
+    }
+
+    $amount = $amount ?? saas_monthly_price();
+    $ref = trim($payment_reference);
+    $paid_at = date('Y-m-d H:i:s');
+    $kind = $is_renewal ? 'renew' : 'new';
+    $dedupe = 'pay-' . $tenant_id . '-' . md5($ref . '|' . $source . '|' . $kind . '|' . date('Y-m-d-H-i'));
+
+    try {
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')
+            ->select('tenant_id, company_name, tenant_code')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRowArray();
+        if ($tenant === null) {
+            return 0;
+        }
+
+        $period_end = null;
+        if ($db->tableExists('subscriptions')) {
+            $sub = $db->table('subscriptions')
+                ->select('period_end')
+                ->where('tenant_id', $tenant_id)
+                ->orderBy('subscription_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            $period_end = $sub !== null ? (string)($sub->period_end ?? '') : null;
+            if ($period_end === '') {
+                $period_end = null;
+            }
+        }
+
+        $existing = $db->table('platform_payments')
+            ->select('payment_id')
+            ->where('dedupe_key', substr($dedupe, 0, 120))
+            ->get(1)
+            ->getRow();
+        if ($existing !== null) {
+            return (int)$existing->payment_id;
+        }
+
+        $ok = $db->table('platform_payments')->insert([
+            'tenant_id'          => $tenant_id,
+            'company_name'       => substr(trim((string)($tenant['company_name'] ?? '')), 0, 191),
+            'tenant_code'        => substr(trim((string)($tenant['tenant_code'] ?? '')), 0, 80),
+            'payment_kind'       => $kind,
+            'amount'             => number_format((float)$amount, 2, '.', ''),
+            'currency_code'      => 'USD',
+            'provider'           => substr($source !== '' ? $source : 'aba_khqr', 0, 40),
+            'payment_reference'  => $ref !== '' ? substr($ref, 0, 191) : null,
+            'period_end'         => $period_end,
+            'source'             => substr($source, 0, 40),
+            'paid_at'            => $paid_at,
+            'dedupe_key'         => substr($dedupe, 0, 120),
+        ]);
+
+        if (!$ok) {
+            return 0;
+        }
+
+        return (int)$db->insertID();
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
+
+/**
+ * Full payment flow after subscription is activated/renewed:
+ * ledger row + invoice attempt + Super Admin bell alert.
+ */
+function saas_complete_shop_payment(
+    int $tenant_id,
+    string $payment_reference,
+    string $source = 'owner_checkout',
+    bool $is_renewal = false,
+    ?float $amount = null
+): bool {
+    if ($tenant_id <= 0) {
+        return false;
+    }
+
+    $amount = $amount ?? saas_monthly_price();
+    $ledger_id = saas_record_platform_payment($tenant_id, $payment_reference, $source, $is_renewal, $amount);
+    saas_record_subscription_payment($tenant_id, $source, $payment_reference, $amount);
+    saas_notify_shop_paid($tenant_id, $payment_reference, $source, $is_renewal);
+
+    return $ledger_id > 0;
+}
+
+/**
+ * List stored subscription payments for Super Admin.
+ *
+ * @return list<array<string, mixed>>
+ */
+function saas_list_platform_payments(int $limit = 200): array
+{
+    if (!saas_ensure_platform_payments_table()) {
+        return [];
+    }
+
+    try {
+        $db = db_connect('platform');
+
+        return $db->table('platform_payments')
+            ->orderBy('paid_at', 'DESC')
+            ->orderBy('payment_id', 'DESC')
+            ->limit(max(1, $limit))
+            ->get()
+            ->getResultArray();
+    } catch (Throwable $e) {
+        return [];
     }
 }
 
@@ -1094,7 +1275,7 @@ function saas_notify_shop_paid(
             'title'        => $title,
             'body'         => $body,
             'meta'         => $source,
-            'link_path'    => 'super-admin/businesses',
+            'link_path'    => 'super-admin/payments',
             'tenant_id'    => $tenant_id,
             'company_name' => $company !== '' ? $company : ('Shop #' . $tenant_id),
             'tenant_code'  => $code,

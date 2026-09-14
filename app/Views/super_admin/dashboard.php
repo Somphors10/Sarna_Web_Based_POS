@@ -7,6 +7,7 @@
  * @var array $subscription_request_history
  * @var array $recent_payments
  * @var array $platform_alerts
+ * @var array $platform_payments
  * @var array $tenants
  * @var object|null $logged_in_admin
  * @var string $active_page
@@ -383,6 +384,10 @@ $format_relative_time = static function (?string $value): string {
             'title' => 'Request History',
             'subtitle' => 'View approved and rejected website registrations.',
         ],
+        'payments' => [
+            'title' => 'Payments',
+            'subtitle' => 'Stored new and renew payments ($20 KHQR). Search by shop or receipt.',
+        ],
         'features' => [
             'title' => 'Master POS Features',
             'subtitle' => 'Global kill switches for the shared POS template. Plan assignment is on Plans & Sync.',
@@ -722,7 +727,7 @@ $format_relative_time = static function (?string $value): string {
                 <h1 class="sa-page-header__title"><?= esc($current_meta['title']) ?></h1>
                 <p class="sa-page-header__subtitle"><?= esc($current_meta['subtitle']) ?></p>
             </div>
-            <?php if (in_array($active_page, ['businesses', 'admins', 'requests', 'history'], true)): ?>
+            <?php if (in_array($active_page, ['businesses', 'admins', 'requests', 'history', 'payments'], true)): ?>
             <div class="sa-toolbar sa-toolbar--filter-only">
                 <?php if ($active_page === 'businesses'): ?>
                 <select id="super_admin_status_filter" class="sa-select">
@@ -739,6 +744,12 @@ $format_relative_time = static function (?string $value): string {
                     <option value="">All History</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
+                </select>
+                <?php elseif ($active_page === 'payments'): ?>
+                <select id="super_admin_status_filter" class="sa-select">
+                    <option value="">All payments</option>
+                    <option value="new">New</option>
+                    <option value="renew">Renew</option>
                 </select>
                 <?php else: ?>
                 <select id="super_admin_status_filter" class="sa-select" hidden aria-hidden="true">
@@ -1356,6 +1367,81 @@ $format_relative_time = static function (?string $value): string {
                                     View
                                 </button>
                             </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($active_page === 'payments'): ?>
+        <?php
+            $platform_payments = $platform_payments ?? [];
+            $payments_total = 0.0;
+            foreach ($platform_payments as $pay_row) {
+                $payments_total += (float)($pay_row['amount'] ?? 0);
+            }
+        ?>
+        <section class="sa-panel">
+            <div class="sa-panel__head">
+                <h2 class="sa-panel__title">Subscription payments</h2>
+                <p class="sa-panel__subtitle">
+                    <?= count($platform_payments) ?> payment(s) stored · Total $<?= esc(number_format($payments_total, 2)) ?>
+                </p>
+            </div>
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Shop</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Receipt / Ref</th>
+                        <th>Source</th>
+                        <th>Paid until</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (empty($platform_payments)): ?>
+                        <tr><td colspan="7" class="sa-empty">No payments stored yet. New and renew payments will appear here.</td></tr>
+                    <?php else: ?>
+                    <?php foreach ($platform_payments as $payment): ?>
+                        <?php
+                            $kind = strtolower((string)($payment['payment_kind'] ?? 'new'));
+                            $kind_label = $kind === 'renew' ? 'Renew' : 'New';
+                            $kind_class = $kind === 'renew' ? 'pending' : 'active';
+                            $company = trim((string)($payment['company_name'] ?? ''));
+                            $code = trim((string)($payment['tenant_code'] ?? ''));
+                            $ref = trim((string)($payment['payment_reference'] ?? ''));
+                            $source = trim((string)($payment['source'] ?? $payment['provider'] ?? ''));
+                            $paid_at = (string)($payment['paid_at'] ?? '');
+                            $period_end = (string)($payment['period_end'] ?? '');
+                        ?>
+                        <tr class="js-searchable-row"
+                            data-group="payment"
+                            data-status="<?= esc($kind, 'attr') ?>"
+                            data-search="<?= esc(strtolower(trim($company . ' ' . $code . ' ' . $ref . ' ' . $source . ' ' . $kind_label))) ?>">
+                            <td data-label="Date"><?= esc($format_request_date($paid_at)) ?></td>
+                            <td data-label="Shop">
+                                <div class="sa-biz-cell">
+                                    <strong class="sa-biz-cell__title"><?= esc($company !== '' ? $company : ('Shop #' . (int)($payment['tenant_id'] ?? 0))) ?></strong>
+                                    <?php if ($code !== ''): ?>
+                                        <span class="sa-biz-cell__sub"><?= esc($code) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td data-label="Type">
+                                <span class="sa-status sa-status--<?= esc($kind_class) ?>"><?= esc($kind_label) ?></span>
+                            </td>
+                            <td data-label="Amount">
+                                <strong>$<?= esc(number_format((float)($payment['amount'] ?? 0), 2)) ?></strong>
+                            </td>
+                            <td data-label="Receipt"><?= $ref !== '' ? esc($ref) : '—' ?></td>
+                            <td data-label="Source"><?= $source !== '' ? esc($source) : '—' ?></td>
+                            <td data-label="Paid until"><?= $period_end !== '' ? esc(saas_format_period_end($period_end)) : '—' ?></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php endif; ?>
@@ -2325,7 +2411,7 @@ $format_relative_time = static function (?string $value): string {
                 const rowBilling = (row.dataset.billing || '').toLowerCase();
 
                 const queryMatch = query === '' || haystack.indexOf(query) !== -1;
-                const usesStatusFilter = rowGroup === 'tenant' || rowGroup === 'history';
+                const usesStatusFilter = rowGroup === 'tenant' || rowGroup === 'history' || rowGroup === 'payment';
                 let statusMatch = true;
                 if (usesStatusFilter && status !== '') {
                     if (status === 'expired') {
