@@ -18,7 +18,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/login.css?v=16') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=18') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=1') ?>">
     <meta name="theme-color" content="#7c3aed">
 </head>

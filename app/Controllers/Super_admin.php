@@ -1000,7 +1000,7 @@ class Super_admin extends BaseController
                 }
                 if ($db->tableExists('tenant_config')) {
                     $db->table('tenant_config')->replace([
-                        'tenant_id' => $tenant_id,
+            'tenant_id' => $tenant_id,
                         'config_key' => $row['config_key'],
                         'config_value' => $row['config_value'],
                     ]);

@@ -45,7 +45,6 @@ if ($invalid) {
 <header class="lp-nav lp-nav--scrolled lp-nav--simple">
     <div class="lp-nav__inner saas-shell">
         <a class="lp-brand" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <div class="lp-nav__actions">

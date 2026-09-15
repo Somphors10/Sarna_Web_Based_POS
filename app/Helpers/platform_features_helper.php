@@ -1444,3 +1444,178 @@ function saas_rejection_reason(?string $notes): string
 
     return '';
 }
+
+/**
+ * Build Super Admin bell notification cards (subscription + POS shell).
+ *
+ * @return list<array{
+ *   type:string,id:int,key:string,title:string,subtitle:string,body:string,
+ *   meta:string,created_at:string,relative_time:string,review_url:string
+ * }>
+ */
+function saas_build_super_admin_notification_items(): array
+{
+    $format_request_date = static function (?string $value): string {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $timestamp = strtotime($value);
+
+        return $timestamp !== false ? date('Y-m-d', $timestamp) : $value;
+    };
+
+    $format_relative_time = static function (?string $value): string {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $timestamp = strtotime($value);
+        if ($timestamp === false) {
+            return $value;
+        }
+        $diff = time() - $timestamp;
+        if ($diff < 60) {
+            return 'Just now';
+        }
+        if ($diff < 3600) {
+            return (int)floor($diff / 60) . ' min ago';
+        }
+        if ($diff < 86400) {
+            return (int)floor($diff / 3600) . ' hours ago';
+        }
+        if ($diff < 604800) {
+            return (int)floor($diff / 86400) . ' days ago';
+        }
+        if ($diff < 2592000) {
+            return (int)floor($diff / 604800) . ' weeks ago';
+        }
+
+        return date('Y-m-d', $timestamp);
+    };
+
+    $items = [];
+
+    try {
+        $platform_alerts = saas_get_platform_alerts(30, 50);
+        foreach ($platform_alerts as $alert) {
+            $type = (string)($alert['alert_type'] ?? 'renewed');
+            if ($type === '') {
+                $type = 'renewed';
+            }
+            $created = (string)($alert['created_at'] ?? '');
+            $link = trim((string)($alert['link_path'] ?? 'super-admin/businesses'));
+            if ($link !== '' && strpos($link, 'http') !== 0) {
+                $link = site_url(ltrim($link, '/'));
+            }
+            $items[] = [
+                'type'          => ($type === 'renewed' || $type === 'payment') ? 'renewed' : $type,
+                'id'            => (int)($alert['alert_id'] ?? 0),
+                'key'           => 'alert-' . (string)($alert['dedupe_key'] ?? ($alert['alert_id'] ?? uniqid('a', true))),
+                'title'         => (string)($alert['title'] ?? 'Payment received'),
+                'subtitle'      => (string)($alert['company_name'] ?? 'Shop'),
+                'body'          => (string)($alert['body'] ?? ''),
+                'meta'          => (string)($alert['meta'] ?? ''),
+                'created_at'    => $format_request_date($created),
+                'relative_time' => $format_relative_time($created),
+                'review_url'    => $link !== '' ? $link : site_url('super-admin/businesses'),
+            ];
+        }
+    } catch (Throwable $e) {
+        // Continue with other sources.
+    }
+
+    try {
+        helper('locale');
+        $subscription_requests = model(\App\Models\Subscription_request::class)->get_pending_with_plan();
+        foreach ($subscription_requests as $request) {
+            $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
+            $items[] = [
+                'type'          => 'registration',
+                'id'            => (int)$request['request_id'],
+                'key'           => 'registration-' . (int)$request['request_id'],
+                'title'         => 'New registration',
+                'subtitle'      => (string)($request['company_name'] ?? 'New registration'),
+                'body'          => 'Needs Approve & send KHQR. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
+                'meta'          => (string)($request['owner_email'] ?? ''),
+                'created_at'    => $format_request_date($request['created_at'] ?? ''),
+                'relative_time' => $format_relative_time($request['created_at'] ?? ''),
+                'review_url'    => site_url('super-admin/requests'),
+            ];
+        }
+    } catch (Throwable $e) {
+        // Ignore.
+    }
+
+    try {
+        $tenants = model(\App\Models\Tenant::class)->get_with_owner_summary();
+        $warn_days = saas_subscription_warning_days();
+        $now = time();
+        foreach ($tenants as $tenant) {
+            $status = strtolower((string)($tenant['status'] ?? ''));
+            $company = trim((string)($tenant['company_name'] ?? ''));
+            if ($company === '') {
+                $company = 'Shop #' . (int)($tenant['tenant_id'] ?? 0);
+            }
+            $code = trim((string)($tenant['tenant_code'] ?? ''));
+            $tid = (int)($tenant['tenant_id'] ?? 0);
+            $info = saas_tenant_subscription_info($tid);
+            $period_end = (string)($info['period_end'] ?? '');
+            $days_left = $info['days_left'] ?? null;
+            $billing = 'none';
+            if (!empty($info['is_expired'])) {
+                $billing = 'expired';
+            } elseif (!empty($info['is_warning'])) {
+                $billing = 'warning';
+            } elseif (!empty($info['has_period'])) {
+                $billing = 'ok';
+            }
+
+            if ($status === 'awaiting_payment') {
+                $items[] = [
+                    'type'          => 'payment',
+                    'id'            => $tid,
+                    'key'           => 'awaiting-payment-' . $tid,
+                    'title'         => 'Waiting for $20 payment',
+                    'subtitle'      => $company,
+                    'body'          => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
+                    'meta'          => (string)($tenant['email'] ?? $tenant['owner_email'] ?? ''),
+                    'created_at'    => $format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
+                    'relative_time' => $format_relative_time((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
+                    'review_url'    => site_url('super-admin/businesses?status=awaiting_payment'),
+                ];
+            }
+
+            if ($billing === 'expired' && !in_array($status, ['cancelled', 'suspended'], true)) {
+                $items[] = [
+                    'type'          => 'expired',
+                    'id'            => $tid,
+                    'key'           => 'expired-' . $tid . '-' . $period_end,
+                    'title'         => 'Subscription expired',
+                    'subtitle'      => $company,
+                    'body'          => ($code !== '' ? $code . ' · ' : '') . 'Period ended ' . saas_format_period_end($period_end) . '. Account still open — needs renew or suspend.',
+                    'meta'          => '',
+                    'created_at'    => $period_end,
+                    'relative_time' => $period_end !== '' ? ('Ended ' . saas_format_period_end($period_end)) : '',
+                    'review_url'    => site_url('super-admin/businesses?status=expired'),
+                ];
+            } elseif ($billing === 'warning' && $status === 'active') {
+                $items[] = [
+                    'type'          => 'warning',
+                    'id'            => $tid,
+                    'key'           => 'expiring-' . $tid . '-' . $period_end,
+                    'title'         => 'Expiring soon',
+                    'subtitle'      => $company,
+                    'body'          => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',
+                    'meta'          => '',
+                    'created_at'    => $period_end,
+                    'relative_time' => (int)$days_left . 'd left',
+                    'review_url'    => site_url('super-admin/businesses?status=expiring_soon'),
+                ];
+            }
+        }
+        unset($warn_days, $now);
+    } catch (Throwable $e) {
+        // Ignore.
+    }
+
+    return $items;
+}

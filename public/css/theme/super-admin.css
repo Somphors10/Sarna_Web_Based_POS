@@ -257,32 +257,36 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 16px;
     position: sticky;
     top: 0;
-    z-index: 100;
-    min-height: 4rem;
-    padding: 0.65rem 1.5rem;
+    z-index: 1050;
+    min-height: 64px;
+    height: 64px;
+    padding: 0 24px;
     background: #ffffff;
     border: none;
     border-bottom: 1px solid #e8edf5;
     border-radius: 0;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .sa-top-navbar__start {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
     flex-shrink: 0;
 }
 
 .sa-top-navbar__end {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
     margin-left: auto;
     min-width: 0;
+    height: 40px;
 }
 
 .sa-top-navbar__menu {
@@ -290,26 +294,33 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
 }
 
 .sa-top-navbar__search {
-    flex: 0 1 22rem;
-    min-width: 10rem;
-    max-width: 22rem;
+    flex: 0 1 320px;
+    width: 320px;
+    min-width: 220px;
+    max-width: 320px;
+    height: 40px;
+}
+
+.sa-top-navbar .sa-search-wrap {
+    height: 40px;
 }
 
 .sa-search-wrap--pill svg {
-    left: 1rem;
-    width: 1rem;
-    height: 1rem;
+    left: 14px;
+    width: 18px;
+    height: 18px;
     color: #94a3b8;
 }
 
 .sa-input--pill {
-    height: 2.65rem;
-    padding-left: 2.65rem;
-    padding-right: 1rem;
+    height: 40px;
+    padding-left: 42px;
+    padding-right: 16px;
     border-radius: 999px;
     border-color: #e2e8f0;
     background: #f8fafc;
-    font-size: 0.875rem;
+    font-size: 14px;
+    line-height: 1.25;
 }
 
 .sa-input--pill:focus {
@@ -321,8 +332,9 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
 .sa-top-navbar__actions {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 10px;
     flex-shrink: 0;
+    height: 40px;
 }
 
 .sa-dropdown-wrap {
@@ -345,13 +357,13 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
 }
 
 .sa-notify-btn {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 40px;
+    height: 40px;
 }
 
 .sa-notify-btn svg {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: 22px;
+    height: 22px;
 }
 
 .sa-notify-btn:hover,
@@ -363,18 +375,18 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
 
 .sa-notify-badge {
     position: absolute;
-    top: -0.2rem;
-    right: -0.55rem;
+    top: -2px;
+    right: -2px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.2rem;
-    height: 1.2rem;
-    padding: 0 0.32rem;
-    border-radius: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
     background: #eff6ff;
     color: #2563eb;
-    font-size: 0.625rem;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1;
     text-align: center;
@@ -387,11 +399,113 @@ body.sa-dashboard .sa-main-body.sa-pos-content {
 }
 
 .sa-profile-btn {
-    width: auto;
-    height: auto;
+    width: 40px;
+    height: 40px;
 }
 
 /* Profile menu visuals live in css/theme/profile-menu.css */
+
+/*
+ * Lock identical navbar chrome on Subscriptions + POS Features.
+ * POS pages load Bootstrap, which otherwise shrinks input[type=text]/button.
+ */
+body.sa-dashboard .sa-top-navbar {
+    min-height: 64px !important;
+    height: 64px !important;
+    padding: 0 24px !important;
+    z-index: 1050 !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__end,
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__actions,
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__search,
+body.sa-dashboard .sa-top-navbar .sa-search-wrap {
+    height: 40px !important;
+}
+
+body.sa-dashboard .sa-top-navbar input.sa-input.sa-input--pill {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 16px 0 42px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 999px !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 38px !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+body.sa-dashboard .sa-top-navbar input.sa-input.sa-input--pill:focus {
+    border-color: #93c5fd !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08) !important;
+    outline: none !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-search-wrap--pill svg {
+    left: 14px !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-notify-btn,
+body.sa-dashboard .sa-top-navbar .sa-profile-btn {
+    box-sizing: border-box !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    line-height: 1 !important;
+    font-size: 14px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-notify-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-notify-badge {
+    top: -2px !important;
+    right: -2px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-profile-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 14px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__search {
+    flex: 0 0 320px !important;
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__end {
+    gap: 12px !important;
+}
+
+body.sa-dashboard .sa-top-navbar .sa-top-navbar__actions {
+    gap: 10px !important;
+}
 
 /* ── Notification side panel ── */
 
@@ -449,7 +563,7 @@ body.sa-notify-open {
 
 .sa-notify-panel__title-wrap h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #0f172a;
     letter-spacing: -0.01em;
@@ -459,13 +573,13 @@ body.sa-notify-open {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.45rem;
-    height: 1.45rem;
-    padding: 0 0.4rem;
+    min-width: 1.55rem;
+    height: 1.55rem;
+    padding: 0 0.45rem;
     border-radius: 9px;
     background: #eff6ff;
     color: #2563eb;
-    font-size: 0.72rem;
+    font-size: 13px;
     font-weight: 700;
     line-height: 1;
     border: 1px solid #bfdbfe;
@@ -506,7 +620,7 @@ body.sa-notify-open {
     border: none;
     background: transparent;
     padding: 0;
-    font-size: 0.8125rem;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
@@ -542,7 +656,7 @@ body.sa-notify-open {
     padding: 2.5rem 1.25rem;
     text-align: center;
     color: #64748b;
-    font-size: 0.9rem;
+    font-size: 14px;
 }
 
 .sa-notify-panel__empty--hidden {
@@ -648,20 +762,20 @@ body.sa-notify-open {
 }
 
 .sa-notify-card__head strong {
-    font-size: 0.875rem;
+    font-size: 14px;
     font-weight: 700;
     color: #0f172a;
     line-height: 1.35;
 }
 
 .sa-notify-card__head time {
-    font-size: 0.75rem;
+    font-size: 13px;
     color: #94a3b8;
 }
 
 .sa-notify-card__subtitle {
     margin: 0.65rem 0 0;
-    font-size: 0.8125rem;
+    font-size: 14px;
     font-weight: 600;
     color: #334155;
     line-height: 1.45;
@@ -669,21 +783,21 @@ body.sa-notify-open {
 
 .sa-notify-card__body {
     margin: 0.45rem 0 0;
-    font-size: 0.8125rem;
+    font-size: 14px;
     color: #64748b;
     line-height: 1.55;
 }
 
 .sa-notify-card__meta {
     margin: 0.35rem 0 0;
-    font-size: 0.75rem;
+    font-size: 13px;
     color: #94a3b8;
 }
 
 .sa-notify-card__link {
     display: inline-block;
     margin-top: 0.75rem;
-    font-size: 0.8125rem;
+    font-size: 14px;
     font-weight: 600;
     color: #2563eb;
     text-decoration: none;
@@ -821,7 +935,7 @@ body.sa-notify-open {
     background: #f8fafc;
     color: var(--sa-text);
     font-family: inherit;
-    font-size: 0.875rem;
+    font-size: 14px;
     outline: none;
     transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -1678,8 +1792,15 @@ a.sa-metric:focus-visible .sa-metric__hint {
 
     .sa-top-navbar {
         flex-wrap: wrap;
-        padding: 0.75rem 1rem;
-        min-height: auto;
+        height: auto;
+        min-height: 64px;
+        padding: 12px 16px;
+    }
+
+    body.sa-dashboard .sa-top-navbar {
+        height: auto !important;
+        min-height: 64px !important;
+        padding: 12px 16px !important;
     }
 
     .sa-top-navbar__menu {
@@ -1689,17 +1810,31 @@ a.sa-metric:focus-visible .sa-metric__hint {
     .sa-top-navbar__end {
         flex: 1 1 auto;
         justify-content: flex-end;
-        gap: 0.65rem;
+        gap: 12px;
+        height: auto;
+    }
+
+    body.sa-dashboard .sa-top-navbar .sa-top-navbar__end {
+        height: auto !important;
     }
 
     .sa-top-navbar__search {
         order: 3;
         flex: 1 1 100%;
         max-width: none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    body.sa-dashboard .sa-top-navbar .sa-top-navbar__search {
+        flex: 1 1 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
     }
 
     .sa-top-navbar__actions {
-        gap: 0.5rem;
+        gap: 10px;
     }
 
     .sa-metrics--status {

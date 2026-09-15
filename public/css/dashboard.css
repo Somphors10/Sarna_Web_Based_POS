@@ -1,52 +1,91 @@
 @import url("theme/tokens.css");
 @import url("theme/topbar-footer.css?v=68");
-@import url("theme/layout-sidebar.css");
-@import url("theme/home.css?v=85");
-@import url("theme/modules.css?v=100");
+@import url("theme/layout-sidebar.css?v=2");
+@import url("theme/home.css?v=86");
+@import url("theme/modules.css?v=101");
 @import url("theme/components.css?v=85");
 @import url("theme/responsive.css?v=75");
 @import url("theme/khmer-font.css?v=72");
 
+/* —— Subscription banner —— */
 .pos-subscription-alert {
-    background: #fefce8;
-    border-bottom: 3px solid #eab308;
+    margin: 0.85rem 1rem 2rem !important;
+    border: 1px solid #f6de8d;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fffbeb 0%, #fef9c3 100%);
     color: #713f12;
-    box-shadow: inset 0 0 0 1px rgba(234, 179, 8, 0.2);
+    box-shadow: 0 8px 20px rgba(202, 138, 4, 0.08);
+}
+
+.pos-subscription-alert--expired {
+    border-color: #fecaca;
+    background: linear-gradient(180deg, #fff5f5 0%, #fee2e2 100%);
+    color: #7f1d1d;
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.08);
 }
 
 .pos-subscription-alert__inner {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem 1.5rem;
+    gap: 0.85rem 1.1rem;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem 1.25rem;
+    padding: 0.95rem 1.15rem;
+}
+
+.pos-subscription-alert__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 999px;
+    background: rgba(202, 138, 4, 0.16);
+    color: #a16207;
+}
+
+.pos-subscription-alert--expired .pos-subscription-alert__icon {
+    background: rgba(220, 38, 38, 0.14);
+    color: #dc2626;
+}
+
+.pos-subscription-alert__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 .pos-subscription-alert__text {
-    flex: 1 1 280px;
-    font-size: 1.15rem;
-    font-weight: 800;
+    flex: 1 1 240px;
+    font-size: 1rem;
+    font-weight: 700;
     line-height: 1.45;
-    letter-spacing: 0.01em;
     color: #713f12;
+}
+
+.pos-subscription-alert--expired .pos-subscription-alert__text {
+    color: #7f1d1d;
 }
 
 .pos-subscription-alert__link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.7rem 1.35rem;
-    border-radius: 12px;
+    padding: 0.65rem 1.2rem;
+    border-radius: 11px;
     background: #ca8a04;
     color: #fff !important;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 800;
     text-decoration: none !important;
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(202, 138, 4, 0.35);
+    box-shadow: 0 2px 8px rgba(202, 138, 4, 0.28);
+}
+
+.pos-subscription-alert--expired .pos-subscription-alert__link {
+    background: #dc2626;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.28);
 }
 
 .pos-subscription-alert__link:hover {
@@ -54,13 +93,307 @@
     color: #fff !important;
 }
 
+.pos-subscription-alert--expired .pos-subscription-alert__link:hover {
+    background: #b91c1c;
+}
+
+/* Extra gap before module/home content under the banner */
+.pos-subscription-alert + .container,
+.pos-subscription-alert + .sa-main-body {
+    margin-top: 0.75rem !important;
+    padding-top: 0.25rem;
+}
+
+.neo-global-content > .container {
+    padding-top: 0.25rem;
+}
+
+.neo-global-content > .pos-subscription-alert + .container {
+    padding-top: 0.5rem;
+}
+
+.neo-global-content > .pos-subscription-alert + .container .neo-module-page {
+    margin-top: 0.5rem !important;
+}
+
+/* Topbar bell sizes are forced in css/theme/pos-notify.css (+ header inline). */
+.pos-notify-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+}
+
+.pos-notify-btn svg {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+.pos-notify-badge {
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+}
+
+/* —— Notify drawer (shop admin — larger text/icons) —— */
+body.pos-notify-open {
+    overflow: hidden;
+}
+
+.pos-notify-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1180;
+    background: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(1px);
+}
+
+.pos-notify-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1190;
+    display: flex;
+    flex-direction: column;
+    width: min(480px, 100vw);
+    height: 100vh;
+    background: #fff;
+    border-left: 1px solid #e8edf5;
+    box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+}
+
+.pos-notify-panel.is-open {
+    transform: translateX(0);
+}
+
+.pos-notify-panel__head {
+    flex-shrink: 0;
+    padding: 1.35rem 1.4rem 1.1rem;
+    border-bottom: 1px solid #eef2f7;
+    background: #fff;
+}
+
+.pos-notify-panel__title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.pos-notify-panel__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.pos-notify-panel__title-wrap h2 {
+    margin: 0;
+    font-size: 1.35rem !important;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.pos-notify-panel__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.7rem;
+    height: 1.7rem;
+    padding: 0 0.45rem;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid #bfdbfe;
+}
+
+.pos-notify-panel__close {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.pos-notify-panel__close:hover,
+.pos-notify-panel__close:focus-visible {
+    background: #f1f5f9;
+    color: #0f172a;
+    outline: none;
+}
+
+.pos-notify-panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.pos-notify-panel__list {
+    list-style: none !important;
+    margin: 0;
+    padding: 0;
+}
+
+.pos-notify-card {
+    position: relative;
+    list-style: none !important;
+    padding: 1.45rem 1.5rem 1.55rem;
+    border-bottom: 1px solid #eef2f7;
+    background: #fff;
+}
+
+.pos-notify-card::marker {
+    content: none;
+    display: none;
+}
+
+.pos-notify-card__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.pos-notify-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.pos-notify-card__icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.pos-notify-card__icon--expired {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.pos-notify-card__icon--warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+}
+
+.pos-notify-card__head {
+    min-width: 0;
+    display: grid;
+    gap: 0.25rem;
+    padding-top: 0.35rem;
+}
+
+.pos-notify-card__head strong {
+    margin: 0;
+    font-size: 1.15rem !important;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+}
+
+.pos-notify-card__body {
+    margin: 0.75rem 0 0;
+    font-size: 1.05rem !important;
+    color: #64748b;
+    line-height: 1.55;
+}
+
+.pos-notify-card__link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 1.05rem !important;
+    font-weight: 700;
+    color: #2563eb !important;
+    text-decoration: none !important;
+}
+
+.pos-notify-card__link:hover {
+    text-decoration: underline !important;
+}
+
+/* —— View-only toast —— */
+.pos-view-only-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    z-index: 2000;
+    max-width: min(28rem, calc(100vw - 2rem));
+    padding: 0.85rem 1.1rem;
+    border-radius: 12px;
+    background: #7f1d1d;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
+    box-shadow: 0 10px 30px rgba(127, 29, 29, 0.35);
+    transform: translate(-50%, 120%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.pos-view-only-toast.is-visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+/* Expired: disable actions; sidebar stays for viewing lists/pages. */
+body.pos-view-only .neo-module-actions a,
+body.pos-view-only .neo-module-actions .btn,
+body.pos-view-only .neo-table-toolbar .btn,
+body.pos-view-only #toolbar .btn,
+body.pos-view-only #title_bar .btn,
+body.pos-view-only #title_bar a.btn,
+body.pos-view-only a.modal-dlg,
+body.pos-view-only button.modal-dlg,
+body.pos-view-only #new_customer_btn,
+body.pos-view-only #delete,
+body.pos-view-only #restore,
+body.pos-view-only #email,
+body.pos-view-only #bulk_edit,
+body.pos-view-only .btn-primary:not(.pos-view-only-allow),
+body.pos-view-only .btn-danger:not(.pos-view-only-allow),
+body.pos-view-only .btn-success:not(.pos-view-only-allow),
+body.pos-view-only .btn-warning:not(.pos-view-only-allow),
+body.pos-view-only form button[type="submit"]:not(.pos-view-only-allow),
+body.pos-view-only form input[type="submit"],
+body.pos-view-only #register button:not(.pos-view-only-allow),
+body.pos-view-only #register input,
+body.pos-view-only #register select {
+    pointer-events: none !important;
+    opacity: 0.42 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(0.15);
+}
+
 @media (max-width: 767px) {
+    .pos-subscription-alert {
+        margin: 0.65rem 0.65rem 1.75rem !important;
+    }
+
     .pos-subscription-alert__text {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
     }
 
     .pos-subscription-alert__link {
         width: 100%;
         text-align: center;
+    }
+
+    .pos-notify-panel {
+        width: 100vw;
     }
 }

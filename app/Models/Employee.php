@@ -707,15 +707,9 @@ class Employee extends Person
                 return false;
             }
 
-            if (((string)($row->status ?? 'active')) !== 'active') {
-                return false;
-            }
-
-            if (function_exists('saas_tenant_subscription_usable')) {
-                return saas_tenant_subscription_usable($tenant_id);
-            }
-
-            return true;
+            // Expired subscription still allows login (view-only in Secure_Controller).
+            // Block only non-active account statuses (awaiting_payment, suspended, etc.).
+            return ((string)($row->status ?? 'active')) === 'active';
         } catch (Throwable $e) {
             // Fail open to avoid blocking authentication if platform DB
             // is temporarily unavailable during migration setup.
@@ -751,20 +745,7 @@ class Employee extends Person
                 return 'awaiting_payment';
             }
 
-            if (
-                $status === 'active'
-                && function_exists('saas_tenant_subscription_usable')
-                && !saas_tenant_subscription_usable($tenant_id)
-            ) {
-                try {
-                    (new \App\Libraries\SubscriptionExpiryNotifier())->notifyTenant($tenant_id);
-                } catch (Throwable $e) {
-                    // Non-blocking: login error still shown.
-                }
-
-                return 'subscription_expired';
-            }
-
+            // Expired period: allow login; Secure_Controller enforces view-only + renew CTA.
             return null;
         } catch (Throwable $e) {
             return null;

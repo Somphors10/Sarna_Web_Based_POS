@@ -99,7 +99,7 @@ class Secure_Controller extends BaseController
             $this->session->set('tenant_id', $tenant_id);
         }
 
-        // Mid-session: warn by email (Gmail), then block shops whose period ended.
+        // Mid-session: warn by email (Gmail); expired shops stay in view-only mode.
         if (!$is_super_admin && $tenant_id > 0) {
             if (
                 function_exists('saas_tenant_needs_renewal')
@@ -112,14 +112,7 @@ class Secure_Controller extends BaseController
                 }
             }
 
-            if (
-                function_exists('saas_tenant_subscription_usable')
-                && !saas_tenant_subscription_usable($tenant_id)
-            ) {
-                $this->employee->logout();
-                header('Location:' . base_url('login') . '?expired=1');
-                exit();
-            }
+            $this->enforceSubscriptionViewOnly($tenant_id);
         }
 
         (new TenantContext())->applyRuntimeConnection($tenant_id);
@@ -210,11 +203,89 @@ class Secure_Controller extends BaseController
         }
 
         $this->global_view_data += [
-            'user_info'       => $logged_in_employee_info,
-            'controller_name' => $module_id,
-            'config'          => $config
+            'user_info'               => $logged_in_employee_info,
+            'controller_name'         => $module_id,
+            'config'                  => $config,
+            'subscription_view_only'  => (bool)$this->session->get('subscription_view_only'),
         ];
         view('viewData', $this->global_view_data);
+    }
+
+    /**
+     * Expired shops may stay logged in to view data, but cannot mutate until they renew.
+     */
+    private function enforceSubscriptionViewOnly(int $tenant_id): void
+    {
+        if (!function_exists('saas_tenant_subscription_info')) {
+            $this->session->set('subscription_view_only', false);
+
+            return;
+        }
+
+        $info = saas_tenant_subscription_info($tenant_id);
+        $view_only = !empty($info['is_expired']);
+        $this->session->set('subscription_view_only', $view_only);
+
+        if (!$view_only) {
+            return;
+        }
+
+        $request = Services::request();
+        $method = strtoupper((string)$request->getMethod(true));
+        $segments = array_values(array_map('strtolower', $request->getUri()->getSegments()));
+        if (($segments[0] ?? '') === 'index.php') {
+            array_shift($segments);
+        }
+
+        $controller = (string)($segments[0] ?? '');
+        $action = (string)($segments[1] ?? '');
+        $path = implode('/', $segments);
+
+        // Renew / pay (Saas is not Secure_Controller, but keep allowlist for safety),
+        // logout, language switch, and access-denied pages.
+        if (
+            $controller === 'saas'
+            || str_starts_with($path, 'home/logout')
+            || str_starts_with($path, 'home/language')
+            || $controller === 'no_access'
+            || $controller === 'login'
+        ) {
+            return;
+        }
+
+        $mutating_get = false;
+        if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+            $mutating_needles = [
+                'delete', 'remove', 'void', 'cancel', 'complete', 'suspend', 'restore',
+                'save', 'update', 'clear', 'change_mode', 'changemode', 'setmode',
+            ];
+            foreach ($mutating_needles as $needle) {
+                if ($action !== '' && str_contains($action, $needle)) {
+                    $mutating_get = true;
+                    break;
+                }
+            }
+
+            if (!$mutating_get) {
+                return;
+            }
+        }
+
+        $message = lang('Login.subscription_view_only');
+        if ($request->isAJAX()) {
+            $response = Services::response();
+            $response->setStatusCode(403);
+            $response->setHeader('Content-Type', 'application/json; charset=UTF-8');
+            $response->setBody(json_encode([
+                'success' => false,
+                'message' => $message,
+            ]));
+            $response->send();
+            exit();
+        }
+
+        header('Location:' . base_url('home') . '?view_only=1');
+        exit();
     }
 
     public function sanitizeSortColumn($headers, $field, $default): string

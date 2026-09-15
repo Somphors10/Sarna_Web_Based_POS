@@ -516,9 +516,10 @@ body.login-page::before {
 }
 
 .login-main--form {
-    align-items: flex-start;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
 }
 
 .login-card__intro {

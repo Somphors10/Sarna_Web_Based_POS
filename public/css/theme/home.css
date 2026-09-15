@@ -3,6 +3,8 @@
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --neo-chart-area-min-h: 168px;
     --neo-chart-bar-min-h: 130px;
+    padding-right: 4px;
+    box-sizing: border-box;
 }
 
 .neo-main {

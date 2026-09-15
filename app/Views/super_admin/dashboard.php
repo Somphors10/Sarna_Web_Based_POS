@@ -69,8 +69,8 @@ $format_relative_time = static function (?string $value): string {
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=56') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=3') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=62') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=5') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=2') ?>">
     <style>
         .sa-mail { display:grid; gap:16px; max-width:920px; }
@@ -642,7 +642,6 @@ $format_relative_time = static function (?string $value): string {
         <div class="neo-global-brand-row">
             <a class="neo-global-brand" href="<?= site_url('super-admin/overview') ?>">
                 <span class="neo-global-brand-full">WBPOS</span>
-                <span class="neo-global-brand-mini">W</span>
             </a>
             <button id="sa_sidebar_toggle" class="neo-sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="true">
                 <svg class="neo-sidebar-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

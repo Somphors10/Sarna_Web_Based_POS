@@ -35,7 +35,6 @@ $show_register_aside = false; // set true to show “What happens next” again
 <header class="lp-nav lp-nav--scrolled lp-nav--simple" id="lp-nav">
     <div class="lp-nav__inner saas-shell">
         <a class="lp-brand" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <div class="lp-nav__actions">
@@ -229,7 +228,6 @@ $show_register_aside = false; // set true to show “What happens next” again
 <footer class="lp-footer lp-footer--simple">
     <div class="lp-footer__inner saas-shell">
         <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>

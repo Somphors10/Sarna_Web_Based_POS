@@ -30,7 +30,6 @@ $contact_address = 'Street 299, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Pen
 <header class="lp-nav" id="lp-nav">
     <div class="lp-nav__inner saas-shell">
         <a class="lp-brand" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
 
@@ -302,7 +301,6 @@ $contact_address = 'Street 299, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Pen
 <footer class="lp-footer lp-footer--simple">
     <div class="lp-footer__inner saas-shell">
         <a class="lp-brand lp-brand--sm" href="<?= site_url() ?>">
-            <span class="lp-brand__mark">W</span>
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <p class="lp-footer__copy">&copy; <?= date('Y') ?> <?= $company ?>. All rights reserved.</p>
