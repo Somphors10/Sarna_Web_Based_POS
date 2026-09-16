@@ -3483,10 +3483,11 @@ select.lp-field-input {
     }
 
     .lp-nav--simple .lp-brand__name {
-        max-width: 42vw;
+        max-width: min(48vw, 11.5rem);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: 15px;
     }
 
     .lp-footer--simple {
@@ -3653,8 +3654,28 @@ select.lp-field-input {
 }
 
 @media (max-width: 480px) {
+    .lp-nav--simple .lp-nav__inner {
+        gap: 6px;
+    }
+
+    .lp-nav--simple .lp-brand {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
     .lp-nav--simple .lp-brand__name {
-        display: none;
+        display: inline-block;
+        max-width: none;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .lp-nav--simple .lp-nav__actions {
+        flex-shrink: 0;
     }
 
     .lp-nav--simple .lp-nav__actions .lp-btn {

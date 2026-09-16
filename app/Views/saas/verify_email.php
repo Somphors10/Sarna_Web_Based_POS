@@ -13,7 +13,7 @@ $already = !empty($already);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=33">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=45">
 </head>
 <body class="saas-modern saas-landing-body saas-success-page">
 <header class="lp-nav lp-nav--scrolled lp-nav--simple">

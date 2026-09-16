@@ -1,0 +1,66 @@
+%% WBPOS — Data Flow Diagram (Level 1)
+%% Decomposes the system into major processes, external roles, and data stores.
+%% Notation: square = external entity | rounded = process | open rectangle = data store
+%% Arrow labels = data flows
+
+flowchart TB
+  %% ===== External entities =====
+  R1["New Shop Registrant"]
+  R2["Super Admin"]
+  R3["Shop Owner"]
+  R4["Employee / Cashier"]
+  R5["Walk-in Customer"]
+
+  %% ===== Level-1 processes =====
+  P1["1.0<br/>Registration &amp; Onboarding"]
+  P2["2.0<br/>Platform Administration"]
+  P3["3.0<br/>Login &amp; Access Control"]
+  P4["4.0<br/>Shop POS Operations"]
+  P5["5.0<br/>Sales at Counter"]
+
+  %% ===== Data stores =====
+  D1[("D1 Platform Database<br/>tenants · requests · payments · subscriptions")]
+  D2[("D2 Shop Tenant Database<br/>items · employees · sales · stock")]
+
+  %% --- Registrant ↔ 1.0 ---
+  R1 -->|"Register / verify email / KHQR pay"| P1
+  P1 -->|"Verify link / payment status"| R1
+  P1 -->|"Subscription request · tokens · payment ref"| D1
+  D1 -->|"Request &amp; payment status"| P1
+
+  %% --- Super Admin ↔ 2.0 ---
+  R2 -->|"Approve / reject / send KHQR / manage shops"| P2
+  P2 -->|"Applications · businesses · alerts"| R2
+  P2 -->|"Update tenants · payments · alerts"| D1
+  D1 -->|"Pending requests · tenants · payments"| P2
+  P2 -->|"Provision / seed shop on approve"| D2
+
+  %% --- Owner & Cashier ↔ 3.0 ---
+  R3 -->|"Username + password"| P3
+  R4 -->|"Username + password"| P3
+  P3 -->|"Session / allowed modules"| R3
+  P3 -->|"Session / allowed modules"| R4
+  P3 -->|"Lookup tenant_logins · plan"| D1
+  D1 -->|"tenant_id · subscription state"| P3
+  P3 -->|"Check employees + permissions"| D2
+  D2 -->|"Auth + grants"| P3
+
+  %% --- Shop Owner ↔ 4.0 ---
+  R3 -->|"Items / staff / config / reports"| P4
+  P4 -->|"Catalogs · settings · report results"| R3
+  P4 -->|"Read / write shop data"| D2
+  D2 -->|"Shop records"| P4
+
+  %% --- Counter sale ↔ 5.0 ---
+  R4 -->|"Ring up sale / take payment"| P5
+  P5 -->|"Receipt / change due"| R4
+  R5 -->|"Buy goods / pay"| P5
+  P5 -->|"Receipt"| R5
+  P5 -->|"Save sale · update stock"| D2
+  D2 -->|"Items · prices · stock"| P5
+
+  %% --- Cross-process links (control / sequence) ---
+  P2 -.->|"Creates active shop after pay"| P1
+  P1 -.->|"Shop active → can log in"| P3
+  P3 -.->|"Authorized session"| P4
+  P3 -.->|"Authorized session"| P5
