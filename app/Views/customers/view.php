@@ -17,7 +17,6 @@
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= lang('Customers.customer') ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
     </header>
 

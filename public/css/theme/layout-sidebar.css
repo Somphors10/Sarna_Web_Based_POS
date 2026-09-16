@@ -116,6 +116,8 @@
     justify-content: space-between;
     gap: 12px;
     flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .neo-global-menu {
@@ -123,6 +125,28 @@
     flex-direction: column;
     gap: 6px;
     padding: 2px 10px 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sa-nav-group {
+    margin: 14px 8px 6px;
+    padding: 0;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.sa-nav-group:first-child {
+    margin-top: 4px;
+}
+
+html.sidebar-collapsed .sa-nav-group {
+    display: none;
 }
 
 .neo-global-menu-item {
@@ -238,11 +262,13 @@ html.sidebar-collapsed .neo-layout {
 }
 
 html.sidebar-collapsed .neo-global-brand-full {
-    display: none;
+    display: inline;
+    font-size: 18px;
+    letter-spacing: -0.03em;
 }
 
 html.sidebar-collapsed .neo-global-brand-mini {
-    display: inline;
+    display: none;
 }
 
 html.sidebar-collapsed .neo-global-brand-row {
@@ -320,6 +346,32 @@ html.sidebar-collapsed .neo-sidebar-toggle {
     max-width: none !important;
     padding-left: 0;
     padding-right: 0;
+}
+
+/* POS pages: same side gutters as Super Admin (space on the right too) */
+body:not(.sa-dashboard) .neo-global-content > .container {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    padding-bottom: 1.5rem;
+    box-sizing: border-box;
+}
+
+body:not(.sa-dashboard) .neo-global-content > .pos-subscription-alert {
+    margin-left: 1.5rem !important;
+    margin-right: 1.5rem !important;
+}
+
+@media (max-width: 767.98px) {
+    body:not(.sa-dashboard) .neo-global-content > .container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-bottom: 1rem;
+    }
+
+    body:not(.sa-dashboard) .neo-global-content > .pos-subscription-alert {
+        margin-left: 0.75rem !important;
+        margin-right: 0.75rem !important;
+    }
 }
 
 .neo-global-content {

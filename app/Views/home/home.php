@@ -9,9 +9,9 @@
  */
 
 $summary_labels = [
-    'total'                  => 'Total',
-    'profit'                 => lang('Reports.profit'),
-    'expenses_total_amount'  => 'Total',
+    'total'                  => lang('Common.dashboard_total'),
+    'profit'                 => lang('Common.dashboard_profit'),
+    'expenses_total_amount'  => lang('Common.dashboard_total'),
 ];
 
 ?>
@@ -28,7 +28,7 @@ $summary_labels = [
     <div class="neo-main">
         <header class="neo-dash-header">
             <div>
-                <h2 class="neo-dash-header__title">Business Dashboard</h2>
+                <h2 class="neo-dash-header__title"><?= esc(lang('Common.dashboard')) ?></h2>
                 <p class="neo-dash-header__subtitle"><?= esc($period_label) ?></p>
             </div>
         </header>
@@ -36,8 +36,18 @@ $summary_labels = [
         <?php if (!empty($kpis)): ?>
             <div class="neo-kpi-grid">
                 <?php foreach ($kpis as $kpi): ?>
-                    <?php $kpi_tag = !empty($kpi['report_url']) ? 'a' : 'div'; ?>
-                    <<?= $kpi_tag ?> class="neo-kpi-card<?= !empty($kpi['report_url']) ? ' neo-kpi-card--link' : '' ?>"<?= !empty($kpi['report_url']) ? ' href="' . esc($kpi['report_url']) . '"' : '' ?>>
+                    <?php
+                        $kpi_tag = !empty($kpi['report_url']) ? 'a' : 'div';
+                        $accent = preg_replace('/[^a-z0-9_-]/i', '', (string) ($kpi['accent'] ?? ''));
+                        $kpi_class = 'neo-kpi-card';
+                        if (!empty($kpi['report_url'])) {
+                            $kpi_class .= ' neo-kpi-card--link';
+                        }
+                        if ($accent !== '') {
+                            $kpi_class .= ' neo-kpi-card--' . $accent;
+                        }
+                    ?>
+                    <<?= $kpi_tag ?> class="<?= esc($kpi_class) ?>"<?= !empty($kpi['report_url']) ? ' href="' . esc($kpi['report_url']) . '"' : '' ?>>
                         <span class="neo-kpi-label"><?= esc($kpi['label']) ?></span>
                         <strong class="neo-kpi-value"><?= esc($kpi['value']) ?></strong>
                         <?php if (!empty($kpi['hint'])): ?>
@@ -52,7 +62,7 @@ $summary_labels = [
         <?php endif; ?>
 
         <?php if (!empty($charts)): ?>
-            <h3 class="neo-section-title">Reports Overview</h3>
+            <h3 class="neo-section-title"><?= esc(lang('Common.dashboard_reports_overview')) ?></h3>
 
             <div class="neo-chart-grid">
                 <?php foreach ($charts as $chart): ?>
@@ -85,9 +95,9 @@ $summary_labels = [
                             <div class="neo-chart-card__heading">
                                 <div class="neo-chart-card__title-row">
                                     <h4 class="neo-chart-card__title"><?= esc($chart['title']) ?></h4>
-                                    <?php if ($chart_total > 0): ?>
+                                    <?php if ($chart_total > 0 || $is_payments): ?>
                                         <div class="neo-chart-card__total">
-                                            <span>Total</span>
+                                            <span><?= esc(lang('Common.dashboard_total')) ?></span>
                                             <strong><?= to_currency($chart_total) ?></strong>
                                         </div>
                                     <?php endif; ?>

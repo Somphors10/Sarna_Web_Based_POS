@@ -1,2 +1,2 @@
-First Name,Last Name,Gender,Consent,Email,Phone Number,Address 1,Address2,City,State,Zip,Country,Comments,Company,Account Number,Discount,Discount_Type,Taxable
-Bob,Smith,1,y,bsmith@nowhere.com,585-555-1111,123 Nowhere Street,Apt 4,Awesome,NY,11111,USA,Awesome guy,,,5,0,y
+Last Name,First Name,Gender,Consent,Email,Phone Number,House/Street,Village,Commune/Sangkat,District/Khan,Province/City,Country,Comments,Company,Account Number,Discount,Discount_Type,Taxable
+Sung,Hee,1,y,hee.sung@example.com,12 345 678,#12 St. 271,Phum 5,Boeung Keng Kang 1,Chamkarmon,Phnom Penh,Cambodia,Sample customer,,,5,0,y

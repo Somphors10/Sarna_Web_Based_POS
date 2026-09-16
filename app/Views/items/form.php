@@ -240,29 +240,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="form-group form-group-sm">
-                <?= form_label(lang('Items.tax_2'), 'tax_percent_2', ['class' => 'control-label col-xs-3']) ?>
-                <div class="col-xs-4">
-                    <?= form_input([
-                        'name'  => 'tax_names[]',
-                        'id'    => 'tax_name_2',
-                        'class' => 'form-control input-sm',
-                        'value' => $item_tax_info[1]['name'] ?? $config['default_tax_2_name']
-                    ]) ?>
-                </div>
-                <div class="col-xs-4">
-                    <div class="input-group input-group-sm">
-                        <?= form_input([
-                            'name'  => 'tax_percents[]',
-                            'class' => 'form-control input-sm',
-                            'id'    => 'tax_percent_name_2',
-                            'value' => isset($item_tax_info[1]['percent']) ? to_tax_decimals($item_tax_info[1]['percent']) : to_tax_decimals($default_tax_2_rate)
-                        ]) ?>
-                        <span class="input-group-addon input-sm"><b>%</b></span>
-                    </div>
-                </div>
-            </div>
         <?php } ?>
 
         <?php if ($use_destination_based_tax): ?>

@@ -32,8 +32,8 @@ class Cashups extends Secure_Controller
     {
         $data['table_headers'] = get_cashups_manage_table_headers();
 
-        // filters that will be loaded in the multiselect dropdown
-        $data['filters'] = ['is_deleted' => lang('Cashups.is_deleted')];
+        // Deleted rows use the Active / Deleted tabs on the manage screen.
+        $data['filters'] = [];
 
         echo view('cashups/manage', $data);
     }
@@ -253,6 +253,21 @@ class Cashups extends Secure_Controller
         } else {
             echo json_encode(['success' => false, 'message' => lang('Cashups.cannot_be_deleted'), 'ids' => $cash_ups_to_delete]);
         }
+    }
+
+    /**
+     * Restores hidden cash-ups.
+     */
+    public function postRestore(): void
+    {
+        $cash_ups_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($cash_ups_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->cashup->undelete_list($cash_ups_to_restore), count($cash_ups_to_restore), 'Cashups');
     }
 
     /**

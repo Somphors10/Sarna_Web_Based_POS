@@ -78,6 +78,17 @@ class Platform_admin extends Model
         ]);
     }
 
+    public function set_status(int $admin_id, string $status): bool
+    {
+        if ($admin_id <= 0 || !in_array($status, ['active', 'disabled'], true)) {
+            return false;
+        }
+
+        return $this->db->table('platform_admins')
+            ->where('admin_id', $admin_id)
+            ->update(['status' => $status]);
+    }
+
     public function get_all_admins(): array
     {
         return $this->db->table('platform_admins')
@@ -85,6 +96,30 @@ class Platform_admin extends Model
             ->orderBy('admin_id', 'asc')
             ->get()
             ->getResultArray();
+    }
+
+    public function check_password(string $username, string $password): bool
+    {
+        $row = $this->db->table('platform_admins')
+            ->where('username', $username)
+            ->where('status', 'active')
+            ->get(1)
+            ->getRow();
+
+        return $row !== null && password_verify($password, $row->password_hash);
+    }
+
+    public function change_password(int $admin_id, string $plain_password): bool
+    {
+        if ($admin_id <= 0 || $plain_password === '') {
+            return false;
+        }
+
+        return $this->db->table('platform_admins')
+            ->where('admin_id', $admin_id)
+            ->update([
+                'password_hash' => password_hash($plain_password, PASSWORD_DEFAULT),
+            ]);
     }
 
     public function logout(): void

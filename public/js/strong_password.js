@@ -5,7 +5,7 @@
         return;
     }
 
-    var message = window.WBPOS_STRONG_PASSWORD_MESSAGE || 'Password must be at least 8 characters and include both letters and numbers.';
+    var message = window.WBPOS_STRONG_PASSWORD_MESSAGE || 'Password must be at least 8 characters and include a letter, a number, and a symbol.';
 
     function isStrongPassword(value) {
         if (window.WBPOS && typeof window.WBPOS.isStrongPassword === 'function') {
@@ -21,6 +21,10 @@
         }
 
         if (!/\d/.test(value)) {
+            return false;
+        }
+
+        if (!/[^A-Za-z0-9]/.test(value)) {
             return false;
         }
 

@@ -13,15 +13,10 @@
     dialog_support.init("a.modal-dlg");
 </script>
 
-<section class="neo-module-page">
-    <div class="neo-report-head">
-        <div class="neo-report-breadcrumb" aria-label="breadcrumb">
-            <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
-            <span class="neo-report-breadcrumb-sep">/</span>
-            <span class="neo-report-breadcrumb-current"><?= lang('Reports.report_input') ?></span>
-        </div>
-        <h3 class="neo-module-title"><?= lang('Reports.report_input') ?></h3>
-    </div>
+<section class="neo-module-page neo-report-page">
+    <?= view('reports/partial/report_header', [
+        'title' => lang('Reports.report_input'),
+    ]) ?>
 
     <?php if (isset($error)): ?>
         <div class="alert alert-dismissible alert-danger"><?= esc($error) ?></div>

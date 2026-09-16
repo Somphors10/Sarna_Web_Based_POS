@@ -15,31 +15,13 @@ use App\Models\Employee;
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var init_select_controls = function() {
-            if ($.fn.selectpicker) {
-                $('.selectpicker').selectpicker();
-                $('#toolbar').addClass('items-selectpicker-ready');
-            } else {
-                $('#toolbar').removeClass('items-selectpicker-ready');
-            }
-        };
-
-        init_select_controls();
+        <?= view('partial/soft_delete_list_script', ['hide_when_deleted' => '#bulk_edit, #generate_barcodes']) ?>
 
         $('#generate_barcodes').click(function() {
             window.open(
                 'index.php/items/generateBarcodes/' + table_support.selected_ids().join(':'),
                 '_blank'
             );
-        });
-
-        // When filter selection changes, refresh table.
-        $('#filters').on('change', function() {
-            table_support.refresh();
-        });
-        // Bootstrap-select compatibility (if plugin is active elsewhere)
-        $('#filters').on('hidden.bs.select', function(e) {
-            table_support.refresh();
         });
 
         // Load the preset daterange picker
@@ -72,7 +54,7 @@ use App\Models\Employee;
                     "start_date": start_date,
                     "end_date": end_date,
                     "stock_location": $("#stock_location").val(),
-                    "filters": $("#filters").val()
+                    "filters": mergeDeletedTableFilters([])
                 });
             },
             onLoadSuccess: function(response) {
@@ -122,19 +104,23 @@ use App\Models\Employee;
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
-            <button class="btn btn-primary btn-sm modal-dlg" data-btn-new="<?= lang('Common.new') ?>" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
+            <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </button>
         </div>
     </header>
 
+    <?= view('partial/list_tabs', ['hide_when_deleted' => '#bulk_edit, #generate_barcodes']) ?>
+
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
             <button id="delete" class="btn btn-default btn-sm print_hide">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
+            </button>
+            <button id="restore" class="btn btn-default btn-sm print_hide hidden">
+                <span class="glyphicon glyphicon-repeat">&nbsp;</span><?= lang('Common.restore') ?>
             </button>
             <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
                 <span class="glyphicon glyphicon-edit">&nbsp;</span><?= lang('Items.bulk_edit') ?>
@@ -143,11 +129,6 @@ use App\Models\Employee;
                 <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
             </button>
             <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
-            <?= form_multiselect('filters[]', $filters, [''], [
-                'id'                        => 'filters',
-                'class'                     => 'form-control input-sm pos-items-filter-select',
-                'size'                      => 1
-            ]) ?>
             <?php
             if (count($stock_locations) > 1) {
                 echo form_dropdown(
@@ -155,8 +136,8 @@ use App\Models\Employee;
                     $stock_locations,
                     $stock_location,
                     [
-                        'id'         => 'stock_location',
-                        'class'      => 'form-control input-sm'
+                        'id'    => 'stock_location',
+                        'class' => 'form-control input-sm pos-native-select'
                     ]
                 );
             }

@@ -34,7 +34,6 @@ class Expenses extends Secure_Controller
             'only_check'  => lang('Expenses.check_filter'),
             'only_credit' => lang('Expenses.credit_filter'),
             'only_debit'  => lang('Expenses.debit_filter'),
-            'is_deleted'  => lang('Expenses.is_deleted')
         ];
 
         echo view('expenses/manage', $data);
@@ -193,5 +192,20 @@ class Expenses extends Secure_Controller
         } else {
             echo json_encode(['success' => false, 'message' => lang('Expenses.cannot_be_deleted'), 'ids' => $expenses_to_delete]);
         }
+    }
+
+    /**
+     * Restores hidden expenses.
+     */
+    public function postRestore(): void
+    {
+        $expenses_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($expenses_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->expense->undelete_list($expenses_to_restore), count($expenses_to_restore), 'Expenses');
     }
 }

@@ -1,0 +1,30 @@
+/*
+ * Pop-ups live on document.body (outside .neo-global-content), so they do not
+ * inherit the store UI font. Match the same stack as neo-home / tables.
+ */
+:root {
+    --pos-ui-font: system-ui, -apple-system, "Segoe UI", Roboto, "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.pos-modal-overlay,
+.pos-modal,
+.pos-modal-overlay .pos-modal,
+.pos-modal-overlay .pos-modal__head,
+.pos-modal-overlay .pos-modal__body,
+.pos-modal-overlay .pos-modal-btn,
+.modal,
+.modal-dialog,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+.modal-title,
+.bootstrap-dialog,
+.bootstrap-dialog .modal-content,
+.bootstrap-dialog .modal-header,
+.bootstrap-dialog .modal-body,
+.bootstrap-dialog .modal-footer,
+.bootstrap-dialog .bootstrap-dialog-title,
+.bootstrap-dialog .modal-footer .btn {
+    font-family: var(--pos-ui-font);
+}

@@ -1267,14 +1267,30 @@ class Sale_lib
         $pieces = explode(' ', $external_item_kit_id);
         $item_kit_id = (count($pieces) > 1) ? $pieces[1] : $external_item_kit_id;
         $result = true;
-        $applied_discount = $discount;
+        $applied_discount = (string) $discount;
+        $missing = [];
 
         foreach ($this->item_kit_items->get_info($item_kit_id) as $item_kit_item) {
-            $result &= $this->add_item($item_kit_item['item_id'], $item_location, $item_kit_item['quantity'], $discount, $discount_type, PRICE_MODE_KIT, $kit_price_option, $kit_print_option);
+            $component_id = (string) $item_kit_item['item_id'];
+            $quantity = (string) $item_kit_item['quantity'];
+            $item_info = $this->item->get_info_by_id_or_number($component_id, false);
+
+            if (empty($item_info)) {
+                $deleted_info = $this->item->get_info((int) $component_id);
+                $missing[] = !empty($deleted_info->name) ? $deleted_info->name : $component_id;
+                $result = false;
+                continue;
+            }
+
+            $result &= $this->add_item($component_id, $item_location, $quantity, $applied_discount, (int) $discount_type, PRICE_MODE_KIT, (int) $kit_price_option, (int) $kit_print_option);
 
             if ($stock_warning == null) {
-                $stock_warning = $this->out_of_stock($item_kit_item['item_id'], $item_location);
+                $stock_warning = $this->out_of_stock((int) $component_id, $item_location);
             }
+        }
+
+        if ($missing !== []) {
+            $stock_warning = sprintf(lang('Sales.unable_to_add_kit_items'), implode(', ', $missing));
         }
 
         return $result;

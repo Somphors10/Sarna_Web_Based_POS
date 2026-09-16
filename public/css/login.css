@@ -475,6 +475,12 @@ body.login-page::before {
     border: 1px solid #bfdbfe;
 }
 
+.login-alert--success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
 .g-recaptcha {
     margin-bottom: 1rem;
     display: flex;
@@ -510,9 +516,10 @@ body.login-page::before {
 }
 
 .login-main--form {
-    align-items: flex-start;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
 }
 
 .login-card__intro {
@@ -527,6 +534,11 @@ body.login-page::before {
     font-size: 0.78rem;
     line-height: 1.45;
     color: var(--pos-muted);
+}
+
+.login-field__hint--center {
+    margin: 0.75rem 0;
+    text-align: center;
 }
 
 .login-success-icon {

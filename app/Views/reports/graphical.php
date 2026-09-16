@@ -35,34 +35,28 @@ $chart_view_data = [
 
 <?= view('partial/header') ?>
 
-<link rel="stylesheet" href="css/reports.css?v=3">
+<link rel="stylesheet" href="css/reports.css?v=7">
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
 </script>
 
-<section class="neo-module-page">
-    <header class="neo-module-header">
-        <div>
-            <div class="neo-report-breadcrumb" aria-label="breadcrumb">
-                <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
-                <span class="neo-report-breadcrumb-sep">/</span>
-                <span class="neo-report-breadcrumb-current"><?= esc($title) ?></span>
-            </div>
-            <h3 class="neo-module-title"><?= esc($title) ?></h3>
-            <?php if (!empty($subtitle)): ?>
-                <p class="neo-module-subtitle"><?= esc($subtitle) ?></p>
-            <?php endif; ?>
-        </div>
-    </header>
+<section class="neo-module-page neo-report-page">
+    <?= view('reports/partial/report_header', [
+        'title'    => $title,
+        'subtitle' => $subtitle ?? '',
+    ]) ?>
 
     <?php if ($has_chart_data): ?>
         <?php
             $list_charts = ['reports/graphs/hbar', 'reports/graphs/payment_breakdown'];
+            $is_line_chart = ($chart_type === 'reports/graphs/line');
             $show_ct_box = empty($hide_chart_container) && !in_array($chart_type, $list_charts, true);
         ?>
         <?php if ($show_ct_box): ?>
-            <div class="ct-chart ct-golden-section neo-report-chart" id="chart1"></div>
+            <div class="neo-report-chart-panel<?= $is_line_chart ? ' neo-report-chart-panel--line' : '' ?>">
+                <div class="ct-chart<?= $is_line_chart ? '' : ' ct-golden-section' ?> neo-report-chart<?= $is_line_chart ? ' neo-report-chart--line' : '' ?>" id="chart1"></div>
+            </div>
         <?php endif; ?>
 
         <?= view($chart_type, $chart_view_data) ?>
@@ -73,20 +67,23 @@ $chart_view_data = [
         </div>
     <?php endif; ?>
 
-    <div id="toolbar" class="neo-table-toolbar">
-        <div class="form-inline" role="toolbar">
-            <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
-                <?= lang('Reports.toggle_cost_and_profit') ?>
-            </button>
-        </div>
-    </div>
-
-    <div id="chart_report_summary" class="neo-report-summary">
-        <?php foreach ($summary_data_1 as $name => $value) { ?>
-            <div class="summary_row">
-                <?= esc(lang("Reports.$name")) . ': ' . report_format_graphical_summary_value((string) $name, $value) ?>
+    <div class="neo-report-chart-footer">
+        <div id="toolbar" class="neo-table-toolbar">
+            <div class="form-inline" role="toolbar">
+                <button id="toggleCostProfitButton" class="btn btn-default btn-sm print_hide">
+                    <?= lang('Reports.toggle_cost_and_profit') ?>
+                </button>
             </div>
-        <?php } ?>
+        </div>
+
+        <div id="chart_report_summary" class="neo-report-summary neo-report-summary--cards">
+            <?php foreach ($summary_data_1 as $name => $value) { ?>
+                <div class="neo-report-summary__item summary_row" data-summary="<?= esc((string) $name, 'attr') ?>">
+                    <span class="neo-report-summary__label"><?= esc(lang("Reports.$name")) ?></span>
+                    <strong class="neo-report-summary__value"><?= esc(report_format_graphical_summary_value((string) $name, $value)) ?></strong>
+                </div>
+            <?php } ?>
+        </div>
     </div>
 </section>
 

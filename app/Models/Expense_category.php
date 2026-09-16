@@ -156,17 +156,29 @@ class Expense_category extends Model
     }
 
     /**
+     * Restores a list of hidden expense categories.
+     */
+    public function undelete_list(array $expense_category_ids): bool
+    {
+        $builder = $this->db->table('expense_categories');
+        $this->scopeTenantIfSupported($builder);
+        $builder->whereIn('expense_category_id', $expense_category_ids);
+
+        return $builder->update(['deleted' => 0]);
+    }
+
+    /**
      * Gets rows
      */
-    public function get_found_rows(string $search): int
+    public function get_found_rows(string $search, int $deleted = 0): int
     {
-        return $this->search($search, 0, 0, 'category_name', 'asc', true);
+        return $this->search($search, 0, 0, 'category_name', 'asc', true, $deleted);
     }
 
     /**
      * Perform a search on expense_category
      */
-    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'category_name', ?string $order = 'asc', ?bool $count_only = false)
+    public function search(string $search, ?int $rows = 0, ?int $limit_from = 0, ?string $sort = 'category_name', ?string $order = 'asc', ?bool $count_only = false, int $deleted = 0)
     {
         // Set default values
         if ($rows == null) $rows = 0;
@@ -189,7 +201,7 @@ class Expense_category extends Model
                     SELECT COUNT(*)
                     FROM ' . $this->db->prefixTable('expense_categories') . ' AS ec2
                     WHERE ec2.tenant_id = expense_categories.tenant_id
-                      AND ec2.deleted = 0
+                      AND ec2.deleted = ' . (int) $deleted . '
                       AND ec2.expense_category_id <= expense_categories.expense_category_id
                 ) AS tenant_expense_category_seq', false);
             }
@@ -199,7 +211,7 @@ class Expense_category extends Model
         $builder->like('category_name', $search);
         $builder->orLike('category_description', $search);
         $builder->groupEnd();
-        $builder->where('deleted', 0);
+        $builder->where('deleted', $deleted);
 
         // get_found_rows case
         if ($count_only) {

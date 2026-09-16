@@ -38,8 +38,8 @@ class Giftcards extends Secure_Controller
         $sort   = $this->sanitizeSortColumn(giftcard_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'giftcard_id');
         $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $giftcards = $this->giftcard->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->giftcard->get_found_rows($search);
+        $giftcards = $this->giftcard->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+        $total_rows = $this->giftcard->get_found_rows($search, list_deleted_flag());
 
         $data_rows = [];
         foreach ($giftcards->getResult() as $giftcard) {
@@ -58,7 +58,7 @@ class Giftcards extends Secure_Controller
     public function getSuggest(): void
     {
         $search = $this->request->getGet('term');
-        $suggestions = $this->giftcard->get_search_suggestions($search, true);
+        $suggestions = $this->giftcard->get_search_suggestions($search, 25);
 
         echo json_encode($suggestions);
     }
@@ -196,5 +196,20 @@ class Giftcards extends Secure_Controller
         } else {
             echo json_encode(['success' => false, 'message' => lang('Giftcards.cannot_be_deleted')]);
         }
+    }
+
+    /**
+     * Restores soft-deleted gift cards.
+     */
+    public function postRestore(): void
+    {
+        $giftcards_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($giftcards_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->giftcard->undelete_list($giftcards_to_restore), count($giftcards_to_restore), 'Giftcards');
     }
 }

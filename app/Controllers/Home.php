@@ -8,6 +8,7 @@ use App\Models\Reports\Summary_sales;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\OSPOS;
 use Config\Services;
+use Throwable;
 
 class Home extends Secure_Controller
 {
@@ -54,6 +55,7 @@ class Home extends Secure_Controller
         $kpis = [];
         $charts = [];
 
+        try {
         if ($this->employee->has_grant('reports_sales', $person_id)) {
             $summary_sales = model(Summary_sales::class);
             $period_summary = $summary_sales->getSummaryData($sale_inputs);
@@ -61,22 +63,25 @@ class Home extends Secure_Controller
             $sales_rows = $summary_sales->getData($sale_inputs);
 
             $kpis[] = [
-                'label'      => lang('Reports.revenue'),
+                'label'      => lang('Common.dashboard_revenue'),
                 'value'      => to_currency($period_summary['total'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
+                'accent'     => 'revenue',
             ];
             $kpis[] = [
-                'label'      => lang('Reports.profit'),
+                'label'      => lang('Common.dashboard_profit'),
                 'value'      => to_currency($period_summary['profit'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_sales/$start_date/$end_date/complete/all"),
+                'accent'     => 'profit',
             ];
             $kpis[] = [
                 'label'      => lang('Common.dashboard_today_sales'),
                 'value'      => to_currency($today_summary['total'] ?? 0),
                 'hint'       => to_date(strtotime($today)),
                 'report_url' => site_url("reports/detailed_sales/$today/$today/complete/all"),
+                'accent'     => 'today',
             ];
 
             $sales_labels = [];
@@ -91,8 +96,8 @@ class Home extends Secure_Controller
             }
 
             $charts[] = [
-                'title'         => 'Sales Trend',
-                'subtitle'      => 'Daily revenue over the last 30 days',
+                'title'         => lang('Common.dashboard_sales_trend'),
+                'subtitle'      => lang('Common.dashboard_sales_trend_hint'),
                 'chart_id'      => 'home_sales_chart',
                 'chart_var'     => 'homeSalesChart',
                 'chart_type'    => 'home/charts/area',
@@ -110,33 +115,50 @@ class Home extends Secure_Controller
             $payment_rows = $summary_payments->getData($sale_inputs);
             $payment_summary = $summary_payments->getSummaryData($sale_inputs);
 
-            $payment_labels = [];
-            $payment_series = [];
+            $amounts_by_type = [];
             foreach ($payment_rows as $row) {
-                if ($row['trans_group'] == lang('Reports.trans_payments') && !empty($row['trans_amount'])) {
-                    $payment_labels[] = $row['trans_type'];
-                    $payment_series[] = [
-                        'meta'  => $row['trans_type'] . ' ' . round($row['trans_amount'] / max($payment_summary['total'], 1) * 100, 2) . '%',
-                        'value' => $row['trans_amount'],
-                    ];
+                if ($row['trans_group'] == lang('Reports.trans_payments')) {
+                    $type = canonicalize_payment_type((string) ($row['trans_type'] ?? ''));
+                    if ($type === '') {
+                        continue;
+                    }
+                    $amounts_by_type[$type] = ($amounts_by_type[$type] ?? 0.0) + (float) ($row['trans_amount'] ?? 0);
                 }
             }
 
-            if (!empty($payment_series)) {
-                $charts[] = [
-                    'title'         => 'Payment Methods',
-                    'subtitle'      => 'How customers paid during this period',
-                    'chart_id'      => 'home_payments_chart',
-                    'chart_var'     => 'homePaymentsChart',
-                    'chart_type'    => 'home/charts/hbar',
-                    'labels_1'      => $payment_labels,
-                    'series_data_1' => $payment_series,
-                    'show_currency' => true,
-                    'has_data'      => true,
-                    'summary'       => $payment_summary,
-                    'summary_keys'  => ['total'],
+            $payment_types = array_values(get_payment_options());
+            foreach (array_keys($amounts_by_type) as $type) {
+                if (!in_array($type, $payment_types, true)) {
+                    $payment_types[] = $type;
+                }
+            }
+
+            $payment_total = (float) ($payment_summary['total'] ?? 0);
+            $payment_labels = [];
+            $payment_series = [];
+            foreach ($payment_types as $type) {
+                $amount = (float) ($amounts_by_type[$type] ?? 0);
+                $pct = $payment_total > 0 ? round($amount / $payment_total * 100, 2) : 0.0;
+                $payment_labels[] = $type;
+                $payment_series[] = [
+                    'meta'  => $type . ' ' . $pct . '%',
+                    'value' => $amount,
                 ];
             }
+
+            $charts[] = [
+                'title'         => lang('Common.dashboard_payment_methods'),
+                'subtitle'      => lang('Common.dashboard_payment_methods_hint'),
+                'chart_id'      => 'home_payments_chart',
+                'chart_var'     => 'homePaymentsChart',
+                'chart_type'    => 'home/charts/hbar',
+                'labels_1'      => $payment_labels,
+                'series_data_1' => $payment_series,
+                'show_currency' => true,
+                'has_data'      => true,
+                'summary'       => $payment_summary,
+                'summary_keys'  => ['total'],
+            ];
         }
 
         if ($this->employee->has_grant('reports_expenses_categories', $person_id)) {
@@ -154,17 +176,37 @@ class Home extends Secure_Controller
                 'value'      => to_currency($expense_summary['expenses_total_amount'] ?? 0),
                 'hint'       => lang('Common.dashboard_last_30_days'),
                 'report_url' => site_url("reports/summary_expenses_categories/$start_date/$end_date/complete"),
+                'accent'     => 'expenses',
             ];
+        }
+        } catch (\Throwable $e) {
+            log_message('error', 'Home dashboard failed: {msg}', ['msg' => $e->getMessage()]);
+        }
+
+        $period_label = '';
+        try {
+            $period_label = lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]);
+        } catch (\Throwable $e) {
+            $period_label = $start_date . ' – ' . $end_date;
         }
 
         $data = [
             'config'       => $config,
             'kpis'         => $kpis,
             'charts'       => $charts,
-            'period_label' => lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]),
+            'period_label' => $period_label,
         ];
 
-        echo view('home/home', $data);
+        try {
+            echo view('home/home', $data);
+        } catch (Throwable $e) {
+            $dump = $e->getMessage() . PHP_EOL . $e->getFile() . ':' . $e->getLine() . PHP_EOL . PHP_EOL . $e->getTraceAsString();
+            @file_put_contents(FCPATH . 'last-crash.txt', $dump);
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $dump;
+            exit;
+        }
     }
 
     /**
@@ -175,8 +217,9 @@ class Home extends Secure_Controller
      */
     public function getLogout(): RedirectResponse
     {
+        $was_super_admin = function_exists('is_platform_super_admin') && is_platform_super_admin();
         $this->employee->logout();
-        return redirect()->to('login');
+        return redirect()->to($was_super_admin ? 'super-admin/login' : 'login');
     }
 
     /**
@@ -215,9 +258,15 @@ class Home extends Secure_Controller
             return redirect()->back();
         }
 
+        $this->session->set('ui_language_code', $language_code);
         Services::language()->setLocale($language_code);
 
-        return redirect()->to('home');
+        $redirect = redirect()->back();
+        if ($redirect->getHeaderLine('Location') === '') {
+            return redirect()->to('home');
+        }
+
+        return $redirect;
     }
 
     /**

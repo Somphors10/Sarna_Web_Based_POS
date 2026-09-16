@@ -82,7 +82,6 @@ class Items extends Secure_Controller
             'is_serialized'  => lang('Items.serialized_items'),
             'no_description' => lang('Items.no_description_items'),
             'search_custom'  => lang('Items.search_attributes'),
-            'is_deleted'     => lang('Items.is_deleted'),
             'temporary'      => lang('Items.temp')
         ];
 
@@ -974,6 +973,23 @@ class Items extends Secure_Controller
             echo json_encode(['success' => true, 'message' => $message]);
         } else {
             echo json_encode(['success' => false, 'message' => lang('Items.cannot_be_deleted')]);
+        }
+    }
+
+    public function postRestore(): void
+    {
+        $items_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($items_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Items.cannot_be_restored')]);
+            return;
+        }
+
+        if ($this->item->undelete_list($items_to_restore)) {
+            $message = lang('Items.successful_restored') . ' ' . count($items_to_restore) . ' ' . lang('Items.one_or_multiple');
+            echo json_encode(['success' => true, 'message' => $message]);
+        } else {
+            echo json_encode(['success' => false, 'message' => lang('Items.cannot_be_restored')]);
         }
     }
 

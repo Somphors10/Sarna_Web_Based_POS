@@ -1,30 +1,103 @@
 <?php
 
-use App\Models\Employee;
 use Config\OSPOS;
+
+function locale_intl_available(): bool
+{
+    return class_exists('NumberFormatter');
+}
+
+function locale_fmt_decimal(): int
+{
+    return locale_intl_available() ? NumberFormatter::DECIMAL : 1;
+}
+
+function locale_fmt_currency(): int
+{
+    return locale_intl_available() ? NumberFormatter::CURRENCY : 2;
+}
+
+/**
+ * POS UI languages supported in the profile menu.
+ *
+ * @return array<string, string>
+ */
+function pos_ui_language_codes(): array
+{
+    return [
+        'en' => 'english',
+        'km' => 'centralkhmer',
+    ];
+}
+
+/**
+ * Normalize a language code to a supported POS UI language.
+ */
+function pos_normalize_language_code(?string $language_code, ?string $fallback = null): string
+{
+    $allowed = array_keys(pos_ui_language_codes());
+    $language_code = strtolower(trim((string)$language_code));
+
+    if (in_array($language_code, $allowed, true)) {
+        return $language_code;
+    }
+
+    if ($fallback !== null) {
+        $fallback = strtolower(trim($fallback));
+        if (in_array($fallback, $allowed, true)) {
+            return $fallback;
+        }
+    }
+
+    return DEFAULT_LANGUAGE_CODE;
+}
+
+/**
+ * Resolve the active POS UI language for the current request.
+ */
+function resolve_ui_language_code(): string
+{
+    $session = session();
+    $session_code = $session->get('ui_language_code');
+    if (is_string($session_code) && $session_code !== '') {
+        return pos_normalize_language_code($session_code);
+    }
+
+    $person_id = (int)($session->get('person_id') ?? 0);
+    if ($person_id > 0) {
+        $employee = model(\App\Models\Employee::class);
+        $info = $employee->get_info($person_id);
+        $employee_code = pos_normalize_language_code($info->language_code ?? '', null);
+        if (in_array($employee_code, array_keys(pos_ui_language_codes()), true)) {
+            $session->set('ui_language_code', $employee_code);
+
+            return $employee_code;
+        }
+    }
+
+    $config = config(OSPOS::class)->settings;
+    $shop_code = pos_normalize_language_code($config['language_code'] ?? '', DEFAULT_LANGUAGE_CODE);
+    $session->set('ui_language_code', $shop_code);
+
+    return $shop_code;
+}
 
 /**
  * Returns the currently configured language code.
  *
- * @param bool $load_system_language When true, the system language is returned.
+ * @param bool $load_system_language When true, the shop default language is returned.
  * @return string Returns the default language code if a language code is not configured.
  */
 function current_language_code(bool $load_system_language = false): string
 {
-    $employee = model(Employee::class);
-    $config = config(OSPOS::class)->settings;
+    if ($load_system_language) {
+        $config = config(OSPOS::class)->settings;
+        $language_code = $config['language_code'] ?? '';
 
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
-
-        if (property_exists($employee_info, 'language_code') && !empty($employee_info->language_code)) {
-            return $employee_info->language_code;
-        }
+        return empty($language_code) ? DEFAULT_LANGUAGE_CODE : $language_code;
     }
 
-    $language_code = $config['language_code'] ?? '';
-
-    return empty($language_code) ? DEFAULT_LANGUAGE_CODE : $language_code;
+    return resolve_ui_language_code();
 }
 
 /**
@@ -33,18 +106,7 @@ function current_language_code(bool $load_system_language = false): string
  */
 function current_language(bool $load_system_language = false): string
 {
-    $employee = model(Employee::class);
     $config = config(OSPOS::class)->settings;
-
-    // Returns the language of the employee if set or system language if not
-    if ($employee->is_logged_in() && !$load_system_language) {
-        $employee_info = $employee->get_logged_in_employee_info();
-
-        if (property_exists($employee_info, 'language') && !empty($employee_info->language)) {
-            return $employee_info->language;
-        }
-    }
-
     $language = $config['language'] ?? '';
 
     return empty($language) ? DEFAULT_LANGUAGE : $language;
@@ -67,7 +129,7 @@ function get_languages(): array
         'de-CH:german'                => 'German (Switzerland)',
         'de-DE:german'                => 'German (Germany)',
         'el:greek'                    => 'Greek',
-        'en:english'                  => 'English (United States)',
+        'en:english'                  => 'English',
         'en-GB:english'               => 'English (United Kingdom)',
         'es-ES:spanish'               => 'Spanish (Spain)',
         'es-MX:spanish'               => 'Spanish (Mexico)',
@@ -180,6 +242,7 @@ function get_timezones(): array
         'Asia/Novosibirsk'               => '(GMT+06:00) Novosibirsk',
         'Asia/Rangoon'                   => '(GMT+06:30) Yangon (Rangoon)',
         'Asia/Bangkok'                   => '(GMT+07:00) Bangkok, Hanoi, Jakarta',
+        'Asia/Phnom_Penh'                => '(GMT+07:00) Phnom Penh',
         'Asia/Krasnoyarsk'               => '(GMT+07:00) Krasnoyarsk',
         'Asia/Hong_Kong'                 => '(GMT+08:00) Beijing, Chongqing, Hong Kong, Urumqi',
         'Asia/Irkutsk'                   => '(GMT+08:00) Irkutsk, Ulaan Bataar',
@@ -278,12 +341,89 @@ function get_payment_options(): array
 }
 
 /**
+ * Maps a stored payment_type label (any language) onto the current-language label.
+ * Gift-card values with a number suffix ("Gift Card:12") collapse to the giftcard label.
+ */
+function canonicalize_payment_type(string $stored_type): string
+{
+    $stored_type = trim($stored_type);
+    if ($stored_type === '') {
+        return $stored_type;
+    }
+
+    static $alias_map = null;
+    if ($alias_map === null) {
+        $keys = [
+            'cash',
+            'debit',
+            'credit',
+            'due',
+            'check',
+            'giftcard',
+            'rewards',
+            'upi',
+            'cash_adjustment',
+            'cash_deposit',
+        ];
+
+        // Known historical labels (en + km) plus whatever the current locale uses.
+        $known = [
+            'cash'             => ['Cash', 'ប្រាក់'],
+            'debit'            => ['Debit Card', 'Debit', 'កាត ធនាគារ'],
+            'credit'           => ['Credit Card', 'Credit', 'បណ្ណ័មូលបត្របំណុល'],
+            'due'              => ['Due', 'ដល់ពេល'],
+            'check'            => ['Check', 'Cheque', 'ឆែក'],
+            'giftcard'         => ['Gift Card', 'Giftcard', 'កាតអំណោយ'],
+            'rewards'          => ['Reward Points', 'Rewards', 'ពិន្ទុរង្វាន់'],
+            'upi'              => ['UPI'],
+            'cash_adjustment'  => ['Cash Adjustment'],
+            'cash_deposit'     => ['Cash Deposit', 'ប្រាក់កក់'],
+        ];
+
+        $alias_map = [];
+        foreach ($keys as $key) {
+            $current = lang('Sales.' . $key);
+            if ($current === '' || $current === 'Sales.' . $key) {
+                continue;
+            }
+
+            $variants = $known[$key] ?? [];
+            $variants[] = $current;
+            foreach ($variants as $variant) {
+                $variant = trim((string) $variant);
+                if ($variant !== '') {
+                    $alias_map[mb_strtolower($variant)] = $current;
+                }
+            }
+        }
+    }
+
+    $lower = mb_strtolower($stored_type);
+    if (isset($alias_map[$lower])) {
+        return $alias_map[$lower];
+    }
+
+    // Gift card payments are stored as "Label:number"
+    foreach ($alias_map as $alias => $canonical) {
+        if (str_starts_with($lower, $alias . ':')) {
+            return $canonical;
+        }
+    }
+
+    return $stored_type;
+}
+
+/**
  * Determines if the current currency symbol is on the right side of the amount
  *
  * @return bool true is returned when the symbol should be displayed to the right of the amount. False otherwise.
  */
 function is_right_side_currency_symbol(): bool
 {
+    if (!locale_intl_available()) {
+        return false;
+    }
+
     $config = config(OSPOS::class)->settings;
     $fmt = new NumberFormatter($config['number_locale'], NumberFormatter::CURRENCY);
     $fmt->setSymbol(NumberFormatter::CURRENCY_SYMBOL, $config['currency_symbol']);
@@ -330,6 +470,44 @@ function tax_decimals(): int
 }
 
 /**
+ * Display a person name in Cambodia order: Last Name then First Name.
+ */
+function format_person_name(?string $first_name, ?string $last_name, bool $short = false): string
+{
+    $family = trim((string) $last_name);
+    $given = trim((string) $first_name);
+
+    if ($short) {
+        $initial = $given !== '' ? mb_substr($given, 0, 1) : '';
+        return trim($family . ($initial !== '' ? ' ' . $initial : ''));
+    }
+
+    return trim($family . ' ' . $given);
+}
+
+/**
+ * Format Cambodia-style location from person address fields
+ * (zip=Province, state=District, city=Commune, address_2=Village).
+ */
+function format_person_location(
+    ?string $address_2 = '',
+    ?string $city = '',
+    ?string $state = '',
+    ?string $zip = '',
+    ?string $country = ''
+): string {
+    $parts = array_filter([
+        trim((string) $address_2),
+        trim((string) $city),
+        trim((string) $state),
+        trim((string) $zip),
+        trim((string) $country),
+    ], static fn(string $part): bool => $part !== '');
+
+    return implode(', ', $parts);
+}
+
+/**
  * @param int $date
  * @return string
  */
@@ -355,7 +533,7 @@ function to_datetime(int $datetime = DEFAULT_DATETIME): string
  */
 function to_currency(?string $number): string
 {
-    return to_decimals($number, 'currency_decimals', NumberFormatter::CURRENCY);
+    return to_decimals($number, 'currency_decimals', locale_fmt_currency());
 }
 
 /**
@@ -376,10 +554,26 @@ function to_currency_tax(?string $number): string
     $config = config(OSPOS::class)->settings;
 
     if ($config['tax_included']) {    // TODO: ternary notation
-        return to_decimals($number, 'tax_decimals', NumberFormatter::CURRENCY);
+        return to_decimals($number, 'tax_decimals', locale_fmt_currency());
     } else {
-        return to_decimals($number, 'currency_decimals', NumberFormatter::CURRENCY);
+        return to_decimals($number, 'currency_decimals', locale_fmt_currency());
     }
+}
+
+/**
+ * Cambodia receipts must also show the total in Khmer Riel (NBC daily rate).
+ */
+function to_khr_currency($amount): string
+{
+    $config = config(OSPOS::class)->settings;
+    $rate = (float)($config['khr_exchange_rate'] ?? 4100);
+    if ($rate <= 0) {
+        $rate = 4100;
+    }
+
+    $riel = (int)round((float)$amount * $rate);
+
+    return number_format($riel, 0, '.', ',') . ' ៛';
 }
 
 /**
@@ -418,16 +612,28 @@ function to_quantity_decimals(?string $number): string
  * @param int $type
  * @return string
  */
-function to_decimals(?string $number, ?string $decimals = null, int $type = NumberFormatter::DECIMAL): string
+function to_decimals(?string $number, ?string $decimals = null, ?int $type = null): string
 {
     if (!isset($number)) {
         return '';
     }
 
     $config = config(OSPOS::class)->settings;
+    $type = $type ?? locale_fmt_decimal();
+    $precision = empty($decimals) ? (defined('DEFAULT_PRECISION') ? DEFAULT_PRECISION : 2) : (int) ($config[$decimals] ?? 2);
+
+    if (!locale_intl_available()) {
+        $formatted = number_format((float) $number, $precision, '.', empty($config['thousands_separator']) ? '' : ',');
+        if ($type === locale_fmt_currency()) {
+            return ($config['currency_symbol'] ?? '$') . $formatted;
+        }
+
+        return $formatted;
+    }
+
     $fmt = new NumberFormatter($config['number_locale'], $type);
-    $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
-    $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, empty($decimals) ? DEFAULT_PRECISION : $config[$decimals]);
+    $fmt->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, $precision);
+    $fmt->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $precision);
 
     if (empty($config['thousands_separator'])) {
         $fmt->setTextAttribute(NumberFormatter::GROUPING_SEPARATOR_SYMBOL, '');
@@ -468,6 +674,19 @@ function parse_decimals(string $number, ?int $decimals = null): mixed
 
 
     $config = config(OSPOS::class)->settings;
+
+    if (!locale_intl_available()) {
+        $normalized = str_replace([',', ' '], '', $number);
+        if (!is_numeric($normalized)) {
+            return false;
+        }
+        $locale_safe_number = (float) $normalized;
+        if ($locale_safe_number > MAX_PRECISION || $locale_safe_number > 1.e14) {
+            return false;
+        }
+
+        return $locale_safe_number;
+    }
 
     $fmt = new NumberFormatter($config['number_locale'], NumberFormatter::DECIMAL);
 

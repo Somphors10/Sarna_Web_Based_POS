@@ -18,7 +18,10 @@
                 <div class="form-group form-group-sm">
                     <label for="phone" class="col-xs-3 control-label"><?= lang('Messages.phone') ?></label>
                     <div class="col-xs-9">
-                        <input class="form-control input-sm" type="text" name="phone" placeholder="<?= lang('Messages.phone_placeholder') ?>">
+                        <div class="input-group">
+                            <span class="input-group-addon input-sm">+855</span>
+                            <input class="form-control input-sm" type="text" name="phone" placeholder="<?= lang('Messages.phone_placeholder') ?>">
+                        </div>
                         <span class="help-block" style="margin-top: 6px;"><?= lang('Messages.multiple_phones') ?></span>
                     </div>
                 </div>

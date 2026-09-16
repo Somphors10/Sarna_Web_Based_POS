@@ -10,12 +10,18 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        <?= view('partial/soft_delete_list_script') ?>
         <?= view('partial/bootstrap_tables_locale') ?>
         table_support.init({
             resource: '<?= esc($controller_name) ?>',
             headers: <?= $table_headers ?>,
             pageSize: <?= table_page_size($config['lines_per_page']) ?>,
-            uniqueId: 'giftcard_id_key'
+            uniqueId: 'giftcard_id_key',
+            queryParams: function() {
+                return $.extend(arguments[0], {
+                    "filters": mergeDeletedTableFilters([])
+                });
+            }
         });
     });
 </script>
@@ -24,7 +30,6 @@
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions">
             <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
@@ -33,10 +38,15 @@
         </div>
     </header>
 
+    <?= view('partial/list_tabs') ?>
+
     <div id="toolbar" class="neo-table-toolbar">
         <div class="btn-toolbar">
             <button id="delete" class="btn btn-default btn-sm">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
+            </button>
+            <button id="restore" class="btn btn-default btn-sm hidden">
+                <span class="glyphicon glyphicon-repeat">&nbsp;</span><?= lang('Common.restore') ?>
             </button>
         </div>
     </div>

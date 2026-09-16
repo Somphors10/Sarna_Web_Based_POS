@@ -51,8 +51,8 @@ class Suppliers extends Persons
         $sort = $this->sanitizeSortColumn(supplier_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'people.person_id');
         $order = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $suppliers = $this->supplier->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->supplier->get_found_rows($search);
+        $suppliers = $this->supplier->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+        $total_rows = $this->supplier->get_found_rows($search, list_deleted_flag());
 
         $data_rows = [];
 
@@ -71,7 +71,7 @@ class Suppliers extends Persons
     public function getSuggest(): void
     {
         $search = $this->request->getGet('term');
-        $suggestions = $this->supplier->get_search_suggestions($search, true);
+        $suggestions = $this->supplier->get_search_suggestions($search, 25, true);
 
         echo json_encode($suggestions);
     }
@@ -82,7 +82,7 @@ class Suppliers extends Persons
     public function suggest_search(): void
     {
         $search = $this->request->getPost('term');
-        $suggestions = $this->supplier->get_search_suggestions($search, false);
+        $suggestions = $this->supplier->get_search_suggestions($search, 25, false);
 
         echo json_encode($suggestions);
     }
@@ -191,5 +191,20 @@ class Suppliers extends Persons
         } else {
             echo json_encode(['success' => false, 'message' => lang('Suppliers.cannot_be_deleted')]);
         }
+    }
+
+    /**
+     * Restores hidden suppliers.
+     */
+    public function postRestore(): void
+    {
+        $suppliers_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($suppliers_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->supplier->undelete_list($suppliers_to_restore), count($suppliers_to_restore), 'Suppliers');
     }
 }

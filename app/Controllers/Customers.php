@@ -89,8 +89,8 @@ class Customers extends Persons
         $sort = $this->sanitizeSortColumn(customer_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'people.person_id');
         $order = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $customers = $this->customer->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->customer->get_found_rows($search);
+        $customers = $this->customer->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+        $total_rows = $this->customer->get_found_rows($search, list_deleted_flag());
 
         $data_rows = [];
 
@@ -156,7 +156,7 @@ class Customers extends Persons
         }
 
         $employee_info = $this->employee->get_info($info->employee_id);
-        $data['employee'] = $employee_info->first_name . ' ' . $employee_info->last_name;
+        $data['employee'] = format_person_name($employee_info->first_name, $employee_info->last_name);
 
         $tax_code_info = $this->tax_code->get_info($info->sales_tax_code_id);
 
@@ -247,19 +247,26 @@ class Customers extends Persons
         $first_name = $this->nameize($first_name);
         $last_name = $this->nameize($last_name);
 
+        $gender = $this->request->getPost('gender', FILTER_SANITIZE_NUMBER_INT);
+        $discount_raw = $this->request->getPost('discount');
+        $discount = ($discount_raw === null || $discount_raw === '') ? 0.00 : parse_decimals($discount_raw);
+        if ($discount === false || $discount === null || $discount === '') {
+            $discount = 0.00;
+        }
+
         $person_data = [
             'first_name'   => $first_name,
             'last_name'    => $last_name,
-            'gender'       => $this->request->getPost('gender', FILTER_SANITIZE_NUMBER_INT),
+            'gender'       => ($gender === '' || $gender === null || $gender === false) ? null : (int)$gender,
             'email'        => $email,
-            'phone_number' => $this->request->getPost('phone_number'),
-            'address_1'    => $this->request->getPost('address_1'),
-            'address_2'    => $this->request->getPost('address_2'),
-            'city'         => $this->request->getPost('city'),
-            'state'        => $this->request->getPost('state'),
-            'zip'          => $this->request->getPost('zip'),
-            'country'      => $this->request->getPost('country'),
-            'comments'     => $this->request->getPost('comments')
+            'phone_number' => $this->request->getPost('phone_number') ?? '',
+            'address_1'    => $this->request->getPost('address_1') ?? '',
+            'address_2'    => $this->request->getPost('address_2') ?? '',
+            'city'         => $this->request->getPost('city') ?? '',
+            'state'        => $this->request->getPost('state') ?? '',
+            'zip'          => $this->request->getPost('zip') ?? '',
+            'country'      => $this->request->getPost('country') ?? '',
+            'comments'     => $this->request->getPost('comments') ?? ''
         ];
 
         $date_posted = (string)$this->request->getPost('date');
@@ -270,9 +277,8 @@ class Customers extends Persons
         $customer_data = [
             'consent'           => $this->request->getPost('consent') != null,
             'account_number'    => $this->request->getPost('account_number') == '' ? null : $this->request->getPost('account_number'),
-            'tax_id'            => $this->request->getPost('tax_id'),
             'company_name'      => $this->request->getPost('company_name') == '' ? null : $this->request->getPost('company_name'),
-            'discount'          => $this->request->getPost('discount') == '' ? 0.00 : parse_decimals($this->request->getPost('discount')),
+            'discount'          => $discount,
             'discount_type'     => $this->request->getPost('discount_type') == null ? PERCENT : $this->request->getPost('discount_type', FILTER_SANITIZE_NUMBER_INT),
             'package_id'        => $this->request->getPost('package_id') == '' ? null : $this->request->getPost('package_id'),
             'taxable'           => $this->request->getPost('taxable') != null,
@@ -297,20 +303,20 @@ class Customers extends Persons
             if ($customer_id == NEW_ENTRY) {
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Customers.successful_adding') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Customers.successful_adding') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $customer_data['person_id']
                 ]);
             } else { // Existing customer
                 echo json_encode([
                     'success' => true,
-                    'message' => lang('Customers.successful_updating') . ' ' . $first_name . ' ' . $last_name,
+                    'message' => lang('Customers.successful_updating') . ' ' . format_person_name($first_name, $last_name),
                     'id'      => $customer_id
                 ]);
             }
         } else { // Failure
             echo json_encode([
                 'success' => false,
-                'message' => lang('Customers.error_adding_updating') . ' ' . $first_name . ' ' . $last_name,
+                'message' => lang('Customers.error_adding_updating') . ' ' . format_person_name($first_name, $last_name),
                 'id'      => NEW_ENTRY
             ]);
         }
@@ -381,6 +387,21 @@ class Customers extends Persons
     }
 
     /**
+     * Restores hidden customers.
+     */
+    public function postRestore(): void
+    {
+        $customers_to_restore = normalize_post_ids($this->request->getPost('ids'));
+
+        if (empty($customers_to_restore)) {
+            echo json_encode(['success' => false, 'message' => lang('Common.cannot_be_restored')]);
+            return;
+        }
+
+        json_soft_restore_result($this->customer->undelete_list($customers_to_restore), count($customers_to_restore), 'Customers');
+    }
+
+    /**
      * Customers import from csv spreadsheet
      *
      * @return DownloadResponse The template for Customer CSV imports is returned and download forced.
@@ -428,8 +449,8 @@ class Customers extends Persons
                     if (sizeof($data) >= 16 && $consent) {
                         $email = strtolower($data[4]);
                         $person_data = [
-                            'first_name'   => $data[0],
-                            'last_name'    => $data[1],
+                            'last_name'    => $data[0],
+                            'first_name'   => $data[1],
                             'gender'       => $data[2],
                             'email'        => $email,
                             'phone_number' => $data[5],
@@ -438,7 +459,7 @@ class Customers extends Persons
                             'city'         => $data[8],
                             'state'        => $data[9],
                             'zip'          => $data[10],
-                            'country'      => $data[11],
+                            'country'      => $data[11] !== '' ? $data[11] : 'Cambodia',
                             'comments'     => $data[12]
                         ];
 

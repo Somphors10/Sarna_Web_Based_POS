@@ -86,10 +86,17 @@ html[lang="km"] .control-label,
 html.lang-km .control-label,
 html[lang="km"] .help-block,
 html.lang-km .help-block,
+html[lang="km"] .pos-modal-overlay,
+html.lang-km .pos-modal-overlay,
 html[lang="km"] .pos-modal,
 html.lang-km .pos-modal,
 html[lang="km"] .pos-modal__body,
-html.lang-km .pos-modal__body {
+html.lang-km .pos-modal__body,
+html[lang="km"] .bootstrap-dialog,
+html.lang-km .bootstrap-dialog,
+html[lang="km"] .modal,
+html.lang-km .modal {
+    font-family: "Khmer OS Siemreap", "Khmer OS", Siemreap, sans-serif !important;
     font-size: 17px !important;
 }
 
@@ -98,6 +105,11 @@ html.lang-km .neo-module-title,
 html[lang="km"] .neo-dash-header__title,
 html.lang-km .neo-dash-header__title {
     font-size: 24px !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    hyphens: none !important;
+    -webkit-hyphens: none !important;
 }
 
 html[lang="km"] .neo-module-subtitle,
@@ -121,13 +133,13 @@ html[lang="km"] .pos-topbar,
 html.lang-km .pos-topbar,
 html[lang="km"] .pos-topbar-user,
 html.lang-km .pos-topbar-user,
-html[lang="km"] .pos-profile-dropdown,
-html.lang-km .pos-profile-dropdown,
-html[lang="km"] .pos-profile-card__copy strong,
-html.lang-km .pos-profile-card__copy strong,
-html[lang="km"] .pos-profile-dropdown__item,
-html.lang-km .pos-profile-dropdown__item {
-    font-size: 18px !important;
+html[lang="km"] .sa-dropdown--profile,
+html.lang-km .sa-dropdown--profile,
+html[lang="km"] .sa-dropdown--profile .sa-profile-card__copy strong,
+html.lang-km .sa-dropdown--profile .sa-profile-card__copy strong,
+html[lang="km"] .sa-dropdown--profile .sa-dropdown__menu-item,
+html.lang-km .sa-dropdown--profile .sa-dropdown__menu-item {
+    font-size: 15px !important;
 }
 
 html[lang="km"] .pos-topbar-clock,
@@ -142,6 +154,20 @@ html.lang-km .btn-sm {
 html[lang="km"] .neo-kpi-label,
 html.lang-km .neo-kpi-label {
     font-size: 12px !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+}
+
+html[lang="km"] .neo-section-title,
+html.lang-km .neo-section-title,
+html[lang="km"] .neo-dash-header__title,
+html.lang-km .neo-dash-header__title,
+html[lang="km"] .neo-chart-card__title,
+html.lang-km .neo-chart-card__title,
+html[lang="km"] .neo-chart-card__total span,
+html.lang-km .neo-chart-card__total span {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
 }
 
 html[lang="km"] .neo-kpi-hint,

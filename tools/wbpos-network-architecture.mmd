@@ -1,0 +1,37 @@
+%% WBPOS Network Architecture — HA / DMZ (same style as sample)
+%% See also: docs/WBPOS-NETWORK-ARCHITECTURE.md
+
+flowchart TB
+  NET(("Internet"))
+
+  FG["1 FortiGate<br/>WAN 203.176.134.2/30<br/>DMZ 10.0.5.1/28<br/>LAN 192.168.1.1/24"]
+
+  subgraph DMZ["DMZ 10.0.5.0/28"]
+    direction TB
+    SAN["2 Storage/SAN<br/>10.0.5.2"]
+    APHA["3 APP_H_A HAProxy<br/>10.0.5.3"]
+    DBHA["4 DB_H_A VIP<br/>10.0.5.4"]
+    APP1["5 APP-SVR1 WBPOS<br/>10.0.5.5"]
+    APP2["6 APP-SVR2 WBPOS<br/>10.0.5.6"]
+    DB1["7 DB-SVR1 Primary<br/>10.0.5.7"]
+    DB2["8 DB-SVR2 Replica<br/>10.0.5.8"]
+    BAK["9 BACKUP-SRV<br/>10.0.5.9"]
+  end
+
+  subgraph LAN["LAN 192.168.1.0/24"]
+    PC["Office PCs / Admin laptop<br/>192.168.1.10-200"]
+  end
+
+  NET <--> FG
+  FG --> APHA
+  FG --> PC
+  APHA --> APP1
+  APHA --> APP2
+  APP1 --> DBHA
+  APP2 --> DBHA
+  DBHA --> DB1
+  DBHA --> DB2
+  APP1 --> SAN
+  APP2 --> SAN
+  BAK --> SAN
+  BAK --> DB1

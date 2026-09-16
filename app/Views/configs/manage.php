@@ -8,7 +8,6 @@
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= lang('Module.config') ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
         </div>
     </header>
 
@@ -53,7 +52,7 @@
 
         <div class="tab-content pos-modern-form">
             <div class="tab-pane fade in active" id="info_tab">
-                <?= view('configs/info_config') ?>
+                <?= view('configs/info_config', ['shop_subscription' => $shop_subscription ?? []]) ?>
             </div>
             <div class="tab-pane" id="general_tab">
                 <?= view('configs/general_config') ?>

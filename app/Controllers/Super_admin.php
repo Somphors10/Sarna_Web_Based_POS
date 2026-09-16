@@ -2,14 +2,19 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PlatformArchitecture;
+use App\Libraries\PlatformMail;
+use App\Libraries\Telegram_lib;
+use App\Libraries\TemplateSync;
 use App\Libraries\TenantContext;
+use App\Libraries\TenantDatabaseProvisioner;
 use App\Libraries\TenantSeeder;
-use App\Models\Password_reset_request;
 use App\Models\Platform_admin;
 use App\Models\Subscription_request;
 use App\Models\Tenant;
 use CodeIgniter\HTTP\RedirectResponse;
 use Config\OSPOS;
+use Throwable;
 
 class Super_admin extends BaseController
 {
@@ -52,7 +57,240 @@ class Super_admin extends BaseController
             return view('super_admin/login', $data);
         }
 
+        login_super_admin_pos_session();
+        (new PlatformArchitecture())->ensure();
+
         return redirect()->to('super-admin');
+    }
+
+    public function sendPayment(int $request_id): string|RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        (new PlatformArchitecture())->ensure();
+        $request = model(Subscription_request::class)->get_info_for_review($request_id);
+        if ($request === null || (string)$request->status !== 'approved') {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+
+        $db = db_connect('platform');
+        $plan = $db->table('plans')->where('plan_id', (int)$request->plan_id)->get(1)->getRow();
+        $tenant = $db->table('tenants')->where('tenant_code', (string)$request->tenant_code)->get(1)->getRow();
+        $token = trim((string)($request->payment_token ?? ''));
+
+        return view('super_admin/send_payment', [
+            'request' => $request,
+            'plan' => $plan,
+            'tenant' => $tenant,
+            'pay_url' => $token !== '' ? site_url('saas/pay/' . $token) : '',
+            'checkout_url' => site_url('saas/checkout'),
+            'qr_image_path' => 'images/payment/aba-khqr-code.png',
+            'paid' => service('request')->getGet('paid') === '1',
+            'email_sent' => service('request')->getGet('email') === '1',
+            'email_failed' => service('request')->getGet('email') === '0',
+            'email_error' => (string)session()->getFlashdata('khqr_email_error'),
+            'delivery' => PlatformMail::deliveryInfo(),
+        ]);
+    }
+
+    public function postSaveGmailSmtp(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $gmail = strtolower(trim((string)$this->request->getPost('gmail_user')));
+        $app_password = preg_replace('/\s+/', '', (string)$this->request->getPost('gmail_app_password'));
+        if (!filter_var($gmail, FILTER_VALIDATE_EMAIL)) {
+            session()->setFlashdata('khqr_email_error', 'Enter a valid Gmail address and a Google App Password.');
+            return redirect()->to('super-admin/send-payment/' . $request_id . '?email=0');
+        }
+        if (strlen($app_password) < 8) {
+            session()->setFlashdata('khqr_email_error', 'Paste the 16-character Google App Password (not your normal Gmail password).');
+            return redirect()->to('super-admin/send-payment/' . $request_id . '?email=0');
+        }
+
+        $arch = new PlatformArchitecture();
+        $arch->ensure();
+        $arch->setTemplateMeta('email_smtp_user', $gmail);
+        $arch->setTemplateMeta('email_smtp_pass', PlatformMail::encryptPass($app_password));
+
+        return $this->postResendPaymentEmail($request_id);
+    }
+
+    public function postSaveGmailSettings(): RedirectResponse
+    {
+        $saved = $this->saveGmailFromPost();
+        if (!$saved['ok']) {
+            session()->setFlashdata('gmail_error', $saved['error']);
+            return redirect()->to('super-admin/email?error=gmail');
+        }
+
+        return redirect()->to('super-admin/email?gmail_saved=1');
+    }
+
+    public function postTestGmail(): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $to = strtolower(trim((string)$this->request->getPost('test_email', FILTER_SANITIZE_EMAIL)));
+        $mail = (new PlatformMail())->sendTest($to);
+        if (!$mail['ok']) {
+            session()->setFlashdata('gmail_error', $mail['error']);
+            return redirect()->to('super-admin/email?error=gmail');
+        }
+
+        return redirect()->to('super-admin/email?gmail_test=1');
+    }
+
+    public function postResendOwnerVerify(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $request_model = model(Subscription_request::class);
+        $request = $request_model->get_info_for_review($request_id);
+        if ($request === null || $request->status !== 'pending') {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+        if ($request_model->is_email_verified($request)) {
+            return redirect()->to('super-admin/requests');
+        }
+
+        $token = bin2hex(random_bytes(20));
+        db_connect('platform')->table('subscription_requests')
+            ->where('request_id', $request_id)
+            ->update(['email_verify_token' => $token]);
+        $request->email_verify_token = $token;
+
+        $mail = (new PlatformMail())->sendVerifyEmail(
+            $request,
+            site_url('saas/verify-email/' . $token)
+        );
+        if (!$mail['ok']) {
+            session()->setFlashdata('gmail_error', $mail['error']);
+            return redirect()->to('super-admin/requests?error=verify_not_sent');
+        }
+
+        return redirect()->to('super-admin/requests?verify_sent=1');
+    }
+
+    /**
+     * @return array{ok:bool, error:string}
+     */
+    private function saveGmailFromPost(): array
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return ['ok' => false, 'error' => 'Not logged in.'];
+        }
+
+        $gmail = strtolower(trim((string)$this->request->getPost('gmail_user')));
+        $app_password = preg_replace('/\s+/', '', (string)$this->request->getPost('gmail_app_password'));
+        if (!filter_var($gmail, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'error' => 'Enter a valid Gmail address and a Google App Password.'];
+        }
+        if (strlen($app_password) < 8) {
+            return ['ok' => false, 'error' => 'Paste the 16-character Google App Password (not your normal Gmail password).'];
+        }
+
+        $arch = new PlatformArchitecture();
+        $arch->ensure();
+        $arch->setTemplateMeta('email_smtp_user', $gmail);
+        $arch->setTemplateMeta('email_smtp_pass', PlatformMail::encryptPass($app_password));
+
+        return ['ok' => true, 'error' => ''];
+    }
+
+    public function postResendPaymentEmail(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $request = model(Subscription_request::class)->get_info_for_review($request_id);
+        if ($request === null || (string)$request->status !== 'approved') {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+
+        $token = trim((string)($request->payment_token ?? ''));
+        $plan = db_connect('platform')->table('plans')->where('plan_id', (int)$request->plan_id)->get(1)->getRow();
+        $mail = (new PlatformMail())->sendKhqrPayment(
+            $request,
+            $token !== '' ? site_url('saas/pay/' . $token) : site_url('saas/checkout'),
+            (float)saas_monthly_price((float)($plan->price_monthly ?? 0))
+        );
+        session()->setFlashdata('khqr_email_error', $mail['error']);
+
+        return redirect()->to('super-admin/send-payment/' . $request_id . '?email=' . ($mail['ok'] ? '1' : '0'));
+    }
+
+    public function previewKhqrEmail(int $request_id): string|RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $path = PlatformMail::outboxPath($request_id);
+        if (!is_file($path)) {
+            return redirect()->to('super-admin/send-payment/' . $request_id);
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/html; charset=UTF-8')
+            ->setBody((string)file_get_contents($path));
+    }
+
+    public function postConfirmPayment(int $request_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $request = model(Subscription_request::class)->get_info_for_review($request_id);
+        if ($request === null || (string)$request->status !== 'approved') {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+
+        $reference = trim((string)$this->request->getPost('payment_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        if ($reference === '') {
+            $reference = 'Confirmed by Super Admin ' . date('Y-m-d H:i');
+        }
+
+        $db = db_connect('platform');
+        $db->table('subscription_requests')
+            ->where('request_id', $request_id)
+            ->update(['payment_reference' => $reference]);
+
+        $tenant = $db->table('tenants')->where('tenant_code', (string)$request->tenant_code)->get(1)->getRow();
+        if ($tenant !== null) {
+            $tenant_id = (int)$tenant->tenant_id;
+            $prior_status = strtolower((string)($tenant->status ?? ''));
+            $db->table('tenants')
+                ->where('tenant_id', $tenant_id)
+                ->update(['status' => 'active']);
+            saas_activate_or_renew_subscription($tenant_id);
+            saas_complete_shop_payment(
+                $tenant_id,
+                $reference,
+                'aba_khqr_manual',
+                $prior_status === 'active'
+            );
+        }
+
+        return redirect()->to('super-admin/send-payment/' . $request_id . '?paid=1');
     }
 
     public function index(string $page = 'overview'): string|RedirectResponse
@@ -62,30 +300,163 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/login');
         }
 
-        $allowed_pages = ['overview', 'businesses', 'admins', 'requests'];
+        (new PlatformArchitecture())->ensure();
+        refresh_super_admin_pos_session();
+
+        $allowed_pages = ['overview', 'businesses', 'admins', 'requests', 'history', 'payments', 'features', 'plans', 'email'];
         if (!in_array($page, $allowed_pages, true)) {
             return redirect()->to('super-admin/overview');
         }
 
+        return $this->renderDashboard($platform_admin, $page);
+    }
+
+    public function feature(string $module_id): string|RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        (new PlatformArchitecture())->ensure();
+        refresh_super_admin_pos_session();
+
+        $features = platform_pos_features();
+        if (!isset($features[$module_id])) {
+            return redirect()->to('super-admin/features');
+        }
+
+        return $this->renderDashboard($platform_admin, 'feature', $module_id);
+    }
+
+    public function postToggleFeature(string $module_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        if (!isset(platform_pos_features()[$module_id])) {
+            return redirect()->to('super-admin/features');
+        }
+
+        $enabled = (string) $this->request->getPost('enabled') === '1';
+        if (!platform_set_feature_enabled($module_id, $enabled)) {
+            return redirect()->to('super-admin/features/' . $module_id . '?error=feature_update_failed');
+        }
+
+        return redirect()->to('super-admin/features/' . $module_id . '?feature_updated=1');
+    }
+
+    public function postTogglePlanFeature(int $plan_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $feature_id = (string)$this->request->getPost('feature_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $enabled = (string)$this->request->getPost('enabled') === '1';
+        if (!(new PlatformArchitecture())->setPlanFeature($plan_id, $feature_id, $enabled)) {
+            return redirect()->to('super-admin/plans?error=feature_update_failed');
+        }
+
+        return redirect()->to('super-admin/plans?plan_updated=1');
+    }
+
+    public function postSyncTemplate(): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $result = (new TemplateSync())->deploy();
+        session()->setFlashdata('template_sync', $result);
+
+        return redirect()->to('super-admin/plans?template_synced=1');
+    }
+
+    public function postIsolateTenants(): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $report = (new TenantDatabaseProvisioner())->isolateAllSharedTenants();
+        session()->setFlashdata('isolate_report', $report);
+
+        return redirect()->to('super-admin/businesses?tenants_isolated=1');
+    }
+
+    public function postIsolateTenant(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $result = (new TenantDatabaseProvisioner())->isolateExisting($tenant_id);
+        if (empty($result['success'])) {
+            return redirect()->to('super-admin/businesses?error=isolate_failed');
+        }
+
+        return redirect()->to('super-admin/businesses?tenant_isolated=1');
+    }
+
+    private function renderDashboard(Platform_admin $platform_admin, string $page, ?string $module_id = null): string
+    {
         $tenant_model = model(Tenant::class);
         $request_model = model(Subscription_request::class);
-        $password_reset_model = model(Password_reset_request::class);
+        $arch = new PlatformArchitecture();
         $subscription_requests = $request_model->get_pending_with_plan();
-        $password_reset_requests = $password_reset_model->db->tableExists('password_reset_requests')
-            ? $password_reset_model->get_pending()
-            : [];
-        $data = [
-            'tenants' => $tenant_model->get_with_owner_summary(),
+        $unverified_requests = $request_model->get_unverified_pending_with_plan();
+        $subscription_request_history = $request_model->get_history_with_plan();
+        $system_features = platform_features_for_view();
+        $current_feature = null;
+        if ($module_id !== null) {
+            foreach ($system_features as $feature) {
+                if ($feature['id'] === $module_id) {
+                    $current_feature = $feature;
+                    break;
+                }
+            }
+        }
+
+        $tenants = $tenant_model->get_with_owner_summary();
+        $this->attachPaymentLinks($tenants);
+        $this->attachSubscriptionPeriods($tenants);
+        $recent_payments = $this->getRecentSubscriptionPayments(30);
+        $this->backfillPaidAlertsFromRequests($tenants);
+        $this->backfillPlatformPayments($tenants, $recent_payments);
+        $platform_alerts = saas_get_platform_alerts(30, 50);
+        $platform_payments = saas_list_platform_payments(200);
+
+        return view('super_admin/dashboard', [
+            'tenants' => $tenants,
             'platform_admins' => $platform_admin->get_all_admins(),
             'logged_in_admin' => $platform_admin->get_logged_in_admin(),
             'is_owner' => $platform_admin->is_owner(),
             'subscription_requests' => $subscription_requests,
-            'password_reset_requests' => $password_reset_requests,
+            'unverified_requests' => $unverified_requests,
+            'mail_delivery' => PlatformMail::deliveryInfo(),
+            'subscription_request_history' => $subscription_request_history,
+            'recent_payments' => $recent_payments,
+            'platform_alerts' => $platform_alerts,
+            'platform_payments' => $platform_payments,
             'latest_registration_request_id' => $request_model->get_latest_pending_id(),
-            'active_page' => $page
-        ];
-
-        return view('super_admin/dashboard', $data);
+            'active_page' => $page,
+            'system_features' => $system_features,
+            'current_feature' => $current_feature,
+            'subscription_plans' => $arch->getActivePlans(),
+            'plan_feature_matrix' => $arch->getPlanFeatureMatrix(),
+            'template_meta' => $arch->getTemplateMeta(),
+            'template_sync' => session()->getFlashdata('template_sync'),
+            'isolate_report' => session()->getFlashdata('isolate_report'),
+            'activation_pay_url' => session()->getFlashdata('activation_pay_url'),
+            'activation_email_ok' => session()->getFlashdata('activation_email_ok'),
+        ]);
     }
 
     public function postToggleStatus(int $tenant_id): RedirectResponse
@@ -96,12 +467,53 @@ class Super_admin extends BaseController
         }
 
         $status = (string)$this->request->getPost('status', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $allowed = ['active', 'suspended', 'cancelled'];
+        $allowed = ['active', 'suspended', 'cancelled', 'awaiting_payment'];
         if (!in_array($status, $allowed, true)) {
             return redirect()->to('super-admin/businesses');
         }
 
+        $db = db_connect('platform');
+        $previous = $db->table('tenants')
+            ->select('status, tenant_code')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRow();
+        $previous_status = strtolower((string)($previous->status ?? ''));
+
         model(Tenant::class)->set_status($tenant_id, $status);
+        if ($status === 'active') {
+            $info = saas_tenant_subscription_info($tenant_id);
+            if (!$info['has_period'] || $info['is_expired'] || $previous_status !== 'active') {
+                saas_activate_or_renew_subscription($tenant_id);
+            } elseif ($db->tableExists('subscriptions')) {
+                $db->table('subscriptions')
+                    ->where('tenant_id', $tenant_id)
+                    ->update(['status' => 'active']);
+            }
+
+            $tenant_code = (string)($previous->tenant_code ?? '');
+            if (
+                $tenant_code !== ''
+                && $db->tableExists('subscription_requests')
+                && $db->fieldExists('payment_reference', 'subscription_requests')
+            ) {
+                $request = $db->table('subscription_requests')
+                    ->select('request_id, payment_reference')
+                    ->where('tenant_code', $tenant_code)
+                    ->where('status', 'approved')
+                    ->orderBy('request_id', 'DESC')
+                    ->get(1)
+                    ->getRow();
+
+                if ($request !== null && trim((string)($request->payment_reference ?? '')) === '') {
+                    $db->table('subscription_requests')
+                        ->where('request_id', (int)$request->request_id)
+                        ->update([
+                            'payment_reference' => 'Confirmed by Super Admin ' . date('Y-m-d H:i'),
+                        ]);
+                }
+            }
+        }
 
         return redirect()->to('super-admin/businesses');
     }
@@ -109,7 +521,10 @@ class Super_admin extends BaseController
     public function logout(): RedirectResponse
     {
         model(Platform_admin::class)->logout();
+        logout_super_admin_pos_session();
         (new TenantContext())->clearTenantDatabaseSession();
+        session()->destroy();
+
         return redirect()->to('super-admin/login');
     }
 
@@ -125,10 +540,8 @@ class Super_admin extends BaseController
 
         $since_id = (int)($this->request->getGet('since') ?? 0);
         $request_model = model(Subscription_request::class);
-        $password_reset_model = model(Password_reset_request::class);
 
         $pending_registrations = $request_model->count_pending();
-        $pending_password_resets = $password_reset_model->count_pending();
         $new_registrations = $request_model->get_registrations_since_id($since_id);
 
         $mapped = [];
@@ -145,18 +558,209 @@ class Super_admin extends BaseController
             ];
         }
 
+        $since_alert_id = (int)($this->request->getGet('since_alert') ?? 0);
+        $new_payments = [];
+        if (saas_ensure_platform_alerts_table()) {
+            $db = db_connect('platform');
+            $builder = $db->table('platform_alerts')
+                ->whereIn('alert_type', ['renewed', 'payment'])
+                ->orderBy('alert_id', 'DESC')
+                ->limit(20);
+            if ($since_alert_id > 0) {
+                $builder->where('alert_id >', $since_alert_id);
+            } else {
+                $builder->where('created_at >=', date('Y-m-d H:i:s', strtotime('-2 minutes')));
+            }
+            foreach ($builder->get()->getResultArray() as $row) {
+                $new_payments[] = [
+                    'alert_id'     => (int)$row['alert_id'],
+                    'title'        => (string)($row['title'] ?? 'Shop paid'),
+                    'company_name' => (string)($row['company_name'] ?? ''),
+                    'tenant_code'  => (string)($row['tenant_code'] ?? ''),
+                    'body'         => (string)($row['body'] ?? ''),
+                    'created_at'   => (string)($row['created_at'] ?? ''),
+                    'review_url'   => site_url(ltrim((string)($row['link_path'] ?? 'super-admin/businesses'), '/')),
+                ];
+            }
+        }
+
+        $latest_alert_id = 0;
+        if ($new_payments !== []) {
+            $latest_alert_id = (int)$new_payments[0]['alert_id'];
+        } elseif (saas_ensure_platform_alerts_table()) {
+            $latest = db_connect('platform')->table('platform_alerts')
+                ->select('alert_id')
+                ->orderBy('alert_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            $latest_alert_id = $latest !== null ? (int)$latest->alert_id : 0;
+        }
+
         return $this->response->setJSON([
             'pending_registrations'            => $pending_registrations,
-            'pending_password_resets'          => $pending_password_resets,
-            'pending_total'                    => $pending_registrations + $pending_password_resets,
+            'pending_total'                    => $pending_registrations,
             'latest_registration_request_id'   => $request_model->get_latest_pending_id(),
             'new_registrations'                => $mapped,
+            'new_payments'                     => $new_payments,
+            'latest_alert_id'                  => $latest_alert_id,
         ]);
     }
 
     public function postCreateAdmin(): RedirectResponse
     {
-        return redirect()->to('super-admin?error=admin_creation_disabled');
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+        if (!$platform_admin->is_owner()) {
+            return redirect()->to('super-admin/admins?error=admin_not_allowed');
+        }
+
+        $username = strtolower(trim((string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
+        $full_name = trim((string)$this->request->getPost('full_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $email = trim((string)$this->request->getPost('email', FILTER_SANITIZE_EMAIL));
+        $password = (string)$this->request->getPost('password');
+
+        if ($username === '' || !preg_match('/^[a-z0-9._-]{3,40}$/', $username)) {
+            return redirect()->to('super-admin/admins?error=admin_invalid');
+        }
+        if ($full_name === '' || strlen($password) < 8) {
+            return redirect()->to('super-admin/admins?error=admin_invalid');
+        }
+        if ($platform_admin->username_exists($username)) {
+            return redirect()->to('super-admin/admins?error=admin_exists');
+        }
+
+        if (!$platform_admin->create_admin($username, $password, $full_name, $email !== '' ? $email : null)) {
+            return redirect()->to('super-admin/admins?error=admin_create_failed');
+        }
+
+        return redirect()->to('super-admin/admins?admin_created=1');
+    }
+
+    public function postToggleAdminStatus(int $admin_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+        if (!$platform_admin->is_owner()) {
+            return redirect()->to('super-admin/admins?error=admin_not_allowed');
+        }
+
+        $status = (string)$this->request->getPost('status', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if (!in_array($status, ['active', 'disabled'], true)) {
+            return redirect()->to('super-admin/admins');
+        }
+
+        $self_id = (int)($platform_admin->get_logged_in_admin()->admin_id ?? 0);
+        if ($admin_id === $self_id) {
+            return redirect()->to('super-admin/admins?error=admin_self');
+        }
+
+        $target = $platform_admin->get_all_admins();
+        foreach ($target as $row) {
+            if ((int)$row['admin_id'] === $admin_id && (string)$row['username'] === 'superadmin') {
+                return redirect()->to('super-admin/admins?error=admin_owner_locked');
+            }
+        }
+
+        if (!$platform_admin->set_status($admin_id, $status)) {
+            return redirect()->to('super-admin/admins?error=admin_update_failed');
+        }
+
+        return redirect()->to('super-admin/admins?admin_updated=1');
+    }
+
+    public function postExtendSubscription(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $months = (int)$this->request->getPost('months');
+        if ($months < 1) {
+            $months = 1;
+        }
+        if ($months > 24) {
+            $months = 24;
+        }
+
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        saas_extend_tenant_subscription($tenant_id, $months);
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+
+        return redirect()->to('super-admin/businesses?extended=1');
+    }
+
+    public function postSetExpiry(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $period_end = trim((string)$this->request->getPost('period_end', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        if (!saas_set_tenant_period_end($tenant_id, $period_end)) {
+            return redirect()->to('super-admin/businesses?error=expiry_invalid');
+        }
+
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+
+        return redirect()->to('super-admin/businesses?expiry_set=1');
+    }
+
+    public function postConfirmRenewal(int $tenant_id): RedirectResponse
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return redirect()->to('super-admin/login');
+        }
+
+        $db = db_connect('platform');
+        $tenant = $db->table('tenants')->where('tenant_id', $tenant_id)->get(1)->getRow();
+        if ($tenant === null) {
+            return redirect()->to('super-admin/businesses?error=tenant_not_found');
+        }
+
+        $reference = trim((string)$this->request->getPost('payment_reference', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+        if ($reference === '') {
+            $reference = 'Renewal confirmed by Super Admin ' . date('Y-m-d H:i');
+        }
+
+        $tenant_code = (string)$tenant->tenant_code;
+        if ($db->tableExists('subscription_requests')) {
+            $request = $db->table('subscription_requests')
+                ->select('request_id')
+                ->where('tenant_code', $tenant_code)
+                ->where('status', 'approved')
+                ->orderBy('request_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            if ($request !== null) {
+                $db->table('subscription_requests')
+                    ->where('request_id', (int)$request->request_id)
+                    ->update(['payment_reference' => $reference]);
+            }
+        }
+
+        $db->table('tenants')->where('tenant_id', $tenant_id)->update(['status' => 'active']);
+        saas_activate_or_renew_subscription($tenant_id);
+        saas_complete_shop_payment($tenant_id, $reference, 'aba_khqr_manual', true);
+
+        return redirect()->to('super-admin/businesses?renewed=1');
     }
 
     public function postApproveRequest(int $request_id): RedirectResponse
@@ -166,26 +770,31 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/login');
         }
 
+        $arch = new PlatformArchitecture();
+        $arch->ensure();
+
         $request_model = model(Subscription_request::class);
         $request = $request_model->get_info_for_review($request_id);
         if ($request === null || $request->status !== 'pending') {
             return redirect()->to('super-admin/requests?error=request_not_found');
         }
+        if (!model(Subscription_request::class)->is_email_verified($request)) {
+            return redirect()->to('super-admin/requests?error=email_not_verified');
+        }
 
-        $db = db_connect();
-        $tenant_exists = $db->table('tenants')->where('tenant_code', $request->tenant_code)->countAllResults();
-        $username_exists = $db->table('employees')->where('username', $request->owner_username)->countAllResults();
-        if ($tenant_exists > 0 || $username_exists > 0) {
+        $db = db_connect('platform');
+        if ($arch->usernameExists((string)$request->owner_username) || $db->table('tenants')->where('tenant_code', $request->tenant_code)->countAllResults() > 0) {
             return redirect()->to('super-admin/requests?error=tenant_or_user_exists');
         }
 
+        $payment_token = bin2hex(random_bytes(20));
         $db->transStart();
 
         $tenant_insert = [
             'tenant_code' => $request->tenant_code,
             'company_name' => $request->company_name,
-            'status' => 'active',
-            'timezone' => 'UTC',
+            'status' => 'awaiting_payment',
+            'timezone' => 'Asia/Phnom_Penh',
             'currency_code' => 'USD'
         ];
         if ($db->fieldExists('db_name', 'tenants')) {
@@ -201,18 +810,103 @@ class Super_admin extends BaseController
         $db->table('tenants')->insert($tenant_insert);
         $tenant_id = (int)$db->insertID();
 
+        $db->table('subscriptions')->insert([
+            'tenant_id' => $tenant_id,
+            'plan_id' => (int)$request->plan_id,
+            'status' => 'trialing',
+            'trial_ends_at' => null,
+            'period_start' => date('Y-m-d H:i:s'),
+            'period_end' => date('Y-m-d H:i:s', strtotime('+1 month')),
+            'cancel_at_period_end' => 0
+        ]);
+
+        $request_update = [
+            'status' => 'approved',
+            'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
+            'reviewed_at' => date('Y-m-d H:i:s')
+        ];
+        if ($db->fieldExists('payment_token', 'subscription_requests')) {
+            $request_update['payment_token'] = $payment_token;
+        }
+        $db->table('subscription_requests')
+            ->where('request_id', $request_id)
+            ->update($request_update);
+
+        $db->transComplete();
+
+        if (!$db->transStatus() || $tenant_id <= 0) {
+            return redirect()->to('super-admin/requests?error=approve_failed');
+        }
+
+        $owner = [
+            'first_name' => (string)$request->owner_first_name,
+            'last_name' => (string)$request->owner_last_name,
+            'email' => (string)$request->owner_email,
+            'phone' => (string)($request->owner_phone ?? ''),
+            'username' => (string)$request->owner_username,
+            'password_hash' => (string)$request->owner_password_hash,
+            'company_name' => (string)$request->company_name,
+            'address' => (string)($request->address ?? ''),
+            'city' => (string)($request->city ?? ''),
+            'country' => (string)($request->country ?? ''),
+            'tax_id' => (string)($request->tax_id ?? ''),
+            'business_type' => (string)($request->business_type ?? ''),
+        ];
+
+        $provisioned = (new TenantDatabaseProvisioner())->provisionNew($tenant_id, $owner);
+        if (empty($provisioned['success'])) {
+            $this->seedSharedTenant($tenant_id, $owner);
+        } else {
+            $this->applyShopProfile($tenant_id, $owner);
+        }
+
+        $arch->upsertTenantLogin(
+            $tenant_id,
+            $this->ownerPersonId($tenant_id, $owner['username']),
+            $owner['username'],
+            trim($owner['first_name'] . ' ' . $owner['last_name']),
+            true
+        );
+
+        $pay_url = site_url('saas/pay/' . $payment_token);
+        $checkout_url = site_url('saas/checkout');
+        $plan = $db->table('plans')->where('plan_id', (int)$request->plan_id)->get(1)->getRow();
+        $price = saas_monthly_price((float)($plan->price_monthly ?? 0));
+        $mail = (new PlatformMail())->sendKhqrPayment($request, $pay_url, $price);
+        session()->setFlashdata('khqr_email_error', $mail['error']);
+        (new Telegram_lib())->notify_activation_payment([
+            'company_name' => (string)$request->company_name,
+            'tenant_code' => (string)$request->tenant_code,
+            'owner_phone' => (string)($request->owner_phone ?? ''),
+            'owner_email' => (string)$request->owner_email,
+            'plan_name' => (string)($plan->plan_name ?? 'POS'),
+            'plan_price' => $price,
+            'checkout_url' => $checkout_url,
+            'pay_url' => $pay_url,
+            'qr_path' => FCPATH . 'images/payment/aba-khqr-code.png',
+        ]);
+
+        return redirect()->to('super-admin/send-payment/' . $request_id . '?email=' . ($mail['ok'] ? '1' : '0'));
+    }
+
+    /**
+     * @param array<string, string> $owner
+     */
+    private function seedSharedTenant(int $tenant_id, array $owner): void
+    {
+        $db = db_connect('platform');
         $db->table('people')->insert([
-            'first_name' => $request->owner_first_name,
-            'last_name' => $request->owner_last_name,
+            'first_name' => $owner['first_name'],
+            'last_name' => $owner['last_name'],
             'gender' => null,
-            'phone_number' => (string)($request->owner_phone ?? ''),
-            'email' => $request->owner_email,
-            'address_1' => '',
+            'phone_number' => $owner['phone'],
+            'email' => $owner['email'],
+            'address_1' => $owner['address'] ?? '',
             'address_2' => '',
-            'city' => '',
+            'city' => $owner['city'] ?? '',
             'state' => '',
             'zip' => '',
-            'country' => '',
+            'country' => $owner['country'] ?? '',
             'comments' => '',
             'tenant_id' => $tenant_id
         ]);
@@ -220,8 +914,8 @@ class Super_admin extends BaseController
 
         $db->table('employees')->insert([
             'person_id' => $person_id,
-            'username' => $request->owner_username,
-            'password' => $request->owner_password_hash,
+            'username' => $owner['username'],
+            'password' => $owner['password_hash'],
             'deleted' => 0,
             'hash_version' => 2,
             'tenant_id' => $tenant_id
@@ -248,39 +942,353 @@ class Super_admin extends BaseController
             $db->query($sql, [$person_id]);
         }
 
-        $db->table('tenant_config')->insertBatch([
-            ['tenant_id' => $tenant_id, 'config_key' => 'company', 'config_value' => $request->company_name],
-            ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'UTC'],
-            ['tenant_id' => $tenant_id, 'config_key' => 'currency_code', 'config_value' => 'USD']
-        ]);
+        $db->table('tenant_config')->insertBatch($this->shopProfileConfigRows($tenant_id, $owner));
 
         (new TenantSeeder())->seedForTenant($tenant_id);
+        $this->applyShopProfile($tenant_id, $owner);
+    }
 
-        $db->table('subscriptions')->insert([
+    /**
+     * @param array<string, string> $owner
+     * @return list<array{tenant_id:int, config_key:string, config_value:string}>
+     */
+    private function shopProfileConfigRows(int $tenant_id, array $owner): array
+    {
+        $address = trim((string)($owner['address'] ?? ''));
+        $city = trim((string)($owner['city'] ?? ''));
+        $country = trim((string)($owner['country'] ?? ''));
+        $full_address = trim($address . ($city !== '' ? "\n" . $city : '') . ($country !== '' ? "\n" . $country : ''));
+
+        $country_codes = [
+            'Cambodia' => 'kh',
+            'Vietnam' => 'vn',
+            'Laos' => 'la',
+            'United States' => 'us',
+        ];
+
+        return [
+            ['tenant_id' => $tenant_id, 'config_key' => 'company', 'config_value' => (string)($owner['company_name'] ?? '')],
+            ['tenant_id' => $tenant_id, 'config_key' => 'address', 'config_value' => $full_address],
+            ['tenant_id' => $tenant_id, 'config_key' => 'phone', 'config_value' => (string)($owner['phone'] ?? '')],
+            ['tenant_id' => $tenant_id, 'config_key' => 'email', 'config_value' => strtolower((string)($owner['email'] ?? ''))],
+            // Never inherit another shop's logo — owner uploads their own after login.
+            ['tenant_id' => $tenant_id, 'config_key' => 'company_logo', 'config_value' => ''],
+            ['tenant_id' => $tenant_id, 'config_key' => 'tax_id', 'config_value' => (string)($owner['tax_id'] ?? '')],
+            ['tenant_id' => $tenant_id, 'config_key' => 'country_codes', 'config_value' => $country_codes[$country] ?? 'kh'],
+            ['tenant_id' => $tenant_id, 'config_key' => 'timezone', 'config_value' => 'Asia/Phnom_Penh'],
+            ['tenant_id' => $tenant_id, 'config_key' => 'currency_code', 'config_value' => 'USD'],
+        ];
+    }
+
+    /**
+     * Write store profile into the shop database so receipts show the real company.
+     *
+     * @param array<string, string> $owner
+     */
+    private function applyShopProfile(int $tenant_id, array $owner): void
+    {
+        $context = new TenantContext();
+        $context->applyRuntimeConnection($tenant_id);
+        try {
+            $db = db_connect();
+            foreach ($this->shopProfileConfigRows($tenant_id, $owner) as $row) {
+                if ($db->tableExists('app_config')) {
+                    $db->table('app_config')->replace([
+                        'key' => $row['config_key'],
+                        'value' => $row['config_value'],
+                    ]);
+                }
+                if ($db->tableExists('tenant_config')) {
+                    $db->table('tenant_config')->replace([
             'tenant_id' => $tenant_id,
-            'plan_id' => (int)$request->plan_id,
-            'status' => 'active',
-            'trial_ends_at' => null,
-            'period_start' => date('Y-m-d H:i:s'),
-            'period_end' => date('Y-m-d H:i:s', strtotime('+1 month')),
-            'cancel_at_period_end' => 0
-        ]);
+                        'config_key' => $row['config_key'],
+                        'config_value' => $row['config_value'],
+                    ]);
+                }
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Could not apply shop profile: ' . $e->getMessage());
+        }
+        $context->restoreSharedConnection();
+    }
 
-        $db->table('subscription_requests')
-            ->where('request_id', $request_id)
-            ->update([
-                'status' => 'approved',
-                'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
-                'reviewed_at' => date('Y-m-d H:i:s')
-            ]);
-
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            return redirect()->to('super-admin/requests?error=approve_failed');
+    private function ownerPersonId(int $tenant_id, string $username): int
+    {
+        $login = db_connect('platform')->table('tenant_logins')
+            ->where('tenant_id', $tenant_id)
+            ->where('username', $username)
+            ->get(1)
+            ->getRow();
+        if ($login) {
+            return (int)$login->person_id;
         }
 
-        return redirect()->to('super-admin/requests?request_approved=1');
+        $context = new TenantContext();
+        $context->applyRuntimeConnection($tenant_id);
+        try {
+            $row = db_connect()->table('employees')->where('username', $username)->get(1)->getRow();
+            $context->restoreSharedConnection();
+            return $row ? (int)$row->person_id : 0;
+        } catch (\Throwable $e) {
+            $context->restoreSharedConnection();
+            return 0;
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $tenants
+     */
+    private function attachPaymentLinks(array &$tenants): void
+    {
+        $db = db_connect('platform');
+        if (!$db->tableExists('subscription_requests') || !$db->fieldExists('payment_token', 'subscription_requests')) {
+            return;
+        }
+
+        $rows = $db->table('subscription_requests')
+            ->select('subscription_requests.request_id, subscription_requests.tenant_code, subscription_requests.payment_token, subscription_requests.payment_reference, subscription_requests.owner_email, subscription_requests.owner_phone, subscription_requests.owner_username, subscription_requests.address, subscription_requests.city, subscription_requests.country, subscription_requests.tax_id, subscription_requests.business_type, subscription_requests.created_at, plans.plan_name')
+            ->join('plans', 'plans.plan_id = subscription_requests.plan_id', 'left')
+            ->where('subscription_requests.status', 'approved')
+            ->where('subscription_requests.payment_token !=', '')
+            ->get()
+            ->getResultArray();
+
+        $by_code = [];
+        foreach ($rows as $row) {
+            $by_code[(string)$row['tenant_code']] = $row;
+        }
+
+        foreach ($tenants as &$tenant) {
+            $code = (string)($tenant['tenant_code'] ?? '');
+            if (!isset($by_code[$code])) {
+                continue;
+            }
+            $tenant['payment_token'] = (string)$by_code[$code]['payment_token'];
+            $tenant['payment_reference'] = (string)($by_code[$code]['payment_reference'] ?? '');
+            $tenant['payment_url'] = site_url('saas/pay/' . $tenant['payment_token']);
+            $tenant['request_id'] = (int)$by_code[$code]['request_id'];
+            $tenant['owner_email'] = (string)($by_code[$code]['owner_email'] ?? '');
+            $tenant['owner_phone'] = (string)($by_code[$code]['owner_phone'] ?? '');
+            $tenant['owner_username'] = (string)($by_code[$code]['owner_username'] ?? '');
+            $tenant['address'] = (string)($by_code[$code]['address'] ?? '');
+            $tenant['city'] = (string)($by_code[$code]['city'] ?? '');
+            $tenant['country'] = (string)($by_code[$code]['country'] ?? '');
+            $tenant['tax_id'] = (string)($by_code[$code]['tax_id'] ?? '');
+            $tenant['business_type'] = (string)($by_code[$code]['business_type'] ?? '');
+            $tenant['plan_name'] = (string)($by_code[$code]['plan_name'] ?? '');
+            $tenant['registered_at'] = (string)($by_code[$code]['created_at'] ?? '');
+        }
+        unset($tenant);
+    }
+
+    /**
+     * Attach subscription period_end and billing flags for Super Admin businesses UI.
+     *
+     * @param list<array<string, mixed>> $tenants
+     */
+    private function attachSubscriptionPeriods(array &$tenants): void
+    {
+        $db = db_connect('platform');
+        if ($tenants === [] || !$db->tableExists('subscriptions') || !$db->fieldExists('period_end', 'subscriptions')) {
+            return;
+        }
+
+        $ids = [];
+        foreach ($tenants as $tenant) {
+            $id = (int)($tenant['tenant_id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return;
+        }
+
+        $rows = $db->table('subscriptions')
+            ->select('subscription_id, tenant_id, period_end, status')
+            ->whereIn('tenant_id', $ids)
+            ->orderBy('subscription_id', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        $by_tenant = [];
+        foreach ($rows as $row) {
+            $tid = (int)$row['tenant_id'];
+            if (!isset($by_tenant[$tid])) {
+                $by_tenant[$tid] = $row;
+            }
+        }
+
+        $now = time();
+        $warn_days = saas_subscription_warning_days();
+        foreach ($tenants as &$tenant) {
+            $tid = (int)($tenant['tenant_id'] ?? 0);
+            $sub = $by_tenant[$tid] ?? null;
+            $period_end = $sub !== null ? trim((string)($sub['period_end'] ?? '')) : '';
+            $tenant['period_end'] = $period_end;
+            $tenant['billing'] = 'none';
+            $tenant['days_left'] = null;
+
+            if ($period_end === '') {
+                continue;
+            }
+
+            $end = strtotime($period_end);
+            if ($end === false) {
+                continue;
+            }
+
+            $days_left = (int)floor(($end - $now) / 86400);
+            $tenant['days_left'] = $days_left;
+            if ($end < $now) {
+                $tenant['billing'] = 'expired';
+            } elseif ($days_left <= $warn_days) {
+                $tenant['billing'] = 'warning';
+            } else {
+                $tenant['billing'] = 'ok';
+            }
+        }
+        unset($tenant);
+    }
+
+    /**
+     * Recent paid invoices so Super Admin can see renewals / continued use.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function getRecentSubscriptionPayments(int $days = 7): array
+    {
+        $db = db_connect('platform');
+        if (!$db->tableExists('invoice_payments') || !$db->tableExists('tenants')) {
+            return [];
+        }
+
+        $since = date('Y-m-d H:i:s', strtotime('-' . max(1, $days) . ' days'));
+        $builder = $db->table('invoice_payments ip')
+            ->select('ip.payment_id, ip.tenant_id, ip.amount, ip.paid_at, ip.provider, ip.provider_payment_id, t.company_name, t.tenant_code')
+            ->join('tenants t', 't.tenant_id = ip.tenant_id', 'left')
+            ->where('ip.paid_at >=', $since)
+            ->orderBy('ip.paid_at', 'DESC')
+            ->limit(30);
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
+     * Create missing "Shop paid" alerts for active shops that already have a payment reference.
+     *
+     * @param list<array<string, mixed>> $tenants
+     */
+    private function backfillPaidAlertsFromRequests(array $tenants): void
+    {
+        $db = db_connect('platform');
+        if (!saas_ensure_platform_alerts_table()) {
+            return;
+        }
+
+        // Remove false "Shop paid" alerts created from old signup refs.
+        try {
+            $db->table('platform_alerts')
+                ->groupStart()
+                    ->where('meta', 'backfill')
+                    ->orLike('dedupe_key', 'paid-backfill-', 'after')
+                ->groupEnd()
+                ->delete();
+        } catch (Throwable $e) {
+            // Ignore.
+        }
+
+        // Only import real invoice payment alerts.
+        foreach ($this->getRecentSubscriptionPayments(30) as $payment) {
+            $tid = (int)($payment['tenant_id'] ?? 0);
+            if ($tid <= 0) {
+                continue;
+            }
+            $ref = trim((string)($payment['provider_payment_id'] ?? ''));
+            $company = trim((string)($payment['company_name'] ?? ''));
+            $code = trim((string)($payment['tenant_code'] ?? ''));
+            $amount = (string)($payment['amount'] ?? '');
+            saas_push_platform_alert([
+                'type'         => 'renewed',
+                'title'        => 'Payment received',
+                'body'         => ($code !== '' ? $code . ' · ' : '')
+                    . 'Paid $' . $amount
+                    . ($ref !== '' ? ' · Ref: ' . $ref : '')
+                    . '. Shop continues on the system.',
+                'meta'         => (string)($payment['provider'] ?? ''),
+                'link_path'    => 'super-admin/payments',
+                'tenant_id'    => $tid,
+                'company_name' => $company !== '' ? $company : ('Shop #' . $tid),
+                'tenant_code'  => $code,
+                'dedupe_key'   => 'paid-invoice-' . (int)($payment['payment_id'] ?? 0),
+            ]);
+        }
+    }
+
+    /**
+     * Import only real invoice payment rows into the ledger.
+     * Do NOT invent payments from old signup payment_reference fields.
+     *
+     * @param list<array<string, mixed>> $tenants
+     * @param list<array<string, mixed>> $recent_payments
+     */
+    private function backfillPlatformPayments(array $tenants, array $recent_payments): void
+    {
+        if (!saas_ensure_platform_payments_table()) {
+            return;
+        }
+
+        $db = db_connect('platform');
+
+        // Remove false rows created by the old "every active shop with a ref" backfill.
+        try {
+            $db->table('platform_payments')
+                ->groupStart()
+                    ->where('source', 'backfill')
+                    ->orWhere('provider', 'backfill')
+                    ->orLike('dedupe_key', 'pay-backfill-', 'after')
+                ->groupEnd()
+                ->delete();
+        } catch (Throwable $e) {
+            // Ignore cleanup errors.
+        }
+
+        foreach ($recent_payments as $payment) {
+            $tid = (int)($payment['tenant_id'] ?? 0);
+            $pay_id = (int)($payment['payment_id'] ?? 0);
+            if ($tid <= 0 || $pay_id <= 0) {
+                continue;
+            }
+            $ref = trim((string)($payment['provider_payment_id'] ?? ''));
+            $dedupe = 'pay-invoice-' . $pay_id;
+            try {
+                $exists = $db->table('platform_payments')
+                    ->select('payment_id')
+                    ->where('dedupe_key', substr($dedupe, 0, 120))
+                    ->get(1)
+                    ->getRow();
+                if ($exists !== null) {
+                    continue;
+                }
+                $db->table('platform_payments')->insert([
+                    'tenant_id'         => $tid,
+                    'company_name'      => substr(trim((string)($payment['company_name'] ?? '')), 0, 191),
+                    'tenant_code'       => substr(trim((string)($payment['tenant_code'] ?? '')), 0, 80),
+                    'payment_kind'      => 'renew',
+                    'amount'            => number_format((float)($payment['amount'] ?? saas_monthly_price()), 2, '.', ''),
+                    'currency_code'     => 'USD',
+                    'provider'          => substr((string)($payment['provider'] ?? 'invoice'), 0, 40),
+                    'payment_reference' => $ref !== '' ? substr($ref, 0, 191) : null,
+                    'period_end'        => null,
+                    'source'            => substr((string)($payment['provider'] ?? 'invoice'), 0, 40),
+                    'paid_at'           => (string)($payment['paid_at'] ?? date('Y-m-d H:i:s')),
+                    'dedupe_key'        => substr($dedupe, 0, 120),
+                ]);
+            } catch (Throwable $e) {
+                // Ignore.
+            }
+        }
     }
 
     public function postRejectRequest(int $request_id): RedirectResponse
@@ -290,84 +1298,132 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/login');
         }
 
-        db_connect()->table('subscription_requests')
+        $reject_comment = trim((string)$this->request->getPost('reject_comment'));
+        if ($reject_comment === '' || mb_strlen($reject_comment) < 3) {
+            return redirect()->to('super-admin/requests?error=reject_comment_required');
+        }
+
+        $db = db_connect('platform');
+        $request = $db->table('subscription_requests')
+            ->where('request_id', $request_id)
+            ->where('status', 'pending')
+            ->get(1)
+            ->getRow();
+
+        if ($request === null) {
+            return redirect()->to('super-admin/requests?error=request_not_found');
+        }
+
+        $existing_notes = trim((string)($request->notes ?? ''));
+        $notes = $existing_notes !== ''
+            ? $existing_notes . "\nRejected: " . $reject_comment
+            : 'Rejected: ' . $reject_comment;
+
+        $db->table('subscription_requests')
             ->where('request_id', $request_id)
             ->where('status', 'pending')
             ->update([
                 'status' => 'rejected',
+                'notes' => $notes,
                 'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
-                'reviewed_at' => date('Y-m-d H:i:s')
+                'reviewed_at' => date('Y-m-d H:i:s'),
             ]);
 
-        return redirect()->to('super-admin/requests?request_rejected=1');
+        return redirect()->to('super-admin/history?request_rejected=1');
     }
 
-    public function postApprovePasswordReset(int $request_id): RedirectResponse
+    /**
+     * Change-password form for modal (same fields as shop admin).
+     */
+    public function getChangePassword(): string|RedirectResponse
     {
         $platform_admin = model(Platform_admin::class);
         if (!$platform_admin->is_logged_in()) {
             return redirect()->to('super-admin/login');
         }
 
-        $reset_model = model(Password_reset_request::class);
-        if (!$reset_model->db->tableExists('password_reset_requests')) {
-            return redirect()->to('super-admin/requests?error=password_reset_unavailable');
-        }
-
-        $request = $reset_model->get_info_for_review($request_id);
-        if ($request === null || $request->status !== 'pending') {
-            return redirect()->to('super-admin/requests?error=password_reset_not_found');
-        }
-
-        $db = db_connect();
-        $db->transStart();
-
-        $db->table('employees')
-            ->where('person_id', (int)$request->person_id)
-            ->where('tenant_id', (int)$request->tenant_id)
-            ->update([
-                'password' => $request->new_password_hash,
-                'hash_version' => 2,
-            ]);
-
-        $db->table('password_reset_requests')
-            ->where('request_id', $request_id)
-            ->update([
-                'status' => 'approved',
-                'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
-                'reviewed_at' => date('Y-m-d H:i:s'),
-            ]);
-
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            return redirect()->to('super-admin/requests?error=password_reset_failed');
-        }
-
-        return redirect()->to('super-admin/requests?password_reset_approved=1');
-    }
-
-    public function postRejectPasswordReset(int $request_id): RedirectResponse
-    {
-        $platform_admin = model(Platform_admin::class);
-        if (!$platform_admin->is_logged_in()) {
+        $admin = $platform_admin->get_logged_in_admin();
+        if ($admin === null) {
             return redirect()->to('super-admin/login');
         }
 
-        $reset_model = model(Password_reset_request::class);
-        if (!$reset_model->db->tableExists('password_reset_requests')) {
-            return redirect()->to('super-admin/requests?error=password_reset_unavailable');
+        return view('super_admin/form_change_password', [
+            'admin' => $admin,
+        ]);
+    }
+
+    /**
+     * Save Super Admin password change (JSON, like Home::postSave).
+     */
+    public function postChangePassword()
+    {
+        $platform_admin = model(Platform_admin::class);
+        if (!$platform_admin->is_logged_in()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please log in again.',
+            ]);
         }
 
-        db_connect()->table('password_reset_requests')
-            ->where('request_id', $request_id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'rejected',
-                'reviewed_by_admin_id' => (int)session()->get('platform_admin_id'),
-                'reviewed_at' => date('Y-m-d H:i:s'),
+        $admin = $platform_admin->get_logged_in_admin();
+        if ($admin === null) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Please log in again.',
             ]);
+        }
 
-        return redirect()->to('super-admin/requests?password_reset_rejected=1');
+        $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $current_password = (string)$this->request->getPost('current_password');
+        $plain_password = (string)$this->request->getPost('password');
+        $repeat_password = (string)$this->request->getPost('repeat_password');
+
+        if ($username === '' || $username !== (string)$admin->username) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Username does not match the logged-in account.',
+            ]);
+        }
+
+        if ($current_password === '' || !$platform_admin->check_password($username, $current_password)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.current_password_invalid'),
+            ]);
+        }
+
+        if ($plain_password !== $repeat_password) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_must_match'),
+            ]);
+        }
+
+        if ($plain_password === $current_password) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_not_must_match'),
+            ]);
+        }
+
+        helper('password');
+        if (!is_strong_password($plain_password)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => lang('Employees.password_strong'),
+            ]);
+        }
+
+        if ($platform_admin->change_password((int)$admin->admin_id, $plain_password)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => lang('Employees.successful_change_password'),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => lang('Employees.unsuccessful_change_password'),
+        ]);
     }
 }

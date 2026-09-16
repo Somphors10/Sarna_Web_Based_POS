@@ -31,6 +31,9 @@
 
                 <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
                 <div id="company_phone"><?= esc($config['phone']) ?></div>
+                <?php if (!empty($config['tax_id'])): ?>
+                    <div id="company_tax_id"><?= lang('Sales.tax_id') ?>: <?= esc($config['tax_id']) ?></div>
+                <?php endif; ?>
             </div>
         </div>
 

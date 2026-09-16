@@ -11,24 +11,17 @@
 
 <?= view('partial/header') ?>
 
+<link rel="stylesheet" href="css/reports.css?v=7">
+
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
 </script>
 
-<section class="neo-module-page">
-    <header class="neo-module-header">
-        <div>
-            <div class="neo-report-breadcrumb" aria-label="breadcrumb">
-                <a href="<?= site_url('reports') ?>"><?= lang('Module.reports') ?></a>
-                <span class="neo-report-breadcrumb-sep">/</span>
-                <span class="neo-report-breadcrumb-current"><?= esc($title) ?></span>
-            </div>
-            <h3 class="neo-module-title"><?= esc($title) ?></h3>
-            <?php if (!empty($subtitle)): ?>
-                <p class="neo-module-subtitle"><?= esc($subtitle) ?></p>
-            <?php endif; ?>
-        </div>
-    </header>
+<section class="neo-module-page neo-report-page">
+    <?= view('reports/partial/report_header', [
+        'title'    => $title,
+        'subtitle' => $subtitle ?? '',
+    ]) ?>
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
@@ -38,18 +31,24 @@
         </div>
     </div>
 
-    <div id="table_holder" class="neo-table-holder">
+    <div id="table_holder" class="neo-table-holder neo-report-table-holder">
         <table id="table"></table>
     </div>
 
-    <div id="report_summary" class="neo-report-summary">
+    <div id="report_summary" class="neo-report-summary neo-report-summary--cards">
     <?php
     foreach ($summary_data as $name => $value) {
         if ($name == "total_quantity") {
             ?>
-            <div class="summary_row"><?= lang("Reports.$name") . ": $value" ?></div>
+            <div class="neo-report-summary__item summary_row" data-summary="<?= esc((string) $name, 'attr') ?>">
+                <span class="neo-report-summary__label"><?= esc(lang("Reports.$name")) ?></span>
+                <strong class="neo-report-summary__value"><?= esc($value) ?></strong>
+            </div>
         <?php } else { ?>
-            <div class="summary_row"><?= lang("Reports.$name") . ': ' . to_currency($value) ?></div>
+            <div class="neo-report-summary__item summary_row" data-summary="<?= esc((string) $name, 'attr') ?>">
+                <span class="neo-report-summary__label"><?= esc(lang("Reports.$name")) ?></span>
+                <strong class="neo-report-summary__value"><?= to_currency($value) ?></strong>
+            </div>
             <?php
         }
     }
@@ -64,7 +63,6 @@
 
         $('#table')
             .addClass("table-striped")
-            .addClass("table-bordered")
             .bootstrapTable({
                 columns: applyColumnVisibility(<?= transform_headers(esc($headers), true, false) ?>),
                 pageSize: <?= table_page_size($config['lines_per_page']) ?>,
@@ -84,6 +82,7 @@
                 paginationVAlign: 'bottom',
                 escape: true,
                 search: true,
+                toolbar: '#toolbar',
                 onPostBody: function() {
                     table_support.fix_toolbar_dropdowns($('#table'));
                 }
@@ -92,5 +91,7 @@
         table_support.fix_toolbar_dropdowns($('#table'));
     });
 </script>
+
+<script src="<?= base_url('js/hide_cost_profit.js') ?>"></script>
 
 <?= view('partial/footer') ?>

@@ -237,7 +237,7 @@ class Database extends Config
 
         $tenant_db_name = (string)($_SESSION['tenant_db_name'] ?? '');
 
-        if ($tenant_db_name === '' || $tenant_db_name === (string)$this->default['database']) {
+        if ($tenant_db_name === '' || $tenant_db_name === (string)$this->platform['database']) {
             $this->clearTenantDatabaseSessionKeys();
             return;
         }
@@ -252,14 +252,18 @@ class Database extends Config
             return;
         }
 
-        $this->tenant['hostname'] = $hostname;
-        $this->tenant['username'] = $username;
-        $this->tenant['password'] = $password;
-        $this->tenant['database'] = $tenant_db_name;
-        $this->tenant['port'] = $port;
+        foreach (['default', 'development', 'tenant'] as $group) {
+            $this->{$group}['hostname'] = $hostname;
+            $this->{$group}['username'] = $username;
+            $this->{$group}['password'] = $password;
+            $this->{$group}['database'] = $tenant_db_name;
+            $this->{$group}['port'] = $port;
+        }
         $session_prefix = trim((string)($_SESSION['tenant_db_prefix'] ?? ''));
         if ($session_prefix !== '') {
-            $this->tenant['DBPrefix'] = $session_prefix;
+            foreach (['default', 'development', 'tenant'] as $group) {
+                $this->{$group}['DBPrefix'] = $session_prefix;
+            }
         }
     }
 

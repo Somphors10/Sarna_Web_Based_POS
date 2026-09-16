@@ -20,11 +20,14 @@ services:
     image: mariadb:10.5
     container_name: wbpos-mysql
     restart: unless-stopped
+    ports:
+      - "3307:3306"
     networks:
       - wbpos_net
     volumes:
       - wbpos_mysql_data:/var/lib/mysql
       - ./app/Database/wbpos.sql:/docker-entrypoint-initdb.d/01-wbpos.sql:ro
+      - ./app/Database/docker/02-tenant-grants.sql:/docker-entrypoint-initdb.d/02-tenant-grants.sql:ro
     environment:
       MYSQL_ROOT_PASSWORD: wbpos_root
       MYSQL_DATABASE: wbpos
@@ -61,6 +64,7 @@ services:
       - wbpos_uploads:/app/public/uploads
       - wbpos_logs:/app/writable/logs
       - ./writable/cache:/app/writable/cache
+      - ./writable/mail_outbox:/app/writable/mail_outbox
     environment:
       CI_ENVIRONMENT: development
       MYSQL_HOST_NAME: mysql
@@ -68,3 +72,13 @@ services:
       MYSQL_PASSWORD: wbpos123
       MYSQL_DB_NAME: wbpos
       PHP_TIMEZONE: Asia/Phnom_Penh
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: wbpos-mailhog
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - wbpos_net

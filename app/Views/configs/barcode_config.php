@@ -25,7 +25,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_width'), 'barcode_width', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_height'), 'barcode_height', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_font'), 'barcode_font', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-sm-2">
                     <?= form_dropdown(
@@ -127,7 +127,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_formats'), 'barcode_formats', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-4">
                     <?php
@@ -142,7 +142,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_layout'), 'barcode_layout', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-sm-10">
                     <div class="form-group form-group-sm row">
@@ -200,7 +200,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_number_in_row'), 'barcode_num_in_row', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -212,7 +212,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_page_width'), 'barcode_page_width', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-sm-2">
                     <div class="input-group">
@@ -227,7 +227,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.barcode_page_cellspacing'), 'barcode_page_cellspacing', ['class' => 'control-label col-xs-2 required']) ?>
                 <div class="col-sm-2">
                     <div class="input-group">

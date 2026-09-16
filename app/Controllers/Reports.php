@@ -873,7 +873,7 @@ class Reports extends Secure_Controller
         $series = [];
         foreach ($report_data as $row) {
             $labels[] = $row['category'];
-            $series[] = ['meta' => $row['category'] . ' ' . round($row['total'] / $summary['total'] * 100, 2) . '%', 'value' => $row['total']];
+            $series[] = ['meta' => $row['category'] . ' ' . round($row['total'] / max((float) ($summary['total'] ?? 0), 1) * 100, 2) . '%', 'value' => (float) $row['total']];
         }
 
         $data = [
@@ -1281,13 +1281,6 @@ class Reports extends Secure_Controller
         $details_data_rewards = [];
 
         foreach ($report_data['summary'] as $key => $row) {
-            if ($row['sale_status'] == CANCELED) {
-                $button_key = 'data-btn-restore';
-                $button_label = lang('Common.restore');
-            } else {
-                $button_key = 'data-btn-delete';
-                $button_label = lang('Common.delete');
-            }
 
             $summary_data[] = [
                 'id'            => $row['sale_id'],
@@ -1301,17 +1294,7 @@ class Reports extends Secure_Controller
                 'cost'          => to_currency($row['cost']),
                 'profit'        => to_currency($row['profit']),
                 'payment_type'  => $row['payment_type'],
-                'comment'       => $row['comment'],
-                'edit'          => anchor(
-                    'sales/edit/' . $row['sale_id'],
-                    '<span class="glyphicon glyphicon-edit"></span>',
-                    [
-                        'class'           => 'modal-dlg print_hide',
-                        $button_key       => $button_label,
-                        'data-btn-submit' => lang('Common.submit'),
-                        'title'           => lang('Sales.update')
-                    ]
-                )
+                'comment'       => $row['comment']
             ];
 
             foreach ($report_data['details'][$key] as $drow) {    // TODO: Duplicated Code
@@ -1347,7 +1330,6 @@ class Reports extends Secure_Controller
             'title'                => $customer_info->first_name . ' ' . $customer_info->last_name . ' ' . lang('Reports.report'),
             'subtitle'             => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
             'headers'              => $headers,
-            'editable'             => 'sales',
             'summary_data'         => $summary_data,
             'details_data'         => $details_data,
             'details_data_rewards' => $details_data_rewards,
@@ -1408,13 +1390,6 @@ class Reports extends Secure_Controller
         $details_data_rewards = [];
 
         foreach ($report_data['summary'] as $key => $row) {
-            if ($row['sale_status'] == CANCELED) {
-                $button_key = 'data-btn-restore';
-                $button_label = lang('Common.restore');
-            } else {
-                $button_key = 'data-btn-delete';
-                $button_label = lang('Common.delete');
-            }
 
             $summary_data[] = [
                 'id'            => $row['sale_id'],
@@ -1428,17 +1403,7 @@ class Reports extends Secure_Controller
                 'cost'          => to_currency($row['cost']),
                 'profit'        => to_currency($row['profit']),
                 'payment_type'  => $row['payment_type'],
-                'comment'       => $row['comment'],
-                'edit'          => anchor(
-                    'sales/edit/' . $row['sale_id'],
-                    '<span class="glyphicon glyphicon-edit"></span>',
-                    [
-                        'class'           => 'modal-dlg print_hide',
-                        $button_key       => $button_label,
-                        'data-btn-submit' => lang('Common.submit'),
-                        'title'           => lang('Sales.update')
-                    ]
-                )
+                'comment'       => $row['comment']
             ];
             // TODO: Duplicated Code
             foreach ($report_data['details'][$key] as $drow) {
@@ -1470,7 +1435,6 @@ class Reports extends Secure_Controller
             'title'                => $employee_info->first_name . ' ' . $employee_info->last_name . ' ' . lang('Reports.report'),
             'subtitle'             => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
             'headers'              => $headers,
-            'editable'             => 'sales',
             'summary_data'         => $summary_data,
             'details_data'         => $details_data,
             'details_data_rewards' => $details_data_rewards,
@@ -1539,13 +1503,6 @@ class Reports extends Secure_Controller
         $details_data_rewards = [];
 
         foreach ($report_data['summary'] as $key => $row) {    // TODO: Duplicated Code
-            if ($row['sale_status'] == CANCELED) {
-                $button_key = 'data-btn-restore';
-                $button_label = lang('Common.restore');
-            } else {
-                $button_key = 'data-btn-delete';
-                $button_label = lang('Common.delete');
-            }
 
             $summary_data[] = [
                 'id'            => $row['sale_id'],
@@ -1560,17 +1517,7 @@ class Reports extends Secure_Controller
                 'cost'          => to_currency($row['cost']),
                 'profit'        => to_currency($row['profit']),
                 'payment_type'  => $row['payment_type'],
-                'comment'       => $row['comment'],
-                'edit'          => anchor(
-                    'sales/edit/' . $row['sale_id'],
-                    '<span class="glyphicon glyphicon-edit"></span>',
-                    [
-                        'class'           => 'modal-dlg print_hide',
-                        $button_key       => $button_label,
-                        'data-btn-submit' => lang('Common.submit'),
-                        'title'           => lang('Sales.update')
-                    ]
-                )
+                'comment'       => $row['comment']
             ];
             // TODO: Duplicated Code
             foreach ($report_data['details'][$key] as $drow) {
@@ -1628,14 +1575,6 @@ class Reports extends Secure_Controller
 
         $report_data = $this->detailed_sales->getDataBySaleId($sale_id);
 
-        if ($report_data['sale_status'] == CANCELED) {
-            $button_key = 'data-btn-restore';
-            $button_label = lang('Common.restore');
-        } else {
-            $button_key = 'data-btn-delete';
-            $button_label = lang('Common.delete');
-        }
-
         $summary_data = [
             'sale_id'       => $report_data['sale_id'],
             'sale_time'     => to_datetime(strtotime($report_data['sale_time'])),
@@ -1648,17 +1587,7 @@ class Reports extends Secure_Controller
             'cost'          => to_currency($report_data['cost']),
             'profit'        => to_currency($report_data['profit']),
             'payment_type'  => $report_data['payment_type'],
-            'comment'       => $report_data['comment'],
-            'edit'          => anchor(
-                'sales/edit/' . $report_data['sale_id'],
-                '<span class="glyphicon glyphicon-edit"></span>',
-                [
-                    'class'           => 'modal-dlg print_hide',
-                    $button_key       => $button_label,
-                    'data-btn-submit' => lang('Common.submit'),
-                    'title'           => lang('Sales.update')
-                ]
-            )
+            'comment'       => $report_data['comment']
         ];
 
         echo json_encode([$sale_id => $summary_data]);
@@ -1798,13 +1727,6 @@ class Reports extends Secure_Controller
         $show_locations = $this->stock_location->multiple_locations();
 
         foreach ($report_data['summary'] as $key => $row) {    // TODO: Duplicated Code
-            if ($row['sale_status'] == CANCELED) {
-                $button_key = 'data-btn-restore';
-                $button_label = lang('Common.restore');
-            } else {
-                $button_key = 'data-btn-delete';
-                $button_label = lang('Common.delete');
-            }
 
             $summary_data[] = [
                 'id'            => $row['sale_id'],
@@ -1819,17 +1741,7 @@ class Reports extends Secure_Controller
                 'cost'          => to_currency($row['cost']),
                 'profit'        => to_currency($row['profit']),
                 'payment_type'  => $row['payment_type'],
-                'comment'       => $row['comment'],
-                'edit'          => anchor(
-                    'sales/edit/' . $row['sale_id'],
-                    '<span class="glyphicon glyphicon-edit"></span>',
-                    [
-                        'class'           => 'modal-dlg print_hide',
-                        $button_key       => $button_label,
-                        'data-btn-submit' => lang('Common.submit'),
-                        'title'           => lang('Sales.update')
-                    ]
-                )
+                'comment'       => $row['comment']
             ];
 
             foreach ($report_data['details'][$key] as $drow) {
@@ -1866,7 +1778,6 @@ class Reports extends Secure_Controller
             'title'                => lang('Reports.detailed_sales_report'),
             'subtitle'             => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
             'headers'              => $headers,
-            'editable'             => 'sales',
             'summary_data'         => $summary_data,
             'details_data'         => $details_data,
             'details_data_rewards' => $details_data_rewards,
@@ -1899,17 +1810,7 @@ class Reports extends Secure_Controller
             'total'          => to_currency($report_data['total']),
             'payment_type'   => $report_data['payment_type'],
             'reference'      => $report_data['reference'],
-            'comment'        => $report_data['comment'],
-            'edit'           => anchor(
-                'receivings/edit/' . $report_data['receiving_id'],
-                '<span class="glyphicon glyphicon-edit"></span>',
-                [
-                    'class'           => 'modal-dlg print_hide',
-                    'data-btn-submit' => lang('Common.submit'),
-                    'data-btn-delete' => lang('Common.delete'),
-                    'title'           => lang('Receivings.update')
-                ]
-            )
+            'comment'        => $report_data['comment']
         ];
 
         echo json_encode([$receiving_id => $summary_data]);
@@ -1954,17 +1855,7 @@ class Reports extends Secure_Controller
                 'profit'         => to_currency($row['profit']),
                 'payment_type'   => $row['payment_type'],
                 'reference'      => $row['reference'],
-                'comment'        => $row['comment'],
-                'edit'           => anchor(
-                    'receivings/edit/' . $row['receiving_id'],
-                    '<span class="glyphicon glyphicon-edit"></span>',
-                    [
-                        'class'           => 'modal-dlg print_hide',
-                        'data-btn-delete' => lang('Common.delete'),
-                        'data-btn-submit' => lang('Common.submit'),
-                        'title'           => lang('Receivings.update')
-                    ]
-                )
+                'comment'        => $row['comment']
             ];
 
             foreach ($report_data['details'][$key] as $drow) {
@@ -1990,7 +1881,6 @@ class Reports extends Secure_Controller
             'title'                => lang('Reports.detailed_receivings_report'),
             'subtitle'             => $this->_get_subtitle_report(['start_date' => $start_date, 'end_date' => $end_date]),
             'headers'              => $headers,
-            'editable'             => 'receivings',
             'summary_data'         => $summary_data,
             'details_data'         => $details_data,
             'overall_summary_data' => $this->detailed_receivings->getSummaryData($inputs)

@@ -19,7 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/login.css?v=15') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/login.css?v=18') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=1') ?>">
     <meta name="theme-color" content="#4f46e5">
 </head>
@@ -34,12 +34,39 @@
 
             <?= form_open('login', ['id' => 'login-form']) ?>
 
+            <?php if (service('request')->getGet('password_reset') === '1'): ?>
+                <div class="login-alert login-alert--success">
+                    Your password was updated. You can sign in with your new password.
+                </div>
+            <?php endif; ?>
+
             <?php if ($has_errors): ?>
                 <?php foreach (($validation?->getErrors() ?? []) as $error): ?>
                     <div class="login-alert login-alert--danger">
                         <?= esc($error) ?>
                     </div>
                 <?php endforeach; ?>
+            <?php elseif (service('request')->getGet('expired') === '1'): ?>
+                <div class="login-alert login-alert--danger">
+                    <?= esc(lang('Login.subscription_expired')) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php
+            $show_renew_cta = service('request')->getGet('expired') === '1';
+            if (!$show_renew_cta && $has_errors) {
+                foreach (($validation?->getErrors() ?? []) as $error) {
+                    if (stripos((string)$error, 'expired') !== false || stripos((string)$error, 'ផុតកំណត់') !== false) {
+                        $show_renew_cta = true;
+                        break;
+                    }
+                }
+            }
+            ?>
+            <?php if ($show_renew_cta): ?>
+                <p class="login-forgot" style="margin-top:0;margin-bottom:1rem;">
+                    <a href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                </p>
             <?php endif; ?>
 
             <?php if (!$is_latest): ?>
@@ -111,6 +138,8 @@
             <?= form_close() ?>
 
             <p class="login-card__footer">
+                <a class="login-card__link" href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                <span aria-hidden="true"> · </span>
                 <a class="login-card__link" href="<?= site_url() ?>">View our services</a>
             </p>
         </div>

@@ -4,7 +4,6 @@ namespace App\Events;
 
 use App\Libraries\MY_Migration;
 use App\Models\Appconfig;
-use App\Models\Employee;
 use CodeIgniter\Session\Session;
 use Config\OSPOS;
 use Config\Services;
@@ -46,29 +45,28 @@ class Load_config
         if (empty($language_code) || empty($language_name) || !$language_exists) {
             $config->settings['language'] = DEFAULT_LANGUAGE;
             $config->settings['language_code'] = DEFAULT_LANGUAGE_CODE;
-            $language_code = DEFAULT_LANGUAGE_CODE;
         }
 
-        $person_id = (int)($this->session->get('person_id') ?? 0);
-        if ($person_id > 0) {
-            $employee = model(Employee::class);
-            if ($employee->is_logged_in()) {
-                $employee_info = $employee->get_logged_in_employee_info();
-                if (
-                    !empty($employee_info->language_code)
-                    && file_exists('../app/Language/' . $employee_info->language_code)
-                ) {
-                    $language_code = $employee_info->language_code;
-                }
-            }
-        }
+        helper('locale');
 
         $language = Services::language();
-        $language->setLocale($language_code);
+        $language->setLocale(resolve_ui_language_code());
 
         // Time Zone
         date_default_timezone_set($config->settings['timezone'] ?? ini_get('date.timezone'));
 
         bcscale(max(2, totals_decimals() + tax_decimals()));
+
+        // Existing shops may still have demo email / inherited logo from old provisioning — fix on the fly.
+        try {
+            $appconfig = model(Appconfig::class);
+            $repaired_email = $appconfig->repairPlaceholderShopEmail();
+            $repaired_logo = $appconfig->repairInheritedCompanyLogo();
+            if ($repaired_email !== null || $repaired_logo) {
+                $config->update_settings();
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Shop profile repair failed: ' . $e->getMessage());
+        }
     }
 }

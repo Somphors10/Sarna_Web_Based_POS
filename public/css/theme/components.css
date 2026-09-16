@@ -47,16 +47,16 @@
     color: #fff;
 }
 
-/* Primary link color — override Flatly teal (exclude sidebar nav, report links, and buttons) */
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn),
-.neo-global-content a:not(.neo-report-link):not(.btn) {
+/* Primary link color — override Flatly teal (exclude sidebar nav, report links, profile menu, and buttons) */
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item),
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item) {
     color: var(--wbpos-primary-dark);
 }
 
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):hover,
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):focus,
-.neo-global-content a:not(.neo-report-link):not(.btn):hover,
-.neo-global-content a:not(.neo-report-link):not(.btn):focus {
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):hover,
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):focus,
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):hover,
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):focus {
     color: var(--wbpos-primary-darker);
 }
 
@@ -81,6 +81,49 @@
 
 .neo-global-content .btn-default:hover {
     background: #eef2f7;
+}
+
+/* All Delete toolbar / danger buttons — light red bg, red text/icon */
+.neo-global-content #delete,
+.wrapper #delete,
+.neo-global-content .btn-danger,
+.wrapper .btn-danger,
+.neo-global-content .tax-rates-btn--danger,
+.wrapper .tax-rates-btn--danger {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+
+.neo-global-content #delete:hover,
+.neo-global-content #delete:focus,
+.wrapper #delete:hover,
+.wrapper #delete:focus,
+.neo-global-content .btn-danger:hover,
+.neo-global-content .btn-danger:focus,
+.wrapper .btn-danger:hover,
+.wrapper .btn-danger:focus,
+.neo-global-content .tax-rates-btn--danger:hover,
+.neo-global-content .tax-rates-btn--danger:focus,
+.wrapper .tax-rates-btn--danger:hover,
+.wrapper .tax-rates-btn--danger:focus {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    color: #b91c1c !important;
+}
+
+.neo-global-content #delete .glyphicon,
+.wrapper #delete .glyphicon,
+.neo-global-content .btn-danger .glyphicon,
+.wrapper .btn-danger .glyphicon {
+    color: #dc2626 !important;
+}
+
+.neo-global-content #delete:hover .glyphicon,
+.wrapper #delete:hover .glyphicon,
+.neo-global-content .btn-danger:hover .glyphicon,
+.wrapper .btn-danger:hover .glyphicon {
+    color: #b91c1c !important;
 }
 
 .neo-global-content .btn-primary,
@@ -127,23 +170,50 @@
 }
 
 .neo-global-content .nav-tabs {
-    border-bottom-color: #dbe4ee;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0;
+    padding: 6px 8px;
+    background: #f8fafc;
+    border: 0;
+    border-bottom: 1px solid #eef2f7;
+    border-radius: 0;
+}
+
+.neo-global-content .nav-tabs > li {
+    float: none;
+    margin: 0;
 }
 
 .neo-global-content .nav-tabs > li > a {
-    color: #475569;
-    border: none;
-    border-bottom: 2px solid transparent;
+    margin: 0;
+    padding: 8px 14px;
+    color: #64748b;
+    border: 0 !important;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 13px;
+    line-height: 1.25;
+    background: transparent;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.neo-global-content .nav-tabs > li > a:hover {
+    color: #334155;
+    background: #fff;
+    border: 0 !important;
 }
 
 .neo-global-content .nav-tabs > li.active > a,
 .neo-global-content .nav-tabs > li.active > a:hover,
 .neo-global-content .nav-tabs > li.active > a:focus {
-    color: #0f172a;
-    border: none;
-    border-bottom: 2px solid var(--wbpos-primary);
-    background: #fff;
+    color: #6d28d9 !important;
+    border: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .neo-global-content .table-striped > tbody > tr:nth-of-type(odd) {
@@ -188,58 +258,94 @@
     overflow-x: auto;
 }
 
-.neo-global-content .bootstrap-table .fixed-table-toolbar {
+/* One toolbar row: Delete/date left, Search/actions right (never stacked) */
+.neo-global-content .bootstrap-table .fixed-table-toolbar,
+.wrapper .bootstrap-table .fixed-table-toolbar {
     position: relative;
     z-index: 110;
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 6px 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 8px;
     margin: 0 0 6px;
     padding: 0;
     overflow: visible;
     pointer-events: auto;
 }
 
-.neo-global-content .bootstrap-table .fixed-table-toolbar::after {
-    display: none;
+.neo-global-content .bootstrap-table .fixed-table-toolbar::before,
+.neo-global-content .bootstrap-table .fixed-table-toolbar::after,
+.wrapper .bootstrap-table .fixed-table-toolbar::before,
+.wrapper .bootstrap-table .fixed-table-toolbar::after {
+    display: none !important;
+    content: none !important;
+    clear: none !important;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars,
 .neo-global-content .bootstrap-table .fixed-table-toolbar .search,
-.neo-global-content .bootstrap-table .fixed-table-toolbar .columns {
+.neo-global-content .bootstrap-table .fixed-table-toolbar .columns,
+.wrapper .bootstrap-table .fixed-table-toolbar .bs-bars,
+.wrapper .bootstrap-table .fixed-table-toolbar .search,
+.wrapper .bootstrap-table .fixed-table-toolbar .columns {
     float: none !important;
     position: relative;
-    margin: 0;
+    margin: 0 !important;
+    clear: none !important;
 }
 
-.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars {
-    flex: 1 1 0;
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars,
+.wrapper .bootstrap-table .fixed-table-toolbar .bs-bars {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    align-items: center;
     min-width: 0;
-    width: auto;
+    width: auto !important;
+    max-width: none;
+    margin-right: auto !important;
     order: 1;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars #toolbar,
-.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars .neo-table-toolbar {
-    width: auto;
+.neo-global-content .bootstrap-table .fixed-table-toolbar .bs-bars .neo-table-toolbar,
+.wrapper .bootstrap-table .fixed-table-toolbar .bs-bars #toolbar,
+.wrapper .bootstrap-table .fixed-table-toolbar .bs-bars .neo-table-toolbar {
+    display: flex !important;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    width: auto !important;
     max-width: 100%;
-    margin: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-toolbar .search,
-.neo-global-content .bootstrap-table .fixed-table-toolbar .search.input-group {
-    display: block;
-    flex: 0 0 168px;
-    width: 168px;
-    max-width: 168px;
-    margin-left: auto;
+.neo-global-content .bootstrap-table .fixed-table-toolbar .search.input-group,
+.wrapper .bootstrap-table .fixed-table-toolbar .search,
+.wrapper .bootstrap-table .fixed-table-toolbar .search.input-group {
+    display: flex !important;
+    flex: 0 0 168px !important;
+    align-items: center;
+    width: 168px !important;
+    max-width: 168px !important;
+    margin-left: 0 !important;
     order: 2;
 }
 
-.neo-global-content .bootstrap-table .fixed-table-toolbar .columns {
-    flex: 0 0 auto;
-    width: auto;
+.neo-global-content .bootstrap-table .fixed-table-toolbar .columns,
+.wrapper .bootstrap-table .fixed-table-toolbar .columns {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center;
+    width: auto !important;
+    margin-left: 0 !important;
     order: 3;
 }
 
@@ -556,10 +662,39 @@
 }
 
 .neo-global-content .bootstrap-table .table thead > tr > th {
-    background: #f1f5f9;
-    color: #334155;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 11px;
     font-weight: 600;
-    border-bottom-color: #dbe4ee;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 10px 12px;
+    white-space: nowrap;
+}
+
+html[lang="km"] .neo-global-content .bootstrap-table .table thead > tr > th,
+html.lang-km .neo-global-content .bootstrap-table .table thead > tr > th {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+}
+
+.neo-global-content .bootstrap-table .table tbody > tr > td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.neo-global-content .bootstrap-table .table tbody > tr:hover {
+    background: #fafbff;
+}
+
+.neo-global-content .bootstrap-table .fixed-table-container {
+    border-color: #e2e8f0;
+    border-radius: 10px;
+    overflow-x: auto;
 }
 
 .neo-global-content .bootstrap-table .fixed-table-body .fixed-table-loading {
@@ -627,3 +762,180 @@
     outline: none !important;
     box-shadow: none !important;
 }
+
+/* =========================================================
+   POS selects — native style (same as Stock Source)
+   ========================================================= */
+.neo-global-content select.form-control,
+.neo-global-content select,
+.bootstrap-dialog select.form-control,
+.bootstrap-dialog select,
+.modal select.form-control,
+.modal select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid #d0d7e2;
+    border-radius: 8px;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding: 6px 32px 6px 10px;
+    min-height: 34px;
+    color: #0f172a;
+    box-shadow: none;
+    line-height: 1.35;
+    vertical-align: middle;
+}
+
+.neo-global-content select.form-control:focus,
+.neo-global-content select:focus,
+.bootstrap-dialog select.form-control:focus,
+.bootstrap-dialog select:focus,
+.modal select.form-control:focus,
+.modal select:focus {
+    border-color: #94a3b8;
+    box-shadow: none;
+    outline: none;
+}
+
+.neo-global-content select.input-sm,
+.bootstrap-dialog select.input-sm,
+.modal select.input-sm,
+.neo-global-content select.pos-native-select {
+    min-height: 34px;
+    height: 34px;
+    font-size: 13px;
+    width: auto;
+    max-width: 100%;
+    display: inline-block;
+}
+
+#mode_form select.pos-native-select,
+#add_item_form select.pos-native-select,
+#toolbar select.pos-native-select,
+#toolbar select#stock_location {
+    min-width: 140px;
+}
+
+/* Multi-select filters only: keep bootstrap-select compact + no search */
+.neo-global-content .bootstrap-select,
+.bootstrap-dialog .bootstrap-select,
+.modal .bootstrap-select {
+    vertical-align: middle;
+    width: auto !important;
+    max-width: 240px;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle,
+.modal .bootstrap-select > .dropdown-toggle {
+    border: 1px solid #d0d7e2 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 6px 28px 6px 10px !important;
+    font-weight: 500;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle:hover,
+.neo-global-content .bootstrap-select > .dropdown-toggle:focus,
+.neo-global-content .bootstrap-select.open > .dropdown-toggle,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle:hover,
+.bootstrap-dialog .bootstrap-select > .dropdown-toggle:focus,
+.modal .bootstrap-select > .dropdown-toggle:hover,
+.modal .bootstrap-select > .dropdown-toggle:focus {
+    border-color: #94a3b8 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+}
+
+.neo-global-content .bootstrap-select .dropdown-toggle .caret,
+.neo-global-content .bootstrap-select .dropdown-toggle .bs-caret,
+.bootstrap-dialog .bootstrap-select .dropdown-toggle .caret,
+.bootstrap-dialog .bootstrap-select .dropdown-toggle .bs-caret,
+.modal .bootstrap-select .dropdown-toggle .caret,
+.modal .bootstrap-select .dropdown-toggle .bs-caret {
+    display: none !important;
+}
+
+.neo-global-content .bootstrap-select > .dropdown-toggle {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 14px !important;
+}
+
+.bootstrap-select > .dropdown-menu {
+    border: 1px solid #c5cdd8 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+    padding: 0 !important;
+    margin: 1px 0 0 !important;
+    background: #ffffff !important;
+    overflow: hidden;
+}
+
+.bootstrap-select .dropdown-menu.inner {
+    position: static !important;
+    float: none !important;
+    top: auto !important;
+    left: auto !important;
+    max-height: 220px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow-y: auto !important;
+}
+
+.bootstrap-select .dropdown-menu > li > a,
+.bootstrap-select .dropdown-menu.inner > li > a {
+    border-radius: 0 !important;
+    padding: 8px 12px !important;
+    color: #0f172a !important;
+    font-size: 13px;
+}
+
+.bootstrap-select .dropdown-menu > li > a:hover,
+.bootstrap-select .dropdown-menu > li > a:focus,
+.bootstrap-select .dropdown-menu > li.selected > a,
+.bootstrap-select .dropdown-menu > li.active > a,
+.bootstrap-select .dropdown-menu.inner > li > a:hover,
+.bootstrap-select .dropdown-menu.inner > li > a:focus,
+.bootstrap-select .dropdown-menu.inner > li.selected > a,
+.bootstrap-select .dropdown-menu.inner > li.active > a {
+    background: #1d68d4 !important;
+    color: #ffffff !important;
+}
+
+.bootstrap-select .dropdown-menu > li.selected > a .text,
+.bootstrap-select .dropdown-menu > li.active > a .text,
+.bootstrap-select .dropdown-menu > li > a:hover .text {
+    color: inherit !important;
+}
+
+.bootstrap-select .bs-searchbox {
+    display: none !important;
+}
+
+.neo-global-content #register_wrapper #mode_form,
+.neo-global-content #register_wrapper #add_item_form {
+    overflow: visible;
+    position: relative;
+    z-index: 30;
+}
+
+.recv-page #register_wrapper,
+.sale-page #register_wrapper {
+    overflow: visible;
+}
+

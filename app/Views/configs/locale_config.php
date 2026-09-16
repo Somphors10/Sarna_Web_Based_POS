@@ -14,7 +14,7 @@
             <div id="required_fields_message"><?= lang('Common.fields_required_message') ?></div>
             <ul id="locale_error_message_box" class="error_message_box"></ul>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.number_locale'), 'number_locale', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_input([
@@ -89,7 +89,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.tax_decimals'), 'tax_decimals', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_dropdown(
@@ -176,7 +176,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.country_codes'), 'country_codes', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_input([
@@ -238,7 +238,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.date_or_time_format'), 'date_or_time_format', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_checkbox([
@@ -250,7 +250,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.financial_year'), 'financial_year', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_dropdown(

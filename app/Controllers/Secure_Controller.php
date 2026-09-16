@@ -38,14 +38,35 @@ class Secure_Controller extends BaseController
     {
         $this->session = session();
 
-        // Clear stale per-tenant DB overrides before any model connects.
+        try {
+            $this->bootSecureController($module_id, $submodule_id, $menu_group);
+        } catch (Throwable $e) {
+            $dump = $e->getMessage() . PHP_EOL . $e->getFile() . ':' . $e->getLine() . PHP_EOL . PHP_EOL . $e->getTraceAsString();
+            if (defined('FCPATH')) {
+                @file_put_contents(FCPATH . 'last-crash.txt', $dump);
+            }
+            http_response_code(500);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $dump;
+            exit;
+        }
+    }
+
+    private function bootSecureController(string $module_id, ?string $submodule_id, ?string $menu_group): void
+    {
+
         $bootstrap_tenant_id = (int)($this->session->get('tenant_id') ?? 0);
-        (new TenantContext())->bootstrapSessionTenantDatabase($bootstrap_tenant_id > 0 ? $bootstrap_tenant_id : 1);
+        if ($bootstrap_tenant_id > 0) {
+            (new TenantContext())->applyRuntimeConnection($bootstrap_tenant_id);
+        }
 
         $this->employee = model(Employee::class);
         $this->module = model(Module::class);
-        $config = config(OSPOS::class)->settings;
         $validation = Services::validation();
+
+        if (function_exists('is_platform_super_admin') && is_platform_super_admin()) {
+            refresh_super_admin_pos_session();
+        }
 
         if (!$this->employee->is_logged_in()) {
             header("Location:" . base_url('login'));
@@ -53,6 +74,7 @@ class Secure_Controller extends BaseController
         }
 
         $logged_in_employee_info = $this->employee->get_logged_in_employee_info();
+        $is_super_admin = function_exists('is_platform_super_admin') && is_platform_super_admin();
         $tenant_id = (int)($this->session->get('tenant_id') ?? 0);
         if ($tenant_id <= 0) {
             $tenant_id = (int)($logged_in_employee_info->tenant_id ?? 0);
@@ -76,11 +98,56 @@ class Secure_Controller extends BaseController
             }
             $this->session->set('tenant_id', $tenant_id);
         }
-        (new TenantContext())->bootstrapSessionTenantDatabase($tenant_id);
+
+        // Mid-session: warn by email (Gmail); expired shops stay in view-only mode.
+        if (!$is_super_admin && $tenant_id > 0) {
+            if (
+                function_exists('saas_tenant_needs_renewal')
+                && saas_tenant_needs_renewal($tenant_id)
+            ) {
+                try {
+                    (new \App\Libraries\SubscriptionExpiryNotifier())->notifyTenant($tenant_id);
+                } catch (Throwable $e) {
+                    log_message('error', 'Expiry email on POS load failed: ' . $e->getMessage());
+                }
+            }
+
+            $this->enforceSubscriptionViewOnly($tenant_id);
+        }
+
+        (new TenantContext())->applyRuntimeConnection($tenant_id);
+
+        // After tenant is known: drop inherited demo email / other-shop logos.
+        try {
+            $appconfig = model(\App\Models\Appconfig::class);
+            $email_fixed = $appconfig->repairPlaceholderShopEmail();
+            $logo_fixed = $appconfig->repairInheritedCompanyLogo();
+            if ($email_fixed !== null || $logo_fixed) {
+                config(OSPOS::class)->update_settings();
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Shop profile repair failed: ' . $e->getMessage());
+        }
+
+        $config = config(OSPOS::class)->settings;
+        $logo = trim((string)($config['company_logo'] ?? ''));
+        $prefix = 'tenants/' . $tenant_id . '/company_logo.';
+        if ($logo !== '' && !str_starts_with($logo, $prefix)) {
+            $config['company_logo'] = '';
+        }
 
         if (
             !$this->employee->has_module_grant($module_id, $logged_in_employee_info->person_id)
             || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, $logged_in_employee_info->person_id))
+        ) {
+            header("Location:" . base_url("no_access/$module_id/$submodule_id"));
+            exit();
+        }
+
+        if (
+            $module_id !== ''
+            && function_exists('tenant_feature_enabled')
+            && !tenant_feature_enabled($module_id)
         ) {
             header("Location:" . base_url("no_access/$module_id/$submodule_id"));
             exit();
@@ -100,20 +167,125 @@ class Secure_Controller extends BaseController
 
         $this->global_view_data = [];
         $this->global_view_data['allowed_modules'] = [];
-        foreach ($allowed_modules->getResult() as $module) {
-            if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
-                continue;
+        $hidden_modules = $is_super_admin
+            ? array_values(array_unique(array_merge(
+                ['messages', 'migrate', 'office'],
+                function_exists('platform_disabled_feature_ids') ? platform_disabled_feature_ids() : []
+            )))
+            : hidden_ui_module_ids();
+
+        if ($is_super_admin) {
+            $seen_modules = [];
+            $super_admin_modules = array_merge(
+                $this->module->get_allowed_home_modules($logged_in_employee_info->person_id)->getResult(),
+                $this->module->get_allowed_office_modules($logged_in_employee_info->person_id)->getResult()
+            );
+            foreach ($super_admin_modules as $module) {
+                if (isset($seen_modules[$module->module_id]) || in_array($module->module_id, $hidden_modules, true)) {
+                    continue;
+                }
+                $seen_modules[$module->module_id] = true;
+                $this->global_view_data['allowed_modules'][] = $module;
             }
 
-            $this->global_view_data['allowed_modules'][] = $module;
+            usort(
+                $this->global_view_data['allowed_modules'],
+                static fn($a, $b) => (int)($a->sort ?? 0) <=> (int)($b->sort ?? 0)
+            );
+        } else {
+            foreach ($allowed_modules->getResult() as $module) {
+                if (in_array($module->module_id, $hidden_modules, true)) {
+                    continue;
+                }
+
+                $this->global_view_data['allowed_modules'][] = $module;
+            }
         }
 
         $this->global_view_data += [
-            'user_info'       => $logged_in_employee_info,
-            'controller_name' => $module_id,
-            'config'          => $config
+            'user_info'               => $logged_in_employee_info,
+            'controller_name'         => $module_id,
+            'config'                  => $config,
+            'subscription_view_only'  => (bool)$this->session->get('subscription_view_only'),
         ];
         view('viewData', $this->global_view_data);
+    }
+
+    /**
+     * Expired shops may stay logged in to view data, but cannot mutate until they renew.
+     */
+    private function enforceSubscriptionViewOnly(int $tenant_id): void
+    {
+        if (!function_exists('saas_tenant_subscription_info')) {
+            $this->session->set('subscription_view_only', false);
+
+            return;
+        }
+
+        $info = saas_tenant_subscription_info($tenant_id);
+        $view_only = !empty($info['is_expired']);
+        $this->session->set('subscription_view_only', $view_only);
+
+        if (!$view_only) {
+            return;
+        }
+
+        $request = Services::request();
+        $method = strtoupper((string)$request->getMethod(true));
+        $segments = array_values(array_map('strtolower', $request->getUri()->getSegments()));
+        if (($segments[0] ?? '') === 'index.php') {
+            array_shift($segments);
+        }
+
+        $controller = (string)($segments[0] ?? '');
+        $action = (string)($segments[1] ?? '');
+        $path = implode('/', $segments);
+
+        // Renew / pay (Saas is not Secure_Controller, but keep allowlist for safety),
+        // logout, language switch, and access-denied pages.
+        if (
+            $controller === 'saas'
+            || str_starts_with($path, 'home/logout')
+            || str_starts_with($path, 'home/language')
+            || $controller === 'no_access'
+            || $controller === 'login'
+        ) {
+            return;
+        }
+
+        $mutating_get = false;
+        if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+            $mutating_needles = [
+                'delete', 'remove', 'void', 'cancel', 'complete', 'suspend', 'restore',
+                'save', 'update', 'clear', 'change_mode', 'changemode', 'setmode',
+            ];
+            foreach ($mutating_needles as $needle) {
+                if ($action !== '' && str_contains($action, $needle)) {
+                    $mutating_get = true;
+                    break;
+                }
+            }
+
+            if (!$mutating_get) {
+                return;
+            }
+        }
+
+        $message = lang('Login.subscription_view_only');
+        if ($request->isAJAX()) {
+            $response = Services::response();
+            $response->setStatusCode(403);
+            $response->setHeader('Content-Type', 'application/json; charset=UTF-8');
+            $response->setBody(json_encode([
+                'success' => false,
+                'message' => $message,
+            ]));
+            $response->send();
+            exit();
+        }
+
+        header('Location:' . base_url('home') . '?view_only=1');
+        exit();
     }
 
     public function sanitizeSortColumn($headers, $field, $default): string

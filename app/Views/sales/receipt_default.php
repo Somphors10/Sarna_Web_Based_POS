@@ -33,11 +33,14 @@
 
                 <div id="company_address"><?= nl2br(esc($config['address'])) ?></div>
                 <div id="company_phone"><?= esc($config['phone']) ?></div>
+                <?php if (!empty($config['tax_id'])): ?>
+                    <div id="company_tax_id"><?= lang('Sales.tax_id') ?>: <?= esc($config['tax_id']) ?></div>
+                <?php endif; ?>
             </div>
         </div>
 
         <div class="receipt-header__meta">
-            <div id="sale_receipt"><?= lang('Sales.receipt') ?></div>
+            <div id="sale_receipt"><?= lang('Sales.tax_invoice') ?></div>
             <div id="sale_time"><?= ($transaction_time) ?></div>
         </div>
     </div>
@@ -45,6 +48,9 @@
     <div id="receipt_general_info">
         <?php if (isset($customer)) { ?>
             <div id="customer"><?= lang('Customers.customer') . esc(": $customer") ?></div>
+            <?php if (!empty($tax_id)) { ?>
+                <div id="customer_tax_id"><?= lang('Sales.tax_id') . esc(": $tax_id") ?></div>
+            <?php } ?>
         <?php } ?>
 
         <div id="sale_id"><?= lang('Sales.id') . esc(": $sale_id") ?></div>
@@ -135,6 +141,10 @@
         <tr>
             <td colspan="3" style="text-align: right;<?= $border ? ' border-top: 2px solid black;' : '' ?>"><?= lang('Sales.total') ?></td>
             <td style="text-align: right;<?= $border ? ' border-top: 2px solid black;' : '' ?>"><?= to_currency($total) ?></td>
+        </tr>
+        <tr>
+            <td colspan="3" style="text-align: right;"><?= lang('Sales.total_khr') ?></td>
+            <td style="text-align: right;"><?= to_khr_currency($total) ?></td>
         </tr>
 
         <tr>

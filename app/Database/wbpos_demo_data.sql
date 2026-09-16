@@ -106,12 +106,12 @@ INSERT INTO `wbpos_people` (`first_name`, `last_name`, `gender`, `phone_number`,
 ('Frank', 'Scott', 1, '555-2006', 'frank@email.com', '60 Elm Court', '', 'Springfield', 'IL', '62715', 'USA', 'Regular customer', 1016, 1);
 
 INSERT INTO `wbpos_customers` (`person_id`, `company_name`, `account_number`, `taxable`, `tax_id`, `sales_tax_code_id`, `package_id`, `points`, `deleted`, `discount`, `discount_type`, `date`, `employee_id`, `consent`, `tenant_id`) VALUES
-(1011, NULL, 'CUST-001', 1, '', NULL, 2, 120, 0, 0.00, 0, '2026-05-01 09:00:00', 1, 1, 1),
-(1012, 'Hall Trading', 'CUST-002', 1, '', NULL, 3, 80, 0, 5.00, 0, '2026-05-02 09:00:00', 1, 1, 1),
-(1013, NULL, 'CUST-003', 1, '', NULL, 2, 45, 0, 0.00, 0, '2026-05-03 09:00:00', 1, 1, 1),
-(1014, 'Young Corp', 'CUST-004', 1, '', NULL, 4, 200, 0, 10.00, 1, '2026-05-04 09:00:00', 1, 1, 1),
-(1015, NULL, 'CUST-005', 1, '', NULL, 1, 15, 0, 0.00, 0, '2026-05-05 09:00:00', 1, 1, 1),
-(1016, 'Scott Retail', 'CUST-006', 1, '', NULL, 5, 300, 0, 0.00, 0, '2026-05-06 09:00:00', 1, 1, 1);
+(1011, NULL, 'CUST-00001', 1, '', NULL, 2, 120, 0, 0.00, 0, '2026-05-01 09:00:00', 1, 1, 1),
+(1012, 'Hall Trading', 'CUST-00002', 1, '', NULL, 3, 80, 0, 5.00, 0, '2026-05-02 09:00:00', 1, 1, 1),
+(1013, NULL, 'CUST-00003', 1, '', NULL, 2, 45, 0, 0.00, 0, '2026-05-03 09:00:00', 1, 1, 1),
+(1014, 'Young Corp', 'CUST-00004', 1, '', NULL, 4, 200, 0, 10.00, 1, '2026-05-04 09:00:00', 1, 1, 1),
+(1015, NULL, 'CUST-00005', 1, '', NULL, 1, 15, 0, 0.00, 0, '2026-05-05 09:00:00', 1, 1, 1),
+(1016, 'Scott Retail', 'CUST-00006', 1, '', NULL, 5, 300, 0, 0.00, 0, '2026-05-06 09:00:00', 1, 1, 1);
 
 -- ----------------------------------------------------------
 -- Employees (5 + admin = 6) - person_id 1021-1025, password: pointofsale

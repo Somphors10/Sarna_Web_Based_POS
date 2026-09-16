@@ -295,7 +295,7 @@
             pageSize = 10;
         }
 
-        $('#table')
+        $('#table'))
             .addClass("table-striped")
             .addClass("table-bordered")
             .            bootstrapTable($.extend(options, {

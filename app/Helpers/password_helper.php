@@ -69,6 +69,10 @@ function is_strong_password(?string $password): bool
         return false;
     }
 
+    if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+        return false;
+    }
+
     if (preg_match('/^(.)\1+$/', $password)) {
         return false;
     }

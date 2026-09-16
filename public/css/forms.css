@@ -1,5 +1,13 @@
+.pos-config-hidden {
+    display: none !important;
+}
+
 .pos-form-shell {
-    padding: 6px;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .pos-form-required {
@@ -8,7 +16,7 @@
     color: #1e3a8a;
     border-radius: 8px;
     padding: 8px 10px;
-    margin-bottom: 10px;
+    margin: 12px 14px 10px;
     font-size: 12px;
 }
 
@@ -38,10 +46,10 @@ label.required.control-label::after {
 
 .pos-modern-form {
     background: #ffffff;
-    border: 1px solid #dbe4ee;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
-    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
 }
 
 .pos-modern-form .tab-content {
@@ -82,23 +90,50 @@ label.required.control-label::after {
 }
 
 .pos-form-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0;
+    padding: 8px 10px;
     background: #f8fafc;
-    border-bottom: 1px solid #dbe4ee;
+    border: 0;
+    border-bottom: 1px solid #eef2f7;
+    border-radius: 0;
+}
+
+.pos-form-tabs > li {
+    float: none;
+    margin: 0;
 }
 
 .pos-form-tabs > li > a {
-    color: #475569;
+    display: block;
+    margin: 0;
+    padding: 8px 14px;
+    color: #64748b;
     font-weight: 600;
-    border: none !important;
-    border-radius: 0;
+    font-size: 13px;
+    line-height: 1.25;
+    border: 0 !important;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.pos-form-tabs > li > a:hover {
+    color: #334155;
+    background: #fff;
 }
 
 .pos-form-tabs > li.active > a,
 .pos-form-tabs > li.active > a:hover,
 .pos-form-tabs > li.active > a:focus {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    border-bottom: 2px solid var(--wbpos-primary) !important;
+    background: #fff !important;
+    color: #6d28d9 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .pos-modern-form .radio-inline {

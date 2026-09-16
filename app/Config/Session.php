@@ -5,6 +5,7 @@ namespace Config;
 use CodeIgniter\Config\BaseConfig;
 use CodeIgniter\Session\Handlers\BaseHandler;
 use CodeIgniter\Session\Handlers\DatabaseHandler;
+use CodeIgniter\Session\Handlers\FileHandler;
 
 class Session extends BaseConfig
 {
@@ -98,7 +99,7 @@ class Session extends BaseConfig
      *
      * DB Group for the database session.
      */
-    public ?string $DBGroup = null;
+    public ?string $DBGroup = 'platform';
 
     /**
      * --------------------------------------------------------------------------
@@ -124,4 +125,21 @@ class Session extends BaseConfig
      * seconds.
      */
     public int $lockMaxRetries = 300;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $use_file = filter_var(env('session.useFile', false), FILTER_VALIDATE_BOOLEAN);
+        if ($use_file) {
+            $this->driver = FileHandler::class;
+            $session_dir = (defined('WRITEPATH') ? WRITEPATH : dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'writable' . DIRECTORY_SEPARATOR) . 'session';
+            if (!is_dir($session_dir)) {
+                @mkdir($session_dir, 0775, true);
+            }
+            $this->savePath = $session_dir;
+            $this->matchIP = false;
+            $this->cookieName = 'PHPSESSID';
+        }
+    }
 }

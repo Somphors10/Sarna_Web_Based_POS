@@ -11,6 +11,8 @@
 /* Form fields: border-only focus — no outer glow/shadow ring */
 .login-field__input:focus,
 .lp-field-input:focus,
+.sa-khqr-input:focus,
+.sa-mail-input:focus,
 .sa-input:focus,
 .sa-select:focus,
 .form-control:focus,

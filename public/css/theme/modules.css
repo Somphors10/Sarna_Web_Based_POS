@@ -3,15 +3,22 @@
     background: #f8fafc;
     border: 1px solid #dbe4ee;
     border-radius: var(--neo-radius-md);
-    padding: var(--neo-panel-padding);
+    padding: 16px 20px 20px;
+    box-sizing: border-box;
 }
 
 .neo-module-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--neo-gap-sm);
-    margin-bottom: var(--neo-gap-sm);
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: nowrap;
+}
+
+.neo-module-header > div:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .neo-module-title {
@@ -19,6 +26,11 @@
     color: #0f172a;
     font-size: 22px;
     font-weight: 600;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
+    -webkit-hyphens: none;
 }
 
 .neo-module-subtitle {
@@ -27,29 +39,166 @@
     font-size: 12px;
 }
 
+.neo-module-subtitle:empty {
+    display: none;
+}
+
 .neo-module-actions {
     display: flex;
     align-items: center;
     gap: var(--neo-gap-xs);
+    flex-shrink: 0;
+    margin: 0 !important;
 }
 
 .neo-module-actions .btn {
     border-radius: 8px;
 }
 
+/* Active / Deleted — boxed segmented control + divider above toolbar */
+.neo-list-tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0;
+    margin: 0;
+    padding: 10px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0; /* line above Delete / Restore */
+    border-radius: 12px 12px 0 0;
+}
+
+.neo-list-tabs__track {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    background: #eef2f7;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+}
+
+.neo-list-tabs:not(:has(.neo-list-tabs__track)) {
+    gap: 2px;
+}
+
+.neo-list-tab {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    border-radius: 999px;
+    padding: 7px 18px;
+    margin: 0;
+    min-width: 84px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: none;
+    outline: none;
+    transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.neo-list-tab::after {
+    display: none;
+    content: none;
+}
+
+.neo-list-tab:hover {
+    color: #334155;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.neo-list-tab:focus,
+.neo-list-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.neo-list-tab.is-active {
+    background: #fff;
+    color: #6d28d9;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.neo-list-tab.is-active[data-list="deleted"] {
+    background: #fff;
+    color: #b91c1c;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
 .neo-table-toolbar {
-    margin-bottom: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
 }
 
 .neo-table-toolbar .btn {
     border-radius: 8px;
 }
 
+.neo-global-content .btn-default,
+.neo-global-content .bootstrap-table .btn-default {
+    border-color: #e2e8f0;
+    color: #475569;
+    background: #fff;
+    box-shadow: none;
+}
+
 .neo-table-holder {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: var(--neo-radius-sm);
-    padding: var(--neo-gap-xs);
+    border-radius: 12px;
+    padding: 12px 16px 16px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
+}
+
+/* Same connected card style as Super Admin feature lists */
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar {
+    margin: 0;
+    padding: 10px 16px;
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-top: 0;
+    border-bottom: 0;
+}
+
+.neo-module-page > .neo-list-tabs + .neo-table-holder,
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar + .neo-table-holder {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 8px 16px 16px;
+    box-shadow: none;
+}
+
+.neo-module-page > .neo-list-tabs + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-list-tabs + .neo-table-toolbar + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-module-header + .neo-table-holder .bootstrap-table > .fixed-table-toolbar,
+.neo-module-page > .neo-module-header + .neo-table-toolbar + .neo-table-holder .bootstrap-table > .fixed-table-toolbar {
+    margin: 0 0 8px;
+    padding: 0 0 8px;
+}
+
+/* Toolbar is moved into the table by bootstrap-table — keep the card on the table only */
+.neo-module-page > .neo-module-header + .neo-table-toolbar {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.neo-module-page > .neo-module-header + .neo-table-toolbar + .neo-table-holder,
+.neo-module-page > .neo-module-header + .neo-table-holder {
+    border-radius: 12px;
 }
 
 /* Shared styling for all feature pages in content area */
@@ -62,11 +211,15 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--neo-gap-xs);
-    margin: var(--neo-gap-sm) 0 var(--neo-gap-sm);
+    gap: var(--neo-gap-xs, 8px);
+    margin: 0;
     padding: 0;
     height: auto;
     min-height: 0;
+}
+
+.neo-global-content .neo-module-header [id="title_bar"] {
+    margin: 0;
 }
 
 .neo-global-content .btn-toolbar {
@@ -123,9 +276,27 @@
 .neo-global-content #toolbar .bootstrap-select > .dropdown-toggle {
     height: 34px;
     border-radius: 8px;
-    border-color: #d5dee8;
-    background: #ffffff;
+    border-color: #d0d7e2;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 14px !important;
     color: #334155;
+    padding-right: 32px !important;
+    cursor: pointer;
+}
+
+.neo-global-content #toolbar .bootstrap-select {
+    width: auto !important;
+    min-width: 150px;
+    max-width: 240px;
+    vertical-align: middle;
+}
+
+.neo-global-content #toolbar .pos-items-filter-select + .bootstrap-select,
+.neo-global-content #toolbar .bootstrap-select:has(#filters) {
+    min-width: 160px;
 }
 
 .neo-global-content #toolbar .bootstrap-select .dropdown-menu {
@@ -356,12 +527,13 @@
 }
 
 .neo-global-content .neo-report-breadcrumb a {
-    color: #0f172a;
+    color: var(--wbpos-primary, #7c3aed);
     text-decoration: none;
     font-weight: 600;
 }
 
 .neo-global-content .neo-report-breadcrumb a:hover {
+    color: #6d28d9;
     text-decoration: underline;
 }
 
@@ -466,16 +638,50 @@
 }
 
 .neo-report-card__title {
-    margin: 0 0 10px;
+    margin: 0 0 4px;
     color: #0f172a;
     font-size: 15px;
     font-weight: 700;
+}
+
+.neo-report-card__hint {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .neo-report-card__links {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.neo-report-card--advanced {
+    grid-column: 1 / -1;
+    background: #ffffff;
+}
+
+.neo-report-card__links--grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 10px;
+}
+
+.neo-report-card__links--grid .neo-report-link {
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .neo-report-card__links--grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .neo-report-card__links--grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .neo-global-content a.neo-report-link {
@@ -507,6 +713,182 @@
 
 .neo-report-summary {
     margin-top: 12px;
+}
+
+.neo-report-page .neo-module-title {
+    white-space: normal;
+}
+
+.neo-report-page .neo-report-table-holder {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.neo-report-page .neo-report-table-holder .fixed-table-toolbar {
+    padding: 10px 12px 0;
+}
+
+.neo-report-page .neo-report-table-holder .bootstrap-table .table > thead > tr > th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 700;
+    border-bottom-color: #e2e8f0;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    min-width: 0;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbe4ee;
+    color: #334155 !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:hover,
+.neo-report-page .neo-report-table-holder .detail-icon:focus {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a !important;
+    text-decoration: none !important;
+    outline: none;
+}
+
+/* Hide default +/- glyph; use text label + simple chevron */
+.neo-report-page .neo-report-table-holder .detail-icon .glyphicon,
+.neo-report-page .neo-report-table-holder .detail-icon i {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+    order: 2;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon .glyphicon::before,
+.neo-report-page .neo-report-table-holder .detail-icon i::before {
+    content: "" !important;
+    position: absolute;
+    left: 1px;
+    top: 0;
+    width: 5px;
+    height: 5px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg); /* ▼ show more */
+    color: #64748b;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon::after {
+    content: attr(data-label-open);
+    order: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: inherit;
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus)::after,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon::after {
+    content: attr(data-label-close);
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus) .glyphicon::before,
+.neo-report-page .neo-report-table-holder .detail-icon:has(.icon-minus)::before,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon .glyphicon::before,
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon i::before {
+    top: 2px;
+    transform: rotate(-135deg); /* ▲ hide */
+    color: var(--wbpos-primary, #7c3aed);
+}
+
+.neo-report-page .neo-report-table-holder .detail-icon:has(.glyphicon-minus),
+.neo-report-page .neo-report-table-holder tr:has(+ tr.detail-view) .detail-icon {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    color: var(--wbpos-primary, #7c3aed) !important;
+}
+
+/* Nested line-items panel — card under the sale, not another main table */
+.neo-report-page .neo-report-table-holder tr.detail-view > td {
+    background: #f8fafc !important;
+    padding: 10px 14px 14px 18px !important;
+    border-top: none !important;
+    box-shadow: inset 3px 0 0 var(--wbpos-primary, #7c3aed);
+}
+
+.neo-report-page .neo-report-line-items {
+    max-width: 100%;
+}
+
+.neo-report-page .neo-report-line-items__title {
+    margin: 0 0 8px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.neo-report-page .neo-report-line-items .bootstrap-table,
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table {
+    margin: 0;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table > thead > tr > th {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom-color: #e2e8f0;
+}
+
+.neo-report-page .neo-report-table-holder tr.detail-view .bootstrap-table .table > tbody > tr > td {
+    color: #334155;
+    font-size: 13px;
+    background: #fff;
+}
+
+.neo-report-page #report_summary.neo-report-summary--cards {
+    justify-content: center;
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.neo-report-page #report_summary.neo-report-summary--cards .neo-report-summary__item {
+    min-width: 120px;
+    border: none;
+    background: transparent;
+    padding: 4px 12px;
+    text-align: center;
 }
 
 .neo-report-chart {
@@ -560,6 +942,67 @@
     margin-bottom: 8px;
 }
 
+.neo-report-pie-caption {
+    max-width: 640px;
+    margin: 4px auto 10px;
+    padding: 0 14px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.neo-report-pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto 16px;
+    padding: 0 14px;
+}
+
+.neo-report-pie-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e8edf4;
+    background: #fff;
+}
+
+.neo-report-pie-legend__dot {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    box-sizing: border-box;
+}
+
+.neo-report-pie-legend__name {
+    flex: 1;
+    min-width: 0;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.neo-report-pie-legend__amount {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.neo-report-pie-legend__pct {
+    min-width: 52px;
+    text-align: right;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
 .neo-report-pay-item__name {
     flex: 1;
     min-width: 0;
@@ -603,6 +1046,101 @@
     margin-right: auto;
 }
 
+.neo-report-chart-panel {
+    margin: 0 0 16px;
+}
+
+.neo-report-chart-panel--line {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    padding: 16px 12px 8px;
+}
+
+.neo-report-chart--line.ct-chart {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    height: 320px;
+    margin: 0;
+}
+
+.neo-report-chart--line .ct-point,
+.neo-report-chart--line .ct-tooltip-point {
+    fill: #6366f1;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.neo-report-chart--line .ct-line {
+    stroke: #6366f1;
+    stroke-width: 3px;
+}
+
+.neo-report-chart--line .ct-label {
+    fill: #64748b;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.neo-report-chart-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.neo-report-summary--cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    text-align: left;
+}
+
+.neo-report-summary__item {
+    min-width: 140px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.neo-report-summary__label {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.neo-report-summary__value {
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.neo-report-chart--pie-slide {
+    max-width: 300px;
+    max-height: 300px;
+    aspect-ratio: 1 / 1;
+    padding: 12px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.neo-report-chart--pie-slide svg {
+    overflow: visible;
+}
+
+.neo-report-chart--pie-slide .ct-slice-pie {
+    stroke-linejoin: round;
+}
+
 .neo-form-submit {
     margin: 8px 14px 14px;
 }
@@ -610,25 +1148,62 @@
 /* Sales register responsive grid */
 .neo-register-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, min(300px, 30%));
     gap: 12px;
     align-items: start;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .neo-register-layout #register_wrapper,
 .neo-register-layout #overall_sale {
     float: none !important;
     width: auto !important;
+    max-width: 100%;
     margin: 0 !important;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
-@media (max-width: 1200px) {
+/* Keep wide cart tables inside the left column instead of overlapping the sidebar */
+.neo-register-layout #register_wrapper {
+    overflow: visible;
+}
+
+.neo-register-layout .neo-register-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.neo-register-layout .neo-register-table-scroll table#register {
+    width: 100%;
+    min-width: 640px;
+}
+
+.neo-register-layout #overall_sale {
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 1400px) {
     .neo-reports-grid {
         grid-template-columns: 1fr;
     }
 
     .neo-register-layout {
         grid-template-columns: 1fr;
+    }
+
+    .neo-register-layout #overall_sale {
+        width: 100% !important;
+        max-width: 100%;
+        justify-self: stretch;
     }
 }
 
@@ -1096,4 +1671,649 @@
 .neo-image-lightbox__close:hover {
     background: #fef2f2;
     color: #dc2626;
+}
+
+/* Receiving register polish */
+.recv-page {
+    overflow: visible;
+    padding-top: 16px;
+}
+
+.recv-page .neo-module-title {
+    line-height: 1.35;
+    overflow: visible;
+}
+
+.recv-page .neo-register-layout {
+    align-items: start;
+    min-width: 0;
+}
+
+.recv-page .neo-register-layout #register_wrapper,
+.recv-page .neo-register-layout #overall_sale {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.recv-page .neo-register-layout #overall_sale {
+    margin-top: 0;
+    position: static;
+}
+
+.recv-page #overall_sale.recv-overall.panel.panel-default {
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+}
+
+.recv-page #overall_sale.recv-overall > .panel-body {
+    padding: 14px 14px 12px;
+    text-align: left;
+    overflow: visible;
+}
+
+.recv-page #register_wrapper {
+    overflow: visible;
+}
+
+.recv-page table#register {
+    width: 100%;
+    min-width: 640px;
+    table-layout: auto;
+}
+
+.recv-page .recv-item-name {
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.recv-page .recv-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.recv-page .recv-stock--zero {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.recv-page .recv-stock--neg {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.recv-page .recv-supplier-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.recv-page .recv-supplier-card__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.recv-page .recv-supplier-card__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.recv-page .recv-supplier-card__meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.recv-page .recv-supplier-card__remove {
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Delete actions: always red (Receiving + Sales cart) */
+.recv-page #register a[href*="deleteItem"],
+.recv-page #register a[href*="deleteItem"] .glyphicon,
+.sale-page #register a[href*="deleteItem"],
+.sale-page #register a[href*="deleteItem"] .glyphicon,
+.sale-page #register a[href*="deletePayment"],
+.sale-page #register a[href*="deletePayment"] .glyphicon,
+.neo-global-content #overall_sale a[href*="deletePayment"],
+.neo-global-content #overall_sale a[href*="deletePayment"] .glyphicon {
+    color: #dc2626 !important;
+}
+
+.recv-page #register a[href*="deleteItem"]:hover,
+.recv-page #register a[href*="deleteItem"]:focus,
+.sale-page #register a[href*="deleteItem"]:hover,
+.sale-page #register a[href*="deleteItem"]:focus,
+.sale-page #register a[href*="deletePayment"]:hover,
+.sale-page #register a[href*="deletePayment"]:focus,
+.neo-global-content #overall_sale a[href*="deletePayment"]:hover,
+.neo-global-content #overall_sale a[href*="deletePayment"]:focus {
+    color: #b91c1c !important;
+}
+
+.recv-page .recv-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 4px 14px;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    margin: 4px 0 12px;
+}
+
+.recv-page .recv-total--empty {
+    display: none;
+}
+
+.recv-page .recv-total__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.recv-page .recv-total__amount {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.recv-page #finish_sale {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    overflow: visible;
+}
+
+.recv-page #finish_sale .form-group {
+    margin: 0;
+}
+
+.recv-page #comment_label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #334155;
+    text-align: left;
+}
+
+.recv-page #comment {
+    resize: vertical;
+    min-height: 56px;
+    max-height: 100px;
+    margin-bottom: 12px;
+}
+
+.recv-page .recv-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    float: none;
+    clear: both;
+    overflow: visible;
+}
+
+.recv-page .recv-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+}
+
+.recv-page .recv-check input {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.recv-page .recv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.recv-page .recv-field label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.recv-page .recv-field .form-control,
+.recv-page .recv-field select.form-control {
+    width: 100%;
+    max-width: 100%;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.recv-page .recv-finish-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.recv-page .recv-finish-actions .btn {
+    flex: 1;
+    margin: 0;
+    float: none;
+    padding: 10px 12px;
+    font-weight: 700;
+}
+
+.recv-page #new_supplier_button,
+.recv-page .recv-new-supplier {
+    width: 100%;
+    margin-top: 8px;
+    background: #ffffff;
+    border: 1px solid #d6d3f8;
+    color: #5b21b6;
+}
+
+.recv-page #new_supplier_button:hover,
+.recv-page .recv-new-supplier:hover {
+    background: #f5f3ff;
+    border-color: #c4b5fd;
+    color: #4c1d95;
+}
+
+.recv-page #select_customer {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1400px) {
+    .recv-page .neo-register-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .recv-page .neo-register-layout #overall_sale {
+        position: static;
+        max-width: 100%;
+    }
+}
+
+/* Sales register polish */
+.sale-page {
+    overflow: visible;
+    padding-top: 16px;
+}
+
+.sale-page .neo-module-title {
+    line-height: 1.35;
+}
+
+.sale-page .neo-register-layout {
+    min-width: 0;
+}
+
+.sale-page .neo-register-layout #register_wrapper,
+.sale-page .neo-register-layout #overall_sale {
+    min-width: 0;
+    max-width: 100%;
+    position: static;
+    margin-top: 0;
+}
+
+.sale-page #overall_sale.sale-overall.panel.panel-default {
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+}
+
+.sale-page #overall_sale.sale-overall > .panel-body {
+    padding: 14px;
+    text-align: left;
+    overflow: visible;
+}
+
+.sale-page #register_wrapper {
+    overflow: visible;
+}
+
+.sale-page #register_wrapper table#register {
+    width: 100%;
+    min-width: 640px;
+    table-layout: auto;
+}
+
+.sale-page .sale-item-name {
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.sale-page .sale-stock {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.sale-page .sale-stock--zero {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.sale-page .sale-stock--neg {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.sale-page #sales_takings_button,
+.sale-page #show_suspended_sales_button {
+    background: #ffffff !important;
+    border: 1px solid #d6d3f8 !important;
+    color: #5b21b6 !important;
+}
+
+.sale-page #sales_takings_button:hover,
+.sale-page #show_suspended_sales_button:hover,
+.sale-page #sales_takings_button:focus,
+.sale-page #show_suspended_sales_button:focus,
+.sale-page #sales_takings_button:visited {
+    background: #f5f3ff !important;
+    border-color: #c4b5fd !important;
+    color: #4c1d95 !important;
+}
+
+.sale-page #new_item_button {
+    background: #ffffff;
+    border: 1px solid #d6d3f8;
+    color: #5b21b6;
+}
+
+.sale-page #new_item_button:hover {
+    background: #f5f3ff;
+    border-color: #c4b5fd;
+    color: #4c1d95;
+}
+
+.sale-page #select_customer {
+    margin-bottom: 0;
+}
+
+.sale-page #select_customer .control-label {
+    margin: 0 0 8px !important;
+}
+
+.sale-page .sale-customer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sale-page .sale-customer-actions .btn {
+    width: 100%;
+    margin: 0;
+}
+
+.sale-page .sale-new-customer {
+    background: #ffffff;
+    border: 1px solid #d6d3f8;
+    color: #5b21b6;
+}
+
+.sale-page .sale-new-customer:hover {
+    background: #f5f3ff;
+    border-color: #c4b5fd;
+    color: #4c1d95;
+}
+
+.sale-page .sale-customer-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.sale-page .sale-customer-card__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.sale-page .sale-customer-card__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.sale-page .sale-customer-card__name a {
+    color: inherit;
+}
+
+.sale-page .sale-customer-card__meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.sale-page .sale-customer-card__remove {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.sale-page .sale-summary {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.sale-page .sale-summary__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.sale-page .sale-summary__row strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.sale-page .sale-summary__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #334155;
+}
+
+.sale-page .sale-summary__total #sale_total {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.sale-page .sale-due {
+    margin-top: 10px;
+    padding: 10px 0 0;
+    border-top: 1px solid #e2e8f0;
+}
+
+.sale-page .sale-due__amount {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 6px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.sale-page .sale-due__amount #sale_amount_due {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.sale-page #payment_details.sale-payment,
+.sale-page .sale-payment {
+    margin-top: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    float: none;
+    clear: both;
+    text-align: left;
+}
+
+.sale-page .sale-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sale-page .sale-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.sale-page .sale-field label,
+.sale-page .sale-field #amount_tendered_label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    display: block;
+}
+
+.sale-page .sale-field .form-control,
+.sale-page .sale-field select.form-control {
+    width: 100%;
+    max-width: 100%;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.sale-page .sale-field .giftcard-input:disabled,
+.sale-page .sale-field .non-giftcard-input:disabled {
+    display: none;
+}
+
+.sale-page .sale-payment__primary {
+    display: block;
+    width: 100%;
+    float: none !important;
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.sale-page .sale-payments-table {
+    margin-top: 12px;
+    min-width: 0 !important;
+}
+
+.sale-page .sale-actions {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0 0 !important;
+}
+
+.sale-page .sale-actions .btn {
+    flex: 1;
+    float: none !important;
+    margin: 0;
+    padding: 10px 12px;
+    font-weight: 700;
+}
+
+.sale-page .sale-extras {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.sale-page .sale-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.sale-page .sale-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+}
+
+.sale-page .sale-check input {
+    margin: 0;
+}
+
+.sale-page #comment {
+    resize: vertical;
+    min-height: 56px;
+    max-height: 100px;
+}
+
+@media (max-width: 1400px) {
+    .sale-page .neo-register-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sale-page .neo-register-layout #overall_sale {
+        max-width: 100%;
+    }
 }

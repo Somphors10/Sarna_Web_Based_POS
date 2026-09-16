@@ -1,18 +1,89 @@
 <?php
 /**
+ * Shop-focused reports hub: primary Cambodia retail reports first, advanced last.
+ *
  * @var int   $person_id
  * @var array $permission_ids
  * @var array $grants
  */
 
-$detailed_reports = [
-    'reports_sales'      => 'detailed',
-    'reports_receivings' => 'detailed',
-    'reports_customers'  => 'specific',
-    'reports_discounts'  => 'specific',
-    'reports_employees'  => 'specific',
-    'reports_suppliers'  => 'specific',
+$permission_ids = $permission_ids ?? [];
+
+$report_text = static function (string $key, string $fallback): string {
+    $value = lang('Reports.' . $key);
+    if ($value === '' || $value === 'Reports.' . $key) {
+        return $fallback;
+    }
+
+    return $value;
+};
+
+$render_links = static function (array $items) use ($permission_ids, $report_text): void {
+    $label_overrides = [
+        'reports_sales' => $report_text('sales', 'Sales'),
+    ];
+
+    foreach ($items as $item) {
+        $permission = $item['permission'];
+        if (!in_array($permission, $permission_ids, true)) {
+            continue;
+        }
+
+        $link = get_report_link($permission, $item['prefix'] ?? '', $item['lang'] ?? '');
+        $label = $label_overrides[$permission] ?? $link['label'];
+        if ($label === '' || str_starts_with((string) $label, 'Reports.')) {
+            $label = $link['label'] !== '' ? $link['label'] : $permission;
+        }
+        ?>
+        <a class="neo-report-link" href="<?= esc($link['path'], 'attr') ?>"><?= esc($label) ?></a>
+        <?php
+    }
+};
+
+$chart_reports = [
+    ['permission' => 'reports_payments', 'prefix' => 'graphical_summary'],
+    ['permission' => 'reports_sales', 'prefix' => 'graphical_summary'],
+    ['permission' => 'reports_categories', 'prefix' => 'graphical_summary'],
+    ['permission' => 'reports_items', 'prefix' => 'graphical_summary'],
 ];
+
+$summary_reports = [
+    ['permission' => 'reports_payments', 'prefix' => 'summary'],
+    ['permission' => 'reports_sales', 'prefix' => 'summary'],
+    ['permission' => 'reports_categories', 'prefix' => 'summary'],
+    ['permission' => 'reports_items', 'prefix' => 'summary'],
+];
+
+$history_reports = [
+    ['permission' => 'reports_sales', 'prefix' => 'detailed'],
+    ['permission' => 'reports_receivings', 'prefix' => 'detailed'],
+    ['permission' => 'reports_customers', 'prefix' => 'specific'],
+];
+
+$advanced_reports = [
+    ['permission' => 'reports_suppliers', 'prefix' => 'summary'],
+    ['permission' => 'reports_employees', 'prefix' => 'summary'],
+    ['permission' => 'reports_discounts', 'prefix' => 'summary'],
+    ['permission' => 'reports_expenses_categories', 'prefix' => 'summary'],
+    ['permission' => 'reports_taxes', 'prefix' => 'summary'],
+    ['permission' => 'reports_sales_taxes', 'prefix' => 'summary'],
+];
+
+$has_any = static function (array $items) use ($permission_ids): bool {
+    foreach ($items as $item) {
+        if (in_array($item['permission'], $permission_ids, true)) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$show_charts = $has_any($chart_reports);
+$show_summary = $has_any($summary_reports);
+$show_history = $has_any($history_reports);
+$show_inventory = in_array('reports_inventory', $permission_ids, true);
+$show_advanced = $has_any($advanced_reports);
 ?>
 
 <?= view('partial/header') ?>
@@ -45,7 +116,7 @@ $detailed_reports = [
     <header class="neo-module-header">
         <div>
             <h3 class="neo-module-title"><?= lang('Module.reports') ?></h3>
-            <p class="neo-module-subtitle"><?= lang('Common.welcome_message') ?></p>
+            <p class="neo-module-subtitle"><?= esc($report_text('hub_subtitle', 'Start with payments, sales, items, and stock. Use More reports only when needed.')) ?></p>
         </div>
     </header>
 
@@ -54,61 +125,60 @@ $detailed_reports = [
     <?php endif; ?>
 
     <div class="neo-reports-grid">
+        <?php if ($show_charts): ?>
         <div class="neo-report-card">
-            <h4 class="neo-report-card__title"><?= lang('Reports.graphical_reports') ?></h4>
+            <h4 class="neo-report-card__title"><?= esc($report_text('graphical_reports', 'Charts')) ?></h4>
+            <p class="neo-report-card__hint"><?= esc($report_text('hub_charts_hint', 'Easy visual view of money and products.')) ?></p>
             <div class="neo-report-card__links">
-                <?php foreach ($permission_ids as $permission_id) {
-                    if (can_show_report($permission_id, ['inventory', 'receiving'])) {
-                        $link = get_report_link($permission_id, 'graphical_summary');
-                ?>
-                    <a class="neo-report-link" href="<?= $link['path'] ?>"><?= $link['label'] ?></a>
-                <?php
-                    }
-                } ?>
+                <?php $render_links($chart_reports); ?>
             </div>
         </div>
+        <?php endif; ?>
 
+        <?php if ($show_summary): ?>
         <div class="neo-report-card">
-            <h4 class="neo-report-card__title"><?= lang('Reports.summary_reports') ?></h4>
+            <h4 class="neo-report-card__title"><?= esc($report_text('summary_reports', 'Summary tables')) ?></h4>
+            <p class="neo-report-card__hint"><?= esc($report_text('hub_summary_hint', 'Same data as tables for printing or checking totals.')) ?></p>
             <div class="neo-report-card__links">
-                <?php foreach ($permission_ids as $permission_id) {
-                    if (can_show_report($permission_id, ['inventory', 'receiving'])) {
-                        $link = get_report_link($permission_id, 'summary');
-                ?>
-                    <a class="neo-report-link" href="<?= $link['path'] ?>"><?= $link['label'] ?></a>
-                <?php
-                    }
-                } ?>
+                <?php $render_links($summary_reports); ?>
             </div>
         </div>
+        <?php endif; ?>
 
+        <?php if ($show_history): ?>
         <div class="neo-report-card">
-            <h4 class="neo-report-card__title"><?= lang('Reports.detailed_reports') ?></h4>
+            <h4 class="neo-report-card__title"><?= esc($report_text('detailed_reports', 'Sale & receiving history')) ?></h4>
+            <p class="neo-report-card__hint"><?= esc($report_text('hub_history_hint', 'Each sale or receiving, one by one.')) ?></p>
             <div class="neo-report-card__links">
-                <?php foreach ($detailed_reports as $report_name => $prefix) {
-                    if (in_array($report_name, $permission_ids, true)) {
-                        $link = get_report_link($report_name, $prefix);
-                ?>
-                    <a class="neo-report-link" href="<?= $link['path'] ?>"><?= $link['label'] ?></a>
-                <?php
-                    }
-                } ?>
+                <?php $render_links($history_reports); ?>
             </div>
         </div>
+        <?php endif; ?>
 
-        <?php if (in_array('reports_inventory', $permission_ids, true)) { ?>
+        <?php if ($show_inventory): ?>
         <div class="neo-report-card">
-            <h4 class="neo-report-card__title"><?= lang('Reports.inventory_reports') ?></h4>
+            <h4 class="neo-report-card__title"><?= esc($report_text('inventory_reports', 'Stock')) ?></h4>
+            <p class="neo-report-card__hint"><?= esc($report_text('hub_stock_hint', 'What is low and what you have in store.')) ?></p>
             <div class="neo-report-card__links">
                 <?php
                 $inventory_low_report = get_report_link('reports_inventory_low');
                 $inventory_summary_report = get_report_link('reports_inventory_summary');
                 ?>
-                <a class="neo-report-link" href="<?= $inventory_low_report['path'] ?>"><?= $inventory_low_report['label'] ?></a>
-                <a class="neo-report-link" href="<?= $inventory_summary_report['path'] ?>"><?= $inventory_summary_report['label'] ?></a>
+                <a class="neo-report-link" href="<?= esc($inventory_low_report['path'], 'attr') ?>"><?= esc($inventory_low_report['label']) ?></a>
+                <a class="neo-report-link" href="<?= esc($inventory_summary_report['path'], 'attr') ?>"><?= esc($inventory_summary_report['label']) ?></a>
             </div>
         </div>
-        <?php } ?>
+        <?php endif; ?>
+
+        <?php if ($show_advanced): ?>
+        <div class="neo-report-card neo-report-card--advanced">
+            <h4 class="neo-report-card__title"><?= esc($report_text('advanced_reports', 'More reports')) ?></h4>
+            <p class="neo-report-card__hint"><?= esc($report_text('hub_advanced_hint', 'Taxes, staff, discounts, suppliers, expenses.')) ?></p>
+            <div class="neo-report-card__links neo-report-card__links--grid">
+                <?php $render_links($advanced_reports); ?>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </section>
 

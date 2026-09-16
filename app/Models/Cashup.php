@@ -343,4 +343,19 @@ class Cashup extends Model
 
         return $success;
     }
+
+    /**
+     * Restores a list of hidden cashups. This does not reverse a later close.
+     */
+    public function undelete_list(array $cashup_ids): bool
+    {
+        $this->db->transStart();
+        $builder = $this->db->table('cash_up');
+        $builder->whereIn('cashup_id', $cashup_ids);
+        $this->scopeCashupByTenant($builder, 'tenant_id', 'open_employee_id');
+        $success = $builder->update(['deleted' => 0]);
+        $this->db->transComplete();
+
+        return $success;
+    }
 }

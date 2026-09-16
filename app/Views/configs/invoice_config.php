@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.line_sequence'), 'line_sequence', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_dropdown(
@@ -110,7 +110,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.sales_quote_format'), 'sales_quote_format', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -122,7 +122,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.last_used_quote_number'), 'last_used_quote_number', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -135,7 +135,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.quote_default_comments'), 'quote_default_comments', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-5">
                     <?= form_textarea([
@@ -147,7 +147,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.work_order_enable'), 'work_order_enable', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-1">
                     <?= form_checkbox([
@@ -159,7 +159,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.work_order_format'), 'work_order_format', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
@@ -171,7 +171,7 @@
                 </div>
             </div>
 
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm hidden pos-config-hidden" aria-hidden="true">
                 <?= form_label(lang('Config.last_used_work_order_number'), 'last_used_work_order_number', ['class' => 'control-label col-xs-2']) ?>
                 <div class="col-xs-2">
                     <?= form_input([
