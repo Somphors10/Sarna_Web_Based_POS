@@ -82,13 +82,21 @@ class Config extends Secure_Controller
 
         $license[$i]['title'] = 'WBPOS ' . config('App')->application_version;
 
-        if (file_exists('license/LICENSE')) {
-            $license[$i]['text'] = file_get_contents('license/LICENSE', false, null, 0, 3000);
+        $license_file = is_file(FCPATH . 'license/LICENSE') ? FCPATH . 'license/LICENSE'
+            : (is_file(ROOTPATH . 'LICENSE') ? ROOTPATH . 'LICENSE' : '');
+        if ($license_file !== '') {
+            $license[$i]['text'] = file_get_contents($license_file, false, null, 0, 3000);
         } else {
             $license[$i]['text'] = 'LICENSE file must be in WBPOS license directory. You are not allowed to use WBPOS application until the distribution copy of LICENSE file is present.';
         }
 
-        $dir = new DirectoryIterator('license');    // Read all the files in the dir license
+        $license_dir = is_dir(FCPATH . 'license') ? FCPATH . 'license'
+            : (is_dir(ROOTPATH . 'license') ? ROOTPATH . 'license' : '');
+        if ($license_dir === '') {
+            return $license;
+        }
+
+        $dir = new DirectoryIterator($license_dir);    // Read all the files in the dir license
 
         foreach ($dir as $fileinfo) {    // TODO: $fileinfo doesn't match our variable naming convention
             // License files must be in couples: .version (name & version) & .license (license text)
@@ -96,7 +104,7 @@ class Config extends Secure_Controller
                 if ($fileinfo->getExtension() == 'version') {
                     ++$i;
 
-                    $basename = 'license/' . $fileinfo->getBasename('.version');
+                    $basename = $license_dir . DIRECTORY_SEPARATOR . $fileinfo->getBasename('.version');
 
                     $license[$i]['title'] = file_get_contents($basename . '.version', false, null, 0, 100);
 
@@ -126,7 +134,7 @@ class Config extends Secure_Controller
             $license[$i]['title'] = 'Composer Libraries';
             $license[$i]['text'] = '';
 
-            $file = file_get_contents('license/composer.LICENSES');
+            $file = file_get_contents($license_dir . DIRECTORY_SEPARATOR . 'composer.LICENSES');
             $array = json_decode($file, true);
 
             if (isset($array['dependencies'])) {
@@ -153,7 +161,7 @@ class Config extends Secure_Controller
             $license[$i]['title'] = 'NPM Production Libraries';
             $license[$i]['text'] = '';
 
-            $file = file_get_contents('license/npm-prod.LICENSES');
+            $file = file_get_contents($license_dir . DIRECTORY_SEPARATOR . 'npm-prod.LICENSES');
             $array = json_decode($file, true);
 
             foreach ($array as $dependency) {
@@ -173,7 +181,7 @@ class Config extends Secure_Controller
             $license[$i]['title'] = 'NPM Development Libraries';
             $license[$i]['text'] = '';
 
-            $file = file_get_contents('license/npm-dev.LICENSES');
+            $file = file_get_contents($license_dir . DIRECTORY_SEPARATOR . 'npm-dev.LICENSES');
             $array = json_decode($file, true);
 
             foreach ($array as $dependency) {
@@ -199,8 +207,13 @@ class Config extends Secure_Controller
     {
         $themes = [];
 
-        // Read all themes in the dist folder
-        $dir = new DirectoryIterator('resources/bootswatch');
+        $theme_dir = is_dir(FCPATH . 'resources/bootswatch') ? FCPATH . 'resources/bootswatch'
+            : (is_dir('resources/bootswatch') ? 'resources/bootswatch' : '');
+        if ($theme_dir === '') {
+            return $themes;
+        }
+
+        $dir = new DirectoryIterator($theme_dir);
 
         foreach ($dir as $dirinfo) {    // TODO: $dirinfo doesn't follow naming convention
             if ($dirinfo->isDir() && !$dirinfo->isDot() && $dirinfo->getFileName() != 'fonts') {
@@ -250,7 +263,10 @@ class Config extends Secure_Controller
         $data['tax_jurisdiction_options'] = $this->tax_lib->get_tax_jurisdiction_options();
         $data['show_office_group'] = $this->module->get_show_office_group();
         $data['currency_code'] = $this->config['currency_code'] ?? '';
-        $data['dbVersion'] = mysqli_get_server_info($this->db->getConnection());
+        $connection = $this->db->getConnection();
+        $data['dbVersion'] = ($connection instanceof \mysqli)
+            ? mysqli_get_server_info($connection)
+            : '';
 
         // Load all the license statements, they are already XSS cleaned in the private function
         $data['licenses'] = $this->_licenses();
@@ -261,7 +277,7 @@ class Config extends Secure_Controller
         // General related fields
         $image_allowed_types = ['jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'png', 'tif', 'tiff'];
         $data['image_allowed_types'] = array_combine($image_allowed_types, $image_allowed_types);
-        $data['selected_image_allowed_types'] = explode(',', $this->config['image_allowed_types']);
+        $data['selected_image_allowed_types'] = explode(',', (string)($this->config['image_allowed_types'] ?? ''));
 
         // Integrations Related fields
         $data['mailchimp']    = [];
@@ -272,13 +288,19 @@ class Config extends Secure_Controller
                 $this->encrypter = Services::encrypter();
             }
 
-            $data['mailchimp']['api_key'] = (isset($this->config['mailchimp_api_key']) && !empty($this->config['mailchimp_api_key']))
-                ? $this->encrypter->decrypt($this->config['mailchimp_api_key'])
-                : '';
-
-            $data['mailchimp']['list_id'] = (isset($this->config['mailchimp_list_id']) && !empty($this->config['mailchimp_list_id']))
-                ? $this->encrypter->decrypt($this->config['mailchimp_list_id'])
-                : '';
+            $data['mailchimp']['api_key'] = '';
+            $data['mailchimp']['list_id'] = '';
+            try {
+                if (!empty($this->config['mailchimp_api_key'])) {
+                    $data['mailchimp']['api_key'] = $this->encrypter->decrypt($this->config['mailchimp_api_key']);
+                }
+                if (!empty($this->config['mailchimp_list_id'])) {
+                    $data['mailchimp']['list_id'] = $this->encrypter->decrypt($this->config['mailchimp_list_id']);
+                }
+            } catch (\Throwable $e) {
+                $data['mailchimp']['api_key'] = '';
+                $data['mailchimp']['list_id'] = '';
+            }
 
             // Remove any backup of .env created by check_encryption()
             remove_backup();

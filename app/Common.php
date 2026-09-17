@@ -13,3 +13,36 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+
+if (!function_exists('bcmul')) {
+    function bcmul($num1, $num2, $scale = 2): string
+    {
+        return (string) round(((float) $num1) * ((float) $num2), (int) $scale);
+    }
+}
+
+if (!function_exists('bcdiv')) {
+    function bcdiv($num1, $num2, $scale = 2): string
+    {
+        $divisor = (float) $num2;
+        if ($divisor == 0.0) {
+            return '0';
+        }
+
+        return (string) round(((float) $num1) / $divisor, (int) $scale);
+    }
+}
+
+if (!function_exists('bcadd')) {
+    function bcadd($num1, $num2, $scale = 2): string
+    {
+        return (string) round(((float) $num1) + ((float) $num2), (int) $scale);
+    }
+}
+
+if (!function_exists('bcsub')) {
+    function bcsub($num1, $num2, $scale = 2): string
+    {
+        return (string) round(((float) $num1) - ((float) $num2), (int) $scale);
+    }
+}

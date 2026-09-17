@@ -534,6 +534,9 @@ $is_sa_pos_shell = is_platform_super_admin();
                     $subscription_banner = null;
                     $subscription_banner_tone = 'warning';
                     $shop_company = (string)($config['company'] ?? 'Shop');
+                    $shop_pay_url = function_exists('saas_current_shop_pay_url')
+                        ? saas_current_shop_pay_url()
+                        : site_url('saas/checkout');
                     if (!$is_sa_pos_shell) {
                         $banner_tenant_id = (int)(session()->get('tenant_id') ?? 0);
                         if ($banner_tenant_id > 0 && function_exists('saas_tenant_subscription_info')) {
@@ -552,7 +555,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                                     'title'    => lang('Login.subscription_notify_expired_title'),
                                     'subtitle' => $shop_company,
                                     'body'     => $subscription_banner,
-                                    'link'     => site_url('saas/checkout'),
+                                    'link'     => $shop_pay_url,
                                     'link_label' => lang('Login.subscription_notify_renew'),
                                 ];
                             } elseif (!empty($sub_info['is_warning']) && !empty($sub_info['period_end'])) {
@@ -568,7 +571,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                                     'title'    => lang('Login.subscription_notify_warning_title'),
                                     'subtitle' => $shop_company,
                                     'body'     => $subscription_banner,
-                                    'link'     => site_url('saas/checkout'),
+                                    'link'     => $shop_pay_url,
                                     'link_label' => lang('Login.subscription_notify_renew'),
                                 ];
                             } elseif (!empty($sub_info['has_period']) && !empty($sub_info['period_end'])) {
@@ -583,7 +586,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                                             (string)max(0, (int)$sub_info['days_left']),
                                         ]
                                     ),
-                                    'link'     => site_url('saas/checkout'),
+                                    'link'     => $shop_pay_url,
                                     'link_label' => lang('Login.subscription_notify_view'),
                                 ];
                             }
@@ -774,7 +777,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                             <?php endif; ?>
                         </span>
                         <span class="pos-subscription-alert__text"><?= esc($subscription_banner) ?></span>
-                        <a class="pos-subscription-alert__link pos-view-only-allow" href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                        <a class="pos-subscription-alert__link pos-view-only-allow" href="<?= esc($shop_pay_url, 'attr') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -785,7 +788,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6"></path><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"></circle></svg>
                         </span>
                         <span class="pos-subscription-alert__text"><?= esc(lang('Login.subscription_view_only')) ?></span>
-                        <a class="pos-subscription-alert__link pos-view-only-allow" href="<?= site_url('saas/checkout') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
+                        <a class="pos-subscription-alert__link pos-view-only-allow" href="<?= esc($shop_pay_url ?? site_url('saas/checkout'), 'attr') ?>"><?= esc(lang('Login.subscription_renew')) ?></a>
                     </div>
                 </div>
                 <?php endif; ?>

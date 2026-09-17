@@ -712,6 +712,78 @@ function saas_tenant_needs_renewal(int $tenant_id): bool
 }
 
 /**
+ * Company code, register email, and KHQR token for the shop currently logged into POS.
+ *
+ * @return array{tenant_code:string,owner_email:string,payment_token:string}
+ */
+function saas_logged_in_shop_checkout(): array
+{
+    $empty = [
+        'tenant_code'    => '',
+        'owner_email'    => '',
+        'payment_token'  => '',
+    ];
+    $tenant_id = (int)(session()->get('tenant_id') ?? 0);
+    if ($tenant_id <= 0) {
+        return $empty;
+    }
+
+    try {
+        $db = db_connect('platform');
+        if (!$db->tableExists('tenants')) {
+            return $empty;
+        }
+
+        $tenant = $db->table('tenants')
+            ->select('tenant_code')
+            ->where('tenant_id', $tenant_id)
+            ->get(1)
+            ->getRow();
+        $code = strtolower(trim((string)($tenant->tenant_code ?? '')));
+        if ($code === '') {
+            return $empty;
+        }
+
+        $email = '';
+        $token = '';
+        if ($db->tableExists('subscription_requests')) {
+            $request = $db->table('subscription_requests')
+                ->select('owner_email, payment_token')
+                ->where('tenant_code', $code)
+                ->orderBy('request_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            $email = strtolower(trim((string)($request->owner_email ?? '')));
+            $token = trim((string)($request->payment_token ?? ''));
+        }
+
+        return [
+            'tenant_code'   => $code,
+            'owner_email'   => $email,
+            'payment_token' => $token,
+        ];
+    } catch (Throwable $e) {
+        return $empty;
+    }
+}
+
+/**
+ * Renew link for a logged-in shop: checkout with company code and email already filled.
+ */
+function saas_current_shop_pay_url(): string
+{
+    $shop = saas_logged_in_shop_checkout();
+    if ($shop['tenant_code'] !== '' || $shop['owner_email'] !== '') {
+        return site_url('saas/checkout') . '?' . http_build_query(array_filter([
+            'code'  => $shop['tenant_code'],
+            'email' => $shop['owner_email'],
+        ]));
+    }
+
+    return site_url('saas/checkout');
+}
+
+/**
  * Extend subscription by N months from max(now, current period_end). Activates subscription row.
  */
 function saas_extend_tenant_subscription(int $tenant_id, int $months = 1): void

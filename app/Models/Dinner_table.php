@@ -24,9 +24,14 @@ class Dinner_table extends Model
         'tenant_id'
     ];
 
+    private function hasTable(): bool
+    {
+        return $this->db->tableExists('dinner_tables');
+    }
+
     private function hasTenantColumn(): bool
     {
-        return $this->db->tableExists('dinner_tables') && $this->db->fieldExists('tenant_id', 'dinner_tables');
+        return $this->hasTable() && $this->db->fieldExists('tenant_id', 'dinner_tables');
     }
 
     private function scopeTableTenant($builder, string $column = 'dinner_tables.tenant_id'): void
@@ -42,6 +47,10 @@ class Dinner_table extends Model
      */
     public function exists(int $dinner_table_id): bool
     {
+        if (!$this->hasTable()) {
+            return false;
+        }
+
         $builder = $this->db->table('dinner_tables');
         $this->scopeTableTenant($builder);
         $builder->where('dinner_table_id', $dinner_table_id);
@@ -56,6 +65,10 @@ class Dinner_table extends Model
      */
     public function save_value(array $table_data, int $dinner_table_id): bool
     {
+        if (!$this->hasTable()) {
+            return false;
+        }
+
         $table_data_to_save = ['name' => $table_data['name'], 'deleted' => 0];
         if ($this->hasTenantColumn()) {
             $table_data_to_save['tenant_id'] = $this->getTenantId();
@@ -78,6 +91,10 @@ class Dinner_table extends Model
      */
     public function get_empty_tables(?int $current_dinner_table_id): array
     {
+        if (!$this->hasTable()) {
+            return [];
+        }
+
         $builder = $this->db->table('dinner_tables');
         $this->scopeTableTenant($builder);
         $builder->groupStart();
@@ -102,7 +119,7 @@ class Dinner_table extends Model
      */
     public function get_name(?string $dinner_table_id): string
     {
-        if (empty($dinner_table_id)) {
+        if (empty($dinner_table_id) || !$this->hasTable()) {
             return '';
         }
 
@@ -119,7 +136,7 @@ class Dinner_table extends Model
      */
     public function is_occupied(int $dinner_table_id): bool
     {
-        if (empty($dinner_table_id)) {
+        if (empty($dinner_table_id) || !$this->hasTable()) {
             return false;
         }
 
@@ -135,6 +152,10 @@ class Dinner_table extends Model
      */
     public function get_all(): ResultInterface
     {
+        if (!$this->hasTable()) {
+            return $this->db->query('SELECT 0 AS dinner_table_id, \'\' AS `name`, 0 AS status, 0 AS deleted WHERE 0');
+        }
+
         $builder = $this->db->table('dinner_tables');
         $this->scopeTableTenant($builder);
         $builder->where('deleted', 0);
@@ -147,6 +168,10 @@ class Dinner_table extends Model
      */
     public function delete($dinner_table_id = null, bool $purge = false): bool
     {
+        if (!$this->hasTable()) {
+            return true;
+        }
+
         $builder = $this->db->table('dinner_tables');
         $this->scopeTableTenant($builder);
         $builder->where('dinner_table_id', $dinner_table_id);
@@ -161,6 +186,9 @@ class Dinner_table extends Model
     public function occupy(int $dinner_table_id): bool
     {
         if ($dinner_table_id > 2) {
+            if (!$this->hasTable()) {
+                return true;
+            }
             $builder = $this->db->table('dinner_tables');
             $this->scopeTableTenant($builder);
             $builder->where('dinner_table_id', $dinner_table_id);
@@ -176,6 +204,9 @@ class Dinner_table extends Model
     public function release(int $dinner_table_id): bool
     {
         if ($dinner_table_id > 2) {
+            if (!$this->hasTable()) {
+                return true;
+            }
             $builder = $this->db->table('dinner_tables');
             $this->scopeTableTenant($builder);
             $builder->where('dinner_table_id', $dinner_table_id);

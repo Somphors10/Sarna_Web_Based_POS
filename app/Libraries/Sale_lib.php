@@ -820,7 +820,7 @@ class Sale_lib
     public function get_dinner_table(): ?int
     {
         if (!$this->session->get('dinner_table')) {
-            if ($this->config['dinner_table_enable']) {
+            if (($this->config['dinner_table_enable'] ?? false) && $this->dinner_table->exists(1)) {
                 $this->set_dinner_table(1);    // TODO: Replace 1 with constant
             }
         }

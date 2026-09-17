@@ -21,7 +21,9 @@ class Token_lib
     {
         // Apply the transformation for the "%" tokens if any are used
         if (strpos($tokened_text, '%') !== false) {
-            $tokened_text = strftime($tokened_text);    // TODO: these need to be converted to IntlDateFormatter::format()
+            $tokened_text = function_exists('strftime')
+                ? strftime($tokened_text)
+                : date('Y-m-d');
         }
 
         // Call scan to build an array of all of the tokens used in the text to be transformed
@@ -29,7 +31,7 @@ class Token_lib
 
         if (empty($token_tree)) {
             if (strpos($tokened_text, '%') !== false) {
-                return strftime($tokened_text);
+                return function_exists('strftime') ? strftime($tokened_text) : date('Y-m-d');
             } else {
                 return $tokened_text;
             }

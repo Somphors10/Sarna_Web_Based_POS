@@ -1254,6 +1254,24 @@ class Super_admin extends BaseController
             // Ignore cleanup errors.
         }
 
+        // One checkout already writes the ledger + an invoice. Do not copy that invoice
+        // again as a fake RENEW with the same receipt (PAY-xxxx).
+        try {
+            $db->query(
+                'DELETE copy_row FROM ' . $db->prefixTable('platform_payments') . ' AS copy_row
+                 INNER JOIN ' . $db->prefixTable('platform_payments') . ' AS keep_row
+                    ON keep_row.tenant_id = copy_row.tenant_id
+                   AND keep_row.payment_reference = copy_row.payment_reference
+                   AND keep_row.payment_reference IS NOT NULL
+                   AND keep_row.payment_reference <> \'\'
+                   AND keep_row.payment_id <> copy_row.payment_id
+                   AND keep_row.dedupe_key NOT LIKE \'pay-invoice-%\'
+                 WHERE copy_row.dedupe_key LIKE \'pay-invoice-%\''
+            );
+        } catch (Throwable $e) {
+            // Ignore cleanup errors.
+        }
+
         foreach ($recent_payments as $payment) {
             $tid = (int)($payment['tenant_id'] ?? 0);
             $pay_id = (int)($payment['payment_id'] ?? 0);
@@ -1265,17 +1283,40 @@ class Super_admin extends BaseController
             try {
                 $exists = $db->table('platform_payments')
                     ->select('payment_id')
-                    ->where('dedupe_key', substr($dedupe, 0, 120))
+                    ->groupStart()
+                        ->where('dedupe_key', substr($dedupe, 0, 120))
+                        ->orGroupStart()
+                            ->where('tenant_id', $tid)
+                            ->where('payment_reference', $ref !== '' ? $ref : null)
+                            ->where('payment_reference IS NOT NULL', null, false)
+                        ->groupEnd()
+                    ->groupEnd()
                     ->get(1)
                     ->getRow();
                 if ($exists !== null) {
                     continue;
                 }
+                if ($ref !== '') {
+                    $same_ref = $db->table('platform_payments')
+                        ->select('payment_id')
+                        ->where('tenant_id', $tid)
+                        ->where('payment_reference', $ref)
+                        ->get(1)
+                        ->getRow();
+                    if ($same_ref !== null) {
+                        continue;
+                    }
+                }
+
+                $already_paid = $db->table('platform_payments')
+                    ->where('tenant_id', $tid)
+                    ->countAllResults() > 0;
+
                 $db->table('platform_payments')->insert([
                     'tenant_id'         => $tid,
                     'company_name'      => substr(trim((string)($payment['company_name'] ?? '')), 0, 191),
                     'tenant_code'       => substr(trim((string)($payment['tenant_code'] ?? '')), 0, 80),
-                    'payment_kind'      => 'renew',
+                    'payment_kind'      => $already_paid ? 'renew' : 'new',
                     'amount'            => number_format((float)($payment['amount'] ?? saas_monthly_price()), 2, '.', ''),
                     'currency_code'     => 'USD',
                     'provider'          => substr((string)($payment['provider'] ?? 'invoice'), 0, 40),

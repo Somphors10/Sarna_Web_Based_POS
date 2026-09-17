@@ -7,6 +7,7 @@ use App\Libraries\PlatformMail;
 use App\Libraries\Telegram_lib;
 use App\Models\Subscription_request;
 use Config\OSPOS;
+use Throwable;
 
 class Saas extends BaseController
 {
@@ -349,15 +350,29 @@ class Saas extends BaseController
         ]);
     }
 
-    public function checkout(): string
+    public function checkout()
     {
+        $shop = function_exists('saas_logged_in_shop_checkout')
+            ? saas_logged_in_shop_checkout()
+            : ['tenant_code' => '', 'owner_email' => '', 'payment_token' => ''];
+
+        $tenant_code = strtolower(trim((string)$this->request->getGet('code')));
+        $owner_email = strtolower(trim((string)$this->request->getGet('email')));
+        if ($tenant_code === '') {
+            $tenant_code = $shop['tenant_code'];
+        }
+        if ($owner_email === '') {
+            $owner_email = $shop['owner_email'];
+        }
+
         return view('saas/checkout', [
             'config' => config(OSPOS::class)->settings,
             'validation' => service('validation'),
             'has_errors' => false,
             'status_message' => '',
-            'tenant_code' => (string)$this->request->getGet('code'),
-            'owner_email' => (string)$this->request->getGet('email'),
+            'tenant_code' => $tenant_code,
+            'owner_email' => $owner_email,
+            'fields_locked' => $tenant_code !== '' && $owner_email !== '',
         ]);
     }
 
@@ -504,8 +519,7 @@ class Saas extends BaseController
         }
 
         $tenant_id = (int)$tenant->tenant_id;
-        $prior_status = strtolower((string)($tenant->status ?? ''));
-        $is_renewal = $prior_status === 'active' || saas_tenant_needs_renewal($tenant_id);
+        $is_renewal = $this->shopHasPriorPayment($tenant_id) || saas_tenant_needs_renewal($tenant_id);
 
         $db->table('tenants')
             ->where('tenant_id', $tenant_id)
@@ -513,6 +527,24 @@ class Saas extends BaseController
 
         saas_activate_or_renew_subscription($tenant_id);
         saas_complete_shop_payment($tenant_id, $payment_reference, 'owner_checkout', $is_renewal);
+    }
+
+    private function shopHasPriorPayment(int $tenant_id): bool
+    {
+        if ($tenant_id <= 0 || !function_exists('saas_ensure_platform_payments_table')) {
+            return false;
+        }
+        if (!saas_ensure_platform_payments_table()) {
+            return false;
+        }
+
+        try {
+            return db_connect('platform')->table('platform_payments')
+                ->where('tenant_id', $tenant_id)
+                ->countAllResults() > 0;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function captchaImage()

@@ -198,15 +198,25 @@ class Barcode_lib
     {
         $array = [];    // TODO: Naming of this variable should be changed.  The variable should never be named the data type.  $fonts would be a better name.
 
-        if (($handle = opendir($folder)) !== false) {
+        if ($folder !== '' && !is_dir($folder) && defined('FCPATH') && is_dir(FCPATH . $folder)) {
+            $folder = FCPATH . $folder;
+        }
+
+        if ($folder === '' || !is_dir($folder)) {
+            $array[''] = lang('Config.none');
+
+            return $array;
+        }
+
+        $handle = @opendir($folder);
+        if ($handle !== false) {
             while (($file = readdir($handle)) !== false) {
                 if (str_ends_with($file, '.ttf')) {
                     $array[$file] = $file;
                 }
             }
+            closedir($handle);
         }
-
-        closedir($handle);
 
         array_unshift($array, lang('Config.none'));
 

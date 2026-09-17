@@ -5,6 +5,7 @@ $status_message = (string)($status_message ?? '');
 $tenant_code = (string)($tenant_code ?? '');
 $owner_email = (string)($owner_email ?? '');
 $has_errors = !empty($has_errors);
+$fields_locked = !empty($fields_locked);
 $monthly_price = saas_monthly_price();
 ?>
 <!doctype html>
@@ -98,7 +99,7 @@ $monthly_price = saas_monthly_price();
                         placeholder="e.g. somphors-store"
                         autocomplete="organization"
                         required
-                        autofocus
+                        <?= $fields_locked ? 'readonly' : 'autofocus' ?>
                     >
                 </div>
                 <div class="lp-checkout__field">
@@ -112,6 +113,7 @@ $monthly_price = saas_monthly_price();
                         placeholder="owner@email.com"
                         autocomplete="email"
                         required
+                        <?= $fields_locked ? 'readonly' : '' ?>
                     >
                 </div>
 
