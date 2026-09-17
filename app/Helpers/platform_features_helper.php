@@ -1460,6 +1460,80 @@ function saas_shop_subscription_dates(int $tenant_id): array
 }
 
 /**
+ * Plan + subscription status for the shop Account menu in the sidebar.
+ *
+ * @return array{
+ *   plan_name:string,
+ *   price:float,
+ *   price_label:string,
+ *   paid_until:string,
+ *   days_left:?int,
+ *   status:string,
+ *   show_renew:bool,
+ *   has_plan:bool
+ * }
+ */
+function saas_shop_account_plan(int $tenant_id): array
+{
+    $price = saas_monthly_price();
+    $empty = [
+        'plan_name'    => 'WBPOS',
+        'price'        => $price,
+        'price_label'  => '$' . number_format($price, 0) . ' / month',
+        'paid_until'   => '—',
+        'days_left'    => null,
+        'status'       => 'none',
+        'show_renew'   => false,
+        'has_plan'     => false,
+    ];
+
+    if ($tenant_id <= 0) {
+        return $empty;
+    }
+
+    $plan_name = 'WBPOS';
+    try {
+        $db = db_connect('platform');
+        if ($db->tableExists('subscriptions') && $db->tableExists('plans')) {
+            $row = $db->table('subscriptions')
+                ->select('plans.plan_name')
+                ->join('plans', 'plans.plan_id = subscriptions.plan_id', 'left')
+                ->where('subscriptions.tenant_id', $tenant_id)
+                ->orderBy('subscriptions.subscription_id', 'DESC')
+                ->get(1)
+                ->getRow();
+            $name = trim((string)($row->plan_name ?? ''));
+            if ($name !== '') {
+                $plan_name = $name;
+            }
+        }
+    } catch (Throwable $e) {
+        // Keep the default plan name.
+    }
+
+    $dates = saas_shop_subscription_dates($tenant_id);
+    $status = 'none';
+    if (!empty($dates['is_expired'])) {
+        $status = 'expired';
+    } elseif (!empty($dates['is_warning'])) {
+        $status = 'warning';
+    } elseif (!empty($dates['has_data'])) {
+        $status = 'active';
+    }
+
+    return [
+        'plan_name'   => $plan_name,
+        'price'       => $price,
+        'price_label' => '$' . number_format($price, 0) . ' / month',
+        'paid_until'  => $dates['expires_label'] !== '' ? $dates['expires_label'] : '—',
+        'days_left'   => $dates['days_left'],
+        'status'      => $status,
+        'show_renew'  => $status === 'warning' || $status === 'expired',
+        'has_plan'    => true,
+    ];
+}
+
+/**
  * @return array<string, string>
  */
 function saas_business_types(): array

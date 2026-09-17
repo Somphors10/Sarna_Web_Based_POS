@@ -337,4 +337,48 @@ class Home extends Secure_Controller
             ]);
         }
     }
+
+    /**
+     * Shop account profile (Account menu).
+     */
+    public function getProfile(): void
+    {
+        if (is_platform_super_admin()) {
+            redirect()->to('super-admin/overview')->send();
+            return;
+        }
+
+        echo view('home/profile');
+    }
+
+    /**
+     * Current WBPOS plan page (Account → Plan).
+     */
+    public function getPlan(): void
+    {
+        if (is_platform_super_admin()) {
+            redirect()->to('super-admin/overview')->send();
+            return;
+        }
+
+        $tenant_id = (int)$this->session->get('tenant_id');
+        $plan = function_exists('saas_shop_account_plan')
+            ? saas_shop_account_plan($tenant_id)
+            : [
+                'plan_name'   => 'WBPOS',
+                'price_label' => '$20 / month',
+                'paid_until'  => '—',
+                'days_left'   => null,
+                'status'      => 'none',
+                'show_renew'  => false,
+            ];
+
+        echo view('home/plan', [
+            'plan'     => $plan,
+            'pay_url'  => function_exists('saas_current_shop_pay_url')
+                ? saas_current_shop_pay_url()
+                : site_url('saas/checkout'),
+            'shop_name' => (string)(config(OSPOS::class)->settings['company'] ?? 'Shop'),
+        ]);
+    }
 }

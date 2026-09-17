@@ -57,6 +57,8 @@ $routes->group('home', static function ($routes) {
     $routes->get('changeLanguage/(:segment)', 'Home::getChangeLanguage/$1');
     $routes->get('changepassword/(:num)', 'Home::getChangePassword/$1');
     $routes->get('changePassword/(:num)', 'Home::getChangePassword/$1');
+    $routes->get('profile', 'Home::getProfile');
+    $routes->get('plan', 'Home::getPlan');
     $routes->post('save/(:num)', 'Home::postSave/$1');
     $routes->post('save', 'Home::postSave');
 });

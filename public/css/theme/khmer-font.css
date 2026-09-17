@@ -125,7 +125,9 @@ html.lang-km .neo-dash-header__subtitle {
 html[lang="km"] .neo-global-menu-item span,
 html.lang-km .neo-global-menu-item span,
 html[lang="km"] .neo-sidebar-logout,
-html.lang-km .neo-sidebar-logout {
+html.lang-km .neo-sidebar-logout,
+html[lang="km"] .neo-sidebar-account-btn,
+html.lang-km .neo-sidebar-account-btn {
     font-size: 16px !important;
 }
 
@@ -138,7 +140,9 @@ html.lang-km .sa-dropdown--profile,
 html[lang="km"] .sa-dropdown--profile .sa-profile-card__copy strong,
 html.lang-km .sa-dropdown--profile .sa-profile-card__copy strong,
 html[lang="km"] .sa-dropdown--profile .sa-dropdown__menu-item,
-html.lang-km .sa-dropdown--profile .sa-dropdown__menu-item {
+html.lang-km .sa-dropdown--profile .sa-dropdown__menu-item,
+html[lang="km"] .neo-sidebar-account-panel,
+html.lang-km .neo-sidebar-account-panel {
     font-size: 15px !important;
 }
 

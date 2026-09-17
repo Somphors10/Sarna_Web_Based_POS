@@ -842,3 +842,180 @@ a.neo-kpi-card:focus-visible {
         min-height: 120px;
     }
 }
+
+.pos-plan-page {
+    padding: 12px 0 40px;
+}
+
+.pos-plan-page__head {
+    text-align: center;
+    margin: 8px auto 28px;
+    max-width: 640px;
+}
+
+.pos-plan-page__head h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+}
+
+.pos-plan-page__head p {
+    margin: 10px 0 0;
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.pos-plan-grid {
+    display: flex;
+    justify-content: center;
+}
+
+.pos-plan-card {
+    width: 100%;
+    max-width: 380px;
+    text-align: left;
+    background: #fff;
+    border: 2px solid #7c3aed;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.pos-plan-card--renew {
+    border-color: #d97706;
+}
+
+.pos-plan-card__badge {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #7c3aed;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pos-plan-card--renew .pos-plan-card__badge {
+    color: #d97706;
+}
+
+.pos-plan-card h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.pos-plan-card__shop {
+    margin: 4px 0 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.pos-plan-card__price {
+    margin-bottom: 16px;
+}
+
+.pos-plan-card__price strong {
+    font-size: 28px;
+    font-weight: 800;
+    color: #15803d;
+}
+
+.pos-plan-card__list {
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.pos-plan-card__list li {
+    position: relative;
+    padding: 7px 0 7px 22px;
+    color: #334155;
+    font-size: 14px;
+}
+
+.pos-plan-card__list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #7c3aed;
+}
+
+.pos-plan-card__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.pos-plan-card__meta strong {
+    color: #0f172a;
+}
+
+.pos-plan-card__status {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #059669;
+    margin-bottom: 14px;
+}
+
+.pos-plan-card__status--warning {
+    color: #d97706;
+}
+
+.pos-plan-card__status--expired {
+    color: #dc2626;
+}
+
+.pos-plan-card__cta {
+    display: block;
+    padding: 12px 16px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #fff !important;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none !important;
+}
+
+.pos-plan-card__cta:hover,
+.pos-plan-card__cta:focus {
+    background: #1d4ed8;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+
+.pos-plan-card__cta--secondary {
+    background: #0f172a;
+}
+
+.pos-plan-card__cta--secondary:hover,
+.pos-plan-card__cta--secondary:focus {
+    background: #1e293b;
+}
+
+.pos-profile-card-page .sa-profile-card {
+    padding: 0 0 18px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 767.98px) {
+    .pos-plan-page__head h1 {
+        font-size: 26px;
+    }
+}

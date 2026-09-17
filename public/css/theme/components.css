@@ -48,15 +48,15 @@
 }
 
 /* Primary link color — override Flatly teal (exclude sidebar nav, report links, profile menu, and buttons) */
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item),
-.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item) {
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-sidebar-account-renew):not(.neo-sidebar-account-profile):not(.pos-plan-card__cta):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item),
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):not(.neo-sidebar-account-renew):not(.pos-plan-card__cta) {
     color: var(--wbpos-primary-dark);
 }
 
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):hover,
-.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):focus,
-.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):hover,
-.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):focus {
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-sidebar-account-renew):not(.neo-sidebar-account-profile):not(.pos-plan-card__cta):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):hover,
+.wrapper a:not(.neo-global-menu-item):not(.neo-sidebar-logout):not(.neo-sidebar-account-renew):not(.neo-sidebar-account-profile):not(.pos-plan-card__cta):not(.neo-global-brand):not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):focus,
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):not(.neo-sidebar-account-renew):not(.pos-plan-card__cta):hover,
+.neo-global-content a:not(.neo-report-link):not(.btn):not(.sa-dropdown__menu-item):not(.pos-profile-dropdown__item):not(.neo-sidebar-account-renew):not(.pos-plan-card__cta):focus {
     color: var(--wbpos-primary-darker);
 }
 

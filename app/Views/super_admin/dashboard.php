@@ -62,15 +62,17 @@ $format_relative_time = static function (?string $value): string {
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title>Super Admin Console</title>
+    <title>WBPOS | Super Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="shortcut icon" type="image/x-icon" href="<?= base_url('images/favicon.ico') ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=4') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=4') ?>">
+    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=4') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=62') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=5') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=63') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=8') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=2') ?>">
     <style>
         .sa-mail { display:grid; gap:16px; max-width:920px; }

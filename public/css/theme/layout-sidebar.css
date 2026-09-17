@@ -217,6 +217,58 @@ html.sidebar-collapsed .sa-nav-group {
     margin-top: auto;
     padding: 8px 10px 4px;
     border-top: 1px solid #eef2f7;
+    position: relative;
+    z-index: 30;
+    overflow: visible;
+}
+
+.neo-sidebar-account {
+    position: relative;
+}
+
+.neo-sidebar-account-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    padding: 5px 8px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.neo-sidebar-account-btn:hover,
+.neo-sidebar-account-btn:focus,
+.neo-sidebar-account-btn[aria-expanded="true"],
+.neo-sidebar-account-btn.is-active {
+    background: var(--wbpos-primary-soft, #eef2ff);
+    border-color: transparent;
+    color: #0f172a;
+    outline: none;
+}
+
+.neo-sidebar-account-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #f59e0b;
+    margin-left: auto;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.neo-sidebar-account-dot--expired {
+    background: #dc2626;
 }
 
 .neo-sidebar-logout {
@@ -248,13 +300,22 @@ html.sidebar-collapsed .neo-sidebar-footer {
     padding: 8px 0 4px;
 }
 
-html.sidebar-collapsed .neo-sidebar-logout {
+html.sidebar-collapsed .neo-sidebar-logout,
+html.sidebar-collapsed .neo-sidebar-account-btn {
     justify-content: center;
     padding: 8px 0;
 }
 
-html.sidebar-collapsed .neo-sidebar-logout span {
+html.sidebar-collapsed .neo-sidebar-logout span,
+html.sidebar-collapsed .neo-sidebar-account-btn span:not(.neo-sidebar-account-dot) {
     display: none;
+}
+
+html.sidebar-collapsed .neo-sidebar-account-dot {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    margin: 0;
 }
 
 html.sidebar-collapsed .neo-layout {

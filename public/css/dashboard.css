@@ -1,11 +1,11 @@
 @import url("theme/tokens.css");
 @import url("theme/topbar-footer.css?v=68");
-@import url("theme/layout-sidebar.css?v=2");
-@import url("theme/home.css?v=86");
+@import url("theme/layout-sidebar.css?v=4");
+@import url("theme/home.css?v=87");
 @import url("theme/modules.css?v=101");
-@import url("theme/components.css?v=85");
+@import url("theme/components.css?v=87");
 @import url("theme/responsive.css?v=75");
-@import url("theme/khmer-font.css?v=72");
+@import url("theme/khmer-font.css?v=73");
 
 /* —— Subscription banner —— */
 .pos-subscription-alert {

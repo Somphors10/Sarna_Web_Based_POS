@@ -21,8 +21,10 @@ $is_sa_pos_shell = is_platform_super_admin();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <base href="<?= base_url() ?>">
-    <title><?= esc($config['company']) . ' | ' . lang('Common.powered_by') . ' ' . lang('Common.software_short') . ' ' . esc(config('App')->application_version) ?></title>
-    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+    <title><?= esc(lang('Common.software_short')) . ' | ' . esc($config['company']) ?></title>
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=4">
+    <link rel="icon" type="image/png" href="images/favicon.png?v=4">
+    <link rel="shortcut icon" href="images/favicon.png?v=4">
     <link rel="stylesheet" href="<?= 'resources/bootswatch/' . (empty($config['theme']) ? 'flatly' : esc($config['theme'])) . '/bootstrap.min.css' ?>">
 
     <?php $assets_injected = false; ?>
@@ -49,7 +51,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=117">
+        <link rel="stylesheet" href="css/dashboard.css?v=119">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -57,12 +59,12 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=62">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=63">
         <?php endif; ?>
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
         <?php } ?>
-        <link rel="stylesheet" href="css/theme/profile-menu.css?v=5">
+        <link rel="stylesheet" href="css/theme/profile-menu.css?v=9">
         <link rel="stylesheet" href="css/theme/modals.css?v=1">
         <!-- inject:debug:js -->
         <script src="resources/js/jquery-12e87d2f3a.js"></script>
@@ -105,7 +107,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=117">
+        <link rel="stylesheet" href="css/dashboard.css?v=119">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=11">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -113,14 +115,14 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=62">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=63">
         <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
         <?php } ?>
-        <link rel="stylesheet" href="css/theme/profile-menu.css?v=5">
+        <link rel="stylesheet" href="css/theme/profile-menu.css?v=9">
         <link rel="stylesheet" href="css/theme/modals.css?v=1">
         <!-- inject:prod:js -->
         <script src="resources/jquery-2c872dbe60.min.js"></script>
@@ -143,7 +145,7 @@ $is_sa_pos_shell = is_platform_super_admin();
     } ?>
 
     <?= view('partial/header_js') ?>
-    <script src="js/password_toggle.js?v=3"></script>
+    <script src="js/password_toggle.js?v=4"></script>
     <script src="js/pos_select.js?v=5"></script>
     <?= view('partial/lang_lines') ?>
 
@@ -250,7 +252,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                     }
                 });
 
-                document.querySelectorAll('.neo-global-menu-item, .neo-sidebar-logout').forEach(function(link) {
+                document.querySelectorAll('.neo-global-menu-item, .neo-sidebar-logout, .js-pos-logout').forEach(function(link) {
                     link.addEventListener('click', function() {
                         if (window.innerWidth <= 992) {
                             closeMobileSidebar();
@@ -271,48 +273,98 @@ $is_sa_pos_shell = is_platform_super_admin();
             });
 
             document.addEventListener('DOMContentLoaded', function() {
-                const profileBtn = document.getElementById('pos_profile_btn');
-                const profileDropdown = document.getElementById('pos_profile_dropdown');
-                let openDropdown = null;
-
-                const closeDropdown = function() {
-                    if (openDropdown) {
-                        openDropdown.hidden = true;
-                        openDropdown = null;
+                const menus = [
+                    {
+                        btn: document.getElementById('pos_profile_btn'),
+                        panel: document.getElementById('pos_profile_dropdown')
+                    },
+                    {
+                        btn: document.getElementById('pos_sidebar_account_btn'),
+                        panel: document.getElementById('pos_sidebar_account_panel')
                     }
-                    if (profileBtn) {
-                        profileBtn.setAttribute('aria-expanded', 'false');
-                    }
-                };
+                ].filter(function(menu) {
+                    return menu.btn && menu.panel;
+                });
 
-                if (!profileBtn || !profileDropdown) {
+                if (!menus.length) {
                     return;
                 }
 
-                profileBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const willOpen = profileDropdown.hasAttribute('hidden');
-                    closeDropdown();
-                    if (willOpen) {
-                        profileDropdown.removeAttribute('hidden');
-                        profileBtn.setAttribute('aria-expanded', 'true');
-                        openDropdown = profileDropdown;
+                const closeDropdowns = function() {
+                    menus.forEach(function(menu) {
+                        menu.panel.hidden = true;
+                        menu.btn.setAttribute('aria-expanded', 'false');
+                    });
+                    document.documentElement.classList.remove('sidebar-account-open');
+                };
+
+                const positionSidebarPanel = function(btn, panel) {
+                    const rect = btn.getBoundingClientRect();
+                    const collapsed = document.documentElement.classList.contains('sidebar-collapsed');
+                    const mobile = window.innerWidth <= 992;
+                    const width = collapsed || mobile ? 280 : Math.max(rect.width, 248);
+                    let left = collapsed || mobile ? rect.right + 8 : rect.left;
+                    if (left + width > window.innerWidth - 8) {
+                        left = Math.max(8, window.innerWidth - width - 8);
                     }
+                    panel.style.position = 'fixed';
+                    panel.style.left = left + 'px';
+                    panel.style.width = width + 'px';
+                    panel.style.right = 'auto';
+                    panel.style.top = 'auto';
+                    panel.style.bottom = Math.max(8, window.innerHeight - rect.top + 8) + 'px';
+                };
+
+                menus.forEach(function(menu) {
+                    menu.btn.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const willOpen = menu.panel.hasAttribute('hidden');
+                        closeDropdowns();
+                        if (willOpen) {
+                            menu.panel.removeAttribute('hidden');
+                            menu.btn.setAttribute('aria-expanded', 'true');
+                            if (menu.panel.id === 'pos_sidebar_account_panel') {
+                                document.documentElement.classList.add('sidebar-account-open');
+                                positionSidebarPanel(menu.btn, menu.panel);
+                            }
+                        }
+                    });
                 });
 
                 document.addEventListener('click', function(event) {
-                    if (event.target.closest('.pos-profile-dropdown-wrap, .sa-dropdown-wrap')) {
+                    if (event.target.closest('.pos-profile-dropdown-wrap, .sa-dropdown-wrap, .neo-sidebar-account')) {
                         return;
                     }
-                    closeDropdown();
+                    closeDropdowns();
                 });
 
                 document.addEventListener('keydown', function(event) {
                     if (event.key === 'Escape') {
-                        closeDropdown();
+                        closeDropdowns();
                     }
                 });
+
+                window.addEventListener('resize', function() {
+                    const openPanel = document.getElementById('pos_sidebar_account_panel');
+                    const openBtn = document.getElementById('pos_sidebar_account_btn');
+                    if (openPanel && openBtn && !openPanel.hidden) {
+                        positionSidebarPanel(openBtn, openPanel);
+                    }
+                });
+
+                const sidebarToggle = document.getElementById('neo_sidebar_toggle');
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener('click', function() {
+                        window.requestAnimationFrame(function() {
+                            const openPanel = document.getElementById('pos_sidebar_account_panel');
+                            const openBtn = document.getElementById('pos_sidebar_account_btn');
+                            if (openPanel && openBtn && !openPanel.hidden) {
+                                positionSidebarPanel(openBtn, openPanel);
+                            }
+                        });
+                    });
+                }
             });
 
             document.addEventListener('DOMContentLoaded', function() {
@@ -376,6 +428,11 @@ $is_sa_pos_shell = is_platform_super_admin();
                     '.pos-notify-backdrop',
                     '.sa-profile-btn',
                     '.sa-dropdown__menu-item',
+                    '.neo-sidebar-account-btn',
+                    '.neo-sidebar-account-panel',
+                    'a[href*="home/plan"]',
+                    'a[href*="home/profile"]',
+                    '.pos-plan-card__cta',
                     '.js-pos-logout',
                     '.pos-logout-link',
                     '.neo-sidebar-logout',
@@ -441,6 +498,61 @@ $is_sa_pos_shell = is_platform_super_admin();
         })();
     </script>
     <?php if (!$is_sa_pos_shell): ?><div class="wrapper"><?php endif; ?>
+        <?php
+            $profile_card = pos_profile_card_context($user_info);
+            $profile_initials = '';
+            foreach (preg_split('/\s+/', (string)$profile_card['display_name']) ?: [] as $part) {
+                if ($part !== '') {
+                    $profile_initials .= strtoupper(substr($part, 0, 1));
+                }
+                if (strlen($profile_initials) >= 2) {
+                    break;
+                }
+            }
+            if ($profile_initials === '') {
+                $profile_initials = strtoupper(
+                    substr((string)($user_info->first_name ?? ''), 0, 1)
+                    . substr((string)($user_info->last_name ?? ''), 0, 1)
+                );
+            }
+            if ($profile_initials === '' && is_platform_super_admin()) {
+                $profile_initials = 'SA';
+            }
+            $label_or = static function (string $key, string $fallback): string {
+                $line = lang($key);
+                return ($line === $key || $line === '') ? $fallback : $line;
+            };
+            $label_profile = $label_or('Common.profile', 'Profile');
+            $label_account = $label_or('Login.account', 'Account');
+            $label_change_password = $label_or('Employees.change_password', 'Change Password');
+            $ui_language = current_language_code();
+            $header_logout_url = is_platform_super_admin()
+                ? site_url('super-admin/logout')
+                : site_url('home/logout');
+            $shop_pay_url = function_exists('saas_current_shop_pay_url')
+                ? saas_current_shop_pay_url()
+                : site_url('saas/checkout');
+            $shop_account_plan = [
+                'plan_name'   => 'WBPOS',
+                'price_label' => '$20 / month',
+                'paid_until'  => '—',
+                'days_left'   => null,
+                'status'      => 'none',
+                'show_renew'  => false,
+            ];
+            if (!$is_sa_pos_shell) {
+                $plan_tenant_id = (int)(session()->get('tenant_id') ?? 0);
+                if ($plan_tenant_id > 0 && function_exists('saas_shop_account_plan')) {
+                    $shop_account_plan = saas_shop_account_plan($plan_tenant_id);
+                }
+            }
+            $account_status_key = (string)($shop_account_plan['status'] ?? 'none');
+            $account_section_active = in_array(
+                strtolower((string)$request->getUri()->getSegment(2)),
+                ['plan', 'profile'],
+                true
+            );
+        ?>
         <div class="neo-layout<?= $is_sa_pos_shell ? ' sa-layout' : '' ?>">
             <aside class="neo-global-sidebar<?= $is_sa_pos_shell ? ' sa-sidebar' : '' ?>">
                 <div class="neo-global-brand-row">
@@ -475,13 +587,9 @@ $is_sa_pos_shell = is_platform_super_admin();
                         <?php endif; ?>
                     </nav>
                     <div class="neo-sidebar-footer">
-                        <?php
-                            $header_logout_url = is_platform_super_admin()
-                                ? site_url('super-admin/logout')
-                                : site_url('home/logout');
-                        ?>
+                        <?php if ($is_sa_pos_shell): ?>
                         <a
-                            class="neo-sidebar-logout <?= is_platform_super_admin() ? 'js-super-admin-logout' : 'pos-logout-link' ?>"
+                            class="neo-sidebar-logout js-super-admin-logout"
                             href="<?= $header_logout_url ?>"
                             data-logout-url="<?= $header_logout_url ?>"
                             title="<?= lang('Login.logout') ?>"
@@ -490,6 +598,52 @@ $is_sa_pos_shell = is_platform_super_admin();
                             <span class="sa-nav-icon"><img class="neo-nav__icon" src="<?= base_url('images/super-admin/logout.svg') ?>" alt=""></span>
                             <span><?= lang('Login.logout') ?></span>
                         </a>
+                        <?php else: ?>
+                        <div class="neo-sidebar-account" id="pos_sidebar_account">
+                            <button
+                                type="button"
+                                class="neo-sidebar-account-btn<?= !empty($account_section_active) ? ' is-active' : '' ?>"
+                                id="pos_sidebar_account_btn"
+                                aria-label="<?= esc($label_account) ?>"
+                                aria-expanded="false"
+                                aria-haspopup="true"
+                                aria-controls="pos_sidebar_account_panel"
+                                title="<?= esc($label_account) ?>"
+                            >
+                                <img class="neo-nav__icon" src="<?= base_url('images/super-admin/account.svg') ?>" alt="">
+                                <span><?= esc($label_account) ?></span>
+                                <?php if (!empty($shop_account_plan['show_renew'])): ?>
+                                    <span class="neo-sidebar-account-dot<?= $account_status_key === 'expired' ? ' neo-sidebar-account-dot--expired' : '' ?>" aria-hidden="true"></span>
+                                <?php endif; ?>
+                            </button>
+                            <div class="sa-dropdown sa-dropdown--profile neo-sidebar-account-panel" id="pos_sidebar_account_panel" hidden>
+                                <div class="sa-profile-card neo-sidebar-account-profile">
+                                    <span class="sa-profile-card__avatar" aria-hidden="true"><?= esc($profile_initials) ?></span>
+                                    <div class="sa-profile-card__copy">
+                                        <strong><?= esc($profile_card['display_name']) ?></strong>
+                                        <?php if ($profile_card['email'] !== ''): ?>
+                                            <span><?= esc($profile_card['email']) ?></span>
+                                        <?php endif; ?>
+                                        <span class="sa-profile-card__role"><?= esc($profile_card['role_label']) ?></span>
+                                    </div>
+                                </div>
+                                <div class="sa-dropdown__menu">
+                                    <a class="sa-dropdown__menu-item neo-sidebar-account-link" href="<?= site_url('home/plan') ?>">
+                                        <?= esc($label_or('Login.account_your_plan', 'Your plan')) ?>
+                                        <?php if (!empty($shop_account_plan['show_renew'])): ?>
+                                            <span class="neo-sidebar-account-link-hint"><?= esc(lang('Login.subscription_notify_renew')) ?></span>
+                                        <?php endif; ?>
+                                    </a>
+                                    <a
+                                        class="sa-dropdown__menu-item js-pos-logout pos-logout-link"
+                                        href="<?= site_url('home/logout') ?>"
+                                        data-logout-url="<?= site_url('home/logout') ?>"
+                                        onclick="return typeof window.osposConfirmLogout === 'function' ? window.osposConfirmLogout(this) : true;"
+                                    ><?= lang('Login.logout') ?></a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </aside>
@@ -497,34 +651,6 @@ $is_sa_pos_shell = is_platform_super_admin();
 
             <main class="neo-global-content<?= $is_sa_pos_shell ? ' sa-main' : '' ?>">
                 <?php
-                    helper('platform_features');
-                    $profile_card = pos_profile_card_context($user_info);
-                    $profile_initials = '';
-                    foreach (preg_split('/\s+/', (string)$profile_card['display_name']) ?: [] as $part) {
-                        if ($part !== '') {
-                            $profile_initials .= strtoupper(substr($part, 0, 1));
-                        }
-                        if (strlen($profile_initials) >= 2) {
-                            break;
-                        }
-                    }
-                    if ($profile_initials === '') {
-                        $profile_initials = strtoupper(
-                            substr((string)($user_info->first_name ?? ''), 0, 1)
-                            . substr((string)($user_info->last_name ?? ''), 0, 1)
-                        );
-                    }
-                    if ($profile_initials === '' && is_platform_super_admin()) {
-                        $profile_initials = 'SA';
-                    }
-                    $label_or = static function (string $key, string $fallback): string {
-                        $line = lang($key);
-                        return ($line === $key || $line === '') ? $fallback : $line;
-                    };
-                    $label_profile = $label_or('Common.profile', 'Profile');
-                    $label_change_password = $label_or('Employees.change_password', 'Change Password');
-                    $ui_language = current_language_code();
-
                     $sa_notification_items = [];
                     if ($is_sa_pos_shell && function_exists('saas_build_super_admin_notification_items')) {
                         $sa_notification_items = saas_build_super_admin_notification_items();
@@ -534,9 +660,6 @@ $is_sa_pos_shell = is_platform_super_admin();
                     $subscription_banner = null;
                     $subscription_banner_tone = 'warning';
                     $shop_company = (string)($config['company'] ?? 'Shop');
-                    $shop_pay_url = function_exists('saas_current_shop_pay_url')
-                        ? saas_current_shop_pay_url()
-                        : site_url('saas/checkout');
                     if (!$is_sa_pos_shell) {
                         $banner_tenant_id = (int)(session()->get('tenant_id') ?? 0);
                         if ($banner_tenant_id > 0 && function_exists('saas_tenant_subscription_info')) {

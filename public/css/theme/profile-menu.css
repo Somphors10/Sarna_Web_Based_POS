@@ -187,3 +187,174 @@
     color: #0f172a;
     background: #ffffff !important;
 }
+
+.neo-sidebar-account-profile {
+    display: flex;
+    cursor: default;
+    pointer-events: none;
+}
+    position: fixed !important;
+    top: auto !important;
+    right: auto !important;
+    z-index: 1300;
+    min-width: 248px;
+    max-width: min(320px, calc(100vw - 16px));
+}
+
+.neo-sidebar-account-view[hidden] {
+    display: none !important;
+}
+
+.neo-sidebar-account-link {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.neo-sidebar-account-link::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid #94a3b8;
+    border-top: 2px solid #94a3b8;
+    transform: rotate(45deg);
+    flex-shrink: 0;
+}
+
+.neo-sidebar-account-link-hint {
+    margin-left: auto;
+    margin-right: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #b45309;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.neo-sidebar-account-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 10px 16px 8px;
+    border: 0;
+    border-bottom: 1px solid #f1f5f9;
+    background: transparent;
+    color: #64748b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.neo-sidebar-account-back::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-left: 2px solid #94a3b8;
+    border-bottom: 2px solid #94a3b8;
+    transform: rotate(45deg);
+}
+
+.neo-sidebar-account-back:hover,
+.neo-sidebar-account-back:focus {
+    color: #0f172a;
+    outline: none;
+}
+
+.neo-sidebar-account-plan {
+    display: grid;
+    gap: 6px;
+    padding: 12px 16px 16px;
+    background: #fff;
+}
+
+.neo-sidebar-account-plan--warning {
+    background: #fffbeb;
+}
+
+.neo-sidebar-account-plan--expired {
+    background: #fef2f2;
+}
+
+.neo-sidebar-account-plan__name span:first-child {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.neo-sidebar-account-plan__name strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.neo-sidebar-account-plan__name span:last-child {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.neo-sidebar-account-plan__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.neo-sidebar-account-plan__row strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.neo-sidebar-account-plan__status {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #059669;
+}
+
+.neo-sidebar-account-plan--warning .neo-sidebar-account-plan__status {
+    color: #d97706;
+}
+
+.neo-sidebar-account-plan--expired .neo-sidebar-account-plan__status {
+    color: #dc2626;
+}
+
+.neo-sidebar-account-renew {
+    display: block;
+    margin-top: 4px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #7c3aed;
+    color: #fff !important;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none !important;
+}
+
+.neo-sidebar-account-renew:hover,
+.neo-sidebar-account-renew:focus {
+    background: #6d28d9;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+
+.neo-sidebar-account-panel .js-pos-logout {
+    color: #dc2626 !important;
+}
