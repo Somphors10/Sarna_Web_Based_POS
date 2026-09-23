@@ -17,9 +17,10 @@
     <title><?= esc(lang('Common.software_title')) ?> | Reset Password</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=4') ?>">
-    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=4') ?>">
-    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=4') ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=5') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=5') ?>">
+    <link rel="icon" href="<?= base_url('favicon.ico?v=5') ?>">
+    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=5') ?>">
     <link rel="stylesheet" href="<?= base_url('css/login.css?v=18') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=1') ?>">
     <meta name="theme-color" content="#7c3aed">

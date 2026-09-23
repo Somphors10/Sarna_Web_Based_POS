@@ -21,10 +21,13 @@ $is_sa_pos_shell = is_platform_super_admin();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <base href="<?= base_url() ?>">
-    <title><?= esc(lang('Common.software_short')) . ' | ' . esc($config['company']) ?></title>
-    <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=4">
-    <link rel="icon" type="image/png" href="images/favicon.png?v=4">
-    <link rel="shortcut icon" href="images/favicon.png?v=4">
+    <title><?= $is_sa_pos_shell
+        ? 'WBPOS | Super Admin'
+        : esc(lang('Common.software_short')) . ' | ' . esc($config['company']) ?></title>
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=5">
+    <link rel="icon" type="image/png" href="images/favicon.png?v=5">
+    <link rel="icon" href="favicon.ico?v=5">
+    <link rel="shortcut icon" href="images/favicon.png?v=5">
     <link rel="stylesheet" href="<?= 'resources/bootswatch/' . (empty($config['theme']) ? 'flatly' : esc($config['theme'])) . '/bootstrap.min.css' ?>">
 
     <?php $assets_injected = false; ?>
@@ -51,15 +54,15 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=119">
+        <link rel="stylesheet" href="css/dashboard.css?v=120">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
-        <link rel="stylesheet" href="css/forms.css?v=11">
+        <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=63">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=65">
         <?php endif; ?>
         <?php if ($config['theme'] != 'flatly' && file_exists($_SERVER['DOCUMENT_ROOT'] . '/public/css/' . esc($config['theme']) . '.css')) { ?>
             <link rel="stylesheet" href="<?= 'css/' . esc($config['theme']) . '.css' ?>">
@@ -107,15 +110,15 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=119">
+        <link rel="stylesheet" href="css/dashboard.css?v=120">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
-        <link rel="stylesheet" href="css/forms.css?v=11">
+        <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
         <link rel="stylesheet" href="css/theme/layout-sidebar.css">
         <link rel="stylesheet" href="css/theme/responsive.css">
-        <link rel="stylesheet" href="css/theme/super-admin.css?v=63">
+        <link rel="stylesheet" href="css/theme/super-admin.css?v=65">
         <?php endif; ?>
 
         <!-- Tweaks to the UI for a particular theme should drop here  -->
@@ -718,23 +721,18 @@ $is_sa_pos_shell = is_platform_super_admin();
                     $pos_notify_count = count($pos_notify_items);
                 ?>
                 <?php if ($is_sa_pos_shell): ?>
-                <header class="sa-top-navbar">
-                    <div class="sa-top-navbar__start">
-                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle sa-top-navbar__menu" type="button" aria-label="Open menu" aria-expanded="false">
+                <div class="topbar pos-topbar">
+                    <div class="container pos-topbar-inner sa-pos-topbar-inner">
+                        <button id="neo_mobile_sidebar_toggle" class="neo-mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
                             <span class="neo-hamburger-icon" aria-hidden="true"></span>
                         </button>
-                    </div>
-                    <div class="sa-top-navbar__end">
-                        <div class="sa-top-navbar__search">
-                            <div class="sa-search-wrap sa-search-wrap--pill">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="11" cy="11" r="7"></circle>
-                                    <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
-                                </svg>
-                                <input type="text" id="sa_navbar_search" class="sa-input sa-input--pill" placeholder="Search businesses, admins, requests..." autocomplete="off">
-                            </div>
+                        <div class="navbar-left pos-topbar-clock">
+                            <div id="liveclock"><?= date(($config['dateformat'] ?? 'Y-m-d') . ' ' . ($config['timeformat'] ?? 'H:i:s')) ?></div>
                         </div>
-                        <div class="sa-top-navbar__actions">
+                        <div class="navbar-center pos-topbar-company">
+                            <strong>Super Admin</strong>
+                        </div>
+                        <div class="navbar-right pos-topbar-user">
                             <?= view('partial/super_admin_notify', [
                                 'notification_items' => $sa_notification_items,
                                 'sa_notify_mode'     => 'button',
@@ -786,27 +784,7 @@ $is_sa_pos_shell = is_platform_super_admin();
                             </div>
                         </div>
                     </div>
-                </header>
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var searchInput = document.getElementById('sa_navbar_search');
-                    if (!searchInput) {
-                        return;
-                    }
-                    searchInput.addEventListener('keydown', function(event) {
-                        if (event.key !== 'Enter') {
-                            return;
-                        }
-                        event.preventDefault();
-                        var q = (searchInput.value || '').trim();
-                        var url = <?= json_encode(site_url('super-admin/businesses')) ?>;
-                        if (q !== '') {
-                            url += (url.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q);
-                        }
-                        window.location.href = url;
-                    });
-                });
-                </script>
+                </div>
                 <?php else: ?>
                 <div class="topbar pos-topbar">
                     <div class="container pos-topbar-inner">

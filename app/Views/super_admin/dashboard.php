@@ -65,13 +65,14 @@ $format_relative_time = static function (?string $value): string {
     <title>WBPOS | Super Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=4') ?>">
-    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=4') ?>">
-    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=4') ?>">
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=5') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=5') ?>">
+    <link rel="icon" href="<?= base_url('favicon.ico?v=5') ?>">
+    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=5') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/layout-sidebar.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/responsive.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=63') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=65') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/profile-menu.css?v=8') ?>">
     <link rel="stylesheet" href="<?= base_url('css/password-toggle.css?v=2') ?>">
     <style>
@@ -564,7 +565,7 @@ $format_relative_time = static function (?string $value): string {
             $notification_items[] = [
                 'type' => 'payment',
                 'id' => $tid,
-                'key' => 'awaiting-payment-' . $tid,
+                'key' => saas_notify_stable_key('awaiting-payment', $tid),
                 'title' => 'Waiting for $20 payment',
                 'subtitle' => $company,
                 'body' => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
@@ -579,7 +580,7 @@ $format_relative_time = static function (?string $value): string {
             $notification_items[] = [
                 'type' => 'expired',
                 'id' => $tid,
-                'key' => 'expired-' . $tid . '-' . $period_end,
+                'key' => saas_notify_stable_key('expired', $tid, $period_end),
                 'title' => 'Subscription expired',
                 'subtitle' => $company,
                 'body' => ($code !== '' ? $code . ' · ' : '') . 'Period ended ' . saas_format_period_end($period_end) . '. Account still open — needs renew or suspend.',
@@ -592,7 +593,7 @@ $format_relative_time = static function (?string $value): string {
             $notification_items[] = [
                 'type' => 'warning',
                 'id' => $tid,
-                'key' => 'expiring-' . $tid . '-' . $period_end,
+                'key' => saas_notify_stable_key('expiring', $tid, $period_end),
                 'title' => 'Expiring soon',
                 'subtitle' => $company,
                 'body' => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',
@@ -1864,22 +1865,86 @@ $format_relative_time = static function (?string $value): string {
         const profileBtn = document.getElementById('sa_profile_btn');
         const profileDropdown = document.getElementById('sa_profile_dropdown');
         const dismissedStorageKey = 'sa_dismissed_notifications';
+        const markedReadStorageKey = 'sa_notifications_marked_read';
         let pendingForm = null;
         let pendingLogoutHref = null;
         let pendingActionForm = null;
         let openDropdown = null;
 
-        const getDismissedKeys = function() {
+        const normalizeNotifyKey = function(key) {
+            const match = String(key || '').match(/^(expired|expiring|awaiting-payment|registration|alert)-(.+)$/);
+            if (!match) {
+                return String(key || '');
+            }
+            const rest = match[2];
+            const dateMatch = rest.match(/^(\d+)[-_](.+)$/);
+            if (!dateMatch) {
+                return match[1] + '-' + rest;
+            }
+            const rawDate = dateMatch[2].replace(/_/g, '-');
+            const ymd = rawDate.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (ymd) {
+                return match[1] + '-' + dateMatch[1] + '-' + ymd[1];
+            }
+            const parsed = Date.parse(rawDate);
+            if (isNaN(parsed)) {
+                return match[1] + '-' + rest;
+            }
+            const date = new Date(parsed);
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            return match[1] + '-' + dateMatch[1] + '-' + date.getUTCFullYear() + '-' + month + '-' + day;
+        };
+
+        const readStoredKeys = function(storage) {
             try {
-                const parsed = JSON.parse(sessionStorage.getItem(dismissedStorageKey) || '[]');
+                const parsed = JSON.parse(storage.getItem(dismissedStorageKey) || '[]');
                 return Array.isArray(parsed) ? parsed : [];
             } catch (error) {
                 return [];
             }
         };
 
+        const getDismissedKeys = function() {
+            let keys = readStoredKeys(localStorage);
+            if (!keys.length) {
+                keys = readStoredKeys(sessionStorage);
+                if (keys.length) {
+                    setDismissedKeys(keys);
+                }
+            }
+            return keys.map(normalizeNotifyKey);
+        };
+
         const setDismissedKeys = function(keys) {
-            sessionStorage.setItem(dismissedStorageKey, JSON.stringify(keys));
+            const unique = [];
+            keys.forEach(function(key) {
+                const normalized = normalizeNotifyKey(key);
+                if (normalized !== '' && unique.indexOf(normalized) === -1) {
+                    unique.push(normalized);
+                }
+            });
+            localStorage.setItem(dismissedStorageKey, JSON.stringify(unique));
+            sessionStorage.removeItem(dismissedStorageKey);
+        };
+
+        const isDismissedKey = function(key, dismissed) {
+            const normalized = normalizeNotifyKey(key);
+            return normalized !== '' && dismissed.indexOf(normalized) !== -1;
+        };
+
+        const isMarkedRead = function() {
+            return localStorage.getItem(markedReadStorageKey) === '1'
+                || sessionStorage.getItem(markedReadStorageKey) === '1';
+        };
+
+        const setMarkedRead = function(value) {
+            if (value) {
+                localStorage.setItem(markedReadStorageKey, '1');
+            } else {
+                localStorage.removeItem(markedReadStorageKey);
+            }
+            sessionStorage.removeItem(markedReadStorageKey);
         };
 
         const getVisibleNotifyCards = function() {
@@ -1903,7 +1968,7 @@ $format_relative_time = static function (?string $value): string {
         };
 
         const syncNotifyCountsFromVisible = function() {
-            if (sessionStorage.getItem('sa_notifications_marked_read') === '1') {
+            if (isMarkedRead()) {
                 updateNotifyCounts(0);
                 return;
             }
@@ -1936,37 +2001,15 @@ $format_relative_time = static function (?string $value): string {
             }
         };
 
-        const pruneDismissedNotifications = function() {
-            if (!notifyList) {
-                return;
-            }
-
-            const validKeys = Array.from(notifyList.querySelectorAll('.sa-notify-card'))
-                .map(function(card) {
-                    return card.getAttribute('data-notify-key') || '';
-                })
-                .filter(function(key) {
-                    return key !== '';
-                });
-
-            const dismissed = getDismissedKeys().filter(function(key) {
-                return validKeys.indexOf(key) !== -1;
-            });
-
-            setDismissedKeys(dismissed);
-        };
-
         const applyDismissedNotifications = function() {
             if (!notifyList) {
                 return;
             }
 
-            pruneDismissedNotifications();
-
             const dismissed = getDismissedKeys();
             notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
                 const key = card.getAttribute('data-notify-key') || '';
-                if (dismissed.indexOf(key) !== -1) {
+                if (isDismissedKey(key, dismissed)) {
                     card.style.display = 'none';
                 }
             });
@@ -2065,7 +2108,7 @@ $format_relative_time = static function (?string $value): string {
                     });
                 }
 
-                sessionStorage.setItem('sa_notifications_marked_read', '1');
+                setMarkedRead(true);
                 updateNotifyCounts(0);
             });
         }
@@ -2077,13 +2120,13 @@ $format_relative_time = static function (?string $value): string {
                 notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
                     const key = card.getAttribute('data-notify-key') || '';
                     card.style.display = 'none';
-                    if (key !== '' && dismissed.indexOf(key) === -1) {
+                    if (key !== '' && !isDismissedKey(key, dismissed)) {
                         dismissed.push(key);
                     }
                 });
 
                 setDismissedKeys(dismissed);
-                sessionStorage.removeItem('sa_notifications_marked_read');
+                setMarkedRead(false);
                 syncNotifyCountsFromVisible();
                 syncNotifyEmptyState();
             });
@@ -2103,13 +2146,13 @@ $format_relative_time = static function (?string $value): string {
 
                 const key = card.getAttribute('data-notify-key') || '';
                 const dismissed = getDismissedKeys();
-                if (key !== '' && dismissed.indexOf(key) === -1) {
+                if (key !== '' && !isDismissedKey(key, dismissed)) {
                     dismissed.push(key);
                     setDismissedKeys(dismissed);
                 }
 
                 card.style.display = 'none';
-                sessionStorage.removeItem('sa_notifications_marked_read');
+                setMarkedRead(false);
                 syncNotifyCountsFromVisible();
                 syncNotifyEmptyState();
             });

@@ -84,18 +84,82 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const dismissedStorageKey = 'sa_dismissed_notifications';
+    const markedReadStorageKey = 'sa_notifications_marked_read';
 
-    const getDismissedKeys = function() {
+    const normalizeNotifyKey = function(key) {
+        const match = String(key || '').match(/^(expired|expiring|awaiting-payment|registration|alert)-(.+)$/);
+        if (!match) {
+            return String(key || '');
+        }
+        const rest = match[2];
+        const dateMatch = rest.match(/^(\d+)[-_](.+)$/);
+        if (!dateMatch) {
+            return match[1] + '-' + rest;
+        }
+        const rawDate = dateMatch[2].replace(/_/g, '-');
+        const ymd = rawDate.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (ymd) {
+            return match[1] + '-' + dateMatch[1] + '-' + ymd[1];
+        }
+        const parsed = Date.parse(rawDate);
+        if (isNaN(parsed)) {
+            return match[1] + '-' + rest;
+        }
+        const date = new Date(parsed);
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return match[1] + '-' + dateMatch[1] + '-' + date.getUTCFullYear() + '-' + month + '-' + day;
+    };
+
+    const readStoredKeys = function(storage) {
         try {
-            const parsed = JSON.parse(sessionStorage.getItem(dismissedStorageKey) || '[]');
+            const parsed = JSON.parse(storage.getItem(dismissedStorageKey) || '[]');
             return Array.isArray(parsed) ? parsed : [];
         } catch (e) {
             return [];
         }
     };
 
+    const getDismissedKeys = function() {
+        let keys = readStoredKeys(localStorage);
+        if (!keys.length) {
+            keys = readStoredKeys(sessionStorage);
+            if (keys.length) {
+                setDismissedKeys(keys);
+            }
+        }
+        return keys.map(normalizeNotifyKey);
+    };
+
     const setDismissedKeys = function(keys) {
-        sessionStorage.setItem(dismissedStorageKey, JSON.stringify(keys));
+        const unique = [];
+        keys.forEach(function(key) {
+            const normalized = normalizeNotifyKey(key);
+            if (normalized !== '' && unique.indexOf(normalized) === -1) {
+                unique.push(normalized);
+            }
+        });
+        localStorage.setItem(dismissedStorageKey, JSON.stringify(unique));
+        sessionStorage.removeItem(dismissedStorageKey);
+    };
+
+    const isDismissedKey = function(key, dismissed) {
+        const normalized = normalizeNotifyKey(key);
+        return normalized !== '' && dismissed.indexOf(normalized) !== -1;
+    };
+
+    const isMarkedRead = function() {
+        return localStorage.getItem(markedReadStorageKey) === '1'
+            || sessionStorage.getItem(markedReadStorageKey) === '1';
+    };
+
+    const setMarkedRead = function(value) {
+        if (value) {
+            localStorage.setItem(markedReadStorageKey, '1');
+        } else {
+            localStorage.removeItem(markedReadStorageKey);
+        }
+        sessionStorage.removeItem(markedReadStorageKey);
     };
 
     const getVisibleNotifyCards = function() {
@@ -131,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const syncNotifyCountsFromVisible = function() {
-        if (sessionStorage.getItem('sa_notifications_marked_read') === '1') {
+        if (isMarkedRead()) {
             updateNotifyCounts(0);
             return;
         }
@@ -145,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dismissed = getDismissedKeys();
         notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
             const key = card.getAttribute('data-notify-key') || '';
-            if (dismissed.indexOf(key) !== -1) {
+            if (isDismissedKey(key, dismissed)) {
                 card.style.display = 'none';
             }
         });
@@ -202,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const key = card.getAttribute('data-notify-key') || '';
             if (key !== '') {
                 const keys = getDismissedKeys();
-                if (keys.indexOf(key) === -1) {
+                if (!isDismissedKey(key, keys)) {
                     keys.push(key);
                     setDismissedKeys(keys);
                 }
@@ -215,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (notifyMarkReadBtn) {
         notifyMarkReadBtn.addEventListener('click', function() {
-            sessionStorage.setItem('sa_notifications_marked_read', '1');
+            setMarkedRead(true);
             updateNotifyCounts(0);
         });
     }
@@ -228,13 +292,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const keys = getDismissedKeys();
             notifyList.querySelectorAll('.sa-notify-card').forEach(function(card) {
                 const key = card.getAttribute('data-notify-key') || '';
-                if (key !== '' && keys.indexOf(key) === -1) {
+                if (key !== '' && !isDismissedKey(key, keys)) {
                     keys.push(key);
                 }
                 card.style.display = 'none';
             });
             setDismissedKeys(keys);
-            sessionStorage.setItem('sa_notifications_marked_read', '1');
+            setMarkedRead(true);
             syncNotifyEmptyState();
             updateNotifyCounts(0);
         });

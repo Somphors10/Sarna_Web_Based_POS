@@ -72,10 +72,13 @@ if ($country_value === '') {
         <div class="input-group">
             <span class="input-group-addon input-sm"><span class="glyphicon glyphicon-envelope"></span></span>
             <?= form_input([
-                'name'  => 'email',
-                'id'    => 'email',
-                'class' => 'form-control input-sm',
-                'value' => $person_info->email
+                'name'         => 'email',
+                'id'           => 'email',
+                'class'        => 'form-control input-sm',
+                'value'        => $person_info->email,
+                'placeholder'  => 'name@gmail.com',
+                'autocomplete' => 'off',
+                'readonly'     => 'readonly',
             ]) ?>
             <span class="input-group-btn">
                 <a id="person_email_send_btn" class="btn btn-default btn-sm" href="#" title="<?= esc(lang('Common.email_send')) ?>" aria-label="<?= esc(lang('Common.email_send')) ?>">
@@ -108,7 +111,24 @@ if ($country_value === '') {
                 .attr('aria-disabled', 'false');
         };
 
+        var isValidEmail = function(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((value || '').trim());
+        };
+
+        var clearAutofillIfInvalid = function() {
+            var value = ($emailField.val() || '').trim();
+            if (value !== '' && !isValidEmail(value)) {
+                $emailField.val('');
+            }
+        };
+
+        $emailField.on('focus', function() {
+            $emailField.removeAttr('readonly');
+        });
+
         $emailField.on('input change blur', syncEmailSendButton);
+        clearAutofillIfInvalid();
+        setTimeout(clearAutofillIfInvalid, 300);
         syncEmailSendButton();
     });
 </script>

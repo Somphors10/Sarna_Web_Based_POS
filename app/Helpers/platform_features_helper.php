@@ -1374,6 +1374,27 @@ function saas_format_period_end(?string $period_end): string
 }
 
 /**
+ * Stable notification key so Clear / X stays dismissed across Super Admin pages.
+ * Period dates are normalized to Y-m-d so dashboard and POS shell match.
+ */
+function saas_notify_stable_key(string $kind, int $id, ?string $period_end = null): string
+{
+    $key = $kind . '-' . $id;
+    $period_end = trim((string)$period_end);
+    if ($period_end === '') {
+        return $key;
+    }
+
+    $ts = strtotime($period_end);
+    $day = $ts !== false ? date('Y-m-d', $ts) : substr($period_end, 0, 10);
+    if ($day !== '') {
+        $key .= '-' . $day;
+    }
+
+    return $key;
+}
+
+/**
  * Request + expiry dates for a shop (Configuration Information tab).
  *
  * @return array{
@@ -1719,7 +1740,7 @@ function saas_build_super_admin_notification_items(): array
                 $items[] = [
                     'type'          => 'payment',
                     'id'            => $tid,
-                    'key'           => 'awaiting-payment-' . $tid,
+                    'key'           => saas_notify_stable_key('awaiting-payment', $tid),
                     'title'         => 'Waiting for $20 payment',
                     'subtitle'      => $company,
                     'body'          => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
@@ -1734,7 +1755,7 @@ function saas_build_super_admin_notification_items(): array
                 $items[] = [
                     'type'          => 'expired',
                     'id'            => $tid,
-                    'key'           => 'expired-' . $tid . '-' . $period_end,
+                    'key'           => saas_notify_stable_key('expired', $tid, $period_end),
                     'title'         => 'Subscription expired',
                     'subtitle'      => $company,
                     'body'          => ($code !== '' ? $code . ' · ' : '') . 'Period ended ' . saas_format_period_end($period_end) . '. Account still open — needs renew or suspend.',
@@ -1747,7 +1768,7 @@ function saas_build_super_admin_notification_items(): array
                 $items[] = [
                     'type'          => 'warning',
                     'id'            => $tid,
-                    'key'           => 'expiring-' . $tid . '-' . $period_end,
+                    'key'           => saas_notify_stable_key('expiring', $tid, $period_end),
                     'title'         => 'Expiring soon',
                     'subtitle'      => $company,
                     'body'          => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',

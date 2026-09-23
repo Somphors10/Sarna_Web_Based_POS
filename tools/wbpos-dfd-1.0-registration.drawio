@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="WBPOS" version="24.0.0" type="device">
+  <diagram id="dfd-1" name="1.0 Process Registration">
+    <mxGraphModel dx="1000" dy="560" grid="0" gridSize="10" guides="0" connect="0" arrows="1" fold="0" page="1" pageScale="1" pageWidth="940" pageHeight="540" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="e1" value="New Shop Registrant" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="36" y="36" width="176" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Super Admin" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="36" y="288" width="176" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="New Shop Registrant" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="36" y="414" width="176" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="p11" value="&lt;b&gt;1.1&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Submit Registration Data" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="268" y="36" width="230" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="p12" value="&lt;b&gt;1.2&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Verify Email" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="268" y="162" width="230" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="p13" value="&lt;b&gt;1.3&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Process Subscription Request" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="268" y="288" width="230" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="p14" value="&lt;b&gt;1.4&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Pay with KHQR" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fontSize=13;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="268" y="414" width="230" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="&lt;b&gt;D1&lt;/b&gt; &amp;nbsp; Platform Database" style="shape=partialRectangle;whiteSpace=wrap;html=1;top=1;bottom=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;left=1;right=0;fontFamily=Arial;fontSize=13;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="150" width="270" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="Registration data" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="212" y="58" as="sourcePoint"/><mxPoint x="268" y="58" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a2" value="Verify email link" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="268" y="92" as="sourcePoint"/><mxPoint x="212" y="92" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a3" value="Click verify link" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="212" y="204" as="sourcePoint"/><mxPoint x="268" y="204" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a4" value="Approve" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="212" y="330" as="sourcePoint"/><mxPoint x="268" y="330" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a5" value="KHQR / payment link" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="268" y="350" as="sourcePoint"/><mxPoint x="212" y="456" as="targetPoint"/><Array as="points"><mxPoint x="232" y="350"/><mxPoint x="232" y="456"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a6" value="Payment reference" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="212" y="476" as="sourcePoint"/><mxPoint x="268" y="476" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a7" value="Pending request" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="498" y="58" as="sourcePoint"/><mxPoint x="640" y="150" as="targetPoint"/><Array as="points"><mxPoint x="640" y="58"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a8" value="Email verified" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="498" y="204" as="sourcePoint"/><mxPoint x="640" y="204" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a9" value="Verified request" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="640" y="318" as="sourcePoint"/><mxPoint x="498" y="318" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a10" value="Tenant + payment token" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="498" y="354" as="sourcePoint"/><mxPoint x="640" y="354" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a11" value="Approved request" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="640" y="438" as="sourcePoint"/><mxPoint x="498" y="438" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="a12" value="Payment + shop active" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.5;edgeStyle=orthogonalEdgeStyle;fontSize=11;fontFamily=Arial;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="498" y="476" as="sourcePoint"/><mxPoint x="640" y="380" as="targetPoint"/><Array as="points"><mxPoint x="640" y="476"/></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

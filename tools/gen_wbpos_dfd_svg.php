@@ -1,10 +1,9 @@
 <?php
 /**
- * Generate clean WBPOS DFD Level-2 SVGs with correct arrow directions.
- * Run: php tools/gen_wbpos_dfd_svg.php
+ * WBPOS DFD Level 2 — Gane–Sarson SVGs in the assignment picture style,
+ * with data flows corrected from live WBPOS code.
  *
- * Layout style: entity left, processes center column, data stores right
- * (same structure as shop-owner / cashier diagrams).
+ * Run: php tools/gen_wbpos_dfd_svg.php
  */
 
 $outDir = __DIR__;
@@ -25,99 +24,66 @@ function defs(): string
 XML;
 }
 
-function title(string $t, float $cx = 520): string
-{
-    return sprintf(
-        '<text x="%.0f" y="36" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">%s</text>',
-        $cx,
-        e($t)
-    );
-}
-
-function footnote(string $t, float $y, float $cx = 520): string
-{
-    return sprintf(
-        '<text x="%.0f" y="%.0f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-style="italic" fill="#444">%s</text>',
-        $cx,
-        $y,
-        e($t)
-    );
-}
-
 function entity(float $x, float $y, float $w, float $h, string $label): string
 {
     return sprintf(
-        '<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="4" ry="4" fill="#fff" stroke="#111" stroke-width="2"/>' .
-        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#111">%s</text>',
-        $x,
-        $y,
-        $w,
-        $h,
-        $x + $w / 2,
-        $y + $h / 2 + 5,
+        '<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" fill="#fff" stroke="#111" stroke-width="2"/>' .
+        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#111">%s</text>',
+        $x, $y, $w, $h,
+        $x + $w / 2, $y + $h / 2 + 5,
         e($label)
     );
 }
 
 function process(float $x, float $y, float $w, float $h, string $num, string $name): string
 {
-    $band = 24;
-    return sprintf(
-        '<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="6" ry="6" fill="#fff" stroke="#111" stroke-width="1.8"/>' .
+    $band = 26;
+    $out = sprintf(
+        '<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="14" ry="14" fill="#fff" stroke="#111" stroke-width="1.8"/>' .
         '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#111" stroke-width="1.5"/>' .
-        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#111">%s</text>' .
-        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#111">%s</text>',
-        $x,
-        $y,
-        $w,
-        $h,
-        $x,
-        $y + $band,
-        $x + $w,
-        $y + $band,
-        $x + $w / 2,
-        $y + 16,
-        e($num),
-        $x + $w / 2,
-        $y + $band + ($h - $band) / 2 + 5,
-        e($name)
+        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#111">%s</text>',
+        $x, $y, $w, $h,
+        $x, $y + $band, $x + $w, $y + $band,
+        $x + $w / 2, $y + 18,
+        e($num)
     );
+    $lines = explode("\n", $name);
+    $lineH = 15;
+    $bodyMid = $y + $band + ($h - $band) / 2;
+    $start = $bodyMid - ((count($lines) - 1) * $lineH) / 2 + 5;
+    foreach ($lines as $i => $line) {
+        $out .= sprintf(
+            '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#111">%s</text>',
+            $x + $w / 2,
+            $start + $i * $lineH,
+            e($line)
+        );
+    }
+
+    return $out;
 }
 
 function store(float $x, float $y, float $w, float $h, string $id, string $name): string
 {
-    $left = 30;
+    $left = 36;
     return sprintf(
         '<path d="M %.1f %.1f H %.1f V %.1f H %.1f" fill="none" stroke="#111" stroke-width="1.8"/>' .
         '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#111" stroke-width="1.8"/>' .
         '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#111">%s</text>' .
         '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#111">%s</text>',
-        $x,
-        $y,
-        $x + $w,
-        $y + $h,
-        $x,
-        $x + $left,
-        $y,
-        $x + $left,
-        $y + $h,
-        $x + $left / 2,
-        $y + $h / 2 + 5,
-        e($id),
-        $x + $left + ($w - $left) / 2,
-        $y + $h / 2 + 5,
-        e($name)
+        $x, $y, $x + $w, $y + $h, $x,
+        $x + $left, $y, $x + $left, $y + $h,
+        $x + $left / 2, $y + $h / 2 + 5, e($id),
+        $x + $left + ($w - $left) / 2, $y + $h / 2 + 5, e($name)
     );
 }
 
-/** Orthogonal polyline with arrow at end. Points: [[x,y], ...] */
-function flow(array $pts, string $label, float $lx = 0, float $ly = -8): string
+function flow(array $pts, string $label, float $lx = 0, float $ly = -10): string
 {
     $d = '';
     foreach ($pts as $i => $p) {
         $d .= ($i === 0 ? 'M' : 'L') . sprintf(' %.1f %.1f', $p[0], $p[1]);
     }
-    // Label near middle segment
     $n = count($pts);
     $a = $pts[(int) floor(($n - 1) / 2)];
     $b = $pts[(int) ceil(($n - 1) / 2)];
@@ -127,14 +93,15 @@ function flow(array $pts, string $label, float $lx = 0, float $ly = -8): string
     }
     $mx = ($a[0] + $b[0]) / 2 + $lx;
     $my = ($a[1] + $b[1]) / 2 + $ly;
+    $labelXml = $label === '' ? '' : sprintf(
+        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#222">%s</text>',
+        $mx, $my, e($label)
+    );
 
     return sprintf(
-        '<path d="%s" fill="none" stroke="#111" stroke-width="1.5" marker-end="url(#arrow)"/>' .
-        '<text x="%.1f" y="%.1f" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#222">%s</text>',
+        '<path d="%s" fill="none" stroke="#111" stroke-width="1.5" marker-end="url(#arrow)"/>%s',
         $d,
-        $mx,
-        $my,
-        e($label)
+        $labelXml
     );
 }
 
@@ -142,328 +109,109 @@ function wrap_svg(int $w, int $h, array $parts): string
 {
     return sprintf(
         '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">%s%s</svg>',
-        $w,
-        $h,
-        $w,
-        $h,
+        $w, $h, $w, $h,
         '<rect width="100%" height="100%" fill="#fff"/>',
         implode("\n", $parts)
     );
 }
 
 // =============================================================================
-// A) Registrant — Process Registration (1.0)
+// 1.0 New Shop Registrant
 // =============================================================================
-$W = 1040;
-$H = 820;
+$parts = [defs()];
+$parts[] = entity(36, 36, 176, 210, 'New Shop Registrant');
+$parts[] = entity(36, 288, 176, 84, 'Super Admin');
+$parts[] = entity(36, 414, 176, 84, 'New Shop Registrant');
+$parts[] = process(268, 36, 230, 84, '1.1', "Submit Registration\nData");
+$parts[] = process(268, 162, 230, 84, '1.2', 'Verify Email');
+$parts[] = process(268, 288, 230, 84, '1.3', "Process Subscription\nRequest");
+$parts[] = process(268, 414, 230, 84, '1.4', 'Pay with KHQR');
+$parts[] = store(640, 150, 270, 230, 'D1', 'Platform Database');
 
-$ex = 40;
-$ey = 340;
-$ew = 160;
-$eh = 64;
-$bus = $ex + $ew / 2; // vertical trunk under entity
+$parts[] = flow([[212, 58], [268, 58]], 'Registration data', 0, -12);
+$parts[] = flow([[268, 92], [212, 92]], 'Verify email link', 0, 16);
+$parts[] = flow([[212, 204], [268, 204]], 'Click verify link', 0, -12);
+$parts[] = flow([[212, 330], [268, 330]], 'Approve', 0, -12);
+$parts[] = flow([[268, 350], [232, 350], [232, 456], [212, 456]], 'KHQR / payment link', -90, 0);
+$parts[] = flow([[212, 476], [268, 476]], 'Payment reference', 0, 16);
 
-$px = 320;
-$pw = 260;
-$ph = 72;
-$gap = 48;
-$py = [];
-$py[0] = 70;
-for ($i = 1; $i < 4; $i++) {
-    $py[$i] = $py[$i - 1] + $ph + $gap;
-}
+$parts[] = flow([[498, 58], [640, 58], [640, 150]], 'Pending request', 50, -12);
+$parts[] = flow([[498, 204], [640, 204]], 'Email verified', 0, -12);
+$parts[] = flow([[640, 318], [498, 318]], 'Verified request', 0, -12);
+$parts[] = flow([[498, 354], [640, 354]], 'Tenant + payment token', 0, 16);
+$parts[] = flow([[640, 438], [498, 438]], 'Approved request', 0, -12);
+$parts[] = flow([[498, 476], [640, 476], [640, 380]], 'Payment + shop active', 50, 16);
 
-$sx = 700;
-$sy = 280;
-$sw = 280;
-$sh = 100;
-
-$parts = [defs(), title('DFD Level 2 – Process Registration (1.0)', $W / 2)];
-$parts[] = entity($ex, $ey, $ew, $eh, 'New Shop Registrant');
-$parts[] = process($px, $py[0], $pw, $ph, '1.1', 'Submit Registration');
-$parts[] = process($px, $py[1], $pw, $ph, '1.2', 'Send Verify Email');
-$parts[] = process($px, $py[2], $pw, $ph, '1.3', 'Confirm Email Verification');
-$parts[] = process($px, $py[3], $pw, $ph, '1.4', 'Pay with KHQR');
-$parts[] = store($sx, $sy, $sw, $sh, 'D1', 'Platform Database');
-
-// Entity trunk (visual guide only — thin dashed)
-$parts[] = sprintf(
-    '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#bbb" stroke-width="1" stroke-dasharray="4 4"/>',
-    $bus,
-    $ey + $eh,
-    $bus,
-    $py[3] + $ph / 2
-);
-
-// E → 1.1 Registration data
-$parts[] = flow(
-    [[$ex + $ew, $ey + 22], [280, $ey + 22], [280, $py[0] + $ph / 2], [$px, $py[0] + $ph / 2]],
-    'Registration data',
-    0,
-    -10
-);
-
-// 1.1 → D1 write (top)
-$y11w = $py[0] + 22;
-$parts[] = flow(
-    [[$px + $pw, $y11w], [640, $y11w], [640, $sy + 22], [$sx, $sy + 22]],
-    'Subscription request (pending)',
-    20,
-    -10
-);
-// D1 → 1.1 read (below write)
-$y11r = $py[0] + 52;
-$parts[] = flow(
-    [[$sx, $sy + 45], [620, $sy + 45], [620, $y11r], [$px + $pw, $y11r]],
-    'Saved request id',
-    10,
-    14
-);
-
-// 1.1 → 1.2
-$parts[] = flow(
-    [[$px + $pw / 2, $py[0] + $ph], [$px + $pw / 2, $py[1]]],
-    'Pending request',
-    70,
-    0
-);
-
-// 1.2 → D1 email token (enter bottom of D1)
-$parts[] = flow(
-    [[$px + $pw, $py[1] + 22], [660, $py[1] + 22], [660, $sy + $sh], [$sx + 90, $sy + $sh]],
-    'email_verify_token',
-    0,
-    -10
-);
-
-// 1.2 → Entity verify email (left side, above trunk join)
-$parts[] = flow(
-    [[$px, $py[1] + 36], [220, $py[1] + 36], [220, $ey + $eh + 8], [$bus, $ey + $eh]],
-    'Verify email link',
-    -55,
-    -2
-);
-
-// Entity → 1.3 click verify
-$parts[] = flow(
-    [[$bus, $ey + $eh], [200, $ey + $eh + 50], [200, $py[2] + 28], [$px, $py[2] + 28]],
-    'Click verify link + token',
-    -70,
-    0
-);
-
-// 1.3 → D1 lookup/mark
-$parts[] = flow(
-    [[$px + $pw, $py[2] + 22], [680, $py[2] + 22], [680, $sy + $sh + 28], [$sx + 50, $sy + $sh]],
-    'Lookup / mark verified',
-    10,
-    14
-);
-// D1 → 1.3 request by token
-$parts[] = flow(
-    [[$sx + 140, $sy + $sh], [710, $sy + $sh + 55], [710, $py[2] + 52], [$px + $pw, $py[2] + 52]],
-    'Request by token',
-    35,
-    12
-);
-
-// 1.3 → Entity success
-$parts[] = flow(
-    [[$px, $py[2] + 52], [175, $py[2] + 52], [175, $ey + $eh + 95], [$ex + 28, $ey + $eh]],
-    'Verification success',
-    -75,
-    0
-);
-
-// Entity → 1.4 open pay page
-$parts[] = flow(
-    [[$ex + 36, $ey + $eh], [155, 560], [155, $py[3] + 28], [$px, $py[3] + 28]],
-    'Open pay URL + payment ref',
-    -75,
-    0
-);
-
-// D1 → 1.4 read approved (must come from D1 down to 1.4)
-$parts[] = flow(
-    [[$sx + 200, $sy + $sh], [760, $sy + $sh + 70], [760, $py[3] + 22], [$px + $pw, $py[3] + 22]],
-    'Approved request + payment_token',
-    20,
-    14
-);
-// 1.4 → D1 write payment/active
-$parts[] = flow(
-    [[$px + $pw, $py[3] + 52], [790, $py[3] + 52], [790, $sy + $sh + 100], [$sx + 230, $sy + $sh]],
-    'payment_reference + tenant active',
-    10,
-    14
-);
-
-// 1.4 → Entity shop active
-$parts[] = flow(
-    [[$px, $py[3] + 52], [120, $py[3] + 52], [120, $ey + $eh + 130], [$ex + 18, $ey + $eh + 8]],
-    'Payment success / shop active',
-    -55,
-    0
-);
-
-$parts[] = footnote('1.4 starts only after Super Admin Approve creates payment_token (Process 2.2).', $H - 24, $W / 2);
-
-file_put_contents($outDir . '/wbpos-dfd-registrant.svg', wrap_svg($W, $H, $parts));
+file_put_contents($outDir . '/wbpos-dfd-1.0-registration.svg', wrap_svg(940, 540, $parts));
 
 // =============================================================================
-// B) Super Admin — Platform Management (2.0)
+// 2.0 Super Admin
 // =============================================================================
-$W2 = 1080;
-$H2 = 860;
+$parts = [defs()];
+$parts[] = entity(40, 24, 150, 64, 'Super Admin');
+$parts[] = process(70, 140, 230, 88, '2.1', "Review Registration\nRequest");
+$parts[] = process(400, 140, 230, 88, '2.2', "Approve / Reject\nRequest");
+$parts[] = process(400, 310, 230, 88, '2.3', "Manage Shop\nStatus");
+$parts[] = store(70, 430, 280, 52, 'D1', 'Platform Database');
+$parts[] = store(720, 154, 250, 52, 'D2', 'Tenant Shop Database');
 
-$ex = 40;
-$ey = 360;
-$ew = 140;
-$eh = 60;
-$bus = $ex + $ew / 2;
+$parts[] = flow([[115, 88], [115, 140]], 'Review', 32, 0);
+$parts[] = flow([[190, 140], [190, 88]], 'Request list', 48, 0);
+$parts[] = flow([[160, 430], [160, 228]], 'Verified request', 70, 0);
+$parts[] = flow([[190, 56], [515, 56], [515, 140]], 'Approve or reject', 80, -12);
+$parts[] = flow([[300, 184], [400, 184]], 'Selected request', 0, -12);
+$parts[] = flow([[515, 228], [515, 268], [340, 268], [340, 430]], 'Tenant + token / rejected', -8, -12);
+$parts[] = flow([[630, 166], [720, 166]], 'Shop owner & grants', 0, -12);
+$parts[] = flow([[40, 56], [18, 56], [18, 354], [400, 354]], 'Active / suspend / cancel', 100, -12);
+$parts[] = flow([[350, 456], [415, 456], [415, 398]], 'Tenant status', 0, 16);
+$parts[] = flow([[470, 398], [470, 482], [350, 482]], 'Updated status', 0, 16);
+$parts[] = flow([[400, 332], [30, 332], [30, 88], [40, 88]], 'Live status view', 80, -12);
 
-$px = 300;
-$pw = 270;
-$ph = 70;
-$gap = 50;
-$py = [];
-$py[0] = 70;
-for ($i = 1; $i < 4; $i++) {
-    $py[$i] = $py[$i - 1] + $ph + $gap;
-}
+file_put_contents($outDir . '/wbpos-dfd-2.0-super-admin.svg', wrap_svg(1000, 520, $parts));
 
-$sx1 = 680;
-$sy1 = 90;
-$sw = 300;
-$sh = 90;
-$sx2 = 680;
-$sy2 = 430;
+// =============================================================================
+// 3.0 Shop Owner — same layout as the picture, labels corrected
+// =============================================================================
+$parts = [defs()];
+$parts[] = entity(40, 210, 140, 90, 'Shop Owner');
+$parts[] = process(330, 36, 210, 86, '3.1', "Manage Items\n& Staff");
+$parts[] = process(330, 200, 210, 86, '3.2', "Configure Store\nSettings");
+$parts[] = process(400, 380, 210, 86, '3.3', "Generate Shop\nReports");
+$parts[] = store(700, 208, 250, 56, 'D2', 'Tenant Shop Database');
 
-$parts = [defs(), title('DFD Level 2 – Platform Management (2.0)', $W2 / 2)];
-$parts[] = entity($ex, $ey, $ew, $eh, 'Super Admin');
-$parts[] = process($px, $py[0], $pw, $ph, '2.1', 'Review Registration Requests');
-$parts[] = process($px, $py[1], $pw, $ph, '2.2', 'Approve / Reject Request');
-$parts[] = process($px, $py[2], $pw, $ph, '2.3', 'Send KHQR / Confirm Payment');
-$parts[] = process($px, $py[3], $pw, $ph, '2.4', 'Manage Tenant Status');
-$parts[] = store($sx1, $sy1, $sw, $sh, 'D1', 'Platform Database');
-$parts[] = store($sx2, $sy2, $sw, $sh, 'D2', 'Tenant Shop Database');
+$parts[] = flow([[110, 210], [110, 79], [330, 79]], 'Items, staff', 80, -12);
+$parts[] = flow([[180, 255], [330, 255]], 'Store settings', 0, -12);
+$parts[] = flow([[540, 58], [830, 58], [830, 208]], 'Items & staff records', 20, -12);
+$parts[] = flow([[700, 220], [620, 220], [620, 100], [540, 100]], 'Shop records', 0, -12);
+$parts[] = flow([[540, 228], [700, 228]], 'Shop config', 0, -12);
+$parts[] = flow([[700, 250], [540, 250]], 'Shop records', 0, 16);
+$parts[] = flow([[830, 264], [830, 423], [610, 423]], 'Shop records', 0, -12);
+$parts[] = flow([[400, 423], [40, 423], [40, 300]], 'Shop reports', 80, -12);
 
-$parts[] = sprintf(
-    '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#bbb" stroke-width="1" stroke-dasharray="4 4"/>',
-    $bus,
-    $ey + $eh,
-    $bus,
-    $py[3] + $ph / 2
-);
+file_put_contents($outDir . '/wbpos-dfd-3.0-shop-owner.svg', wrap_svg(980, 520, $parts));
 
-// D1 → 2.1 pending requests
-$parts[] = flow(
-    [[$sx1, $sy1 + 35], [600, $sy1 + 35], [600, $py[0] + 28], [$px + $pw, $py[0] + 28]],
-    'Pending / verified requests',
-    0,
-    -10
-);
+// =============================================================================
+// 4.0 Cashier — same layout as the picture, lookup return arrow corrected
+// =============================================================================
+$parts = [defs()];
+$parts[] = entity(40, 200, 130, 80, 'Cashier');
+$parts[] = process(270, 186, 210, 86, '4.1', "Record Sales\nTransaction");
+$parts[] = process(560, 36, 210, 86, '4.2', "Process Item\nLookup");
+$parts[] = process(300, 360, 210, 86, '4.3', "Generate Sales\nReceipt");
+$parts[] = store(760, 198, 200, 52, 'D2', 'Tenant Shop Database');
 
-// 2.1 → Super Admin list
-$parts[] = flow(
-    [[$px, $py[0] + 40], [230, $py[0] + 40], [230, $ey], [$bus, $ey]],
-    'Request list / detail',
-    -50,
-    -8
-);
+$parts[] = flow([[170, 240], [270, 240]], 'Item code, payment', 0, -12);
+$parts[] = flow([[375, 186], [375, 79], [560, 79]], 'Item code', 70, -12);
+$parts[] = flow([[860, 198], [860, 79], [770, 79]], 'Item lookup', 0, -12);
+$parts[] = flow([[560, 100], [500, 100], [500, 186]], 'Item & price data', -78, -12);
+$parts[] = flow([[480, 229], [760, 229]], 'Sales & stock update', 0, -12);
+$parts[] = flow([[375, 272], [375, 360]], 'Recorded sale', 70, 0);
+$parts[] = flow([[300, 403], [40, 403], [40, 280]], 'Receipt', 50, -12);
 
-// Super Admin → 2.2 approve/reject
-$parts[] = flow(
-    [[$ex + $ew, $ey + 18], [250, $ey + 18], [250, $py[1] + 24], [$px, $py[1] + 24]],
-    'Approve or reject + reason',
-    -10,
-    -10
-);
-
-// 2.2 → D1 (reject notes OR approve tenant + token)
-$parts[] = flow(
-    [[$px + $pw, $py[1] + 22], [620, $py[1] + 22], [620, $sy1 + $sh], [$sx1 + 70, $sy1 + $sh]],
-    'Reject notes OR tenant + payment_token',
-    10,
-    14
-);
-
-// 2.2 → D2 seed ONLY (approve)
-$parts[] = flow(
-    [[$px + $pw, $py[1] + 50], [600, $py[1] + 50], [600, $sy2 + 35], [$sx2, $sy2 + 35]],
-    'Seed shop owner data (approve only)',
-    10,
-    -10
-);
-
-// 2.2 → 2.3
-$parts[] = flow(
-    [[$px + $pw / 2, $py[1] + $ph], [$px + $pw / 2, $py[2]]],
-    'Approved + payment_token',
-    85,
-    0
-);
-
-// 2.3 → Super Admin KHQR
-$parts[] = flow(
-    [[$px, $py[2] + 24], [210, $py[2] + 24], [210, $ey + $eh], [$bus, $ey + $eh]],
-    'KHQR / payment link',
-    -55,
-    8
-);
-
-// Super Admin → 2.3 confirm
-$parts[] = flow(
-    [[$ex + $ew, $ey + 42], [235, $ey + 42], [235, $py[2] + 48], [$px, $py[2] + 48]],
-    'Confirm payment / activate',
-    -5,
-    14
-);
-
-// 2.3 → D1 active (NOT D2)
-$parts[] = flow(
-    [[$px + $pw, $py[2] + 35], [640, $py[2] + 35], [640, $sy1 + $sh + 45], [$sx1 + 160, $sy1 + $sh]],
-    'payment_reference + tenant active',
-    15,
-    14
-);
-
-// Super Admin → 2.4
-$parts[] = flow(
-    [[$ex + 30, $ey + $eh], [165, 560], [165, $py[3] + 28], [$px, $py[3] + 28]],
-    'Suspend / activate / cancel',
-    -60,
-    0
-);
-
-// D1 → 2.4 tenant profile (NOT D2) — route along right side away from D2
-$parts[] = flow(
-    [[$sx1 + 40, $sy1 + $sh], [820, $sy1 + $sh + 40], [820, $py[3] + 22], [$px + $pw, $py[3] + 22]],
-    'Tenant profile / status',
-    55,
-    0
-);
-
-// 2.4 → D1 status update (NOT D2) — far right lane, then up to D1 bottom
-$parts[] = flow(
-    [[$px + $pw, $py[3] + 50], [860, $py[3] + 50], [860, $sy1 + $sh + 80], [$sx1 + 220, $sy1 + $sh]],
-    'Update tenants.status',
-    40,
-    14
-);
-
-// 2.4 → Super Admin status view
-$parts[] = flow(
-    [[$px, $py[3] + 50], [130, $py[3] + 50], [130, $ey + $eh + 90], [$ex + 20, $ey + $eh]],
-    'Business status view',
-    -60,
-    0
-);
-
-$parts[] = footnote('D1 = requests, tenants, payment_token, status.   D2 = shop seed only on approve (2.2).', $H2 - 24, $W2 / 2);
-
-file_put_contents($outDir . '/wbpos-dfd-super-admin.svg', wrap_svg($W2, $H2, $parts));
+file_put_contents($outDir . '/wbpos-dfd-4.0-cashier.svg', wrap_svg(990, 500, $parts));
 
 echo "Wrote:\n";
-echo " - {$outDir}/wbpos-dfd-registrant.svg\n";
-echo " - {$outDir}/wbpos-dfd-super-admin.svg\n";
+echo " - {$outDir}/wbpos-dfd-1.0-registration.svg\n";
+echo " - {$outDir}/wbpos-dfd-2.0-super-admin.svg\n";
+echo " - {$outDir}/wbpos-dfd-3.0-shop-owner.svg\n";
+echo " - {$outDir}/wbpos-dfd-4.0-cashier.svg\n";

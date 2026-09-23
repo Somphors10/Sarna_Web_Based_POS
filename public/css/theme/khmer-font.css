@@ -195,3 +195,34 @@ html[lang="km"] .pos-modal-btn,
 html.lang-km .pos-modal-btn {
     font-size: 16px !important;
 }
+
+html[lang="km"] .bootstrap-dialog .control-label,
+html.lang-km .bootstrap-dialog .control-label,
+html[lang="km"] .bootstrap-dialog .form-control,
+html.lang-km .bootstrap-dialog .form-control,
+html[lang="km"] .bootstrap-dialog .modal-title,
+html.lang-km .bootstrap-dialog .modal-title,
+html[lang="km"] .bootstrap-dialog .bootstrap-dialog-title,
+html.lang-km .bootstrap-dialog .bootstrap-dialog-title,
+html[lang="km"] .bootstrap-dialog .pos-form-tabs > li > a,
+html.lang-km .bootstrap-dialog .pos-form-tabs > li > a {
+    letter-spacing: 0 !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+    hyphens: none !important;
+}
+
+html[lang="km"] .bootstrap-dialog .control-label,
+html.lang-km .bootstrap-dialog .control-label {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    font-size: 15px !important;
+    padding-top: 0 !important;
+    margin-bottom: 4px !important;
+}
+
+html[lang="km"] .bootstrap-dialog .form-control,
+html.lang-km .bootstrap-dialog .form-control {
+    font-size: 15px !important;
+}

@@ -65,6 +65,10 @@ label.required.control-label::after {
     font-weight: 600;
     font-size: 13px;
     padding-top: 6px;
+    letter-spacing: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
 }
 
 .pos-modern-form .form-control {
@@ -101,8 +105,13 @@ label.required.control-label::after {
     border-radius: 0;
 }
 
-.pos-form-tabs > li {
-    float: none;
+.pos-form-tabs > li,
+.nav-justified.pos-form-tabs > li,
+.pos-form-tabs.nav-justified > li {
+    float: none !important;
+    display: block !important;
+    width: auto !important;
+    flex: 0 1 auto;
     margin: 0;
 }
 
@@ -119,6 +128,10 @@ label.required.control-label::after {
     background: transparent;
     box-shadow: none !important;
     outline: none !important;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    letter-spacing: normal;
 }
 
 .pos-form-tabs > li > a:hover {
@@ -400,6 +413,156 @@ label.required.control-label::after {
     border-radius: 10px;
     overflow: hidden;
     background: #ffffff;
+}
+
+/* Popup forms (Customer, Employee, Supplier, Item, …): labels were col-xs-3
+   so long text wrapped one letter per line on every tab. */
+.bootstrap-dialog .form-horizontal .form-group,
+.modal-body .form-horizontal .form-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.bootstrap-dialog .form-horizontal .control-label,
+.modal-body .form-horizontal .control-label {
+    float: none;
+    width: 170px;
+    max-width: 42%;
+    flex: 0 0 170px;
+    text-align: left;
+    padding-top: 8px;
+    padding-left: 0;
+    padding-right: 12px;
+    margin-bottom: 0;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+    letter-spacing: normal !important;
+    line-height: 1.35;
+}
+
+.bootstrap-dialog .form-horizontal .form-group > [class*="col-"],
+.modal-body .form-horizontal .form-group > [class*="col-"] {
+    float: none;
+    width: auto;
+    flex: 1 1 220px;
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.bootstrap-dialog .form-horizontal .form-group > .control-label + [class*="col-xs-1"],
+.modal-body .form-horizontal .form-group > .control-label + [class*="col-xs-1"] {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.bootstrap-dialog .modal-title,
+.bootstrap-dialog .bootstrap-dialog-title,
+.bootstrap-dialog .modal-body,
+.bootstrap-dialog .form-control,
+.bootstrap-dialog .pos-form-required,
+.modal-body .form-control {
+    letter-spacing: normal;
+    word-break: normal;
+}
+
+.employee-form-steps-hint {
+    margin: 8px 14px 0;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.employee-form-tabs {
+    background: #eef2f7 !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+}
+
+.employee-form-tabs > li {
+    flex: 1;
+}
+
+.employee-form-tabs > li > a {
+    text-align: center;
+    background: #fff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.employee-form-tabs > li.active > a,
+.employee-form-tabs > li.active > a:hover,
+.employee-form-tabs > li.active > a:focus {
+    background: #6d28d9 !important;
+    border-color: #6d28d9 !important;
+    color: #fff !important;
+}
+
+.employee-permission-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.employee-permission-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #fff;
+}
+
+.employee-permission-module {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.employee-permission-module input[type="checkbox"],
+.employee-permission-item ul input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: #6d28d9;
+    flex-shrink: 0;
+}
+
+.employee-permission-title {
+    display: block;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.employee-permission-desc {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.employee-permission-item .module-menu-group {
+    max-width: 180px;
+    margin-bottom: 8px;
+}
+
+.employee-permission-item ul {
+    list-style: none;
+    padding-left: 28px;
+    margin: 0 0 4px;
+}
+
+.employee-permission-item ul label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #334155;
 }
 
 @media (max-width: 991px) {

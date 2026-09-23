@@ -175,14 +175,21 @@ class Customers extends Persons
 
         $data['use_destination_based_tax'] = $this->config['use_destination_based_tax'];
 
-        // Retrieve the total amount the customer spent so far together with min, max and average values
+        // Always show the Stats tab. New / no-sale customers get zeros.
         $stats = $this->customer->get_stats($customer_id);
-        if (!empty($stats)) {
-            foreach (get_object_vars($stats) as $property => $value) {
-                $info->$property = $value;
-            }
-            $data['stats'] = $stats;
+        if (empty($stats)) {
+            $stats = new stdClass();
+            $stats->total = 0;
+            $stats->min = 0;
+            $stats->max = 0;
+            $stats->average = 0;
+            $stats->avg_discount = 0;
+            $stats->quantity = 0;
         }
+        foreach (get_object_vars($stats) as $property => $value) {
+            $info->$property = $value;
+        }
+        $data['stats'] = $stats;
 
         // Retrieve the info from Mailchimp only if there is an email address assigned
         if (!empty($info->email)) {

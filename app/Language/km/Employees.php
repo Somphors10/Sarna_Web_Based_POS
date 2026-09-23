@@ -28,6 +28,7 @@ return [
     'password_not_must_match'       => 'ពាក្យសម្ងាត់បច្ចុប្បន្ន នឹងពាក្យសម្ងាត់ថ្មី ត្រូវតែមានតែមួយ។',
     'password_required'             => 'ត្រូវការពាក្យសម្ងាត់។',
     'password_strong'               => 'ពាក្យសម្ងាត់ត្រូវតែមានយ៉ាងហោចណាស់ 8 តួអក្សរ ហើយរួមបញ្ចូលអក្សរ លេខ និងនិមិត្តសញ្ញា',
+    'form_steps_hint'               => 'This form has 3 tabs. Open Login and Permissions before Submit.',
     'permission_desc'               => 'ឆែកប្រអប់ខាងក្រោម ដើម្បីផ្ដល់សិទ្ធទៅក្នុងផ្នែកណាមួយ។',
     'permission_info'               => 'សិទ្ធិ',
     'repeat_password'               => 'ពាក្យសម្ងាត់ម្ដងទៀត',

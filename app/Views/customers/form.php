@@ -8,7 +8,19 @@
  * @var string $sales_tax_code_label
  * @var string $employee
  * @var array $config
+ * @var object|null $stats
  */
+$stats ??= (object) [
+    'total'        => 0,
+    'min'          => 0,
+    'max'          => 0,
+    'average'      => 0,
+    'avg_discount' => 0,
+    'quantity'     => 0,
+];
+$is_existing_customer = (int)($person_info->person_id ?? NEW_ENTRY) > 0;
+$show_mailchimp_tab = !empty($mailchimp_info) && !empty($mailchimp_activity);
+$customer_tab_count = 1 + ($is_existing_customer ? 1 : 0) + ($show_mailchimp_tab ? 1 : 0);
 ?>
 
 <div class="pos-form-shell">
@@ -17,21 +29,23 @@
 
 <?= form_open("$controller_name/save/$person_info->person_id", ['id' => 'customer_form', 'class' => 'form-horizontal pos-modern-form']) ?>
 
-    <ul class="nav nav-tabs nav-justified pos-form-tabs" data-tabs="tabs">
+    <?php if ($customer_tab_count > 1): ?>
+    <ul class="nav nav-tabs pos-form-tabs" data-tabs="tabs">
         <li class="active" role="presentation">
             <a data-toggle="tab" href="#customer_basic_info"><?= lang('Customers.basic_information') ?></a>
         </li>
-        <?php if (!empty($stats)) { ?>
-            <li role="presentation">
-                <a data-toggle="tab" href="#customer_stats_info"><?= lang('Customers.stats_info') ?></a>
-            </li>
-        <?php } ?>
-        <?php if (!empty($mailchimp_info) && !empty($mailchimp_activity)) { ?>
+        <?php if ($is_existing_customer): ?>
+        <li role="presentation">
+            <a data-toggle="tab" href="#customer_stats_info"><?= lang('Customers.stats_info') ?></a>
+        </li>
+        <?php endif; ?>
+        <?php if ($show_mailchimp_tab): ?>
             <li role="presentation">
                 <a data-toggle="tab" href="#customer_mailchimp_info"><?= lang('Customers.mailchimp_info') ?></a>
             </li>
-        <?php } ?>
+        <?php endif; ?>
     </ul>
+    <?php endif; ?>
 
     <div class="tab-content">
         <div class="tab-pane fade in active" id="customer_basic_info">
@@ -193,9 +207,8 @@
             </fieldset>
         </div>
 
-        <?php if (!empty($stats)) { ?>
-            <br>
-            <div class="tab-pane" id="customer_stats_info">
+        <?php if ($is_existing_customer): ?>
+        <div class="tab-pane" id="customer_stats_info">
                 <fieldset>
                     <div class="form-group form-group-sm">
                         <?= form_label(lang('Customers.total'), 'total', ['class' => 'control-label col-xs-5']) ?>
@@ -314,7 +327,7 @@
                     </div>
                 </fieldset>
             </div>
-        <?php } ?>
+        <?php endif; ?>
 
         <?php if (!empty($mailchimp_info) && !empty($mailchimp_activity)) { ?>
             <div class="tab-pane" id="customer_mailchimp_info">

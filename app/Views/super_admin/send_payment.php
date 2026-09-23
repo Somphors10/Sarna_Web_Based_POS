@@ -31,8 +31,11 @@ $has_outbox = \App\Libraries\PlatformMail::hasOutbox($request_id);
 <head>
     <meta charset="utf-8">
     <base href="<?= base_url() ?>">
-    <title>Send KHQR · <?= esc($company) ?></title>
+    <title>WBPOS | Super Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=5') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=5') ?>">
+    <link rel="icon" href="<?= base_url('favicon.ico?v=5') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/tokens.css') ?>">
     <link rel="stylesheet" href="<?= base_url('css/theme/super-admin.css?v=42') ?>">
 </head>
