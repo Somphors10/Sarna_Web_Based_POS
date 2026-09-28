@@ -22,26 +22,28 @@ function rbac_ensure(): void
     if (!$db->tableExists('rbac_permissions')) {
         $forge->addField([
             'permission_id'   => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
+            'tenant_id'       => ['type' => 'INT', 'unsigned' => true, 'default' => 0],
             'permission_code' => ['type' => 'VARCHAR', 'constraint' => 64],
             'permission_name' => ['type' => 'VARCHAR', 'constraint' => 128],
             'description'     => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'is_system'       => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 0],
         ]);
         $forge->addKey('permission_id', true);
-        $forge->addUniqueKey('permission_code');
+        $forge->addUniqueKey(['tenant_id', 'permission_code']);
         $forge->createTable('rbac_permissions', true);
     }
 
     if (!$db->tableExists('rbac_roles')) {
         $forge->addField([
             'role_id'     => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
+            'tenant_id'   => ['type' => 'INT', 'unsigned' => true, 'default' => 0],
             'role_key'    => ['type' => 'VARCHAR', 'constraint' => 32],
             'role_name'   => ['type' => 'VARCHAR', 'constraint' => 64],
             'description' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'is_system'   => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 0],
         ]);
         $forge->addKey('role_id', true);
-        $forge->addUniqueKey('role_key');
+        $forge->addUniqueKey(['tenant_id', 'role_key']);
         $forge->createTable('rbac_roles', true);
     }
 
@@ -49,6 +51,7 @@ function rbac_ensure(): void
         $forge->addField([
             'role_id'       => ['type' => 'INT', 'unsigned' => true],
             'permission_id' => ['type' => 'INT', 'unsigned' => true],
+            'tenant_id'     => ['type' => 'INT', 'unsigned' => true, 'default' => 0],
         ]);
         $forge->addKey(['role_id', 'permission_id'], true);
         $forge->createTable('rbac_role_permissions', true);
@@ -58,14 +61,312 @@ function rbac_ensure(): void
         $forge->addField([
             'person_id' => ['type' => 'INT', 'unsigned' => true],
             'role_id'   => ['type' => 'INT', 'unsigned' => true],
+            'tenant_id' => ['type' => 'INT', 'unsigned' => true, 'default' => 0],
         ]);
         $forge->addKey('person_id', true);
         $forge->createTable('rbac_user_roles', true);
     }
 
+    rbac_ensure_tenant_schema($db);
     rbac_register_module($db);
     rbac_seed_defaults($db);
     $ready = true;
+}
+
+function rbac_current_tenant_id(): int
+{
+    return (int)(session()->get('tenant_id') ?? 0);
+}
+
+function rbac_database_is_shared(): bool
+{
+    try {
+        $name = (string)db_connect()->getDatabase();
+        $platform = (string)(config('Database')->platform['database'] ?? '');
+
+        return $name === '' || $platform === '' || strcasecmp($name, $platform) === 0;
+    } catch (\Throwable $e) {
+        return true;
+    }
+}
+
+function rbac_ensure_tenant_schema($db): void
+{
+    foreach (['rbac_permissions', 'rbac_roles', 'rbac_role_permissions', 'rbac_user_roles'] as $table) {
+        if (!$db->tableExists($table) || $db->fieldExists('tenant_id', $table)) {
+            continue;
+        }
+        $full = $db->prefixTable($table);
+        try {
+            $db->query("ALTER TABLE `{$full}` ADD COLUMN `tenant_id` INT UNSIGNED NOT NULL DEFAULT 0");
+        } catch (\Throwable $e) {
+            log_message('error', 'RBAC tenant column failed on ' . $table . ': ' . $e->getMessage());
+            continue;
+        }
+        try {
+            $db->query("ALTER TABLE `{$full}` ADD INDEX `idx_{$table}_tenant` (`tenant_id`)");
+        } catch (\Throwable $e) {
+        }
+    }
+
+    rbac_replace_unique_index($db, 'rbac_permissions', 'permission_code', 'uk_rbac_permissions_tenant_code', ['tenant_id', 'permission_code']);
+    rbac_replace_unique_index($db, 'rbac_roles', 'role_key', 'uk_rbac_roles_tenant_key', ['tenant_id', 'role_key']);
+    try {
+        rbac_backfill_role_tenants($db);
+    } catch (\Throwable $e) {
+        log_message('error', 'RBAC tenant backfill failed: ' . $e->getMessage());
+    }
+}
+
+function rbac_replace_unique_index($db, string $table, string $legacy_column, string $new_name, array $columns): void
+{
+    if (!$db->tableExists($table) || !$db->fieldExists('tenant_id', $table)) {
+        return;
+    }
+
+    $full = $db->prefixTable($table);
+    $have_new = false;
+    try {
+        foreach ($db->query("SHOW INDEX FROM `{$full}`")->getResultArray() as $index) {
+            $key = (string)($index['Key_name'] ?? '');
+            if ($key === $new_name) {
+                $have_new = true;
+            }
+            $non_unique = (int)($index['Non_unique'] ?? 1);
+            $column = (string)($index['Column_name'] ?? '');
+            if ($key !== 'PRIMARY' && $key !== $new_name && $non_unique === 0 && $column === $legacy_column) {
+                try {
+                    $db->query("ALTER TABLE `{$full}` DROP INDEX `{$key}`");
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        return;
+    }
+
+    if ($have_new) {
+        return;
+    }
+
+    $quoted = '`' . implode('`, `', $columns) . '`';
+    try {
+        $db->query("ALTER TABLE `{$full}` ADD UNIQUE INDEX `{$new_name}` ({$quoted})");
+    } catch (\Throwable $e) {
+    }
+}
+
+function rbac_known_tenant_ids($db): array
+{
+    $ids = [];
+    try {
+        $platform = db_connect('platform');
+        if ($platform->tableExists('tenants')) {
+            $rows = $platform->table('tenants')
+                ->select('tenant_id')
+                ->where('tenant_code !=', 'platform')
+                ->get()
+                ->getResultArray();
+            foreach ($rows as $row) {
+                $id = (int)($row['tenant_id'] ?? 0);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+    }
+
+    if ($ids === [] && $db->tableExists('employees') && $db->fieldExists('tenant_id', 'employees')) {
+        foreach ($db->table('employees')->select('tenant_id')->distinct()->get()->getResultArray() as $row) {
+            $id = (int)($row['tenant_id'] ?? 0);
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+    }
+
+    $current = rbac_current_tenant_id();
+    if ($current > 0 && !in_array($current, $ids, true)) {
+        $ids[] = $current;
+    }
+
+    return array_values(array_unique($ids));
+}
+
+function rbac_oldest_tenant_id($db): int
+{
+    $ids = rbac_known_tenant_ids($db);
+    if ($ids === []) {
+        return rbac_current_tenant_id();
+    }
+
+    return min($ids);
+}
+
+function rbac_person_tenant_id($db, int $person_id): int
+{
+    if ($person_id <= 0 || !$db->tableExists('employees') || !$db->fieldExists('tenant_id', 'employees')) {
+        return 0;
+    }
+
+    $row = $db->table('employees')->select('tenant_id')->where('person_id', $person_id)->get(1)->getRowArray();
+
+    return (int)($row['tenant_id'] ?? 0);
+}
+
+function rbac_infer_role_tenant($db, int $role_id): int
+{
+    if ($role_id <= 0 || !$db->tableExists('rbac_user_roles')) {
+        return 0;
+    }
+
+    $found = [];
+    foreach ($db->table('rbac_user_roles')->select('person_id')->where('role_id', $role_id)->get()->getResultArray() as $row) {
+        $tid = rbac_person_tenant_id($db, (int)$row['person_id']);
+        if ($tid > 0) {
+            $found[$tid] = true;
+        }
+    }
+
+    $ids = array_map('intval', array_keys($found));
+    if (count($ids) === 1) {
+        return $ids[0];
+    }
+
+    return 0;
+}
+
+function rbac_backfill_role_tenants($db): void
+{
+    if (!$db->tableExists('rbac_roles') || !$db->fieldExists('tenant_id', 'rbac_roles')) {
+        return;
+    }
+
+    $current = rbac_current_tenant_id();
+    $shared = rbac_database_is_shared();
+
+    foreach ($db->table('rbac_roles')->where('tenant_id', 0)->where('is_system', 0)->get()->getResultArray() as $role) {
+        $role_id = (int)$role['role_id'];
+        $tid = rbac_infer_role_tenant($db, $role_id);
+        if ($tid <= 0) {
+            $tid = $shared ? rbac_oldest_tenant_id($db) : $current;
+        }
+        if ($tid <= 0) {
+            continue;
+        }
+        $db->table('rbac_roles')->where('role_id', $role_id)->update(['tenant_id' => $tid]);
+        if ($db->tableExists('rbac_role_permissions') && $db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+            $db->table('rbac_role_permissions')->where('role_id', $role_id)->update(['tenant_id' => $tid]);
+        }
+    }
+
+    $tenants = $shared ? rbac_known_tenant_ids($db) : ($current > 0 ? [$current] : []);
+    foreach ($db->table('rbac_roles')->where('tenant_id', 0)->where('is_system', 1)->get()->getResultArray() as $role) {
+        $old_id = (int)$role['role_id'];
+        $perm_ids = [];
+        if ($db->tableExists('rbac_role_permissions')) {
+            foreach ($db->table('rbac_role_permissions')->select('permission_id')->where('role_id', $old_id)->get()->getResultArray() as $row) {
+                $perm_ids[] = (int)$row['permission_id'];
+            }
+        }
+
+        foreach ($tenants as $tid) {
+            if ($tid <= 0) {
+                continue;
+            }
+            $exists = $db->table('rbac_roles')
+                ->where('tenant_id', $tid)
+                ->where('role_key', $role['role_key'])
+                ->get(1)
+                ->getRowArray();
+            if ($exists) {
+                $new_id = (int)$exists['role_id'];
+            } else {
+                $copy = $role;
+                unset($copy['role_id']);
+                $copy['tenant_id'] = $tid;
+                $db->table('rbac_roles')->insert($copy);
+                $new_id = (int)$db->insertID();
+                foreach ($perm_ids as $permission_id) {
+                    $link = [
+                        'role_id'       => $new_id,
+                        'permission_id' => $permission_id,
+                    ];
+                    if ($db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+                        $link['tenant_id'] = $tid;
+                    }
+                    $db->table('rbac_role_permissions')->insert($link);
+                }
+            }
+
+            if ($db->tableExists('rbac_user_roles')) {
+                foreach ($db->table('rbac_user_roles')->where('role_id', $old_id)->get()->getResultArray() as $assign) {
+                    $person_id = (int)$assign['person_id'];
+                    if (rbac_person_tenant_id($db, $person_id) !== $tid) {
+                        continue;
+                    }
+                    $update = ['role_id' => $new_id];
+                    if ($db->fieldExists('tenant_id', 'rbac_user_roles')) {
+                        $update['tenant_id'] = $tid;
+                    }
+                    $db->table('rbac_user_roles')->where('person_id', $person_id)->update($update);
+                }
+            }
+        }
+
+        if ($tenants !== []) {
+            $db->table('rbac_role_permissions')->where('role_id', $old_id)->delete();
+            $db->table('rbac_user_roles')->where('role_id', $old_id)->delete();
+            $db->table('rbac_roles')->where('role_id', $old_id)->delete();
+        }
+    }
+
+    if ($db->tableExists('rbac_permissions') && $db->fieldExists('tenant_id', 'rbac_permissions')) {
+        foreach ($db->table('rbac_permissions')->where('tenant_id', 0)->where('is_system', 0)->get()->getResultArray() as $perm) {
+            $tid = $shared ? rbac_oldest_tenant_id($db) : $current;
+            if ($tid > 0) {
+                $db->table('rbac_permissions')->where('permission_id', (int)$perm['permission_id'])->update(['tenant_id' => $tid]);
+            }
+        }
+    }
+}
+
+function rbac_role_row(int $role_id): ?array
+{
+    if ($role_id <= 0) {
+        return null;
+    }
+
+    $db = db_connect();
+    $builder = $db->table('rbac_roles')->where('role_id', $role_id);
+    $tid = rbac_current_tenant_id();
+    if ($tid > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
+        $builder->where('tenant_id', $tid);
+    }
+    $row = $builder->get(1)->getRowArray();
+
+    return $row ?: null;
+}
+
+function rbac_permission_row(int $permission_id): ?array
+{
+    if ($permission_id <= 0) {
+        return null;
+    }
+
+    $db = db_connect();
+    $builder = $db->table('rbac_permissions')->where('permission_id', $permission_id);
+    $tid = rbac_current_tenant_id();
+    if ($tid > 0 && $db->fieldExists('tenant_id', 'rbac_permissions')) {
+        $builder->groupStart()
+            ->where('tenant_id', $tid)
+            ->orWhere('tenant_id', 0)
+            ->groupEnd();
+    }
+    $row = $builder->get(1)->getRowArray();
+
+    return $row ?: null;
 }
 
 function rbac_register_module($db): void
@@ -135,17 +436,34 @@ function rbac_register_module($db): void
 function rbac_seed_defaults($db): void
 {
     $system_codes = rbac_system_codes();
+    $has_perm_tenant = $db->fieldExists('tenant_id', 'rbac_permissions');
+    $has_role_tenant = $db->fieldExists('tenant_id', 'rbac_roles');
+    $tenant_id = rbac_current_tenant_id();
 
     foreach ($system_codes as $code => $name) {
-        if ($db->table('rbac_permissions')->where('permission_code', $code)->countAllResults() > 0) {
+        $perm_q = $db->table('rbac_permissions')->where('permission_code', $code)->where('is_system', 1);
+        if ($has_perm_tenant) {
+            $perm_q->groupStart()->where('tenant_id', 0)->orWhere('tenant_id', $tenant_id)->groupEnd();
+        }
+        if ($perm_q->countAllResults() > 0) {
             continue;
         }
-        $db->table('rbac_permissions')->insert([
+        $perm_data = [
             'permission_code' => $code,
             'permission_name' => $name,
             'description'     => 'POS module',
             'is_system'       => 1,
-        ]);
+        ];
+        if ($has_perm_tenant) {
+            $perm_data['tenant_id'] = 0;
+        }
+        $db->table('rbac_permissions')->insert($perm_data);
+    }
+
+    if ($tenant_id <= 0) {
+        rbac_ensure_admin_has_system_codes($db);
+
+        return;
     }
 
     $roles = [
@@ -155,15 +473,23 @@ function rbac_seed_defaults($db): void
     ];
 
     foreach ($roles as $key => $info) {
-        if ($db->table('rbac_roles')->where('role_key', $key)->countAllResults() > 0) {
+        $role_q = $db->table('rbac_roles')->where('role_key', $key);
+        if ($has_role_tenant) {
+            $role_q->where('tenant_id', $tenant_id);
+        }
+        if ($role_q->countAllResults() > 0) {
             continue;
         }
-        $db->table('rbac_roles')->insert([
+        $role_data = [
             'role_key'    => $key,
             'role_name'   => $info[0],
             'description' => $info[1],
             'is_system'   => 1,
-        ]);
+        ];
+        if ($has_role_tenant) {
+            $role_data['tenant_id'] = $tenant_id;
+        }
+        $db->table('rbac_roles')->insert($role_data);
     }
 
     $codes_by_role = [
@@ -172,14 +498,20 @@ function rbac_seed_defaults($db): void
         'staff'   => ['home', 'items', 'item_kits', 'receivings', 'suppliers'],
     ];
 
-    $perm_rows = $db->table('rbac_permissions')->get()->getResultArray();
+    $perm_q = $db->table('rbac_permissions')->where('is_system', 1);
+    if ($has_perm_tenant) {
+        $perm_q->groupStart()->where('tenant_id', 0)->orWhere('tenant_id', $tenant_id)->groupEnd();
+    }
     $perm_map = [];
-    foreach ($perm_rows as $perm) {
+    foreach ($perm_q->get()->getResultArray() as $perm) {
         $perm_map[(string)$perm['permission_code']] = (int)$perm['permission_id'];
     }
 
-    $role_rows = $db->table('rbac_roles')->get()->getResultArray();
-    foreach ($role_rows as $role) {
+    $role_q = $db->table('rbac_roles');
+    if ($has_role_tenant) {
+        $role_q->where('tenant_id', $tenant_id);
+    }
+    foreach ($role_q->get()->getResultArray() as $role) {
         $key = (string)$role['role_key'];
         if (!isset($codes_by_role[$key])) {
             continue;
@@ -192,10 +524,14 @@ function rbac_seed_defaults($db): void
             if (!isset($perm_map[$code])) {
                 continue;
             }
-            $db->table('rbac_role_permissions')->insert([
+            $link = [
                 'role_id'       => $role_id,
                 'permission_id' => $perm_map[$code],
-            ]);
+            ];
+            if ($db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+                $link['tenant_id'] = $tenant_id;
+            }
+            $db->table('rbac_role_permissions')->insert($link);
         }
     }
 
@@ -227,15 +563,23 @@ function rbac_system_codes(): array
 
 function rbac_ensure_admin_has_system_codes($db): void
 {
-    $admin = $db->table('rbac_roles')->where('role_key', 'admin')->get(1)->getRowArray();
+    $admin_q = $db->table('rbac_roles')->where('role_key', 'admin');
+    $tenant_id = rbac_current_tenant_id();
+    if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
+        $admin_q->where('tenant_id', $tenant_id);
+    }
+    $admin = $admin_q->get(1)->getRowArray();
     if (!$admin) {
         return;
     }
 
     $role_id = (int)$admin['role_id'];
-    $perm_rows = $db->table('rbac_permissions')->get()->getResultArray();
+    $perm_q = $db->table('rbac_permissions')->where('is_system', 1);
+    if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_permissions')) {
+        $perm_q->groupStart()->where('tenant_id', 0)->orWhere('tenant_id', $tenant_id)->groupEnd();
+    }
     $perm_map = [];
-    foreach ($perm_rows as $perm) {
+    foreach ($perm_q->get()->getResultArray() as $perm) {
         $perm_map[(string)$perm['permission_code']] = (int)$perm['permission_id'];
     }
 
@@ -248,23 +592,44 @@ function rbac_ensure_admin_has_system_codes($db): void
         if (!isset($perm_map[$code]) || isset($have[$perm_map[$code]])) {
             continue;
         }
-        $db->table('rbac_role_permissions')->insert([
+        $link = [
             'role_id'       => $role_id,
             'permission_id' => $perm_map[$code],
-        ]);
+        ];
+        if ($db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+            $link['tenant_id'] = $tenant_id;
+        }
+        $db->table('rbac_role_permissions')->insert($link);
     }
 }
 
 function rbac_permissions(): array
 {
     rbac_ensure();
-    return db_connect()->table('rbac_permissions')->orderBy('is_system', 'DESC')->orderBy('permission_code')->get()->getResultArray();
+    $db = db_connect();
+    $builder = $db->table('rbac_permissions')->orderBy('is_system', 'DESC')->orderBy('permission_code');
+    $tid = rbac_current_tenant_id();
+    if ($tid > 0 && $db->fieldExists('tenant_id', 'rbac_permissions')) {
+        $builder->groupStart()
+            ->where('tenant_id', $tid)
+            ->orWhere('tenant_id', 0)
+            ->groupEnd();
+    }
+
+    return $builder->get()->getResultArray();
 }
 
 function rbac_roles(): array
 {
     rbac_ensure();
-    return db_connect()->table('rbac_roles')->orderBy('role_id')->get()->getResultArray();
+    $db = db_connect();
+    $builder = $db->table('rbac_roles')->orderBy('is_system', 'DESC')->orderBy('role_id');
+    $tid = rbac_current_tenant_id();
+    if ($tid > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
+        $builder->where('tenant_id', $tid);
+    }
+
+    return $builder->get()->getResultArray();
 }
 
 function rbac_normalize_code(string $code): string
@@ -282,6 +647,7 @@ function rbac_save_permission(string $code, string $name, string $description = 
     $code = rbac_normalize_code($code);
     $name = trim($name);
     $description = trim($description);
+    $tenant_id = rbac_current_tenant_id();
 
     if ($code === '' || $name === '') {
         return ['ok' => false, 'message' => 'Code and name are required.'];
@@ -290,7 +656,14 @@ function rbac_save_permission(string $code, string $name, string $description = 
         return ['ok' => false, 'message' => 'Code must be at least 3 characters.'];
     }
 
-    $existing = $db->table('rbac_permissions')->where('permission_code', $code)->get(1)->getRowArray();
+    $existing_q = $db->table('rbac_permissions')->where('permission_code', $code);
+    if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_permissions')) {
+        $existing_q->groupStart()
+            ->where('tenant_id', $tenant_id)
+            ->orWhere('tenant_id', 0)
+            ->groupEnd();
+    }
+    $existing = $existing_q->get(1)->getRowArray();
     if ($existing && (int)$existing['permission_id'] !== $permission_id) {
         return ['ok' => false, 'message' => 'This permission code already exists.'];
     }
@@ -302,8 +675,8 @@ function rbac_save_permission(string $code, string $name, string $description = 
     ];
 
     if ($permission_id > 0) {
-        $row = $db->table('rbac_permissions')->where('permission_id', $permission_id)->get(1)->getRowArray();
-        if (!$row) {
+        $row = rbac_permission_row($permission_id);
+        if (!$row || ((int)($row['tenant_id'] ?? 0) !== $tenant_id && (int)($row['is_system'] ?? 0) !== 1 && $tenant_id > 0)) {
             return ['ok' => false, 'message' => 'Permission not found.'];
         }
         if ((int)$row['is_system'] === 1) {
@@ -312,6 +685,9 @@ function rbac_save_permission(string $code, string $name, string $description = 
         $db->table('rbac_permissions')->where('permission_id', $permission_id)->update($data);
     } else {
         $data['is_system'] = 0;
+        if ($db->fieldExists('tenant_id', 'rbac_permissions')) {
+            $data['tenant_id'] = $tenant_id;
+        }
         $db->table('rbac_permissions')->insert($data);
         if ($db->tableExists('permissions') && $db->table('permissions')->where('permission_id', $code)->countAllResults() === 0) {
             $db->table('permissions')->insert([
@@ -329,8 +705,9 @@ function rbac_delete_permission(int $permission_id): array
 {
     rbac_ensure();
     $db = db_connect();
-    $row = $db->table('rbac_permissions')->where('permission_id', $permission_id)->get(1)->getRowArray();
-    if (!$row) {
+    $row = rbac_permission_row($permission_id);
+    $tenant_id = rbac_current_tenant_id();
+    if (!$row || ($tenant_id > 0 && (int)($row['tenant_id'] ?? 0) !== $tenant_id)) {
         return ['ok' => false, 'message' => 'Permission not found.'];
     }
     if ((int)$row['is_system'] === 1) {
@@ -352,7 +729,15 @@ function rbac_save_role(string $name, string $description, array $permission_ids
     $db = db_connect();
     $name = trim($name);
     $description = trim($description);
-    $permission_ids = array_values(array_unique(array_filter(array_map('intval', $permission_ids))));
+    $tenant_id = rbac_current_tenant_id();
+    $allowed = [];
+    foreach (rbac_permissions() as $permission) {
+        $allowed[(int)$permission['permission_id']] = true;
+    }
+    $permission_ids = array_values(array_unique(array_filter(
+        array_map('intval', $permission_ids),
+        static fn(int $id): bool => $id > 0 && isset($allowed[$id])
+    )));
 
     if ($name === '') {
         return ['ok' => false, 'message' => 'Role name is required.'];
@@ -362,7 +747,7 @@ function rbac_save_role(string $name, string $description, array $permission_ids
     }
 
     if ($role_id > 0) {
-        $row = $db->table('rbac_roles')->where('role_id', $role_id)->get(1)->getRowArray();
+        $row = rbac_role_row($role_id);
         if (!$row) {
             return ['ok' => false, 'message' => 'Role not found.'];
         }
@@ -377,25 +762,40 @@ function rbac_save_role(string $name, string $description, array $permission_ids
         }
         $base = $key;
         $n = 2;
-        while ($db->table('rbac_roles')->where('role_key', $key)->countAllResults() > 0) {
+        while (true) {
+            $key_q = $db->table('rbac_roles')->where('role_key', $key);
+            if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
+                $key_q->where('tenant_id', $tenant_id);
+            }
+            if ($key_q->countAllResults() === 0) {
+                break;
+            }
             $key = $base . '_' . $n;
             $n++;
         }
-        $db->table('rbac_roles')->insert([
+        $insert = [
             'role_key'    => $key,
             'role_name'   => $name,
             'description' => $description !== '' ? $description : null,
             'is_system'   => 0,
-        ]);
+        ];
+        if ($db->fieldExists('tenant_id', 'rbac_roles')) {
+            $insert['tenant_id'] = $tenant_id;
+        }
+        $db->table('rbac_roles')->insert($insert);
         $role_id = (int)$db->insertID();
     }
 
     $db->table('rbac_role_permissions')->where('role_id', $role_id)->delete();
     foreach ($permission_ids as $permission_id) {
-        $db->table('rbac_role_permissions')->insert([
+        $link = [
             'role_id'       => $role_id,
             'permission_id' => $permission_id,
-        ]);
+        ];
+        if ($db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+            $link['tenant_id'] = $tenant_id;
+        }
+        $db->table('rbac_role_permissions')->insert($link);
     }
 
     rbac_resync_role_users($role_id);
@@ -407,7 +807,7 @@ function rbac_delete_role(int $role_id): array
 {
     rbac_ensure();
     $db = db_connect();
-    $row = $db->table('rbac_roles')->where('role_id', $role_id)->get(1)->getRowArray();
+    $row = rbac_role_row($role_id);
     if (!$row) {
         return ['ok' => false, 'message' => 'Role not found.'];
     }
@@ -454,9 +854,13 @@ function rbac_user_role(?int $person_id): ?array
     $row = db_connect()->table('rbac_user_roles AS ur')
         ->select('r.*')
         ->join('rbac_roles AS r', 'r.role_id = ur.role_id')
-        ->where('ur.person_id', $person_id)
-        ->get(1)
-        ->getRowArray();
+        ->where('ur.person_id', $person_id);
+    $db = db_connect();
+    $tid = rbac_current_tenant_id();
+    if ($tid > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
+        $row->where('r.tenant_id', $tid);
+    }
+    $row = $row->get(1)->getRowArray();
 
     return $row ?: null;
 }
@@ -468,15 +872,19 @@ function rbac_set_user_role(int $person_id, int $role_id): bool
     }
     rbac_ensure();
     $db = db_connect();
-    if ($db->table('rbac_roles')->where('role_id', $role_id)->countAllResults() === 0) {
+    if (rbac_role_row($role_id) === null) {
         return false;
     }
 
     $db->table('rbac_user_roles')->where('person_id', $person_id)->delete();
-    $db->table('rbac_user_roles')->insert([
+    $assign = [
         'person_id' => $person_id,
         'role_id'   => $role_id,
-    ]);
+    ];
+    if ($db->fieldExists('tenant_id', 'rbac_user_roles')) {
+        $assign['tenant_id'] = rbac_current_tenant_id();
+    }
+    $db->table('rbac_user_roles')->insert($assign);
     rbac_write_person_grants($person_id, rbac_grants_from_role($role_id));
 
     return true;
@@ -564,7 +972,11 @@ function rbac_implied_permission_ids(array $codes): array
     }
 
     $implied = [];
-    if (in_array('expenses', $codes, true)) {
+    if (
+        in_array('employees', $codes, true)
+        || in_array('roles', $codes, true)
+        || in_array('config', $codes, true)
+    ) {
         $implied[] = 'expenses_categories';
     }
 
@@ -652,15 +1064,111 @@ function rbac_person_needs_admin_nav(int $person_id, ?array $role): bool
         return true;
     }
 
-    $ids = array_column(
-        db_connect()->table('grants')->select('permission_id')->where('person_id', $person_id)->get()->getResultArray(),
-        'permission_id'
-    );
-    $shop = ['sales', 'items', 'customers', 'suppliers', 'receivings', 'cashups'];
-    $has_shop = count(array_intersect($shop, $ids)) >= 5;
-    $has_staff = in_array('employees', $ids, true) || in_array('config', $ids, true);
+    return false;
+}
 
-    return $has_shop && !$has_staff;
+function rbac_user_office_display_ids(int $person_id): array
+{
+    $display = function_exists('rbac_office_display_ids')
+        ? rbac_office_display_ids()
+        : ['employees', 'roles', 'expenses_categories', 'config'];
+    if ($person_id <= 0) {
+        return [];
+    }
+
+    try {
+        rbac_sync_expenses_categories_access($person_id);
+        $employee = model(\App\Models\Employee::class);
+        $allowed = [];
+        foreach ($display as $code) {
+            if ($employee->has_grant($code, $person_id)) {
+                $allowed[] = $code;
+            }
+        }
+
+        return $allowed;
+    } catch (\Throwable $e) {
+        return [];
+    }
+}
+
+function rbac_person_may_manage_expense_categories(int $person_id): bool
+{
+    if ($person_id <= 0) {
+        return false;
+    }
+
+    $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
+    if (function_exists('rbac_person_needs_admin_nav') && rbac_person_needs_admin_nav($person_id, $role)) {
+        return true;
+    }
+
+    $codes = $role !== null ? rbac_role_permission_codes((int)$role['role_id']) : [];
+    foreach (['expenses_categories', 'employees', 'roles', 'config'] as $code) {
+        if (in_array($code, $codes, true)) {
+            return true;
+        }
+    }
+
+    $db = db_connect();
+    if (!$db->tableExists('grants')) {
+        return false;
+    }
+    foreach (['employees', 'roles', 'config'] as $code) {
+        if ($db->table('grants')->where(['person_id' => $person_id, 'permission_id' => $code])->countAllResults() > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function rbac_sync_expenses_categories_access(int $person_id): void
+{
+    if ($person_id <= 0) {
+        return;
+    }
+
+    $db = db_connect();
+    if (!$db->tableExists('permissions') || !$db->tableExists('grants')) {
+        return;
+    }
+
+    if ($db->table('permissions')->where('permission_id', 'expenses_categories')->countAllResults() === 0) {
+        $db->table('permissions')->insert([
+            'permission_id' => 'expenses_categories',
+            'module_id'     => 'expenses_categories',
+            'location_id'   => null,
+        ]);
+    }
+    if ($db->tableExists('modules') && $db->table('modules')->where('module_id', 'expenses_categories')->countAllResults() === 0) {
+        $db->table('modules')->insert([
+            'module_id'      => 'expenses_categories',
+            'name_lang_key'  => 'module_expenses_categories',
+            'desc_lang_key'  => 'module_expenses_categories_desc',
+            'sort'           => 109,
+        ]);
+    }
+
+    $allowed = rbac_person_may_manage_expense_categories($person_id);
+    $has_row = $db->table('grants')->where(['person_id' => $person_id, 'permission_id' => 'expenses_categories'])->countAllResults() > 0;
+
+    if ($allowed && !$has_row) {
+        $data = [
+            'permission_id' => 'expenses_categories',
+            'person_id'     => $person_id,
+        ];
+        if ($db->fieldExists('menu_group', 'grants')) {
+            $data['menu_group'] = function_exists('rbac_menu_group_for') ? rbac_menu_group_for('expenses_categories') : 'office';
+        }
+        $db->table('grants')->insert($data);
+        return;
+    }
+
+    if (!$allowed && $has_row) {
+        $db->table('grants')->where(['person_id' => $person_id, 'permission_id' => 'expenses_categories'])->delete();
+        $db->table('grants')->where(['person_id' => $person_id, 'permission_id' => 'office'])->delete();
+    }
 }
 
 function rbac_user_can_open_office(int $person_id): bool
@@ -669,19 +1177,12 @@ function rbac_user_can_open_office(int $person_id): bool
         return false;
     }
 
-    try {
-        $employee = model(\App\Models\Employee::class);
-        foreach (['employees', 'roles', 'expenses_categories', 'config'] as $code) {
-            if ($employee->has_grant($code, $person_id)) {
-                return true;
-            }
-        }
-    } catch (\Throwable $e) {
+    $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
+    if (rbac_person_needs_admin_nav($person_id, $role)) {
+        return true;
     }
 
-    $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
-
-    return rbac_person_needs_admin_nav($person_id, $role);
+    return rbac_user_office_display_ids($person_id) !== [];
 }
 
 function rbac_merge_admin_nav_grants(array $grants): array

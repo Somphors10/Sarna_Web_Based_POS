@@ -23,7 +23,12 @@ function hidden_ui_module_ids(): array
         $hidden = array_merge($hidden, platform_disabled_feature_ids());
     }
 
-    return array_values(array_unique($hidden));
+    $keep = ['home', 'employees', 'roles', 'expenses_categories', 'config'];
+
+    return array_values(array_filter(
+        array_unique($hidden),
+        static fn($id) => !in_array((string)$id, $keep, true)
+    ));
 }
 
 /**

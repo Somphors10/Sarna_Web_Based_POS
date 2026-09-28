@@ -217,33 +217,32 @@ class Secure_Controller extends BaseController
                 ? rbac_office_module_ids()
                 : ['employees', 'roles', 'expenses_categories', 'config'];
             $person_id = (int)$logged_in_employee_info->person_id;
+            if (function_exists('rbac_sync_expenses_categories_access')) {
+                rbac_sync_expenses_categories_access($person_id);
+            }
 
             if ($menu_group === 'office') {
+                $this->restoreOwnerOfficeGrants($person_id);
                 $display_ids = function_exists('rbac_office_display_ids')
                     ? rbac_office_display_ids()
                     : ['employees', 'roles', 'expenses_categories', 'config'];
+                $can_manage_categories = $this->employee->has_grant('employees', $person_id)
+                    || $this->employee->has_grant('roles', $person_id)
+                    || $this->employee->has_grant('config', $person_id);
                 $seen_office = [];
-                $office_candidates = array_merge(
-                    $allowed_modules->getResult(),
-                    $this->module->get_allowed_nav_modules($person_id)->getResult()
-                );
-                foreach ($office_candidates as $nav_module) {
-                    $nav_id = (string)($nav_module->module_id ?? '');
-                    if (
-                        $nav_id === ''
-                        || $nav_id === 'home'
-                        || $nav_id === 'office'
-                        || isset($seen_office[$nav_id])
-                        || in_array($nav_id, $hidden_modules, true)
-                        || !in_array($nav_id, $display_ids, true)
-                    ) {
+                foreach ($display_ids as $office_id) {
+                    if ($office_id === '' || isset($seen_office[$office_id])) {
                         continue;
                     }
-                    $seen_office[$nav_id] = true;
-                    $this->global_view_data['allowed_modules'][] = $nav_module;
-                }
-                foreach ($display_ids as $office_id) {
-                    if (isset($seen_office[$office_id])) {
+                    $is_expense_categories = $office_id === 'expenses_categories';
+                    if (!$is_expense_categories && in_array($office_id, $hidden_modules, true)) {
+                        continue;
+                    }
+                    $allowed = $this->employee->has_grant($office_id, $person_id);
+                    if ($is_expense_categories && $can_manage_categories) {
+                        $allowed = true;
+                    }
+                    if (!$allowed) {
                         continue;
                     }
                     $seen_office[$office_id] = true;
@@ -251,7 +250,7 @@ class Secure_Controller extends BaseController
                         'module_id'     => $office_id,
                         'name_lang_key' => 'module_' . $office_id,
                         'desc_lang_key' => 'module_' . $office_id . '_desc',
-                        'sort'          => 80,
+                        'sort'          => $is_expense_categories ? 90 : 80,
                     ];
                 }
                 $home_modules = $this->module->get_allowed_home_modules($person_id)->getResult();
@@ -301,28 +300,34 @@ class Secure_Controller extends BaseController
         return false;
     }
 
+    private function restoreOwnerOfficeGrants(int $person_id): void
+    {
+        try {
+            $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
+            if (!function_exists('rbac_person_needs_admin_nav') || !rbac_person_needs_admin_nav($person_id, $role)) {
+                return;
+            }
+            rbac_ensure_admin_nav_grants($person_id);
+            $existing = [];
+            foreach (db_connect()->table('grants')->where('person_id', $person_id)->get()->getResultArray() as $row) {
+                $existing[] = [
+                    'permission_id' => (string)$row['permission_id'],
+                    'menu_group'    => (string)($row['menu_group'] ?? 'home'),
+                ];
+            }
+            rbac_write_person_grants($person_id, rbac_merge_admin_nav_grants($existing));
+        } catch (Throwable $e) {
+            log_message('error', 'Office grants restore failed: ' . $e->getMessage());
+        }
+    }
+
     private function appendOfficeNavItem(int $person_id, array $office_ids): void
     {
         if (!$this->userCanOpenOffice($person_id)) {
             return;
         }
 
-        try {
-            $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
-            if (function_exists('rbac_person_needs_admin_nav') && rbac_person_needs_admin_nav($person_id, $role)) {
-                rbac_ensure_admin_nav_grants($person_id);
-                $existing = [];
-                foreach (db_connect()->table('grants')->where('person_id', $person_id)->get()->getResultArray() as $row) {
-                    $existing[] = [
-                        'permission_id' => (string)$row['permission_id'],
-                        'menu_group'    => (string)($row['menu_group'] ?? 'home'),
-                    ];
-                }
-                rbac_write_person_grants($person_id, rbac_merge_admin_nav_grants($existing));
-            }
-        } catch (Throwable $e) {
-            log_message('error', 'Office grants restore failed: ' . $e->getMessage());
-        }
+        $this->restoreOwnerOfficeGrants($person_id);
 
         foreach ($this->global_view_data['allowed_modules'] as $module) {
             if (($module->module_id ?? '') === 'office') {

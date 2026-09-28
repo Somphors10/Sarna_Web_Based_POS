@@ -596,8 +596,13 @@ $is_sa_pos_shell = is_platform_super_admin();
 
                             if ($menu_group_now === 'office') {
                                 $sidebar_modules = [$make_nav_module('home')];
+                                $has_office_access = isset($modules_by_id['employees'])
+                                    || isset($modules_by_id['roles'])
+                                    || isset($modules_by_id['config']);
                                 foreach ($office_keep as $office_id) {
-                                    $sidebar_modules[] = $make_nav_module($office_id);
+                                    if (isset($modules_by_id[$office_id]) || ($office_id === 'expenses_categories' && $has_office_access)) {
+                                        $sidebar_modules[] = $make_nav_module($office_id);
+                                    }
                                 }
                             } else {
                                 $sidebar_modules = array_values(array_filter($allowed_modules ?? [], static function ($module) use ($hidden_sidebar_modules, $office_keep) {

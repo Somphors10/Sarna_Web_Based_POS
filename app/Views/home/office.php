@@ -3,9 +3,33 @@
  * @var array $allowed_modules
  */
 
-$office_cards = function_exists('rbac_office_display_ids')
+$display_ids = function_exists('rbac_office_display_ids')
     ? rbac_office_display_ids()
     : ['employees', 'roles', 'expenses_categories', 'config'];
+$allowed_ids = [];
+foreach ($allowed_modules ?? [] as $module) {
+    $id = (string)($module->module_id ?? '');
+    if ($id !== '') {
+        $allowed_ids[$id] = true;
+    }
+}
+$office_cards = [];
+foreach ($display_ids as $module_id) {
+    if (isset($allowed_ids[$module_id])) {
+        $office_cards[] = $module_id;
+    }
+}
+$has_office_access = isset($allowed_ids['employees'])
+    || isset($allowed_ids['roles'])
+    || isset($allowed_ids['config']);
+if ($has_office_access && !in_array('expenses_categories', $office_cards, true)) {
+    $office_cards = [];
+    foreach ($display_ids as $module_id) {
+        if (isset($allowed_ids[$module_id]) || $module_id === 'expenses_categories') {
+            $office_cards[] = $module_id;
+        }
+    }
+}
 ?>
 
 <?= view('partial/header') ?>

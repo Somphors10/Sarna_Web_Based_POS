@@ -717,6 +717,14 @@ class Employee extends Person
             return false;
         }
 
+        if ($permission_id === 'expenses_categories') {
+            foreach (['employees', 'roles', 'config'] as $code) {
+                if ($this->has_grant($code, $person_id)) {
+                    return true;
+                }
+            }
+        }
+
         if ($this->has_grant($permission_id, $person_id)) {
             return true;
         }
@@ -762,6 +770,15 @@ class Employee extends Person
 
         if ($query->getNumRows() == 1) {
             return true;
+        }
+
+        if ($permission_id === 'expenses_categories') {
+            foreach (['employees', 'roles', 'config'] as $code) {
+                $related = $this->db->table('grants')->getWhere(['person_id' => $person_id, 'permission_id' => $code], 1);
+                if ($related->getNumRows() == 1) {
+                    return true;
+                }
+            }
         }
 
         return function_exists('rbac_user_has_code') && rbac_user_has_code((int)$person_id, (string)$permission_id);
