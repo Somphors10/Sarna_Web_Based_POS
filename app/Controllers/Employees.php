@@ -2,9 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Models\Module;
-use Config\Services;
-
 /**
  *
  *
@@ -17,7 +14,21 @@ class Employees extends Persons
     {
         parent::__construct('employees');
 
-        $this->module = model('Module');
+        try {
+            $this->syncShopLogins();
+        } catch (\Throwable $e) {
+            log_message('error', 'Employee shop login sync failed: ' . $e->getMessage());
+        }
+    }
+
+    private function syncShopLogins(): void
+    {
+        $tenant_id = (int)(session()->get('tenant_id') ?? 0);
+        if ($tenant_id <= 0 || !class_exists(\App\Libraries\PlatformArchitecture::class)) {
+            return;
+        }
+
+        (new \App\Libraries\PlatformArchitecture())->syncTenantEmployeeLogins($tenant_id);
     }
 
     /**
@@ -27,21 +38,29 @@ class Employees extends Persons
      */
     public function getSearch(): void
     {
-        $search = $this->request->getGet('search');
-        $limit  = $this->request->getGet('limit', FILTER_SANITIZE_NUMBER_INT);
-        $offset = $this->request->getGet('offset', FILTER_SANITIZE_NUMBER_INT);
-        $sort   = $this->sanitizeSortColumn(person_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'people.person_id');
-        $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        try {
+            $search = (string)($this->request->getGet('search') ?? '');
+            $limit  = (int)$this->request->getGet('limit');
+            $offset = (int)$this->request->getGet('offset');
+            $sort   = $this->sanitizeSortColumn(person_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'people.person_id');
+            $order  = strtolower((string)($this->request->getGet('order') ?? 'asc'));
+            if (!in_array($order, ['asc', 'desc'], true)) {
+                $order = 'asc';
+            }
 
-        $employees = $this->employee->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
-        $total_rows = $this->employee->get_found_rows($search, list_deleted_flag());
+            $employees = $this->employee->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+            $total_rows = $this->employee->get_found_rows($search, list_deleted_flag());
 
-        $data_rows = [];
-        foreach ($employees->getResult() as $person) {
-            $data_rows[] = get_person_data_row($person);
+            $data_rows = [];
+            foreach ($employees->getResult() as $person) {
+                $data_rows[] = get_person_data_row($person);
+            }
+
+            echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Employee search failed: ' . $e->getMessage());
+            echo json_encode(['total' => 0, 'rows' => []]);
         }
-
-        echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
     }
 
     /**
@@ -79,6 +98,21 @@ class Employees extends Persons
         }
         $data['person_info'] = $person_info;
         $data['employee_id'] = $employee_id;
+        $data['rbac_roles'] = [];
+        $data['selected_role_id'] = 0;
+        $data['rbac_role_codes'] = [];
+        try {
+            helper('rbac');
+            rbac_ensure();
+            $data['rbac_roles'] = rbac_roles();
+            $assigned = rbac_user_role((int)($person_info->person_id ?? 0));
+            $data['selected_role_id'] = (int)($assigned['role_id'] ?? 0);
+            foreach ($data['rbac_roles'] as $role) {
+                $data['rbac_role_codes'][(int)$role['role_id']] = rbac_role_permission_codes((int)$role['role_id']);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Employee role list failed: ' . $e->getMessage());
+        }
 
         $modules = [];
         foreach ($this->module->get_all_modules()->getResult() as $module) {
@@ -135,18 +169,36 @@ class Employees extends Persons
             'comments'     => $this->request->getPost('comments', FILTER_SANITIZE_FULL_SPECIAL_CHARS)
         ];
 
-        $grants_array = [];
-        foreach ($this->module->get_all_permissions()->getResult() as $permission) {
-            if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
-                continue;
-            }
-            $grants = [];
-            $grant = $this->request->getPost('grant_' . $permission->permission_id) != null ? $this->request->getPost('grant_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
+        $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if ($this->employee->username_exists($employee_id === NEW_ENTRY ? 0 : $employee_id, $username)) {
+            echo json_encode([
+                'success' => false,
+                'message' => lang('Employees.username_duplicate'),
+                'id'      => $employee_id
+            ]);
 
-            if ($grant == $permission->permission_id) {
-                $grants['permission_id'] = $permission->permission_id;
-                $grants['menu_group'] = $this->request->getPost('menu_group_' . $permission->permission_id) != null ? $this->request->getPost('menu_group_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '--';
-                $grants_array[] = $grants;
+            return;
+        }
+
+        helper('rbac');
+        rbac_ensure();
+        $role_id = (int)$this->request->getPost('role_id');
+        $grants_array = [];
+        if ($role_id > 0) {
+            $grants_array = rbac_grants_from_role($role_id);
+        } else {
+            foreach ($this->module->get_all_permissions()->getResult() as $permission) {
+                if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
+                    continue;
+                }
+                $grants = [];
+                $grant = $this->request->getPost('grant_' . $permission->permission_id) != null ? $this->request->getPost('grant_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
+
+                if ($grant == $permission->permission_id) {
+                    $grants['permission_id'] = $permission->permission_id;
+                    $grants['menu_group'] = $this->request->getPost('menu_group_' . $permission->permission_id) != null ? $this->request->getPost('menu_group_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '--';
+                    $grants_array[] = $grants;
+                }
             }
         }
 
@@ -180,6 +232,10 @@ class Employees extends Persons
         }
 
         if ($this->employee->save_employee($person_data, $employee_data, $grants_array, $employee_id)) {
+            $saved_id = (int)($employee_data['person_id'] ?? $employee_id);
+            if ($saved_id > 0 && $role_id > 0) {
+                rbac_set_user_role($saved_id, $role_id);
+            }
             // New employee
             if ($employee_id == NEW_ENTRY) {
                 echo json_encode([

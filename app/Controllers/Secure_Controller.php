@@ -74,6 +74,10 @@ class Secure_Controller extends BaseController
         }
 
         $logged_in_employee_info = $this->employee->get_logged_in_employee_info();
+        if (!is_object($logged_in_employee_info) || empty($logged_in_employee_info->person_id)) {
+            header('Location:' . base_url('login'));
+            exit();
+        }
         $is_super_admin = function_exists('is_platform_super_admin') && is_platform_super_admin();
         $tenant_id = (int)($this->session->get('tenant_id') ?? 0);
         if ($tenant_id <= 0) {
@@ -117,6 +121,16 @@ class Secure_Controller extends BaseController
 
         (new TenantContext())->applyRuntimeConnection($tenant_id);
 
+        helper('rbac');
+        $person_id = (int)($logged_in_employee_info->person_id ?? 0);
+        if ($person_id > 0 && function_exists('rbac_sync_person_from_role')) {
+            try {
+                rbac_sync_person_from_role($person_id);
+            } catch (Throwable $e) {
+                log_message('error', 'RBAC grant sync failed: ' . $e->getMessage());
+            }
+        }
+
         // After tenant is known: drop inherited demo email / other-shop logos.
         try {
             $appconfig = model(\App\Models\Appconfig::class);
@@ -137,8 +151,8 @@ class Secure_Controller extends BaseController
         }
 
         if (
-            !$this->employee->has_module_grant($module_id, $logged_in_employee_info->person_id)
-            || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, $logged_in_employee_info->person_id))
+            !$this->employee->has_module_grant($module_id, (int)$logged_in_employee_info->person_id)
+            || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, (int)$logged_in_employee_info->person_id))
         ) {
             header("Location:" . base_url("no_access/$module_id/$submodule_id"));
             exit();
@@ -156,10 +170,16 @@ class Secure_Controller extends BaseController
         // Load up global global_view_data visible to all the loaded views
         if ($menu_group == null) {
             $menu_group = $this->session->get('menu_group') ?: 'home';
-            $this->session->set('menu_group', $menu_group);
-        } else {
-            $this->session->set('menu_group', $menu_group);
         }
+        $office_ids = function_exists('rbac_office_module_ids')
+            ? rbac_office_module_ids()
+            : ['employees', 'roles', 'expenses_categories', 'config'];
+        if ($module_id === 'office' || in_array($module_id, $office_ids, true)) {
+            $menu_group = 'office';
+        } elseif ($module_id === 'home') {
+            $menu_group = 'home';
+        }
+        $this->session->set('menu_group', $menu_group);
 
         $allowed_modules = $menu_group == 'home'
             ? $this->module->get_allowed_home_modules($logged_in_employee_info->person_id)
@@ -193,22 +213,140 @@ class Secure_Controller extends BaseController
                 static fn($a, $b) => (int)($a->sort ?? 0) <=> (int)($b->sort ?? 0)
             );
         } else {
-            foreach ($allowed_modules->getResult() as $module) {
-                if (in_array($module->module_id, $hidden_modules, true)) {
-                    continue;
-                }
+            $office_ids = function_exists('rbac_office_module_ids')
+                ? rbac_office_module_ids()
+                : ['employees', 'roles', 'expenses_categories', 'config'];
+            $person_id = (int)$logged_in_employee_info->person_id;
 
-                $this->global_view_data['allowed_modules'][] = $module;
+            if ($menu_group === 'office') {
+                $display_ids = function_exists('rbac_office_display_ids')
+                    ? rbac_office_display_ids()
+                    : ['employees', 'roles', 'expenses_categories', 'config'];
+                $seen_office = [];
+                $office_candidates = array_merge(
+                    $allowed_modules->getResult(),
+                    $this->module->get_allowed_nav_modules($person_id)->getResult()
+                );
+                foreach ($office_candidates as $nav_module) {
+                    $nav_id = (string)($nav_module->module_id ?? '');
+                    if (
+                        $nav_id === ''
+                        || $nav_id === 'home'
+                        || $nav_id === 'office'
+                        || isset($seen_office[$nav_id])
+                        || in_array($nav_id, $hidden_modules, true)
+                        || !in_array($nav_id, $display_ids, true)
+                    ) {
+                        continue;
+                    }
+                    $seen_office[$nav_id] = true;
+                    $this->global_view_data['allowed_modules'][] = $nav_module;
+                }
+                foreach ($display_ids as $office_id) {
+                    if (isset($seen_office[$office_id])) {
+                        continue;
+                    }
+                    $seen_office[$office_id] = true;
+                    $this->global_view_data['allowed_modules'][] = (object) [
+                        'module_id'     => $office_id,
+                        'name_lang_key' => 'module_' . $office_id,
+                        'desc_lang_key' => 'module_' . $office_id . '_desc',
+                        'sort'          => 80,
+                    ];
+                }
+                $home_modules = $this->module->get_allowed_home_modules($person_id)->getResult();
+                foreach ($home_modules as $home_module) {
+                    if (($home_module->module_id ?? '') === 'home') {
+                        array_unshift($this->global_view_data['allowed_modules'], $home_module);
+                        break;
+                    }
+                }
+            } else {
+                foreach ($allowed_modules->getResult() as $module) {
+                    if (
+                        in_array($module->module_id, $hidden_modules, true)
+                        || in_array($module->module_id, $office_ids, true)
+                        || ($module->module_id ?? '') === 'office'
+                    ) {
+                        continue;
+                    }
+                    $this->global_view_data['allowed_modules'][] = $module;
+                }
+                $this->appendOfficeNavItem($person_id, $office_ids);
             }
         }
 
         $this->global_view_data += [
             'user_info'               => $logged_in_employee_info,
-            'controller_name'         => $module_id,
+            'controller_name'         => $module_id !== '' ? $module_id : (function_exists('get_controller') ? get_controller() : ''),
             'config'                  => $config,
             'subscription_view_only'  => (bool)$this->session->get('subscription_view_only'),
+            'show_office_nav'         => !$is_super_admin && $this->userCanOpenOffice((int)$logged_in_employee_info->person_id),
         ];
         view('viewData', $this->global_view_data);
+    }
+
+    private function userCanOpenOffice(int $person_id): bool
+    {
+        if (function_exists('rbac_user_can_open_office')) {
+            return rbac_user_can_open_office($person_id);
+        }
+
+        foreach (['employees', 'roles', 'expenses_categories', 'config'] as $code) {
+            if ($this->employee->has_grant($code, $person_id)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function appendOfficeNavItem(int $person_id, array $office_ids): void
+    {
+        if (!$this->userCanOpenOffice($person_id)) {
+            return;
+        }
+
+        try {
+            $role = function_exists('rbac_user_role') ? rbac_user_role($person_id) : null;
+            if (function_exists('rbac_person_needs_admin_nav') && rbac_person_needs_admin_nav($person_id, $role)) {
+                rbac_ensure_admin_nav_grants($person_id);
+                $existing = [];
+                foreach (db_connect()->table('grants')->where('person_id', $person_id)->get()->getResultArray() as $row) {
+                    $existing[] = [
+                        'permission_id' => (string)$row['permission_id'],
+                        'menu_group'    => (string)($row['menu_group'] ?? 'home'),
+                    ];
+                }
+                rbac_write_person_grants($person_id, rbac_merge_admin_nav_grants($existing));
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Office grants restore failed: ' . $e->getMessage());
+        }
+
+        foreach ($this->global_view_data['allowed_modules'] as $module) {
+            if (($module->module_id ?? '') === 'office') {
+                return;
+            }
+        }
+
+        $office = null;
+        try {
+            $office = method_exists($this->module, 'get_office_module')
+                ? $this->module->get_office_module()
+                : null;
+        } catch (Throwable $e) {
+            $office = null;
+        }
+        if (!$office) {
+            $office = (object) [
+                'module_id'     => 'office',
+                'name_lang_key' => 'module_office',
+                'desc_lang_key' => 'module_office_desc',
+                'sort'          => 999,
+            ];
+        }
+        $this->global_view_data['allowed_modules'][] = $office;
     }
 
     /**
@@ -290,7 +428,17 @@ class Secure_Controller extends BaseController
 
     public function sanitizeSortColumn($headers, $field, $default): string
     {
-        return $field != null && in_array($field, array_keys(array_merge(...$headers))) ? $field : $default;
+        if (!is_array($headers) || $headers === []) {
+            return (string)$default;
+        }
+
+        try {
+            $allowed = array_keys(array_merge(...array_values($headers)));
+        } catch (Throwable $e) {
+            return (string)$default;
+        }
+
+        return $field != null && in_array($field, $allowed, true) ? (string)$field : (string)$default;
     }
 
     /**

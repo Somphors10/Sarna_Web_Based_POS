@@ -103,9 +103,12 @@ class PlatformArchitecture
                 `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (`login_id`),
-                UNIQUE KEY `uk_tenant_logins_username` (`username`),
-                KEY `idx_tenant_logins_tenant` (`tenant_id`)
+                UNIQUE KEY `uk_tenant_logins_tenant_username` (`tenant_id`, `username`),
+                KEY `idx_tenant_logins_tenant` (`tenant_id`),
+                KEY `idx_tenant_logins_username` (`username`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } else {
+            $this->relaxTenantLoginUsername($db, $prefix);
         }
 
         if (!$db->tableExists('platform_template_meta')) {
@@ -555,6 +558,8 @@ class PlatformArchitecture
             return;
         }
 
+        $this->relaxTenantLoginUsername($db, $db->getPrefix());
+
         $existing = $db->table('tenant_logins')
             ->where('tenant_id', $tenant_id)
             ->where('person_id', $person_id)
@@ -575,15 +580,65 @@ class PlatformArchitecture
             return;
         }
 
-        $taken = $db->table('tenant_logins')->where('username', $username)->countAllResults();
+        $taken = $db->table('tenant_logins')
+            ->where('tenant_id', $tenant_id)
+            ->where('username', $username)
+            ->countAllResults();
         if ($taken > 0) {
             return;
         }
 
-        $db->table('tenant_logins')->insert($payload + [
+        $row = $payload + [
             'tenant_id' => $tenant_id,
             'person_id' => $person_id,
-        ]);
+        ];
+
+        try {
+            $db->table('tenant_logins')->insert($row);
+        } catch (Throwable $e) {
+            $this->relaxTenantLoginUsername($db, $db->getPrefix());
+            try {
+                $db->table('tenant_logins')->insert($row);
+            } catch (Throwable $ignored) {
+            }
+        }
+    }
+
+    /**
+     * Put every shop staff username on the platform sign-in list.
+     */
+    public function syncTenantEmployeeLogins(int $tenant_id, $employee_db = null): void
+    {
+        if ($tenant_id <= 0) {
+            return;
+        }
+
+        try {
+            $db = $employee_db ?? db_connect();
+            if (!$db->tableExists('employees')) {
+                return;
+            }
+
+            $builder = $db->table('employees');
+            $builder->select('employees.person_id, employees.username, employees.deleted, people.first_name, people.last_name');
+            $builder->join('people', 'people.person_id = employees.person_id', 'left');
+            $builder->where('employees.deleted', 0);
+            if ($db->fieldExists('tenant_id', 'employees')) {
+                $builder->where('employees.tenant_id', $tenant_id);
+            }
+
+            foreach ($builder->get()->getResultArray() as $row) {
+                $this->upsertTenantLogin(
+                    $tenant_id,
+                    (int)$row['person_id'],
+                    (string)$row['username'],
+                    trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')),
+                    false,
+                    true
+                );
+            }
+        } catch (Throwable $e) {
+        }
     }
 
     public function usernameExists(string $username): bool
@@ -612,5 +667,44 @@ class PlatformArchitecture
         }
 
         return false;
+    }
+
+    /**
+     * Same username may exist in another shop. Unique only inside one tenant.
+     */
+    private function relaxTenantLoginUsername($db, string $prefix): void
+    {
+        if (!$db->tableExists('tenant_logins')) {
+            return;
+        }
+
+        try {
+            $indexes = $db->query("SHOW INDEX FROM `{$prefix}tenant_logins`")->getResultArray();
+        } catch (Throwable $e) {
+            return;
+        }
+
+        $has_old = false;
+        $has_new = false;
+        foreach ($indexes as $index) {
+            $name = (string)($index['Key_name'] ?? '');
+            if ($name === 'uk_tenant_logins_tenant_username') {
+                $has_new = true;
+            }
+            if ($name === 'uk_tenant_logins_username' && (string)($index['Column_name'] ?? '') === 'username') {
+                $has_old = true;
+            }
+        }
+
+        if ($has_old && !$has_new) {
+            try {
+                $db->query("ALTER TABLE `{$prefix}tenant_logins` DROP INDEX `uk_tenant_logins_username`");
+                $db->query("ALTER TABLE `{$prefix}tenant_logins` ADD UNIQUE KEY `uk_tenant_logins_tenant_username` (`tenant_id`, `username`)");
+                $db->query("ALTER TABLE `{$prefix}tenant_logins` ADD KEY `idx_tenant_logins_username` (`username`)");
+                $db->resetDataCache();
+            } catch (Throwable $e) {
+                $db->resetDataCache();
+            }
+        }
     }
 }

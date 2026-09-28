@@ -98,6 +98,9 @@ class Module extends Model
     public function get_allowed_home_modules(int $person_id): ResultInterface
     {
         $this->ensure_module_catalog();
+        if (function_exists('rbac_ensure')) {
+            rbac_ensure();
+        }
 
         $menus = ['home', 'both'];
         $builder = $this->db->table('modules');    // TODO: this is duplicated with the code below... probably refactor a method and just pass through whether home/office modules are needed.
@@ -112,20 +115,52 @@ class Module extends Model
     }
 
     /**
+     * All modules this person may open, ignoring home/office grouping.
+     */
+    public function get_allowed_nav_modules(int $person_id): ResultInterface
+    {
+        $this->ensure_module_catalog();
+        if (function_exists('rbac_ensure')) {
+            rbac_ensure();
+        }
+
+        $builder = $this->db->table('modules');
+        $builder->join('permissions', 'permissions.permission_id = modules.module_id');
+        $builder->join('grants', 'permissions.permission_id = grants.permission_id');
+        $builder->where('person_id', $person_id);
+        $builder->where('sort !=', 0);
+        $builder->orderBy('sort', 'asc');
+
+        return $builder->get();
+    }
+
+    /**
      * @param int $person_id
      * @return ResultInterface
      */
     public function get_allowed_office_modules(int $person_id): ResultInterface
     {
         $this->ensure_module_catalog();
+        $this->ensure_office_feature_modules_visible();
+        if (function_exists('rbac_ensure')) {
+            rbac_ensure();
+        }
 
-        $menus = ['office', 'both'];
-        $builder = $this->db->table('modules');    // TODO: Duplicated code
+        $office_ids = function_exists('rbac_office_module_ids')
+            ? rbac_office_module_ids()
+            : ['employees', 'roles', 'expenses_categories', 'config'];
+
+        $builder = $this->db->table('modules');
         $builder->join('permissions', 'permissions.permission_id = modules.module_id');
         $builder->join('grants', 'permissions.permission_id = grants.permission_id');
         $builder->where('person_id', $person_id);
-        $builder->whereIn('menu_group', $menus);
+        $builder->groupStart();
+        $builder->groupStart();
+        $builder->whereIn('menu_group', ['office', 'both']);
         $builder->where('sort !=', 0);
+        $builder->groupEnd();
+        $builder->orWhereIn('modules.module_id', $office_ids);
+        $builder->groupEnd();
         $builder->orderBy('sort', 'asc');
 
         return $builder->get();
@@ -159,6 +194,51 @@ class Module extends Model
         $row = $builder->get()->getRow();
 
         return $row ? (int)$row->sort : 0;
+    }
+
+    public function ensure_office_nav_visible(): void
+    {
+        $this->ensure_office_module(999);
+        $this->ensure_office_feature_modules_visible();
+        if (!$this->db->tableExists('modules')) {
+            return;
+        }
+
+        $row = $this->db->table('modules')->where('module_id', 'office')->get(1)->getRow();
+        if ($row && (int)$row->sort === 0) {
+            $this->db->table('modules')->where('module_id', 'office')->update(['sort' => 999]);
+        }
+    }
+
+    public function ensure_office_feature_modules_visible(): void
+    {
+        if (!$this->db->tableExists('modules')) {
+            return;
+        }
+
+        $sorts = [
+            'employees'           => 80,
+            'roles'               => 85,
+            'expenses_categories' => 109,
+            'config'              => 900,
+            'attributes'          => 107,
+        ];
+        foreach ($sorts as $module_id => $sort) {
+            $row = $this->db->table('modules')->where('module_id', $module_id)->get(1)->getRow();
+            if ($row && (int)$row->sort === 0) {
+                $this->db->table('modules')->where('module_id', $module_id)->update(['sort' => $sort]);
+            }
+        }
+    }
+
+    public function get_office_module(): ?object
+    {
+        $this->ensure_office_nav_visible();
+        if (!$this->db->tableExists('modules')) {
+            return null;
+        }
+
+        return $this->db->table('modules')->where('module_id', 'office')->get(1)->getRow() ?: null;
     }
 
     private function ensure_office_module(int $sort = 999): void
@@ -208,6 +288,7 @@ class Module extends Model
             ['name_lang_key' => 'module_receivings', 'desc_lang_key' => 'module_receivings_desc', 'sort' => 60, 'module_id' => 'receivings'],
             ['name_lang_key' => 'module_sales', 'desc_lang_key' => 'module_sales_desc', 'sort' => 70, 'module_id' => 'sales'],
             ['name_lang_key' => 'module_employees', 'desc_lang_key' => 'module_employees_desc', 'sort' => 80, 'module_id' => 'employees'],
+            ['name_lang_key' => 'module_roles', 'desc_lang_key' => 'module_roles_desc', 'sort' => 85, 'module_id' => 'roles'],
             ['name_lang_key' => 'module_giftcards', 'desc_lang_key' => 'module_giftcards_desc', 'sort' => 90, 'module_id' => 'giftcards'],
             ['name_lang_key' => 'module_messages', 'desc_lang_key' => 'module_messages_desc', 'sort' => 98, 'module_id' => 'messages'],
             ['name_lang_key' => 'module_taxes', 'desc_lang_key' => 'module_taxes_desc', 'sort' => 105, 'module_id' => 'taxes'],
@@ -229,6 +310,7 @@ class Module extends Model
             ['permission_id' => 'config', 'module_id' => 'config', 'location_id' => null],
             ['permission_id' => 'customers', 'module_id' => 'customers', 'location_id' => null],
             ['permission_id' => 'employees', 'module_id' => 'employees', 'location_id' => null],
+            ['permission_id' => 'roles', 'module_id' => 'roles', 'location_id' => null],
             ['permission_id' => 'expenses', 'module_id' => 'expenses', 'location_id' => null],
             ['permission_id' => 'expenses_categories', 'module_id' => 'expenses_categories', 'location_id' => null],
             ['permission_id' => 'giftcards', 'module_id' => 'giftcards', 'location_id' => null],

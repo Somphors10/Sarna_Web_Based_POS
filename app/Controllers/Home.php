@@ -54,9 +54,11 @@ class Home extends Secure_Controller
 
         $kpis = [];
         $charts = [];
+        $show_dashboard = $this->employee->has_grant('reports', $person_id)
+            || $this->employee->has_grant('reports_sales', $person_id);
 
         try {
-        if ($this->employee->has_grant('reports_sales', $person_id)) {
+        if ($show_dashboard && $this->employee->has_grant('reports_sales', $person_id)) {
             $summary_sales = model(Summary_sales::class);
             $period_summary = $summary_sales->getSummaryData($sale_inputs);
             $today_summary = $summary_sales->getSummaryData($today_inputs);
@@ -110,7 +112,7 @@ class Home extends Secure_Controller
             ];
         }
 
-        if ($this->employee->has_grant('reports_payments', $person_id)) {
+        if ($show_dashboard && $this->employee->has_grant('reports_payments', $person_id)) {
             $summary_payments = model(Summary_payments::class);
             $payment_rows = $summary_payments->getData($sale_inputs);
             $payment_summary = $summary_payments->getSummaryData($sale_inputs);
@@ -161,7 +163,7 @@ class Home extends Secure_Controller
             ];
         }
 
-        if ($this->employee->has_grant('reports_expenses_categories', $person_id)) {
+        if ($show_dashboard && $this->employee->has_grant('reports_expenses_categories', $person_id)) {
             $expense_inputs = [
                 'start_date' => $start_date,
                 'end_date'   => $end_date,
@@ -184,17 +186,20 @@ class Home extends Secure_Controller
         }
 
         $period_label = '';
-        try {
-            $period_label = lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]);
-        } catch (\Throwable $e) {
-            $period_label = $start_date . ' – ' . $end_date;
+        if ($show_dashboard) {
+            try {
+                $period_label = lang('Common.dashboard_period', [to_date(strtotime($start_date)), to_date(strtotime($end_date))]);
+            } catch (\Throwable $e) {
+                $period_label = $start_date . ' – ' . $end_date;
+            }
         }
 
         $data = [
-            'config'       => $config,
-            'kpis'         => $kpis,
-            'charts'       => $charts,
-            'period_label' => $period_label,
+            'config'          => $config,
+            'kpis'            => $kpis,
+            'charts'          => $charts,
+            'period_label'    => $period_label,
+            'show_dashboard'  => $show_dashboard,
         ];
 
         try {

@@ -108,7 +108,7 @@ helper('url');
 
                 <?php
                 $employee = model(Employee::class);
-                if ($employee->has_grant('reports_sales', session('person_id'))) {
+                if ($employee->has_grant('reports_sales', session('person_id')) || $employee->has_grant('sales', session('person_id'))) {
                 ?>
                     <li class="pull-right">
                         <?= anchor(

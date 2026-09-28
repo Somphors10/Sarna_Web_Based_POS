@@ -35,6 +35,10 @@ function platform_pos_features(): array
             'label' => 'Employees',
             'description' => 'Add, edit, delete, and search store staff and permissions.',
         ],
+        'roles' => [
+            'label' => 'Roles',
+            'description' => 'Create permissions and roles, then assign a role to each employee.',
+        ],
         'giftcards' => [
             'label' => 'Gift Cards',
             'description' => 'Issue, search, and redeem gift cards.',
@@ -203,6 +207,9 @@ function platform_set_feature_enabled(string $module_id, bool $enabled): bool
 function pos_module_nav_icon(string $module_id): string
 {
     $module_id = preg_replace('/[^a-z0-9_]/', '', strtolower($module_id)) ?: 'office';
+    if ($module_id === 'expenses_categories') {
+        $module_id = 'expenses';
+    }
     $candidates = [
         'images/nav/' . $module_id . '.svg',
         'images/menubar/' . $module_id . '.svg',
@@ -212,7 +219,7 @@ function pos_module_nav_icon(string $module_id): string
 
     foreach ($candidates as $path) {
         if (is_file(FCPATH . $path)) {
-            return $path;
+            return $path . '?v=' . filemtime(FCPATH . $path);
         }
     }
 

@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net" agent="WBPOS" version="24.0.0" type="device">
+  <diagram id="dfd-2" name="2.0 Process Super Admin">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" connect="1" arrows="1" fold="0" page="1" pageScale="1" pageWidth="1160" pageHeight="720" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Data Flow Diagram Level 2: Process 2.0 Super Admin" style="text;html=1;fontStyle=1;fontSize=16;fontFamily=Arial;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="180" y="16" width="800" height="28" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="Super Admin" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="292" width="170" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p21" value="&lt;b&gt;2.1&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;View Applications" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="270" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p22" value="&lt;b&gt;2.2&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Process Approval / Rejection" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="284" width="270" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="p23" value="&lt;b&gt;2.3&lt;/b&gt;&lt;hr size=&quot;1&quot; color=&quot;#000000&quot;&gt;Manage Tenant Status" style="rounded=1;whiteSpace=wrap;html=1;arcSize=16;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="510" width="270" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d2" value="&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;width:100%;height:100%;border-collapse:collapse;&quot;&gt;&lt;tr&gt;&lt;td style=&quot;width:46px;border-right:2px solid #000;text-align:center;font-weight:bold;&quot;&gt;D2&lt;/td&gt;&lt;td style=&quot;padding-left:10px;text-align:left;&quot;&gt;Tenant Shop Database&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;overflow=fill;top=1;bottom=1;left=1;right=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontFamily=Arial;fontSize=13;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="860" y="292" width="250" height="54" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1" value="&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;width:100%;height:100%;border-collapse:collapse;&quot;&gt;&lt;tr&gt;&lt;td style=&quot;width:46px;border-right:2px solid #000;text-align:center;font-weight:bold;&quot;&gt;D1&lt;/td&gt;&lt;td style=&quot;padding-left:10px;text-align:left;&quot;&gt;Platform Database&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="shape=partialRectangle;whiteSpace=wrap;html=1;overflow=fill;top=1;bottom=1;left=1;right=0;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontFamily=Arial;fontSize=13;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="860" y="518" width="250" height="54" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="Request list" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.5;entryX=1;entryY=0.18;" edge="1" parent="1" source="p21" target="e1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="240" y="115"/><mxPoint x="240" y="302"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a2" value="Verified request" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.2;entryX=1;entryY=0.5;" edge="1" parent="1" source="d1" target="p21">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="760" y="529"/><mxPoint x="760" y="115"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a3" value="Approve or reject" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="e1" target="p22">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="Tenant + token / rejected" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.28;entryX=0;entryY=0.35;" edge="1" parent="1" source="p22" target="d1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="760" y="304"/><mxPoint x="760" y="537"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a5" value="Shop owner &amp; grants" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.72;entryX=0;entryY=0.5;" edge="1" parent="1" source="p22" target="d2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a6" value="Active / suspend / cancel" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=0.35;exitY=1;entryX=0;entryY=0.35;" edge="1" parent="1" source="e1" target="p23">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="100" y="534"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a7" value="Live status view" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.72;entryX=0.35;entryY=1;" edge="1" parent="1" source="p23" target="e1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="240" y="560"/><mxPoint x="240" y="400"/><mxPoint x="100" y="400"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="a8" value="Tenant status" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.35;entryX=0;entryY=0.35;" edge="1" parent="1" source="p23" target="d1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a9" value="Tenant status" style="endArrow=block;endFill=1;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1.4;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.72;entryX=1;entryY=0.72;" edge="1" parent="1" source="d1" target="p23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

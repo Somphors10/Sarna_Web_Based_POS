@@ -84,7 +84,7 @@ class Sales extends Secure_Controller
     {
         $person_id = $this->session->get('person_id');
 
-        if (!$this->employee->has_grant('reports_sales', $person_id)) {
+        if (!$this->employee->has_grant('reports_sales', $person_id) && !$this->employee->has_grant('sales', $person_id)) {
             redirect('no_access/sales/reports_sales');
         } else {
             $data['table_headers'] = get_sales_manage_table_headers();
@@ -130,7 +130,7 @@ class Sales extends Secure_Controller
     {
         $person_id = (int)$this->session->get('person_id');
 
-        if (!$this->employee->has_grant('reports_sales', $person_id)) {
+        if (!$this->employee->has_grant('reports_sales', $person_id) && !$this->employee->has_grant('sales', $person_id)) {
             echo json_encode(['total' => 0, 'rows' => [], 'payment_summary' => '']);
 
             return;

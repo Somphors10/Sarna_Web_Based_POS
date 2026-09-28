@@ -48,6 +48,11 @@ $routes->post('super-admin/login', 'Super_admin::login');
 $routes->get('super-admin/logout', 'Super_admin::logout');
 $routes->get('super-admin/changepassword', 'Super_admin::getChangePassword');
 $routes->post('super-admin/changepassword', 'Super_admin::postChangePassword');
+$routes->get('roles', 'Roles::getIndex');
+$routes->post('roles/savePermission', 'Roles::postSavePermission');
+$routes->post('roles/deletePermission', 'Roles::postDeletePermission');
+$routes->post('roles/saveRole', 'Roles::postSaveRole');
+$routes->post('roles/deleteRole', 'Roles::postDeleteRole');
 $routes->get('home', 'Home::getIndex');
 $routes->group('home', static function ($routes) {
     $routes->get('/', 'Home::getIndex');

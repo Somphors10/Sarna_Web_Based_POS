@@ -49,6 +49,17 @@ erDiagram
     wbpos_suppliers ||--o{ wbpos_expenses : related_to
     wbpos_employees ||--o{ wbpos_cash_up : opens_closes
 
+    %% ===== RBAC =====
+    wbpos_rbac_roles ||--o{ wbpos_rbac_role_permissions : has
+    wbpos_rbac_permissions ||--o{ wbpos_rbac_role_permissions : granted
+    wbpos_rbac_roles ||--o{ wbpos_rbac_user_roles : assigned
+    wbpos_employees ||--o| wbpos_rbac_user_roles : has_role
+
+    %% ===== PLATFORM PAY =====
+    wbpos_tenants ||--o{ wbpos_invoices : billed
+    wbpos_subscriptions ||--o{ wbpos_invoices : for
+    wbpos_invoices ||--o{ wbpos_invoice_payments : paid_by
+
     wbpos_plans {
         BIGINT plan_id PK
         VARCHAR plan_code
@@ -266,4 +277,41 @@ erDiagram
         DECIMAL value
         INT person_id FK
         BIGINT tenant_id FK
+    }
+
+    wbpos_rbac_permissions {
+        INT permission_id PK
+        VARCHAR permission_code
+        VARCHAR permission_name
+    }
+
+    wbpos_rbac_roles {
+        INT role_id PK
+        VARCHAR role_name
+        TINYINT is_system
+    }
+
+    wbpos_rbac_role_permissions {
+        INT role_id PK
+        INT permission_id PK
+    }
+
+    wbpos_rbac_user_roles {
+        INT person_id PK
+        INT role_id FK
+    }
+
+    wbpos_invoices {
+        INT invoice_id PK
+        INT subscription_id FK
+        INT tenant_id FK
+        DECIMAL amount
+        VARCHAR status
+    }
+
+    wbpos_invoice_payments {
+        INT payment_id PK
+        INT invoice_id FK
+        VARCHAR provider
+        VARCHAR payment_reference
     }

@@ -577,9 +577,38 @@ $is_sa_pos_shell = is_platform_super_admin();
                             ]) ?>
                         <?php else: ?>
                         <?php
-                            // Keep the menu mostly complete, hide only low-priority modules.
                             $hidden_sidebar_modules = hidden_ui_module_ids();
-                            $sidebar_modules = array_values(array_filter($allowed_modules ?? [], static fn($module) => !in_array($module->module_id, $hidden_sidebar_modules, true)));
+                            $office_keep = function_exists('rbac_office_display_ids')
+                                ? rbac_office_display_ids()
+                                : ['employees', 'roles', 'expenses_categories', 'config'];
+                            $menu_group_now = (string)(session()->get('menu_group') ?: 'home');
+                            $modules_by_id = [];
+                            foreach ($allowed_modules ?? [] as $module) {
+                                $id = (string)($module->module_id ?? '');
+                                if ($id !== '') {
+                                    $modules_by_id[$id] = $module;
+                                }
+                            }
+
+                            $make_nav_module = static function (string $id) use ($modules_by_id) {
+                                return $modules_by_id[$id] ?? (object) ['module_id' => $id];
+                            };
+
+                            if ($menu_group_now === 'office') {
+                                $sidebar_modules = [$make_nav_module('home')];
+                                foreach ($office_keep as $office_id) {
+                                    $sidebar_modules[] = $make_nav_module($office_id);
+                                }
+                            } else {
+                                $sidebar_modules = array_values(array_filter($allowed_modules ?? [], static function ($module) use ($hidden_sidebar_modules, $office_keep) {
+                                    $id = (string)($module->module_id ?? '');
+                                    if (in_array($id, $office_keep, true) || $id === 'home') {
+                                        return true;
+                                    }
+
+                                    return !in_array($id, $hidden_sidebar_modules, true);
+                                }));
+                            }
                         ?>
                         <?php foreach ($sidebar_modules as $module): ?>
                             <a class="neo-global-menu-item <?= $module->module_id == $request->getUri()->getSegment(1) ? 'is-active' : '' ?>" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id") ?>">
@@ -587,6 +616,15 @@ $is_sa_pos_shell = is_platform_super_admin();
                                 <span><?= lang('Module.' . $module->module_id) ?></span>
                             </a>
                         <?php endforeach; ?>
+                        <?php
+                            $sidebar_ids = array_map(static fn($module) => (string)$module->module_id, $sidebar_modules);
+                            if (!empty($show_office_nav) && $menu_group_now !== 'office' && !in_array('office', $sidebar_ids, true)):
+                        ?>
+                            <a class="neo-global-menu-item <?= $request->getUri()->getSegment(1) === 'office' ? 'is-active' : '' ?>" href="<?= base_url('office') ?>" title="<?= esc(lang('Module.office')) ?>">
+                                <img class="neo-nav__icon" src="<?= base_url(pos_module_nav_icon('office')) ?>" alt="">
+                                <span><?= esc(lang('Module.office')) ?></span>
+                            </a>
+                        <?php endif; ?>
                         <?php endif; ?>
                     </nav>
                     <div class="neo-sidebar-footer">

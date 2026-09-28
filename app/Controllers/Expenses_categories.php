@@ -22,6 +22,7 @@ class Expenses_categories extends Secure_Controller    // TODO: Is this class ev
     public function getIndex(): void
     {
         $data['table_headers'] = get_expense_category_manage_table_headers();
+        $data['controller_name'] = 'expenses_categories';
 
         echo view('expenses_categories/manage', $data);
     }
@@ -31,21 +32,29 @@ class Expenses_categories extends Secure_Controller    // TODO: Is this class ev
      **/
     public function getSearch(): void
     {
-        $search = $this->request->getGet('search');
-        $limit  = $this->request->getGet('limit', FILTER_SANITIZE_NUMBER_INT);
-        $offset = $this->request->getGet('offset', FILTER_SANITIZE_NUMBER_INT);
-        $sort   = $this->sanitizeSortColumn(expense_category_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'expense_category_id');
-        $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        try {
+            $search = (string)($this->request->getGet('search') ?? '');
+            $limit  = (int)$this->request->getGet('limit');
+            $offset = (int)$this->request->getGet('offset');
+            $sort   = $this->sanitizeSortColumn(expense_category_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'expense_category_id');
+            $order  = strtolower((string)($this->request->getGet('order') ?? 'asc'));
+            if (!in_array($order, ['asc', 'desc'], true)) {
+                $order = 'asc';
+            }
 
-        $expense_categories = $this->expense_category->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
-        $total_rows = $this->expense_category->get_found_rows($search, list_deleted_flag());
+            $expense_categories = $this->expense_category->search($search, $limit, $offset, $sort, $order, false, list_deleted_flag());
+            $total_rows = $this->expense_category->get_found_rows($search, list_deleted_flag());
 
-        $data_rows = [];
-        foreach ($expense_categories->getResult() as $expense_category) {
-            $data_rows[] = get_expense_category_data_row($expense_category);
+            $data_rows = [];
+            foreach ($expense_categories->getResult() as $expense_category) {
+                $data_rows[] = get_expense_category_data_row($expense_category);
+            }
+
+            echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Expense category search failed: ' . $e->getMessage());
+            echo json_encode(['total' => 0, 'rows' => []]);
         }
-
-        echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
     }
 
     /**

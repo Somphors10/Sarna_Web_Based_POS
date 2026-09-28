@@ -75,7 +75,50 @@ class Employee extends Person
         $builder->where('employees.person_id <>', $employee_id);
         $this->scopeTenant($builder, 'employees.tenant_id');
 
-        return ($builder->get()->getNumRows() == 1);    // TODO: ===
+        return ($builder->get()->getNumRows() > 0);
+    }
+
+    /**
+     * Username is unique inside one shop, not across all shops.
+     */
+    private function ensureUsernameUniquePerTenant(): void
+    {
+        static $done = false;
+        if ($done || !$this->db->tableExists('employees') || !$this->db->fieldExists('tenant_id', 'employees')) {
+            return;
+        }
+        $done = true;
+
+        $table = $this->db->prefixTable('employees');
+        try {
+            $indexes = $this->db->query("SHOW INDEX FROM `{$table}`")->getResultArray();
+        } catch (Throwable $e) {
+            return;
+        }
+
+        $has_old = false;
+        $has_new = false;
+        foreach ($indexes as $index) {
+            $name = (string)($index['Key_name'] ?? '');
+            $column = (string)($index['Column_name'] ?? '');
+            if ($name === 'username_tenant') {
+                $has_new = true;
+            }
+            if ($name === 'username' && $column === 'username') {
+                $has_old = true;
+            }
+        }
+
+        if (!$has_old || $has_new) {
+            return;
+        }
+
+        try {
+            $this->db->query("ALTER TABLE `{$table}` DROP INDEX `username`");
+            $this->db->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `username_tenant` (`tenant_id`, `username`)");
+        } catch (Throwable $e) {
+            // Keep going if old rows already collide.
+        }
     }
 
     /**
@@ -162,6 +205,7 @@ class Employee extends Person
         $tenant_id = $this->getTenantId();
         $person_data['tenant_id'] = $tenant_id;
         $employee_data['tenant_id'] = $tenant_id;
+        $this->ensureUsernameUniquePerTenant();
 
         // Run these queries as a transaction, we want to make sure we do all or nothing
         $this->db->transStart();
@@ -206,7 +250,8 @@ class Employee extends Person
         if ($success) {
             $username = (string)($employee_data['username'] ?? '');
             $display = format_person_name($person_data['first_name'] ?? '', $person_data['last_name'] ?? '');
-            (new \App\Libraries\PlatformArchitecture())->upsertTenantLogin(
+            $arch = new \App\Libraries\PlatformArchitecture();
+            $arch->upsertTenantLogin(
                 $tenant_id,
                 (int)$employee_id,
                 $username,
@@ -214,6 +259,7 @@ class Employee extends Person
                 false,
                 true
             );
+            $arch->syncTenantEmployeeLogins($tenant_id, $this->db);
         }
 
         return $success;
@@ -414,9 +460,13 @@ class Employee extends Person
      */
     public function login(string $username, string $password): bool
     {
-        $isolated = $this->loginViaTenantDirectory($username, $password);
-        if ($isolated !== null) {
-            return $isolated;
+        $username = trim($username);
+        if ($this->loginViaTenantDirectory($username, $password) === true) {
+            return true;
+        }
+
+        if ($this->loginViaTenantScan($username, $password)) {
+            return true;
         }
 
         $builder = $this->db->table('employees');
@@ -443,44 +493,115 @@ class Employee extends Person
             return null;
         }
 
-        $login = $platform->table('tenant_logins')
+        $logins = $platform->table('tenant_logins')
             ->where('username', $username)
             ->where('is_active', 1)
-            ->get(1)
-            ->getRow();
+            ->get()
+            ->getResult();
 
-        if ($login === null) {
+        if ($logins === []) {
             return null;
         }
 
-        $tenant_id = (int)$login->tenant_id;
-        if (!$this->is_tenant_active($tenant_id)) {
-            return false;
+        foreach ($logins as $login) {
+            $tenant_id = (int)$login->tenant_id;
+            if (!$this->is_tenant_active($tenant_id)) {
+                continue;
+            }
+
+            $context = new TenantContext();
+            $context->applyRuntimeConnection($tenant_id);
+
+            try {
+                $tenant_db = db_connect();
+                $row = $tenant_db->table('employees')
+                    ->where('username', $username)
+                    ->where('deleted', 0)
+                    ->get(1)
+                    ->getRow();
+            } catch (Throwable $e) {
+                $context->restoreSharedConnection();
+                continue;
+            }
+
+            if ($row === null) {
+                $context->restoreSharedConnection();
+                continue;
+            }
+
+            $row->tenant_id = $tenant_id;
+            $ok = $this->completeLogin($row, $password, $tenant_db);
+            if ($ok) {
+                return true;
+            }
+
+            $context->restoreSharedConnection();
         }
 
-        $context = new TenantContext();
-        $context->applyRuntimeConnection($tenant_id);
+        return false;
+    }
 
+    /**
+     * New staff may be in a shop DB but missing from tenant_logins. Find them there.
+     */
+    private function loginViaTenantScan(string $username, string $password): bool
+    {
         try {
-            $tenant_db = \Config\Database::connect('default', false);
-            $row = $tenant_db->table('employees')
-                ->where('username', $username)
-                ->where('deleted', 0)
-                ->get(1)
-                ->getRow();
+            $platform = db_connect('platform');
         } catch (Throwable $e) {
-            $context->restoreSharedConnection();
             return false;
         }
 
-        if ($row === null) {
-            $context->restoreSharedConnection();
+        if (!$platform->tableExists('tenants')) {
             return false;
         }
 
-        $row->tenant_id = $tenant_id;
+        $tenants = $platform->table('tenants')
+            ->select('tenant_id')
+            ->where('status', 'active')
+            ->get()
+            ->getResult();
 
-        return $this->completeLogin($row, $password, $tenant_db);
+        foreach ($tenants as $tenant) {
+            $tenant_id = (int)$tenant->tenant_id;
+            $context = new TenantContext();
+            $context->applyRuntimeConnection($tenant_id);
+
+            try {
+                $tenant_db = db_connect();
+                $row = $tenant_db->table('employees')
+                    ->where('username', $username)
+                    ->where('deleted', 0)
+                    ->get(1)
+                    ->getRow();
+            } catch (Throwable $e) {
+                $context->restoreSharedConnection();
+                continue;
+            }
+
+            if ($row === null) {
+                $context->restoreSharedConnection();
+                continue;
+            }
+
+            $row->tenant_id = $tenant_id;
+            if ($this->completeLogin($row, $password, $tenant_db)) {
+                (new \App\Libraries\PlatformArchitecture())->upsertTenantLogin(
+                    $tenant_id,
+                    (int)$row->person_id,
+                    $username,
+                    trim(($row->first_name ?? '') . ' ' . ($row->last_name ?? '')),
+                    false,
+                    true
+                );
+
+                return true;
+            }
+
+            $context->restoreSharedConnection();
+        }
+
+        return false;
     }
 
     /**
@@ -495,13 +616,17 @@ class Employee extends Person
 
         $builder_db = $employee_db ?? $this->db;
         $ok = false;
-        if ((string)$row->hash_version === '1' && $row->password === md5($password)) {
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-            $builder_db->table('employees')
-                ->where('person_id', $row->person_id)
-                ->update(['hash_version' => 2, 'password' => $password_hash]);
-            $ok = true;
-        } elseif ((string)$row->hash_version === '2' && password_verify($password, $row->password)) {
+        $hash = (string)($row->password ?? '');
+        $version = (string)($row->hash_version ?? '');
+        if ($version === '1' || (strlen($hash) === 32 && ctype_xdigit($hash))) {
+            if ($hash === md5($password)) {
+                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                $builder_db->table('employees')
+                    ->where('person_id', $row->person_id)
+                    ->update(['hash_version' => 2, 'password' => $password_hash]);
+                $ok = true;
+            }
+        } elseif ($hash !== '' && password_verify($password, $hash)) {
             $ok = true;
         }
 
@@ -520,6 +645,10 @@ class Employee extends Person
         }
 
         (new TenantContext())->applyRuntimeConnection($resolved_tenant_id);
+        if (function_exists('rbac_sync_person_from_role')) {
+            helper('rbac');
+            rbac_sync_person_from_role((int)$row->person_id);
+        }
         model(\App\Models\Appconfig::class)->ensureCompleteConfig($resolved_tenant_id);
         config(\Config\OSPOS::class)->update_settings();
         helper('locale');
@@ -563,8 +692,35 @@ class Employee extends Person
     /**
      * Determines whether the employee has access to at least one submodule
      */
-    public function has_module_grant(string $permission_id, int $person_id): bool
+    public function has_module_grant(string $permission_id, $person_id): bool
     {
+        $person_id = (int)$person_id;
+        if ($permission_id === '' || $person_id <= 0) {
+            return $permission_id === '';
+        }
+
+        // Home is the page after login. Every signed-in user may open it.
+        if ($permission_id === 'home') {
+            return true;
+        }
+
+        if ($permission_id === 'office') {
+            if (function_exists('rbac_user_can_open_office')) {
+                return rbac_user_can_open_office($person_id);
+            }
+            foreach (['employees', 'roles', 'config', 'expenses_categories'] as $code) {
+                if ($this->has_grant($code, $person_id)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if ($this->has_grant($permission_id, $person_id)) {
+            return true;
+        }
+
         $builder = $this->db->table('grants');
         $builder->like('permission_id', $permission_id, 'after');
         $builder->where('person_id', $person_id);
@@ -604,7 +760,11 @@ class Employee extends Person
         $builder = $this->db->table('grants');
         $query = $builder->getWhere(['person_id' => $person_id, 'permission_id' => $permission_id], 1);
 
-        return ($query->getNumRows() == 1);    // TODO: ===
+        if ($query->getNumRows() == 1) {
+            return true;
+        }
+
+        return function_exists('rbac_user_has_code') && rbac_user_has_code((int)$person_id, (string)$permission_id);
     }
 
     /**

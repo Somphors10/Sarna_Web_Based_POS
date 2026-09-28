@@ -1,0 +1,33 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#ffffff","primaryTextColor":"#000000","primaryBorderColor":"#000000","lineColor":"#000000","tertiaryColor":"#ffffff","fontFamily":"Arial"}}}%%
+---
+title: ERD WBPOS
+---
+erDiagram
+    WBPOS_TENANTS ||--o{ WBPOS_SUBSCRIPTIONS : has
+    WBPOS_PLANS ||--o{ WBPOS_SUBSCRIPTIONS : has
+    WBPOS_PLANS ||--o{ WBPOS_SUBSCRIPTION_REQUESTS : chosen_by
+    WBPOS_PLATFORM_ADMINS ||--o{ WBPOS_SUBSCRIPTION_REQUESTS : reviews
+
+    WBPOS_PEOPLE ||--|| WBPOS_CUSTOMERS : customer
+    WBPOS_PEOPLE ||--|| WBPOS_EMPLOYEES : employee
+    WBPOS_PEOPLE ||--|| WBPOS_SUPPLIERS : supplier
+
+    WBPOS_RBAC_ROLES ||--o{ WBPOS_EMPLOYEES : assigned
+    WBPOS_RBAC_ROLES ||--o{ WBPOS_RBAC_PERMISSIONS : has
+
+    WBPOS_CUSTOMERS ||--o{ WBPOS_SALES : buys
+    WBPOS_EMPLOYEES ||--o{ WBPOS_SALES : processes
+    WBPOS_SALES ||--o{ WBPOS_SALES_ITEMS : contains
+    WBPOS_SALES ||--o{ WBPOS_SALES_PAYMENTS : paid_by
+    WBPOS_ITEMS ||--o{ WBPOS_SALES_ITEMS : sold
+
+    WBPOS_SUPPLIERS ||--o{ WBPOS_ITEMS : supplies
+    WBPOS_ITEMS ||--o{ WBPOS_ITEM_QUANTITIES : stocked
+    WBPOS_STOCK_LOCATIONS ||--o{ WBPOS_ITEM_QUANTITIES : stores
+
+    WBPOS_SUPPLIERS ||--o{ WBPOS_RECEIVINGS : provides
+    WBPOS_RECEIVINGS ||--o{ WBPOS_RECEIVINGS_ITEMS : contains
+    WBPOS_ITEMS ||--o{ WBPOS_RECEIVINGS_ITEMS : received
+
+    WBPOS_EXPENSE_CATEGORIES ||--o{ WBPOS_EXPENSES : classifies
+    WBPOS_EMPLOYEES ||--o{ WBPOS_EXPENSES : records

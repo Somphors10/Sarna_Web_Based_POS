@@ -2,6 +2,10 @@
 /**
  * @var array $allowed_modules
  */
+
+$office_cards = function_exists('rbac_office_display_ids')
+    ? rbac_office_display_ids()
+    : ['employees', 'roles', 'expenses_categories', 'config'];
 ?>
 
 <?= view('partial/header') ?>
@@ -17,12 +21,12 @@
         </header>
 
         <div class="neo-module-grid">
-            <?php foreach($allowed_modules as $module) { ?>
-                <a class="neo-module-card" href="<?= base_url($module->module_id) ?>" title="<?= lang("Module.$module->module_id" . '_desc') ?>">
-                    <img class="neo-module-icon" src="<?= base_url(pos_module_nav_icon((string) $module->module_id)) ?>" alt="<?= lang("Module.$module->module_id") ?>">
-                    <span class="neo-module-title"><?= lang("Module.$module->module_id") ?></span>
+            <?php foreach ($office_cards as $module_id): ?>
+                <a class="neo-module-card" href="<?= base_url($module_id) ?>" title="<?= lang("Module.$module_id" . '_desc') ?>">
+                    <img class="neo-module-icon" src="<?= base_url(pos_module_nav_icon($module_id)) ?>" alt="<?= lang("Module.$module_id") ?>">
+                    <span class="neo-module-title"><?= lang("Module.$module_id") ?></span>
                 </a>
-            <?php } ?>
+            <?php endforeach; ?>
         </div>
     </div>
 </section>

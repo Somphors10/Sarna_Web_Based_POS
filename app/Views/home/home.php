@@ -6,8 +6,10 @@
  * @var array $kpis
  * @var array $charts
  * @var string $period_label
+ * @var bool $show_dashboard
  */
 
+$show_dashboard = !empty($show_dashboard);
 $summary_labels = [
     'total'                  => lang('Common.dashboard_total'),
     'profit'                 => lang('Common.dashboard_profit'),
@@ -18,7 +20,9 @@ $summary_labels = [
 
 <?= view('partial/header') ?>
 
+<?php if ($show_dashboard): ?>
 <script src="js/chart.umd.min.js"></script>
+<?php endif; ?>
 
 <script type="text/javascript">
     dialog_support.init("a.modal-dlg");
@@ -26,6 +30,7 @@ $summary_labels = [
 
 <section class="neo-home">
     <div class="neo-main">
+        <?php if ($show_dashboard): ?>
         <header class="neo-dash-header">
             <div>
                 <h2 class="neo-dash-header__title"><?= esc(lang('Common.dashboard')) ?></h2>
@@ -186,6 +191,28 @@ $summary_labels = [
             <div class="neo-dashboard-empty">
                 No report data available. Check your report permissions or add sales data.
             </div>
+        <?php endif; ?>
+        <?php else: ?>
+        <header class="neo-main-header">
+            <h2><?= esc(lang('Module.home')) ?></h2>
+        </header>
+        <div class="neo-module-grid">
+            <?php
+            $office_ids = function_exists('rbac_office_module_ids')
+                ? rbac_office_module_ids()
+                : ['employees', 'roles', 'expenses_categories', 'config'];
+            foreach ($allowed_modules ?? [] as $module):
+                $module_id = (string)($module->module_id ?? '');
+                if ($module_id === '' || in_array($module_id, ['home', 'office'], true) || in_array($module_id, $office_ids, true)) {
+                    continue;
+                }
+            ?>
+                <a class="neo-module-card" href="<?= base_url($module_id) ?>" title="<?= lang("Module.$module_id" . '_desc') ?>">
+                    <img class="neo-module-icon" src="<?= base_url(pos_module_nav_icon($module_id)) ?>" alt="<?= lang("Module.$module_id") ?>">
+                    <span class="neo-module-title"><?= lang("Module.$module_id") ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
         <?php endif; ?>
     </div>
 </section>

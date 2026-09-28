@@ -5,7 +5,13 @@
  * @var array $all_modules
  * @var array $all_subpermissions
  * @var int $employee_id
+ * @var list<array<string, mixed>> $rbac_roles
+ * @var int $selected_role_id
+ * @var array<int, list<string>> $rbac_role_codes
  */
+$rbac_roles = $rbac_roles ?? [];
+$selected_role_id = (int)($selected_role_id ?? 0);
+$rbac_role_codes = $rbac_role_codes ?? [];
 ?>
 
 <div class="pos-form-shell">
@@ -89,10 +95,27 @@
 
         <div class="tab-pane" id="employee_permission_info">
             <fieldset>
-                <p><?= lang('Employees.permission_desc') ?></p>
+                <?php if (lang('Roles.choose_role_help') !== ''): ?>
+                    <p><?= lang('Roles.choose_role_help') ?></p>
+                <?php endif; ?>
+                <div class="form-group form-group-sm">
+                    <?= form_label(lang('Roles.choose_role'), 'role_id', ['class' => 'required control-label col-xs-3']) ?>
+                    <div class="col-xs-8">
+                        <select name="role_id" id="role_id" class="form-control input-sm" required>
+                            <option value=""><?= esc(lang('Roles.no_role')) ?></option>
+                            <?php foreach ($rbac_roles as $role): ?>
+                                <option
+                                    value="<?= (int)$role['role_id'] ?>"
+                                    <?= $selected_role_id === (int)$role['role_id'] ? 'selected' : '' ?>
+                                ><?= esc($role['role_name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="help-block" id="rbac_role_preview" style="margin-top:8px;"></p>
+                    </div>
+                </div>
                 <input type="hidden" name="permission_check" id="permission_check" value="1">
 
-                <ul id="permission_list" class="employee-permission-list">
+                <ul id="permission_list" class="employee-permission-list" style="display:none">
                     <?php foreach ($all_modules as $module) { ?>
                         <li class="employee-permission-item">
                             <label class="employee-permission-module">
@@ -169,8 +192,17 @@
         });
 
         $.validator.addMethod('hasModuleGrant', function() {
-            return $('#permission_list input.module:checked').length > 0;
-        }, "<?= lang('Employees.subpermission_required') ?>");
+            return parseInt($('#role_id').val() || '0', 10) > 0 || $('#permission_list input.module:checked').length > 0;
+        }, "<?= lang('Roles.role_required') ?>");
+
+        var roleCodes = <?= json_encode($rbac_role_codes) ?>;
+        var updateRolePreview = function() {
+            var id = $('#role_id').val();
+            var codes = roleCodes[id] || [];
+            $('#rbac_role_preview').text(codes.length ? codes.join(', ') : '');
+        };
+        $('#role_id').on('change', updateRolePreview);
+        updateRolePreview();
 
         $('#permission_list > li').each(function() {
             var $li = $(this);

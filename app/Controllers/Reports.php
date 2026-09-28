@@ -107,6 +107,17 @@ class Reports extends Secure_Controller
         $person_id = $this->session->get('person_id');
         $grants = $this->employee->get_employee_grants($this->session->get('person_id'));
         $permissions_ids = array_column($grants, 'permission_id');
+        if (function_exists('rbac_user_role')) {
+            $role = rbac_user_role((int)$person_id);
+            if ($role !== null) {
+                $codes = rbac_role_permission_codes((int)$role['role_id']);
+                $permissions_ids = array_values(array_unique(array_merge(
+                    $permissions_ids,
+                    $codes,
+                    rbac_implied_permission_ids($codes)
+                )));
+            }
+        }
 
         $data = [
             'person_id'      => $person_id,

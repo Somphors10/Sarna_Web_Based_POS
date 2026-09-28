@@ -34,6 +34,8 @@ return [
     "office_desc"                => "List office menu modules.",
     "receivings"                 => "Receiving",
     "receivings_desc"            => "Receive stock from suppliers and add it to inventory.",
+    "roles"                      => "Roles",
+    "roles_desc"                 => "Manage roles and permissions.",
     "reports"                    => "Reports",
     "reports_desc"               => "View and generate Reports.",
     "sales"                      => "Sales",

@@ -29,6 +29,7 @@ class Attributes extends Secure_Controller
     public function getIndex(): void
     {
         $data['table_headers'] = get_attribute_definition_manage_table_headers();
+        $data['controller_name'] = 'attributes';
 
         echo view('attributes/manage', $data);
     }
@@ -38,22 +39,30 @@ class Attributes extends Secure_Controller
      */
     public function getSearch(): void
     {
-        $search = $this->request->getGet('search');
-        $limit  = $this->request->getGet('limit', FILTER_SANITIZE_NUMBER_INT);
-        $offset = $this->request->getGet('offset', FILTER_SANITIZE_NUMBER_INT);
-        $sort   = $this->sanitizeSortColumn(attribute_definition_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'definition_id');
-        $order  = $this->request->getGet('order', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        try {
+            $search = (string)($this->request->getGet('search') ?? '');
+            $limit  = (int)$this->request->getGet('limit');
+            $offset = (int)$this->request->getGet('offset');
+            $sort   = $this->sanitizeSortColumn(attribute_definition_headers(), $this->request->getGet('sort', FILTER_SANITIZE_FULL_SPECIAL_CHARS), 'definition_id');
+            $order  = strtolower((string)($this->request->getGet('order') ?? 'asc'));
+            if (!in_array($order, ['asc', 'desc'], true)) {
+                $order = 'asc';
+            }
 
-        $attributes = $this->attribute->search($search, $limit, $offset, $sort, $order);
-        $total_rows = $this->attribute->get_found_rows($search);
+            $attributes = $this->attribute->search($search, $limit, $offset, $sort, $order);
+            $total_rows = $this->attribute->get_found_rows($search);
 
-        $data_rows = [];
-        foreach ($attributes->getResult() as $attribute_row) {
-            $attribute_row->definition_flags = $this->get_attributes($attribute_row->definition_flags);
-            $data_rows[] = get_attribute_definition_data_row($attribute_row);
+            $data_rows = [];
+            foreach ($attributes->getResult() as $attribute_row) {
+                $attribute_row->definition_flags = $this->get_attributes($attribute_row->definition_flags);
+                $data_rows[] = get_attribute_definition_data_row($attribute_row);
+            }
+
+            echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Attribute search failed: ' . $e->getMessage());
+            echo json_encode(['total' => 0, 'rows' => []]);
         }
-
-        echo json_encode(['total' => $total_rows, 'rows' => $data_rows]);
     }
 
     /**

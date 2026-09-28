@@ -1,42 +1,75 @@
 <?php
 
-namespace app\Libraries;
+namespace App\Libraries;
 
 use CodeIgniter\Language\Language;
+use Throwable;
 
 class MY_Language extends Language
 {
-
     public function getLine(string $line, array $args = [])
     {
-        // If no file is given, just parse the line
-        if (! str_contains($line, '.')) {
+        try {
+            if (! str_contains($line, '.')) {
+                return $this->formatMessage($line, $args);
+            }
+
+            [$file, $parsedLine] = $this->parseLine($line, $this->locale);
+            $output = $this->getTranslationOutput($this->locale, $file, $parsedLine);
+
+            if ($output === null && strpos($this->locale, '-')) {
+                [$locale] = explode('-', $this->locale, 2);
+                [$file, $parsedLine] = $this->parseLine($line, $locale);
+                $output = $this->getTranslationOutput($locale, $file, $parsedLine);
+            }
+
+            if ($output === null || $output === '') {
+                [$file, $parsedLine] = $this->parseLine($line, 'en');
+                $output = $this->getTranslationOutput('en', $file, $parsedLine);
+            }
+
+            $output ??= $line;
+
+            return $this->formatMessage($output, $args);
+        } catch (Throwable $e) {
+            log_message('error', 'Language line failed [' . $line . ']: ' . $e->getMessage());
+
             return $this->formatMessage($line, $args);
         }
+    }
 
-        // Parse out the file name and the actual alias.
-        // Will load the language file and strings.
-        [$file, $parsedLine] = $this->parseLine($line, $this->locale);
+    /**
+     * CI4 requires language files to return an array. A missing `return` makes
+     * require() yield integer 1 and crashes the page with Whoops.
+     */
+    protected function requireFile(string $path): array
+    {
+        $files = service('locator')->search($path, 'php', false);
+        $strings = [];
 
-        $output = $this->getTranslationOutput($this->locale, $file, $parsedLine);
+        foreach ($files as $file) {
+            if (! is_file($file)) {
+                continue;
+            }
 
-        if ($output === NULL && strpos($this->locale, '-')) {
-            [$locale] = explode('-', $this->locale, 2);
+            try {
+                $loaded = require $file;
+            } catch (Throwable $e) {
+                log_message('error', 'Language file failed [' . $file . ']: ' . $e->getMessage());
+                continue;
+            }
 
-            [$file, $parsedLine] = $this->parseLine($line, $locale);
-
-            $output = $this->getTranslationOutput($locale, $file, $parsedLine);
+            if (is_array($loaded)) {
+                $strings[] = $loaded;
+            }
         }
 
-        // If still not found, try English
-        if ($output === NULL || $output === "") {
-            [$file, $parsedLine] = $this->parseLine($line, 'en');
+        if (isset($strings[1])) {
+            $first = array_shift($strings);
 
-            $output = $this->getTranslationOutput('en', $file, $parsedLine);
+            return array_replace_recursive($first, ...$strings);
         }
 
-        $output ??= $line;
-
-        return $this->formatMessage($output, $args);
+        return $strings[0] ?? [];
     }
 }

@@ -1,0 +1,150 @@
+<mxfile host="app.diagrams.net" agent="WBPOS" version="24.0.0" type="device">
+  <diagram id="erd" name="ERD WBPOS">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" connect="1" arrows="1" fold="0" page="1" pageScale="1" pageWidth="1680" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="ERD WBPOS" style="text;html=1;fontStyle=1;fontSize=22;fontFamily=Arial;align=center;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="660" y="12" width="360" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ten" value="WBPOS_TENANTS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="plan" value="WBPOS_PLANS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="720" y="60" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="req" value="WBPOS_SUBSCRIPTION_REQUESTS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="60" width="270" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sub" value="WBPOS_SUBSCRIPTIONS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="peop" value="WBPOS_PEOPLE" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="720" y="190" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="adm" value="WBPOS_PLATFORM_ADMINS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="190" width="270" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cust" value="WBPOS_CUSTOMERS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="emp" value="WBPOS_EMPLOYEES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="340" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="supp" value="WBPOS_SUPPLIERS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="760" y="340" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="role" value="WBPOS_RBAC_ROLES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="340" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="perm" value="WBPOS_RBAC_PERMISSIONS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="340" width="250" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sale" value="WBPOS_SALES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="490" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="item" value="WBPOS_ITEMS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="580" y="490" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="loc" value="WBPOS_STOCK_LOCATIONS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="980" y="490" width="240" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="recv" value="WBPOS_RECEIVINGS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="490" width="230" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sitm" value="WBPOS_SALES_ITEMS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="630" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="spay" value="WBPOS_SALES_PAYMENTS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="340" y="630" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="qty" value="WBPOS_ITEM_QUANTITIES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="720" y="630" width="230" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="ritm" value="WBPOS_RECEIVINGS_ITEMS" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="630" width="250" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ecat" value="WBPOS_EXPENSE_CATEGORIES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="770" width="250" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="exp" value="WBPOS_EXPENSES" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontStyle=1;fontSize=12;fontFamily=Arial;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.4;align=center;" vertex="1" parent="1">
+          <mxGeometry x="430" y="770" width="230" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="has" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ten" target="sub">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="has" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="plan" target="sub">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="400" y="78"/><mxPoint x="400" y="208"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="chosen_by" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="plan" target="req">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="reviews" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="adm" target="req">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="customer" style="endArrow=ERmandOne;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="peop" target="cust">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="155" y="208"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="employee" style="endArrow=ERmandOne;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="peop" target="emp">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="835" y="300"/><mxPoint x="515" y="300"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="supplier" style="endArrow=ERmandOne;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="peop" target="supp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="assigned" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="role" target="emp">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1120" y="300"/><mxPoint x="630" y="300"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e9" value="has" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="role" target="perm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="buys" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cust" target="sale">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="processes" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="emp" target="sale">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="400" y="430"/><mxPoint x="300" y="430"/><mxPoint x="300" y="508"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="contains" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.35;exitY=1;entryX=0.35;entryY=0;" edge="1" parent="1" source="sale" target="sitm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="paid_by" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="sale" target="spay">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="455" y="580"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e14" value="sold" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="item" target="sitm">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="580" y="580"/><mxPoint x="300" y="580"/><mxPoint x="300" y="648"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e15" value="supplies" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="supp" target="item">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="875" y="430"/><mxPoint x="695" y="430"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e16" value="stocked" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="item" target="qty">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e17" value="stores" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="loc" target="qty">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1100" y="648"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e18" value="provides" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="supp" target="recv">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1475" y="358"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e19" value="contains" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.7;entryY=0;" edge="1" parent="1" source="recv" target="ritm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e20" value="received" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="item" target="ritm">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1180" y="580"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e21" value="classifies" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="ecat" target="exp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e22" value="records" style="endArrow=ERzeroToMany;startArrow=ERmandOne;html=1;rounded=0;orthogonalLoop=1;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;fontSize=11;fontFamily=Arial;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="emp" target="exp">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="515" y="750"/><mxPoint x="545" y="750"/></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

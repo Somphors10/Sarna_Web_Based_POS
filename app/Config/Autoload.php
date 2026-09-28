@@ -204,6 +204,7 @@ class Autoload extends AutoloadConfig
         'form',
         'cookie',
         'platform_features',
+        'rbac',
         'tabular',
         'locale',
         'security',

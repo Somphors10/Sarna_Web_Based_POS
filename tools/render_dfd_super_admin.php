@@ -1,8 +1,7 @@
 <?php
 /**
- * WBPOS DFD Level 2 — 1.0 Registration (Gane–Sarson)
- * Standard short data store (not a tall box).
- * Run: php tools/render_dfd_registration.php
+ * WBPOS DFD Level 2 — 2.0 Super Admin (correct: 2.3 ↔ D1)
+ * Run: php tools/render_dfd_super_admin.php
  */
 
 $font = 'C:\\Windows\\Fonts\\arial.ttf';
@@ -11,15 +10,14 @@ if (!is_file($fontB)) {
     $fontB = $font;
 }
 
-$W = 1320;
-$H = 720;
+$W = 1280;
+$H = 680;
 $im = imagecreatetruecolor($W, $H);
 imagealphablending($im, true);
 imageantialias($im, true);
-
 $white = imagecolorallocate($im, 255, 255, 255);
 $black = imagecolorallocate($im, 20, 20, 20);
-$ink = imagecolorallocate($im, 45, 45, 45);
+$ink = imagecolorallocate($im, 40, 40, 40);
 imagefilledrectangle($im, 0, 0, $W, $H, $white);
 
 function ttf($im, $size, $x, $y, $color, $font, $text, $center = false): void
@@ -77,8 +75,7 @@ function process_box($im, $x, $y, $w, $h, $num, $title, $black, $white, $font, $
     imagearc($im, $x + $w - $r, $y + $r, $r * 2, $r * 2, 270, 360, $black);
     imagearc($im, $x + $r, $y + $h - $r, $r * 2, $r * 2, 90, 180, $black);
     imagearc($im, $x + $w - $r, $y + $h - $r, $r * 2, $r * 2, 0, 90, $black);
-    $by = $y + 28;
-    imageline($im, $x, $by, $x + $w, $by, $black);
+    imageline($im, $x, $y + 28, $x + $w, $y + 28, $black);
     ttf($im, 13, $x + $w / 2, $y + 20, $black, $fontB, $num, true);
     ttf($im, 13, $x + $w / 2, $y + 52, $black, $font, $title, true);
 }
@@ -101,84 +98,74 @@ function entity_box($im, $x, $y, $w, $h, $label, $black, $fontB): void
     ttf($im, 12, $x + $w / 2, $y + $h / 2 + 5, $black, $fontB, $label, true);
 }
 
-ttf($im, 18, $W / 2, 36, $black, $fontB, 'Data Flow Diagram Level 2: Process 1.0 Registration', true);
+ttf($im, 18, $W / 2, 34, $black, $fontB, 'Data Flow Diagram Level 2: Process 2.0 Super Admin', true);
 
-$ew = 168;
+$ex = 50;
+$ew = 160;
 $eh = 56;
-$pw = 250;
+$px = 380;
+$pw = 270;
 $ph = 70;
-$px = 360;
-$ex = 40;
+$p1y = 70;
+$p2y = 270;
+$p3y = 500;
 
-$p1 = ['x' => $px, 'y' => 70];
-$p2 = ['x' => $px, 'y' => 210];
-$p3 = ['x' => $px, 'y' => 370];
-$p4 = ['x' => $px, 'y' => 530];
+entity_box($im, $ex, 270, $ew, $eh, 'Super Admin', $black, $fontB);
+process_box($im, $px, $p1y, $pw, $ph, '2.1', 'View Applications', $black, $white, $font, $fontB);
+process_box($im, $px, $p2y, $pw, $ph, '2.2', 'Process Approval / Rejection', $black, $white, $font, $fontB);
+process_box($im, $px, $p3y, $pw, $ph, '2.3', 'Manage Tenant Status', $black, $white, $font, $fontB);
 
-entity_box($im, $ex, 77, $ew, $eh, 'New Shop Registrant', $black, $fontB);
-entity_box($im, $ex, 377, $ew, $eh, 'Super Admin', $black, $fontB);
-entity_box($im, $ex, 537, $ew, $eh, 'New Shop Registrant', $black, $fontB);
-
-process_box($im, $p1['x'], $p1['y'], $pw, $ph, '1.1', 'Submit Registration', $black, $white, $font, $fontB);
-process_box($im, $p2['x'], $p2['y'], $pw, $ph, '1.2', 'Verify Email', $black, $white, $font, $fontB);
-process_box($im, $p3['x'], $p3['y'], $pw, $ph, '1.3', 'Approve Request', $black, $white, $font, $fontB);
-process_box($im, $p4['x'], $p4['y'], $pw, $ph, '1.4', 'Pay Subscription (KHQR)', $black, $white, $font, $fontB);
-
-$sx = 980;
-$sy = 318;
-$sw = 280;
+$d1x = 960;
+$d1y = 78;
+$d2x = 960;
+$d2y = 278;
+$sw = 270;
 $sh = 54;
-store_box($im, $sx, $sy, $sw, $sh, 'D1', 'Platform Database', $black, $font, $fontB);
+store_box($im, $d1x, $d1y, $sw, $sh, 'D1', 'Platform Database', $black, $font, $fontB);
+store_box($im, $d2x, $d2y, $sw, $sh, 'D2', 'Tenant Shop Database', $black, $font, $fontB);
 
 $er = $ex + $ew;
 $pl = $px;
 $pr = $px + $pw;
+$d1l = $d1x;
+$d2l = $d2x;
+$d1mid = $d1y + (int)($sh / 2);
+$d2mid = $d2y + (int)($sh / 2);
 $rail = 780;
-$dl = $sx;
-$dmid = $sy + (int)($sh / 2);
+$status_rail = 880;
 
-// Left: 1.1
-polyarrow($im, [[$er, 92], [$pl, 92]], $black);
-ttf($im, 11, ($er + $pl) / 2, 84, $ink, $font, 'Registration data', true);
-polyarrow($im, [[$pl, 122], [$er, 122]], $black);
-ttf($im, 11, ($er + $pl) / 2, 142, $ink, $font, 'Verify email link', true);
+// 2.1
+polyarrow($im, [[$pl, $p1y + 35], [250, $p1y + 35], [250, 282], [$er, 282]], $black);
+ttf($im, 11, 200, $p1y + 26, $ink, $font, 'Request list', true);
 
-// Left: 1.2 from same registrant
-polyarrow($im, [[80, 133], [80, 245], [$pl, 245]], $black);
-ttf($im, 11, 200, 236, $ink, $font, 'Click verify link', true);
+polyarrow($im, [[$d1l, $d1mid], [$pr, $d1mid]], $black);
+ttf($im, 11, 820, $d1y - 8, $ink, $font, 'Verified request', true);
 
-// Left: 1.3
-polyarrow($im, [[$er, 405], [$pl, 405]], $black);
-ttf($im, 11, ($er + $pl) / 2, 396, $ink, $font, 'Approve or reject', true);
+// 2.2
+polyarrow($im, [[$er, 298], [$pl, 298]], $black);
+ttf($im, 11, ($er + $pl) / 2, 290, $ink, $font, 'Approve or reject', true);
 
-// KHQR link 1.3 -> bottom registrant
-polyarrow($im, [[$pl, 425], [250, 425], [250, 556], [$er, 556]], $black);
-ttf($im, 11, 168, 488, $ink, $font, 'KHQR / pay link', false);
+polyarrow($im, [[$pr, $p2y + 22], [$rail, $p2y + 22], [$rail, $d1mid + 14], [$d1l, $d1mid + 14]], $black);
+ttf($im, 11, 700, $p2y + 14, $ink, $font, 'Tenant + token / rejected', false);
 
-// Left: 1.4
-polyarrow($im, [[$er, 574], [$pl, 574]], $black);
-ttf($im, 11, ($er + $pl) / 2, 566, $ink, $font, 'Payment reference', true);
+polyarrow($im, [[$pr, $d2mid], [$d2l, $d2mid]], $black);
+ttf($im, 11, 820, $d2y - 8, $ink, $font, 'Shop owner & grants', true);
 
-// Right rail into standard D1
-polyarrow($im, [[$pr, 92], [$rail, 92], [$rail, $dmid - 16], [$dl, $dmid - 16]], $black);
-ttf($im, 11, 700, 84, $ink, $font, 'Pending request', false);
+// 2.3 left
+polyarrow($im, [[125, 326], [125, $p3y + 35], [$pl, $p3y + 35]], $black);
+ttf($im, 11, 175, 420, $ink, $font, 'Active / suspend / cancel', false);
 
-polyarrow($im, [[$pr, 245], [$rail, 245], [$rail, $dmid - 6], [$dl, $dmid - 6]], $black);
-ttf($im, 11, 700, 236, $ink, $font, 'Email verified', false);
+polyarrow($im, [[$pl, $p3y + 52], [250, $p3y + 52], [250, 340], [125, 340]], $black);
+ttf($im, 11, 175, $p3y + 64, $ink, $font, 'Live status view', false);
 
-polyarrow($im, [[$dl, $dmid + 4], [$rail, $dmid + 4], [$rail, 392], [$pr, 392]], $black);
-ttf($im, 11, 700, 382, $ink, $font, 'Verified request', false);
+// 2.3 <-> D1 (NOT D2)
+polyarrow($im, [[$pr, $p3y + 28], [$status_rail, $p3y + 28], [$status_rail, $d1y + $sh], [$d1x + 40, $d1y + $sh]], $black);
+ttf($im, 11, 720, $p3y + 18, $ink, $font, 'Tenant status', false);
 
-polyarrow($im, [[$pr, 418], [$rail, 418], [$rail, $dmid + 14], [$dl, $dmid + 14]], $black);
-ttf($im, 11, 688, 436, $ink, $font, 'Tenant + payment token', false);
+polyarrow($im, [[$d1x + 20, $d1y + $sh], [820, $d1y + $sh], [820, $p3y + 48], [$pr, $p3y + 48]], $black);
+ttf($im, 11, 720, $p3y + 70, $ink, $font, 'Tenant status', false);
 
-polyarrow($im, [[$dl, $dmid + 22], [820, $dmid + 22], [820, 548], [$pr, 548]], $black);
-ttf($im, 11, 700, 538, $ink, $font, 'Approved request', false);
-
-polyarrow($im, [[$pr, 574], [900, 574], [900, $dmid + 32], [$dl, $dmid + 32]], $black);
-ttf($im, 11, 700, 592, $ink, $font, 'KHQR payment data', false);
-
-$png = __DIR__ . '/wbpos-dfd-1.0-registration-clean.png';
+$png = __DIR__ . '/wbpos-dfd-2.0-super-admin-clean.png';
 imagepng($im, $png, 9);
 imagedestroy($im);
 echo "Wrote $png\n";

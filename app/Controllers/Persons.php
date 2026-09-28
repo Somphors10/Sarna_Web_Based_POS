@@ -13,9 +13,9 @@ abstract class Persons extends Secure_Controller
     /**
      * @param string|null $module_id
      */
-    public function __construct(?string $module_id = null)
+    public function __construct(?string $module_id = null, ?string $menu_group = null)
     {
-        parent::__construct($module_id);
+        parent::__construct((string)$module_id, null, $menu_group);
 
         $this->person = model(Person::class);
     }
@@ -26,6 +26,7 @@ abstract class Persons extends Secure_Controller
     public function getIndex(): void
     {
         $data['table_headers'] = get_people_manage_table_headers();
+        $data['controller_name'] = function_exists('get_controller') ? get_controller() : 'employees';
 
         echo view('people/manage', $data);
     }
