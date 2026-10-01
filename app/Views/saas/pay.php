@@ -15,6 +15,8 @@ $field_errors = ($has_errors ?? false) ? $validation->getErrors() : [];
 $invalid = $request === null || (string)($request->status ?? '') !== 'approved';
 $is_renewal = !empty($is_renewal);
 $already_paid = !empty($already_paid);
+$from_pos = !empty($from_pos);
+$pos_home = site_url('home');
 $shop_name = esc((string)($request->company_name ?? 'Your shop'));
 
 if ($invalid) {
@@ -49,11 +51,15 @@ if ($invalid) {
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <div class="lp-nav__actions">
-            <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
-            <a class="lp-btn lp-btn--outline" href="<?= site_url() ?>">
-                <span class="lp-nav__label-full">Back to home</span>
-                <span class="lp-nav__label-short">Home</span>
-            </a>
+            <?php if ($from_pos): ?>
+                <a class="lp-btn lp-btn--outline" href="<?= $pos_home ?>">Back to POS</a>
+            <?php else: ?>
+                <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
+                <a class="lp-btn lp-btn--outline" href="<?= site_url() ?>">
+                    <span class="lp-nav__label-full">Back to home</span>
+                    <span class="lp-nav__label-short">Home</span>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 </header>
@@ -66,8 +72,12 @@ if ($invalid) {
                 <h1 class="lp-pay-status__title">This link is not valid</h1>
                 <p class="lp-pay-status__text">Ask Super Admin to send a new KHQR payment link, or find your shop again with company code and email.</p>
                 <div class="lp-pay-status__actions">
-                    <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= site_url('saas/checkout') ?>">Find my shop</a>
-                    <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Back to home</a>
+                    <?php if ($from_pos): ?>
+                        <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= $pos_home ?>">Back to POS</a>
+                    <?php else: ?>
+                        <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= site_url('saas/checkout') ?>">Find my shop</a>
+                        <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Back to home</a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -80,17 +90,27 @@ if ($invalid) {
                 <h1 class="lp-pay-status__title">You’re all set</h1>
                 <p class="lp-pay-status__shop"><?= $shop_name ?></p>
                 <p class="lp-pay-status__text">
-                    Payment is already on file for this shop. No need to scan KHQR again right now.
-                    Sign in with the username and password you registered.
+                    <?php if ($from_pos): ?>
+                        Payment is already on file for this shop. You can go back and keep using POS.
+                    <?php else: ?>
+                        Payment is already on file for this shop. No need to scan KHQR again right now.
+                        Sign in with the username and password you registered.
+                    <?php endif; ?>
                 </p>
                 <div class="lp-pay-status__actions">
-                    <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= site_url('login') ?>">Go to POS login</a>
-                    <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Back to home</a>
+                    <?php if ($from_pos): ?>
+                        <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= $pos_home ?>">Back to POS</a>
+                    <?php else: ?>
+                        <a class="lp-btn lp-btn--primary lp-btn--lg" href="<?= site_url('login') ?>">Go to POS login</a>
+                        <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Back to home</a>
+                    <?php endif; ?>
                 </div>
+                <?php if (!$from_pos): ?>
                 <p class="lp-pay-status__hint">
                     When the yellow renew banner appears (last 7 days), come back here via
                     <a href="<?= site_url('saas/checkout') ?>">Renew / pay</a>.
                 </p>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -118,7 +138,7 @@ if ($invalid) {
 
                 <div class="lp-reg__qr lp-pay__qr">
                     <div class="lp-reg__qr-head">
-                        <span class="lp-reg__qr-badge">Step 1 · Scan to pay</span>
+                        <span class="lp-reg__qr-badge">Step 2 · Scan to pay</span>
                         <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                     </div>
                     <?php if ($qr_image_exists): ?>
@@ -134,7 +154,7 @@ if ($invalid) {
 
             <div class="lp-checkout__panel">
                 <div class="lp-checkout__panel-head">
-                    <h2>Step 2 · Enter receipt</h2>
+                    <h2>Step 3 · Enter receipt</h2>
                     <p>After paying in ABA, paste the receipt / transaction number below.</p>
                 </div>
 

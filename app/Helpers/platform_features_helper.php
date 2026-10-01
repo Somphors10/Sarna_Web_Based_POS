@@ -775,7 +775,18 @@ function saas_logged_in_shop_checkout(): array
 }
 
 /**
+ * True when a shop employee is already signed in (renew from POS).
+ */
+function saas_pos_session_active(): bool
+{
+    return (int)(session()->get('person_id') ?? 0) > 0
+        && (int)(session()->get('tenant_id') ?? 0) > 0
+        && (int)(session()->get('platform_admin_id') ?? 0) <= 0;
+}
+
+/**
  * Renew link for a logged-in shop: checkout with company code and email already filled.
+ * Always starts at Step 1 (find shop / confirm details), then KHQR, then receipt.
  */
 function saas_current_shop_pay_url(): string
 {
