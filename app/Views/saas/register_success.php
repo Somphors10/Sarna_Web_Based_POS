@@ -16,11 +16,12 @@ $mailhog = $delivery_mode === 'mailhog' && \App\Libraries\PlatformMail::isLocalD
     <base href="<?= base_url() ?>">
     <title><?= $company ?> | Check your email</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?= view('partial/favicon') ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=45">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=46">
 </head>
 <body class="saas-modern saas-landing-body saas-success-page">
 

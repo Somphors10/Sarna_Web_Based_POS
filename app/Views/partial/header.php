@@ -24,10 +24,7 @@ $is_sa_pos_shell = is_platform_super_admin();
     <title><?= $is_sa_pos_shell
         ? 'WBPOS | Super Admin'
         : esc(lang('Common.software_short')) . ' | ' . esc($config['company']) ?></title>
-    <link rel="icon" type="image/svg+xml" href="images/favicon.svg?v=5">
-    <link rel="icon" type="image/png" href="images/favicon.png?v=5">
-    <link rel="icon" href="favicon.ico?v=5">
-    <link rel="shortcut icon" href="images/favicon.png?v=5">
+    <?= view('partial/favicon') ?>
     <link rel="stylesheet" href="<?= 'resources/bootswatch/' . (empty($config['theme']) ? 'flatly' : esc($config['theme'])) . '/bootstrap.min.css' ?>">
 
     <?php $assets_injected = false; ?>
@@ -54,13 +51,13 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=120">
+        <link rel="stylesheet" href="css/dashboard.css?v=121">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
-        <link rel="stylesheet" href="css/theme/layout-sidebar.css">
+        <link rel="stylesheet" href="css/theme/layout-sidebar.css?v=5">
         <link rel="stylesheet" href="css/theme/responsive.css">
         <link rel="stylesheet" href="css/theme/super-admin.css?v=65">
         <?php endif; ?>
@@ -110,13 +107,13 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=120">
+        <link rel="stylesheet" href="css/dashboard.css?v=121">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
         <?php if ($is_sa_pos_shell): ?>
         <link rel="stylesheet" href="css/theme/tokens.css">
-        <link rel="stylesheet" href="css/theme/layout-sidebar.css">
+        <link rel="stylesheet" href="css/theme/layout-sidebar.css?v=5">
         <link rel="stylesheet" href="css/theme/responsive.css">
         <link rel="stylesheet" href="css/theme/super-admin.css?v=65">
         <?php endif; ?>

@@ -15,14 +15,12 @@ $monthly_price = saas_monthly_price();
     <base href="<?= base_url() ?>">
     <title>WBPOS | Complete payment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=5') ?>">
-    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=5') ?>">
-    <link rel="icon" href="<?= base_url('favicon.ico?v=5') ?>">
+    <?= view('partial/favicon') ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=45">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=46">
 </head>
 <body class="saas-modern saas-landing-body lp-checkout-page">
 <header class="lp-nav lp-nav--scrolled lp-nav--simple">

@@ -19,15 +19,12 @@ $contact_address = 'Street 299, Sangkat Boeung Kak II, Khan Toul Kork, Phnom Pen
     <title>WBPOS | Cloud POS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Modern cloud POS for sales, inventory, and team management. $<?= number_format($monthly_price, 0) ?>/month.">
-    <link rel="icon" type="image/svg+xml" href="<?= base_url('images/favicon.svg?v=5') ?>">
-    <link rel="icon" type="image/png" href="<?= base_url('images/favicon.png?v=5') ?>">
-    <link rel="icon" href="<?= base_url('favicon.ico?v=5') ?>">
-    <link rel="shortcut icon" href="<?= base_url('images/favicon.png?v=5') ?>">
+    <?= view('partial/favicon') ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=45">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=46">
 </head>
 <body class="saas-modern saas-landing-body">
 
