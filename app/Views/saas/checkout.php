@@ -7,6 +7,8 @@ $owner_email = (string)($owner_email ?? '');
 $has_errors = !empty($has_errors);
 $fields_locked = !empty($fields_locked);
 $monthly_price = saas_monthly_price();
+$from_pos = !empty($from_pos);
+$pos_home = site_url('home');
 ?>
 <!doctype html>
 <html lang="<?= current_language_code() ?>">
@@ -29,8 +31,12 @@ $monthly_price = saas_monthly_price();
             <span class="lp-brand__name"><?= $company ?></span>
         </a>
         <div class="lp-nav__actions">
-            <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
-            <a class="lp-btn lp-btn--outline" href="<?= site_url('saas/register') ?>">Register</a>
+            <?php if ($from_pos): ?>
+                <a class="lp-btn lp-btn--outline" href="<?= $pos_home ?>">Back to POS</a>
+            <?php else: ?>
+                <a class="lp-btn lp-btn--ghost" href="<?= site_url('login') ?>">Log in</a>
+                <a class="lp-btn lp-btn--outline" href="<?= site_url('saas/register') ?>">Register</a>
+            <?php endif; ?>
         </div>
     </div>
 </header>
@@ -120,14 +126,16 @@ $monthly_price = saas_monthly_price();
 
                 <div class="lp-checkout__actions">
                     <button class="lp-btn lp-btn--primary lp-btn--lg lp-checkout__submit" type="submit">Show payment QR</button>
-                    <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= site_url() ?>">Back to home</a>
+                    <a class="lp-btn lp-btn--outline lp-btn--lg" href="<?= $from_pos ? $pos_home : site_url() ?>"><?= $from_pos ? 'Back to POS' : 'Back to home' ?></a>
                 </div>
             <?= form_close() ?>
 
+            <?php if (!$from_pos): ?>
             <p class="lp-checkout__footnote">
                 Already paid? Wait a moment, then
                 <a href="<?= site_url('login') ?>">log in to POS</a>.
             </p>
+            <?php endif; ?>
         </div>
     </div>
 </main>
