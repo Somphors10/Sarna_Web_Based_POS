@@ -4204,13 +4204,14 @@ select.lp-field-input {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin: 0 0 20px;
+    margin: 0;
+    max-width: 420px;
 }
 
 .lp-pay__meta > div {
     padding: 12px 14px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.78);
+    background: #fff;
     border: 1px solid #e2e8f0;
 }
 
@@ -4232,7 +4233,70 @@ select.lp-field-input {
     word-break: break-word;
 }
 
+.lp-pay__wrap {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    box-sizing: border-box;
+}
+
+.lp-pay__top {
+    margin-bottom: 24px;
+}
+
+.lp-pay__top .lp-checkout__lead {
+    margin-bottom: 18px;
+    max-width: 40rem;
+}
+
+.lp-pay__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.lp-pay-panel {
+    margin: 0;
+}
+
+.lp-pay-panel__badge {
+    display: inline-block;
+    margin: 0 0 10px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.lp-pay-panel--current {
+    border-color: #c7d2fe;
+    box-shadow: 0 24px 50px rgba(79, 70, 229, 0.12);
+}
+
+.lp-pay-panel--current .lp-pay-panel__badge {
+    background: #4f46e5;
+    color: #fff;
+}
+
+.lp-pay-panel--next {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    box-shadow: none;
+}
+
+.lp-pay-panel--next .lp-pay-panel__badge {
+    background: #e2e8f0;
+    color: #475569;
+}
+
 .lp-pay__qr {
+    display: flex;
+    justify-content: center;
     margin-top: 4px;
 }
 
@@ -4255,6 +4319,22 @@ select.lp-field-input {
         justify-content: center;
     }
 
+    .lp-pay__wrap {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .lp-pay__columns {
+        grid-template-columns: 1fr;
+    }
+
+    .lp-pay__meta {
+        max-width: none;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 560px) {
     .lp-pay__meta {
         grid-template-columns: 1fr;
     }

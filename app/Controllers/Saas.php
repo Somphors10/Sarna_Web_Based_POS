@@ -356,11 +356,6 @@ class Saas extends BaseController
             ? saas_logged_in_shop_checkout()
             : ['tenant_code' => '', 'owner_email' => '', 'payment_token' => ''];
 
-        $from_pos = function_exists('saas_pos_session_active') && saas_pos_session_active();
-        if ($from_pos && trim((string)($shop['payment_token'] ?? '')) !== '') {
-            return redirect()->to('saas/pay/' . $shop['payment_token']);
-        }
-
         $tenant_code = strtolower(trim((string)$this->request->getGet('code')));
         $owner_email = strtolower(trim((string)$this->request->getGet('email')));
         if ($tenant_code === '') {
@@ -378,7 +373,6 @@ class Saas extends BaseController
             'tenant_code' => $tenant_code,
             'owner_email' => $owner_email,
             'fields_locked' => $tenant_code !== '' && $owner_email !== '',
-            'from_pos' => $from_pos,
         ]);
     }
 
@@ -388,13 +382,11 @@ class Saas extends BaseController
         $validation = service('validation');
         $tenant_code = strtolower(trim((string)$this->request->getPost('tenant_code', FILTER_SANITIZE_FULL_SPECIAL_CHARS)));
         $owner_email = strtolower(trim((string)$this->request->getPost('owner_email', FILTER_SANITIZE_EMAIL)));
-        $from_pos = function_exists('saas_pos_session_active') && saas_pos_session_active();
         $view = [
             'config' => config(OSPOS::class)->settings,
             'validation' => $validation,
             'tenant_code' => $tenant_code,
             'owner_email' => $owner_email,
-            'from_pos' => $from_pos,
         ];
 
         if (!$this->validate([
@@ -511,7 +503,6 @@ class Saas extends BaseController
                 && strtolower((string)($tenant->status ?? '')) === 'active'
                 && saas_tenant_needs_renewal((int)$tenant->tenant_id),
             'qr_image_path' => 'images/payment/aba-khqr-code.png',
-            'from_pos' => function_exists('saas_pos_session_active') && saas_pos_session_active(),
         ];
     }
 

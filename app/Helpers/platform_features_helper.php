@@ -775,25 +775,11 @@ function saas_logged_in_shop_checkout(): array
 }
 
 /**
- * True when a shop employee is already signed in (renew from POS, not a public visitor).
- */
-function saas_pos_session_active(): bool
-{
-    return (int)(session()->get('person_id') ?? 0) > 0
-        && (int)(session()->get('tenant_id') ?? 0) > 0
-        && (int)(session()->get('platform_admin_id') ?? 0) <= 0;
-}
-
-/**
- * Renew link for a logged-in shop: open KHQR directly when a payment token exists.
+ * Renew link for a logged-in shop: checkout with company code and email already filled.
  */
 function saas_current_shop_pay_url(): string
 {
     $shop = saas_logged_in_shop_checkout();
-    $token = trim((string)($shop['payment_token'] ?? ''));
-    if ($token !== '') {
-        return site_url('saas/pay/' . $token);
-    }
     if ($shop['tenant_code'] !== '' || $shop['owner_email'] !== '') {
         return site_url('saas/checkout') . '?' . http_build_query(array_filter([
             'code'  => $shop['tenant_code'],

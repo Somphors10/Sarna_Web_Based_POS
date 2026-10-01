@@ -51,7 +51,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <link rel="stylesheet" href="resources/css/register-57e3f53225.css">
         <link rel="stylesheet" href="resources/css/reports-38f70509fb.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=121">
+        <link rel="stylesheet" href="css/dashboard.css?v=122">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -107,7 +107,7 @@ $is_sa_pos_shell = is_platform_super_admin();
         <!--inject:prod:css -->
         <link rel="stylesheet" href="resources/opensourcepos-5bd11d6cca.min.css">
         <!-- endinject -->
-        <link rel="stylesheet" href="css/dashboard.css?v=121">
+        <link rel="stylesheet" href="css/dashboard.css?v=122">
         <link rel="stylesheet" href="css/theme/topbar-footer.css?v=68">
         <link rel="stylesheet" href="css/forms.css?v=15">
         <link rel="stylesheet" href="css/password-toggle.css?v=4">
@@ -186,6 +186,17 @@ $is_sa_pos_shell = is_platform_super_admin();
 
 <?php
     $subscription_view_only = !empty($subscription_view_only) || (bool)session()->get('subscription_view_only');
+    // Match the red banner: if period is expired, force view-only even if session was stale.
+    if (!$is_sa_pos_shell && !$subscription_view_only && function_exists('saas_tenant_subscription_info')) {
+        $live_tenant_id = (int)(session()->get('tenant_id') ?? 0);
+        if ($live_tenant_id > 0) {
+            $live_sub = saas_tenant_subscription_info($live_tenant_id);
+            if (!empty($live_sub['is_expired'])) {
+                $subscription_view_only = true;
+                session()->set('subscription_view_only', true);
+            }
+        }
+    }
     $body_classes = [];
     if ($is_sa_pos_shell) {
         $body_classes[] = 'sa-dashboard';
