@@ -41,7 +41,7 @@ if ($invalid) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="resources/bootswatch5/flatly/bootstrap.min.css">
-    <link rel="stylesheet" href="css/theme/saas-modern.css?v=46">
+    <link rel="stylesheet" href="css/theme/saas-modern.css?v=50">
 </head>
 <body class="saas-modern saas-landing-body lp-checkout-page">
 
@@ -136,19 +136,21 @@ if ($invalid) {
                     </div>
                 </div>
 
-                <div class="lp-reg__qr lp-pay__qr">
-                    <div class="lp-reg__qr-head">
-                        <span class="lp-reg__qr-badge">Step 2 · Scan to pay</span>
-                        <p class="lp-reg__qr-price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
+                <div class="lp-pay-scan">
+                    <div class="lp-pay-scan__head">
+                        <span class="lp-pay-scan__badge">Step 2 · Scan to pay</span>
+                        <p class="lp-pay-scan__price">$<?= number_format($monthly_price, 0) ?><span>/month</span></p>
                     </div>
-                    <?php if ($qr_image_exists): ?>
-                        <?= khqr_scan_card_markup(base_url($qr_image_path) . '?v=8') ?>
-                    <?php else: ?>
-                        <div class="lp-reg__qr-missing">
-                            <p><strong>QR image not found</strong></p>
-                            <p><code>public/images/payment/aba-khqr-code.png</code></p>
-                        </div>
-                    <?php endif; ?>
+                    <div class="lp-pay-scan__qr">
+                        <?php if ($qr_image_exists): ?>
+                            <?= khqr_scan_card_markup(base_url($qr_image_path) . '?v=8') ?>
+                        <?php else: ?>
+                            <div class="lp-reg__qr-missing">
+                                <p><strong>QR image not found</strong></p>
+                                <p><code>public/images/payment/aba-khqr-code.png</code></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </aside>
 
@@ -186,10 +188,16 @@ if ($invalid) {
                     </div>
                 <?= form_close() ?>
 
+                <?php if ($from_pos): ?>
+                <p class="lp-checkout__footnote">
+                    <a href="<?= $pos_home ?>">Back to POS</a>
+                </p>
+                <?php else: ?>
                 <p class="lp-checkout__footnote">
                     Wrong shop?
                     <a href="<?= site_url('saas/checkout') ?>">Find shop again</a>
                 </p>
+                <?php endif; ?>
             </div>
         </div>
     <?php endif; ?>
