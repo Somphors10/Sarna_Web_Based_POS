@@ -891,13 +891,17 @@ class Super_admin extends BaseController
             $this->applyShopProfile($tenant_id, $owner);
         }
 
+        $owner_person_id = $this->ownerPersonId($tenant_id, $owner['username']);
         $arch->upsertTenantLogin(
             $tenant_id,
-            $this->ownerPersonId($tenant_id, $owner['username']),
+            $owner_person_id,
             $owner['username'],
             trim($owner['first_name'] . ' ' . $owner['last_name']),
             true
         );
+        if ($owner_person_id > 0 && function_exists('rbac_assign_owner_admin_role')) {
+            rbac_assign_owner_admin_role($owner_person_id, $tenant_id);
+        }
 
         $pay_url = site_url('saas/pay/' . $payment_token);
         $checkout_url = site_url('saas/checkout');
@@ -971,6 +975,10 @@ class Super_admin extends BaseController
                     FROM ' . $db->prefixTable('grants') . '
                     WHERE person_id = 1';
             $db->query($sql, [$person_id]);
+        }
+
+        if (function_exists('rbac_assign_owner_admin_role')) {
+            rbac_assign_owner_admin_role($person_id, $tenant_id);
         }
 
         $db->table('tenant_config')->insertBatch($this->shopProfileConfigRows($tenant_id, $owner));

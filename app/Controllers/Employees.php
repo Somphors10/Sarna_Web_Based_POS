@@ -104,8 +104,18 @@ class Employees extends Persons
         try {
             helper('rbac');
             rbac_ensure();
+            $view_person_id = (int)($person_info->person_id ?? 0);
+            $tenant_id = (int)(session()->get('tenant_id') ?? 0);
+            // Website signup owner used to have grants but no Role — auto-fill Admin.
+            if ($view_person_id > 0 && $tenant_id > 0
+                && function_exists('rbac_user_role') && rbac_user_role($view_person_id) === null
+                && function_exists('rbac_person_is_tenant_owner') && rbac_person_is_tenant_owner($view_person_id)
+                && function_exists('rbac_assign_owner_admin_role')
+            ) {
+                rbac_assign_owner_admin_role($view_person_id, $tenant_id);
+            }
             $data['rbac_roles'] = rbac_roles();
-            $assigned = rbac_user_role((int)($person_info->person_id ?? 0));
+            $assigned = rbac_user_role($view_person_id);
             $data['selected_role_id'] = (int)($assigned['role_id'] ?? 0);
             foreach ($data['rbac_roles'] as $role) {
                 $data['rbac_role_codes'][(int)$role['role_id']] = rbac_role_permission_codes((int)$role['role_id']);

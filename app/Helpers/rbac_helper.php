@@ -433,12 +433,12 @@ function rbac_register_module($db): void
     }
 }
 
-function rbac_seed_defaults($db): void
+function rbac_seed_defaults($db, ?int $for_tenant_id = null): void
 {
     $system_codes = rbac_system_codes();
     $has_perm_tenant = $db->fieldExists('tenant_id', 'rbac_permissions');
     $has_role_tenant = $db->fieldExists('tenant_id', 'rbac_roles');
-    $tenant_id = rbac_current_tenant_id();
+    $tenant_id = $for_tenant_id !== null ? (int)$for_tenant_id : rbac_current_tenant_id();
 
     foreach ($system_codes as $code => $name) {
         $perm_q = $db->table('rbac_permissions')->where('permission_code', $code)->where('is_system', 1);
@@ -535,7 +535,66 @@ function rbac_seed_defaults($db): void
         }
     }
 
-    rbac_ensure_admin_has_system_codes($db);
+    rbac_ensure_admin_has_system_codes($db, $tenant_id);
+}
+
+/**
+ * Assign the shop Admin role to the website signup owner (new register).
+ * Does nothing if the person already has a role.
+ */
+function rbac_assign_owner_admin_role(int $person_id, int $tenant_id): bool
+{
+    if ($person_id <= 0 || $tenant_id <= 0) {
+        return false;
+    }
+
+    try {
+        $db = db_connect();
+        if (!$db->tableExists('permissions')) {
+            return false;
+        }
+
+        rbac_ensure();
+        rbac_seed_defaults($db, $tenant_id);
+
+        if ($db->tableExists('rbac_user_roles')
+            && $db->table('rbac_user_roles')->where('person_id', $person_id)->countAllResults() > 0
+        ) {
+            return true;
+        }
+
+        $admin_q = $db->table('rbac_roles')->where('role_key', 'admin');
+        if ($db->fieldExists('tenant_id', 'rbac_roles')) {
+            $admin_q->where('tenant_id', $tenant_id);
+        }
+        $admin = $admin_q->get(1)->getRowArray();
+        if ($admin === null) {
+            return false;
+        }
+
+        $role_id = (int)$admin['role_id'];
+        $assign = [
+            'person_id' => $person_id,
+            'role_id'   => $role_id,
+        ];
+        if ($db->fieldExists('tenant_id', 'rbac_user_roles')) {
+            $assign['tenant_id'] = $tenant_id;
+        }
+        $db->table('rbac_user_roles')->insert($assign);
+
+        rbac_ensure_admin_nav_grants($person_id);
+        $grants = rbac_grants_from_role($role_id);
+        if (function_exists('rbac_merge_admin_nav_grants')) {
+            $grants = rbac_merge_admin_nav_grants($grants);
+        }
+        rbac_write_person_grants($person_id, $grants);
+
+        return true;
+    } catch (\Throwable $e) {
+        log_message('error', 'RBAC owner Admin assign failed: ' . $e->getMessage());
+
+        return false;
+    }
 }
 
 function rbac_system_codes(): array
@@ -561,10 +620,10 @@ function rbac_system_codes(): array
     ];
 }
 
-function rbac_ensure_admin_has_system_codes($db): void
+function rbac_ensure_admin_has_system_codes($db, ?int $for_tenant_id = null): void
 {
     $admin_q = $db->table('rbac_roles')->where('role_key', 'admin');
-    $tenant_id = rbac_current_tenant_id();
+    $tenant_id = $for_tenant_id !== null ? (int)$for_tenant_id : rbac_current_tenant_id();
     if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_roles')) {
         $admin_q->where('tenant_id', $tenant_id);
     }
@@ -1240,19 +1299,26 @@ function rbac_sync_person_from_role(int $person_id): void
 {
     $role = rbac_user_role($person_id);
     if ($role === null) {
-        if (rbac_person_needs_admin_nav($person_id, null)) {
-            rbac_ensure_admin_nav_grants($person_id);
-            $existing = [];
-            foreach (db_connect()->table('grants')->where('person_id', $person_id)->get()->getResultArray() as $row) {
-                $existing[] = [
-                    'permission_id' => (string)$row['permission_id'],
-                    'menu_group'    => (string)($row['menu_group'] ?? 'home'),
-                ];
-            }
-            rbac_write_person_grants($person_id, rbac_merge_admin_nav_grants($existing));
+        $tenant_id = rbac_current_tenant_id();
+        if ($tenant_id > 0 && rbac_person_is_tenant_owner($person_id)) {
+            rbac_assign_owner_admin_role($person_id, $tenant_id);
+            $role = rbac_user_role($person_id);
         }
+        if ($role === null) {
+            if (rbac_person_needs_admin_nav($person_id, null)) {
+                rbac_ensure_admin_nav_grants($person_id);
+                $existing = [];
+                foreach (db_connect()->table('grants')->where('person_id', $person_id)->get()->getResultArray() as $row) {
+                    $existing[] = [
+                        'permission_id' => (string)$row['permission_id'],
+                        'menu_group'    => (string)($row['menu_group'] ?? 'home'),
+                    ];
+                }
+                rbac_write_person_grants($person_id, rbac_merge_admin_nav_grants($existing));
+            }
 
-        return;
+            return;
+        }
     }
 
     rbac_ensure_admin_has_system_codes(db_connect());

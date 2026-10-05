@@ -28,7 +28,7 @@ return [
     "password_must_match"          => "Passwords do not match.",
     "password_not_must_match"      => "Current password and new password must be unique.",
     "password_required"            => "Password is required.",
-    "form_steps_hint"              => "This form has 3 tabs. Open Login and Permissions before Submit.",
+    "form_steps_hint"              => "This form has 3 tabs. Open Login and Role before Submit.",
     "permission_desc"              => "Pick a role. The role already has the permissions.",
     "permission_info"              => "Role",
     "repeat_password"              => "Password Again",
