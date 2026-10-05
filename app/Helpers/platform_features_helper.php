@@ -1301,6 +1301,42 @@ function saas_push_platform_alert(array $alert): bool
 }
 
 /**
+ * One newest-first feed (register / pay / renew / expire mixed together).
+ *
+ * @param list<array<string, mixed>> $items
+ * @return list<array<string, mixed>>
+ */
+function saas_sort_notification_items(array $items): array
+{
+    usort($items, static function (array $a, array $b): int {
+        $ta = (int)($a['_sort_ts'] ?? 0);
+        $tb = (int)($b['_sort_ts'] ?? 0);
+        if ($ta === 0) {
+            $raw = (string)($a['created_at'] ?? '');
+            $parsed = $raw !== '' ? strtotime($raw) : false;
+            $ta = $parsed !== false ? $parsed : 0;
+        }
+        if ($tb === 0) {
+            $raw = (string)($b['created_at'] ?? '');
+            $parsed = $raw !== '' ? strtotime($raw) : false;
+            $tb = $parsed !== false ? $parsed : 0;
+        }
+        if ($ta === $tb) {
+            return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+        }
+
+        return $tb <=> $ta;
+    });
+
+    foreach ($items as &$item) {
+        unset($item['_sort_ts']);
+    }
+    unset($item);
+
+    return $items;
+}
+
+/**
  * Recent Super Admin alerts for the bell panel.
  *
  * @return list<array<string, mixed>>
@@ -1323,6 +1359,54 @@ function saas_get_platform_alerts(int $days = 30, int $limit = 50): array
             ->getResultArray();
     } catch (Throwable $e) {
         return [];
+    }
+}
+
+/**
+ * Notify Super Admin bell about a new website registration / application.
+ *
+ * @param object|array<string, mixed> $request Subscription request row
+ * @param 'submitted'|'verified'      $stage   submitted = just registered; verified = email confirmed
+ */
+function saas_notify_new_registration($request, string $stage = 'verified'): void
+{
+    try {
+        $row = is_array($request) ? $request : (array)$request;
+        $request_id = (int)($row['request_id'] ?? 0);
+        if ($request_id <= 0) {
+            return;
+        }
+
+        $company = trim((string)($row['company_name'] ?? ''));
+        $code = trim((string)($row['tenant_code'] ?? ''));
+        $email = trim((string)($row['owner_email'] ?? ''));
+        $owner = trim(
+            trim((string)($row['owner_first_name'] ?? '')) . ' ' . trim((string)($row['owner_last_name'] ?? ''))
+        );
+        if ($owner === '') {
+            $owner = trim((string)($row['owner_username'] ?? ''));
+        }
+
+        $is_submit = ($stage === 'submitted');
+        $title = $is_submit ? 'New application' : 'New registration';
+        $body = ($code !== '' ? $code . ' · ' : '')
+            . ($is_submit
+                ? 'New signup — waiting for owner to verify email.'
+                : 'Email verified. Needs Approve & send KHQR.')
+            . ($owner !== '' ? ' Owner: ' . $owner . '.' : '');
+
+        saas_push_platform_alert([
+            'type'         => 'registration',
+            'title'        => $title,
+            'body'         => $body,
+            'meta'         => $email !== '' ? $email : ($is_submit ? 'register' : 'email_verified'),
+            'link_path'    => 'super-admin/requests',
+            'company_name' => $company !== '' ? $company : ('Request #' . $request_id),
+            'tenant_code'  => $code,
+            'dedupe_key'   => ($is_submit ? 'reg-submit-' : 'reg-verified-') . $request_id,
+        ]);
+    } catch (Throwable $e) {
+        // Ignore alert failures — registration itself already succeeded.
     }
 }
 
@@ -1389,6 +1473,44 @@ function saas_format_period_end(?string $period_end): string
     }
 
     return date('d M Y', $ts);
+}
+
+/**
+ * Human countdown until subscription period_end (for bell / warning cards).
+ * Uses hours when under 2 days so Super Admin sees the same style as other alerts.
+ */
+function saas_format_time_left(?string $period_end): string
+{
+    $period_end = trim((string)$period_end);
+    if ($period_end === '') {
+        return '';
+    }
+
+    $end = strtotime($period_end);
+    if ($end === false) {
+        return '';
+    }
+
+    $seconds = $end - time();
+    if ($seconds <= 0) {
+        return 'Ended';
+    }
+
+    if ($seconds < 3600) {
+        $mins = max(1, (int)ceil($seconds / 60));
+
+        return $mins . ' min left';
+    }
+
+    if ($seconds < 172800) {
+        $hours = max(1, (int)ceil($seconds / 3600));
+
+        return $hours . ' hour' . ($hours === 1 ? '' : 's') . ' left';
+    }
+
+    $days = max(1, (int)ceil($seconds / 86400));
+
+    return $days . ' day' . ($days === 1 ? '' : 's') . ' left';
 }
 
 /**
@@ -1632,13 +1754,15 @@ function saas_rejection_reason(?string $notes): string
 
 /**
  * Build Super Admin bell notification cards (subscription + POS shell).
+ * One mixed feed — register, pay, renew, expire — newest first when $sorted is true.
  *
+ * @param bool $sorted When false, items keep `_sort_ts` so callers can merge then sort.
  * @return list<array{
  *   type:string,id:int,key:string,title:string,subtitle:string,body:string,
  *   meta:string,created_at:string,relative_time:string,review_url:string
  * }>
  */
-function saas_build_super_admin_notification_items(): array
+function saas_build_super_admin_notification_items(bool $sorted = true): array
 {
     $format_request_date = static function (?string $value): string {
         if ($value === null || $value === '') {
@@ -1678,6 +1802,7 @@ function saas_build_super_admin_notification_items(): array
     };
 
     $items = [];
+    $seen_keys = [];
 
     try {
         $platform_alerts = saas_get_platform_alerts(30, 50);
@@ -1691,10 +1816,20 @@ function saas_build_super_admin_notification_items(): array
             if ($link !== '' && strpos($link, 'http') !== 0) {
                 $link = site_url(ltrim($link, '/'));
             }
+            $dedupe = (string)($alert['dedupe_key'] ?? ($alert['alert_id'] ?? uniqid('a', true)));
+            $key = 'alert-' . $dedupe;
+            if ($type === 'registration' && preg_match('/^reg-(?:submit|verified)-(\d+)$/', $dedupe, $m)) {
+                $key = 'registration-' . (int)$m[1];
+            }
+            if (isset($seen_keys[$key])) {
+                continue;
+            }
+            $seen_keys[$key] = true;
+            $sort_ts = strtotime($created);
             $items[] = [
                 'type'          => ($type === 'renewed' || $type === 'payment') ? 'renewed' : $type,
                 'id'            => (int)($alert['alert_id'] ?? 0),
-                'key'           => 'alert-' . (string)($alert['dedupe_key'] ?? ($alert['alert_id'] ?? uniqid('a', true))),
+                'key'           => $key,
                 'title'         => (string)($alert['title'] ?? 'Payment received'),
                 'subtitle'      => (string)($alert['company_name'] ?? 'Shop'),
                 'body'          => (string)($alert['body'] ?? ''),
@@ -1702,6 +1837,7 @@ function saas_build_super_admin_notification_items(): array
                 'created_at'    => $format_request_date($created),
                 'relative_time' => $format_relative_time($created),
                 'review_url'    => $link !== '' ? $link : site_url('super-admin/businesses'),
+                '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
             ];
         }
     } catch (Throwable $e) {
@@ -1710,20 +1846,56 @@ function saas_build_super_admin_notification_items(): array
 
     try {
         helper('locale');
-        $subscription_requests = model(\App\Models\Subscription_request::class)->get_pending_with_plan();
+        $request_model = model(\App\Models\Subscription_request::class);
+        $subscription_requests = $request_model->get_pending_with_plan();
         foreach ($subscription_requests as $request) {
+            $rid = (int)$request['request_id'];
+            $key = 'registration-' . $rid;
+            if (isset($seen_keys[$key])) {
+                continue;
+            }
+            $seen_keys[$key] = true;
             $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
+            $raw_created = (string)($request['created_at'] ?? '');
+            $sort_ts = strtotime($raw_created);
             $items[] = [
                 'type'          => 'registration',
-                'id'            => (int)$request['request_id'],
-                'key'           => 'registration-' . (int)$request['request_id'],
+                'id'            => $rid,
+                'key'           => $key,
                 'title'         => 'New registration',
                 'subtitle'      => (string)($request['company_name'] ?? 'New registration'),
                 'body'          => 'Needs Approve & send KHQR. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
                 'meta'          => (string)($request['owner_email'] ?? ''),
-                'created_at'    => $format_request_date($request['created_at'] ?? ''),
-                'relative_time' => $format_relative_time($request['created_at'] ?? ''),
+                'created_at'    => $format_request_date($raw_created),
+                'relative_time' => $format_relative_time($raw_created),
                 'review_url'    => site_url('super-admin/requests'),
+                '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
+            ];
+        }
+
+        $unverified_requests = $request_model->get_unverified_pending_with_plan();
+        foreach ($unverified_requests as $request) {
+            $rid = (int)$request['request_id'];
+            $key = 'registration-' . $rid;
+            if (isset($seen_keys[$key])) {
+                continue;
+            }
+            $seen_keys[$key] = true;
+            $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
+            $raw_created = (string)($request['created_at'] ?? '');
+            $sort_ts = strtotime($raw_created);
+            $items[] = [
+                'type'          => 'registration',
+                'id'            => $rid,
+                'key'           => $key,
+                'title'         => 'New application',
+                'subtitle'      => (string)($request['company_name'] ?? 'New application'),
+                'body'          => 'Waiting for owner email verify. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '.',
+                'meta'          => (string)($request['owner_email'] ?? ''),
+                'created_at'    => $format_request_date($raw_created),
+                'relative_time' => $format_relative_time($raw_created),
+                'review_url'    => site_url('super-admin/requests'),
+                '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
             ];
         }
     } catch (Throwable $e) {
@@ -1755,6 +1927,8 @@ function saas_build_super_admin_notification_items(): array
             }
 
             if ($status === 'awaiting_payment') {
+                $raw = (string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '');
+                $sort_ts = strtotime($raw);
                 $items[] = [
                     'type'          => 'payment',
                     'id'            => $tid,
@@ -1763,13 +1937,15 @@ function saas_build_super_admin_notification_items(): array
                     'subtitle'      => $company,
                     'body'          => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
                     'meta'          => (string)($tenant['email'] ?? $tenant['owner_email'] ?? ''),
-                    'created_at'    => $format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
-                    'relative_time' => $format_relative_time((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
+                    'created_at'    => $format_request_date($raw),
+                    'relative_time' => $format_relative_time($raw),
                     'review_url'    => site_url('super-admin/businesses?status=awaiting_payment'),
+                    '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
                 ];
             }
 
             if ($billing === 'expired' && !in_array($status, ['cancelled', 'suspended'], true)) {
+                $sort_ts = strtotime($period_end);
                 $items[] = [
                     'type'          => 'expired',
                     'id'            => $tid,
@@ -1781,19 +1957,26 @@ function saas_build_super_admin_notification_items(): array
                     'created_at'    => $period_end,
                     'relative_time' => $period_end !== '' ? ('Ended ' . saas_format_period_end($period_end)) : '',
                     'review_url'    => site_url('super-admin/businesses?status=expired'),
+                    '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
                 ];
             } elseif ($billing === 'warning' && $status === 'active') {
+                $sort_ts = strtotime($period_end);
+                $time_left = saas_format_time_left($period_end);
                 $items[] = [
                     'type'          => 'warning',
                     'id'            => $tid,
                     'key'           => saas_notify_stable_key('expiring', $tid, $period_end),
                     'title'         => 'Expiring soon',
                     'subtitle'      => $company,
-                    'body'          => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',
+                    'body'          => ($code !== '' ? $code . ' · ' : '')
+                        . 'Subscription ends ' . saas_format_period_end($period_end)
+                        . ($time_left !== '' ? ' · ' . $time_left : '')
+                        . '.',
                     'meta'          => '',
                     'created_at'    => $period_end,
-                    'relative_time' => (int)$days_left . 'd left',
+                    'relative_time' => $time_left !== '' ? $time_left : ((int)$days_left . ' days left'),
                     'review_url'    => site_url('super-admin/businesses?status=expiring_soon'),
+                    '_sort_ts'      => $sort_ts !== false ? $sort_ts : 0,
                 ];
             }
         }
@@ -1802,5 +1985,5 @@ function saas_build_super_admin_notification_items(): array
         // Ignore.
     }
 
-    return $items;
+    return $sorted ? saas_sort_notification_items($items) : $items;
 }

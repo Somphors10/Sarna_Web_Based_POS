@@ -246,6 +246,13 @@ class Saas extends BaseController
             }
         }
 
+        if ($request_id !== false) {
+            $notify_row = $request_model->get_info_for_review((int)$request_id);
+            if ($notify_row !== null && function_exists('saas_notify_new_registration')) {
+                saas_notify_new_registration($notify_row, 'submitted');
+            }
+        }
+
         return view('saas/register_success', [
             'tenant_code' => $tenant_code,
             'owner_email' => $owner_email,
@@ -328,6 +335,10 @@ class Saas extends BaseController
 
     private function notifySuperAdminOfRequest(object $request): void
     {
+        if (function_exists('saas_notify_new_registration')) {
+            saas_notify_new_registration($request, 'verified');
+        }
+
         $plan = db_connect('platform')->table('plans')->where('plan_id', (int)$request->plan_id)->get(1)->getRow();
         (new Telegram_lib())->notify_new_subscription_request([
             'request_id'        => (int)$request->request_id,

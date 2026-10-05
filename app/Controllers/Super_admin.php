@@ -242,14 +242,44 @@ class Super_admin extends BaseController
             return redirect()->to('super-admin/login');
         }
 
+        $html = '';
         $path = PlatformMail::outboxPath($request_id);
-        if (!is_file($path)) {
-            return redirect()->to('super-admin/send-payment/' . $request_id);
+        if (is_file($path)) {
+            $html = (string)@file_get_contents($path);
         }
 
-        return $this->response
-            ->setHeader('Content-Type', 'text/html; charset=UTF-8')
-            ->setBody((string)file_get_contents($path));
+        // No saved preview yet (or empty file): build HTML from the request.
+        if (trim($html) === '') {
+            $request = model(Subscription_request::class)->get_info_for_review($request_id);
+            if ($request === null) {
+                return redirect()->to('super-admin/requests?error=request_not_found');
+            }
+
+            $token = trim((string)($request->payment_token ?? ''));
+            $pay_url = $token !== '' ? site_url('saas/pay/' . $token) : site_url('saas/checkout');
+            $plan = db_connect('platform')
+                ->table('plans')
+                ->where('plan_id', (int)($request->plan_id ?? 0))
+                ->get(1)
+                ->getRow();
+            $price = saas_monthly_price((float)($plan->price_monthly ?? 0));
+            $qr_path = FCPATH . 'images/payment/aba-khqr-code.png';
+            $html = view('saas/email_khqr', [
+                'request' => $request,
+                'pay_url'  => $pay_url,
+                'price'    => $price,
+                'qr_cid'   => is_file($qr_path),
+            ]);
+            if (is_file($qr_path)) {
+                $html = str_replace(
+                    'cid:wbpos-khqr',
+                    'data:image/png;base64,' . base64_encode((string)file_get_contents($qr_path)),
+                    $html
+                );
+            }
+        }
+
+        return $html;
     }
 
     public function postConfirmPayment(int $request_id): RedirectResponse
@@ -563,7 +593,7 @@ class Super_admin extends BaseController
         if (saas_ensure_platform_alerts_table()) {
             $db = db_connect('platform');
             $builder = $db->table('platform_alerts')
-                ->whereIn('alert_type', ['renewed', 'payment'])
+                ->whereIn('alert_type', ['renewed', 'payment', 'registration'])
                 ->orderBy('alert_id', 'DESC')
                 ->limit(20);
             if ($since_alert_id > 0) {
@@ -574,6 +604,7 @@ class Super_admin extends BaseController
             foreach ($builder->get()->getResultArray() as $row) {
                 $new_payments[] = [
                     'alert_id'     => (int)$row['alert_id'],
+                    'alert_type'   => (string)($row['alert_type'] ?? 'renewed'),
                     'title'        => (string)($row['title'] ?? 'Shop paid'),
                     'company_name' => (string)($row['company_name'] ?? ''),
                     'tenant_code'  => (string)($row['tenant_code'] ?? ''),

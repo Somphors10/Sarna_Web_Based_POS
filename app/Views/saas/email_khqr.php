@@ -72,7 +72,7 @@ $has_qr = !empty($qr_cid);
                         <p style="margin:0 0 10px;">Open the <strong>ABA</strong> app and scan the QR code above.</p>
                         <p style="margin:0 0 10px;">Company code: <strong style="color:#0f172a;"><?= $code ?></strong></p>
                         <p style="margin:0;">After you pay, tell Super Admin. They will open your POS login.</p>
-                        <?php if ($pay_url !== ''): ?>
+                        <?php if (!empty($pay_url)): ?>
                             <p style="margin:18px 0 0;">
                                 <a href="<?= $pay ?>" style="display:inline-block;background:#0b1f4d;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px;">Open payment page</a>
                             </p>

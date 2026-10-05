@@ -503,106 +503,17 @@ $format_relative_time = static function (?string $value): string {
     $recent_payments = $recent_payments ?? [];
     $platform_alerts = $platform_alerts ?? [];
 
-    $notification_items = [];
+    // One mixed feed (register / pay / renew / expire) — newest first, like normal apps.
+    $notification_items = function_exists('saas_build_super_admin_notification_items')
+        ? saas_build_super_admin_notification_items(false)
+        : [];
 
-    // Paid / renewed first — so Super Admin sees who continues using the system.
-    foreach ($platform_alerts as $alert) {
-        $type = (string)($alert['alert_type'] ?? 'renewed');
-        if ($type === '') {
-            $type = 'renewed';
-        }
-        $created = (string)($alert['created_at'] ?? '');
-        $link = trim((string)($alert['link_path'] ?? 'super-admin/businesses'));
-        if ($link !== '' && strpos($link, 'http') !== 0) {
-            $link = site_url(ltrim($link, '/'));
-        }
-        $notification_items[] = [
-            'type' => $type === 'renewed' || $type === 'payment' ? 'renewed' : $type,
-            'id' => (int)($alert['alert_id'] ?? 0),
-            'key' => 'alert-' . (string)($alert['dedupe_key'] ?? ($alert['alert_id'] ?? uniqid('a', true))),
-            'title' => (string)($alert['title'] ?? 'Payment received'),
-            'subtitle' => (string)($alert['company_name'] ?? 'Shop'),
-            'body' => (string)($alert['body'] ?? ''),
-            'meta' => (string)($alert['meta'] ?? ''),
-            'created_at' => $format_request_date($created),
-            'relative_time' => $format_relative_time($created),
-            'review_url' => $link !== '' ? $link : site_url('super-admin/businesses'),
-        ];
+    $seen_notify_keys = [];
+    foreach ($notification_items as $item) {
+        $seen_notify_keys[(string)($item['key'] ?? '')] = true;
     }
 
-    foreach ($subscription_requests as $request) {
-        $owner = format_person_name($request['owner_first_name'] ?? '', $request['owner_last_name'] ?? '');
-        $notification_items[] = [
-            'type' => 'registration',
-            'id' => (int)$request['request_id'],
-            'key' => 'registration-' . (int)$request['request_id'],
-            'title' => 'New registration',
-            'subtitle' => (string)($request['company_name'] ?? 'New registration'),
-            'body' => 'Needs Approve & send KHQR. Owner: ' . ($owner !== '' ? $owner : ($request['owner_username'] ?? '')) . '. Plan: ' . ($request['plan_name'] ?? 'N/A') . '.',
-            'meta' => (string)($request['owner_email'] ?? ''),
-            'created_at' => $format_request_date($request['created_at'] ?? ''),
-            'relative_time' => $format_relative_time($request['created_at'] ?? ''),
-            'review_url' => site_url('super-admin/requests'),
-        ];
-    }
-
-    foreach ($tenants as $tenant) {
-        $status = strtolower((string)($tenant['status'] ?? ''));
-        $billing = strtolower((string)($tenant['billing'] ?? 'none'));
-        $company = trim((string)($tenant['company_name'] ?? ''));
-        if ($company === '') {
-            $company = 'Shop #' . (int)($tenant['tenant_id'] ?? 0);
-        }
-        $code = trim((string)($tenant['tenant_code'] ?? ''));
-        $tid = (int)($tenant['tenant_id'] ?? 0);
-        $period_end = (string)($tenant['period_end'] ?? '');
-        $days_left = $tenant['days_left'] ?? null;
-
-        if ($status === 'awaiting_payment') {
-            $notification_items[] = [
-                'type' => 'payment',
-                'id' => $tid,
-                'key' => saas_notify_stable_key('awaiting-payment', $tid),
-                'title' => 'Waiting for $20 payment',
-                'subtitle' => $company,
-                'body' => ($code !== '' ? $code . ' · ' : '') . 'Approved. Waiting for shop to pay KHQR.',
-                'meta' => (string)($tenant['email'] ?? $tenant['owner_email'] ?? ''),
-                'created_at' => $format_request_date((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
-                'relative_time' => $format_relative_time((string)($tenant['registered_at'] ?? $tenant['created_at'] ?? '')),
-                'review_url' => site_url('super-admin/businesses?status=awaiting_payment'),
-            ];
-        }
-
-        if ($billing === 'expired' && !in_array($status, ['cancelled', 'suspended'], true)) {
-            $notification_items[] = [
-                'type' => 'expired',
-                'id' => $tid,
-                'key' => saas_notify_stable_key('expired', $tid, $period_end),
-                'title' => 'Subscription expired',
-                'subtitle' => $company,
-                'body' => ($code !== '' ? $code . ' · ' : '') . 'Period ended ' . saas_format_period_end($period_end) . '. Account still open — needs renew or suspend.',
-                'meta' => '',
-                'created_at' => $period_end,
-                'relative_time' => $period_end !== '' ? ('Ended ' . saas_format_period_end($period_end)) : '',
-                'review_url' => site_url('super-admin/businesses?status=expired'),
-            ];
-        } elseif ($billing === 'warning' && $status === 'active') {
-            $notification_items[] = [
-                'type' => 'warning',
-                'id' => $tid,
-                'key' => saas_notify_stable_key('expiring', $tid, $period_end),
-                'title' => 'Expiring soon',
-                'subtitle' => $company,
-                'body' => ($code !== '' ? $code . ' · ' : '') . (int)$days_left . ' day(s) left · ends ' . saas_format_period_end($period_end) . '.',
-                'meta' => '',
-                'created_at' => $period_end,
-                'relative_time' => (int)$days_left . 'd left',
-                'review_url' => site_url('super-admin/businesses?status=expiring_soon'),
-            ];
-        }
-    }
-
-    // Fallback: invoice_payments not already represented by platform_alerts.
+    // Fallback: invoice_payments not already in the unified feed.
     $alert_keys = [];
     foreach ($platform_alerts as $alert) {
         $alert_keys[(string)($alert['dedupe_key'] ?? '')] = true;
@@ -611,7 +522,8 @@ $format_relative_time = static function (?string $value): string {
     foreach ($recent_payments as $payment) {
         $pay_id = (int)($payment['payment_id'] ?? 0);
         $dedupe = 'paid-invoice-' . $pay_id;
-        if (isset($alert_keys[$dedupe]) || $pay_id <= 0) {
+        $key = 'payment-' . $pay_id;
+        if (isset($alert_keys[$dedupe]) || isset($seen_notify_keys[$key]) || $pay_id <= 0) {
             continue;
         }
         $company = trim((string)($payment['company_name'] ?? ''));
@@ -621,18 +533,25 @@ $format_relative_time = static function (?string $value): string {
         $code = trim((string)($payment['tenant_code'] ?? ''));
         $ref = trim((string)($payment['provider_payment_id'] ?? ''));
         $amount = $payment['amount'] ?? '';
+        $raw_paid = (string)($payment['paid_at'] ?? '');
+        $sort_ts = strtotime($raw_paid);
         $notification_items[] = [
             'type' => 'renewed',
             'id' => $pay_id,
-            'key' => 'payment-' . $pay_id,
+            'key' => $key,
             'title' => 'Payment received',
             'subtitle' => $company,
             'body' => ($code !== '' ? $code . ' · ' : '') . 'Paid $' . (string)$amount . ($ref !== '' ? ' · Ref: ' . $ref : '') . '. Shop continues on the system.',
             'meta' => (string)($payment['provider'] ?? ''),
-            'created_at' => $format_request_date((string)($payment['paid_at'] ?? '')),
-            'relative_time' => $format_relative_time((string)($payment['paid_at'] ?? '')),
+            'created_at' => $format_request_date($raw_paid),
+            'relative_time' => $format_relative_time($raw_paid),
             'review_url' => site_url('super-admin/businesses'),
+            '_sort_ts' => $sort_ts !== false ? $sort_ts : 0,
         ];
+    }
+
+    if (function_exists('saas_sort_notification_items')) {
+        $notification_items = saas_sort_notification_items($notification_items);
     }
 
     $notify_count = count($notification_items);
@@ -2902,6 +2821,17 @@ $format_relative_time = static function (?string $value): string {
                         });
 
                         newPayments.forEach(function(payment) {
+                            if ((payment.alert_type || '') === 'registration') {
+                                showToast({
+                                    toastClass: 'sa-toast--registration',
+                                    title: payment.title || 'New registration',
+                                    line1: (payment.company_name || '') + (payment.tenant_code ? ' (' + payment.tenant_code + ')' : ''),
+                                    line2: payment.body || '',
+                                    href: payment.review_url || requestsUrl,
+                                    actionLabel: 'Review'
+                                });
+                                return;
+                            }
                             showPaymentToast(payment);
                         });
 
