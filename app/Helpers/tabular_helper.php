@@ -564,18 +564,64 @@ function get_item_data_row(object $item): array
 
     $image = null;
     if (!empty($item->pic_filename)) {
-        $pics_dir = FCPATH . 'uploads/item_pics/';
-        $ext = pathinfo($item->pic_filename, PATHINFO_EXTENSION);
+        $dirs = [
+            FCPATH . 'uploads/item_pics/',
+            WRITEPATH . 'uploads/item_pics/',
+        ];
+        $pic_filename = basename((string)$item->pic_filename);
+        $full_path = null;
+        $pics_dir = $dirs[0];
 
-        $images = $ext == ''
-            ? glob($pics_dir . $item->pic_filename . '.*') ?: []
-            : (is_file($pics_dir . $item->pic_filename) ? [$pics_dir . $item->pic_filename] : []);
+        foreach ($dirs as $dir) {
+            $ext = pathinfo($pic_filename, PATHINFO_EXTENSION);
+            if ($ext === '') {
+                $images = array_values(array_filter(
+                    glob($dir . $pic_filename . '.*') ?: [],
+                    static fn(string $path): bool => !str_contains(pathinfo($path, PATHINFO_FILENAME), '_thumb')
+                ));
+            } elseif (is_file($dir . $pic_filename)) {
+                $images = [$dir . $pic_filename];
+            } else {
+                $base = pathinfo($pic_filename, PATHINFO_FILENAME);
+                $images = array_values(array_filter(
+                    glob($dir . $base . '.*') ?: [],
+                    static fn(string $path): bool => !str_contains(pathinfo($path, PATHINFO_FILENAME), '_thumb')
+                ));
+            }
 
-        if (sizeof($images) > 0) {
-            $basename = pathinfo($images[0], PATHINFO_BASENAME);
-            $image_src = base_url('uploads/item_pics/' . rawurlencode($basename));
-            $thumb_src = site_url('items/PicThumb/' . rawurlencode($basename));
-            $image .= '<a class="rollover js-item-image-lightbox" href="#" data-image-src="' . esc($image_src, 'attr') . '"><img alt="Image thumbnail" src="' . esc($thumb_src, 'attr') . '"></a>';
+            if ($images !== []) {
+                $full_path = $images[0];
+                $pics_dir = $dir;
+                break;
+            }
+        }
+
+        if ($full_path !== null && is_file($full_path)) {
+            $basename = pathinfo($full_path, PATHINFO_BASENAME);
+            $cache_buster = (string)(@filemtime($full_path) ?: time());
+            $public_dir = FCPATH . 'uploads/item_pics/';
+            $image_src = str_starts_with($full_path, $public_dir)
+                ? base_url('uploads/item_pics/' . $basename) . '?v=' . $cache_buster
+                : site_url('items/picThumb/' . rawurlencode($basename)) . '?v=' . $cache_buster;
+
+            // Prefer a thumb only when it is as new as the full image (avoids stale Coke thumb + new Monster full).
+            $thumb_name = pathinfo($basename, PATHINFO_FILENAME) . '_thumb.' . pathinfo($basename, PATHINFO_EXTENSION);
+            $thumb_path = $pics_dir . $thumb_name;
+            $thumb_ok = is_file($thumb_path) && @filemtime($thumb_path) >= (@filemtime($full_path) - 2);
+            if ($thumb_ok && str_starts_with($thumb_path, $public_dir)) {
+                $thumb_src = base_url('uploads/item_pics/' . $thumb_name) . '?v=' . (string)@filemtime($thumb_path);
+            } elseif ($thumb_ok) {
+                $thumb_src = site_url('items/picThumb/' . rawurlencode($basename)) . '?v=' . (string)@filemtime($thumb_path);
+            } else {
+                $thumb_src = $image_src;
+            }
+
+            $image .= '<a class="item-avatar-link rollover js-item-image-lightbox" href="#" data-image-src="'
+                . esc($image_src, 'attr')
+                . '" title="' . esc(lang('Items.image'), 'attr') . '">'
+                . '<span class="item-avatar">'
+                . '<img alt="" width="40" height="40" src="' . esc($thumb_src, 'attr') . '">'
+                . '</span></a>';
         }
     }
 

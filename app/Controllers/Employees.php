@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use Throwable;
+
 /**
  *
  *
@@ -156,115 +158,131 @@ class Employees extends Persons
      */
     public function postSave(int $employee_id = NEW_ENTRY): void
     {
-        $first_name = $this->request->getPost('first_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);    // TODO: duplicated code
-        $last_name = $this->request->getPost('last_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        $email = strtolower($this->request->getPost('email', FILTER_SANITIZE_EMAIL));
+        try {
+            $first_name = $this->request->getPost('first_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);    // TODO: duplicated code
+            $last_name = $this->request->getPost('last_name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $email = strtolower((string)$this->request->getPost('email', FILTER_SANITIZE_EMAIL));
 
-        // format first and last name properly
-        $first_name = $this->nameize($first_name);
-        $last_name = $this->nameize($last_name);
+            // format first and last name properly
+            $first_name = $this->nameize($first_name);
+            $last_name = $this->nameize($last_name);
 
-        $person_data = [
-            'first_name'   => $first_name,
-            'last_name'    => $last_name,
-            'gender'       => $this->request->getPost('gender', FILTER_SANITIZE_NUMBER_INT),
-            'email'        => $email,
-            'phone_number' => $this->request->getPost('phone_number', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'address_1'    => $this->request->getPost('address_1', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'address_2'    => $this->request->getPost('address_2', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'city'         => $this->request->getPost('city', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'state'        => $this->request->getPost('state', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'zip'          => $this->request->getPost('zip', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'country'      => $this->request->getPost('country', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-            'comments'     => $this->request->getPost('comments', FILTER_SANITIZE_FULL_SPECIAL_CHARS)
-        ];
+            $gender_raw = $this->request->getPost('gender');
+            $gender = ($gender_raw === null || $gender_raw === '') ? null : (int)$gender_raw;
 
-        $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-        if ($this->employee->username_exists($employee_id === NEW_ENTRY ? 0 : $employee_id, $username)) {
-            echo json_encode([
-                'success' => false,
-                'message' => lang('Employees.username_duplicate'),
-                'id'      => $employee_id
-            ]);
+            $person_data = [
+                'first_name'   => $first_name,
+                'last_name'    => $last_name,
+                'gender'       => $gender,
+                'email'        => $email,
+                'phone_number' => $this->request->getPost('phone_number', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'address_1'    => $this->request->getPost('address_1', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'address_2'    => $this->request->getPost('address_2', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'city'         => $this->request->getPost('city', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'state'        => $this->request->getPost('state', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'zip'          => $this->request->getPost('zip', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'country'      => $this->request->getPost('country', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                'comments'     => $this->request->getPost('comments', FILTER_SANITIZE_FULL_SPECIAL_CHARS)
+            ];
 
-            return;
-        }
-
-        helper('rbac');
-        rbac_ensure();
-        $role_id = (int)$this->request->getPost('role_id');
-        $grants_array = [];
-        if ($role_id > 0) {
-            $grants_array = rbac_grants_from_role($role_id);
-        } else {
-            foreach ($this->module->get_all_permissions()->getResult() as $permission) {
-                if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
-                    continue;
-                }
-                $grants = [];
-                $grant = $this->request->getPost('grant_' . $permission->permission_id) != null ? $this->request->getPost('grant_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
-
-                if ($grant == $permission->permission_id) {
-                    $grants['permission_id'] = $permission->permission_id;
-                    $grants['menu_group'] = $this->request->getPost('menu_group_' . $permission->permission_id) != null ? $this->request->getPost('menu_group_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '--';
-                    $grants_array[] = $grants;
-                }
-            }
-        }
-
-        // Password has been changed OR first time password set
-        if (!empty($this->request->getPost('password')) && ENVIRONMENT != 'testing') {
-            $plain_password = (string)$this->request->getPost('password');
-            if (!is_strong_password($plain_password)) {
+            $username = (string)$this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            if ($this->employee->username_exists($employee_id === NEW_ENTRY ? 0 : $employee_id, $username)) {
                 echo json_encode([
                     'success' => false,
-                    'message' => lang('Employees.password_strong'),
+                    'message' => lang('Employees.username_duplicate'),
                     'id'      => $employee_id
                 ]);
 
                 return;
             }
 
-            // Language field is hidden; new/updated employees use system language.
-            $employee_data = [
-                'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-                'password'      => password_hash($plain_password, PASSWORD_DEFAULT),
-                'hash_version'  => 2,
-                'language_code' => '',
-                'language'      => ''
-            ];
-        } else { // Password not changed
-            $employee_data = [
-                'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
-                'language_code' => '',
-                'language'      => ''
-            ];
-        }
+            helper('rbac');
+            rbac_ensure();
+            $role_id = (int)$this->request->getPost('role_id');
+            $grants_array = [];
+            if ($role_id > 0) {
+                $grants_array = rbac_grants_from_role($role_id);
+            } else {
+                foreach ($this->module->get_all_permissions()->getResult() as $permission) {
+                    if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
+                        continue;
+                    }
+                    $grants = [];
+                    $grant = $this->request->getPost('grant_' . $permission->permission_id) != null ? $this->request->getPost('grant_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
 
-        if ($this->employee->save_employee($person_data, $employee_data, $grants_array, $employee_id)) {
-            $saved_id = (int)($employee_data['person_id'] ?? $employee_id);
-            if ($saved_id > 0 && $role_id > 0) {
-                rbac_set_user_role($saved_id, $role_id);
+                    if ($grant == $permission->permission_id) {
+                        $grants['permission_id'] = $permission->permission_id;
+                        $grants['menu_group'] = $this->request->getPost('menu_group_' . $permission->permission_id) != null ? $this->request->getPost('menu_group_' . $permission->permission_id, FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '--';
+                        $grants_array[] = $grants;
+                    }
+                }
             }
-            // New employee
-            if ($employee_id == NEW_ENTRY) {
+
+            // Password has been changed OR first time password set
+            if (!empty($this->request->getPost('password')) && ENVIRONMENT != 'testing') {
+                $plain_password = (string)$this->request->getPost('password');
+                if (!is_strong_password($plain_password)) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => lang('Employees.password_strong'),
+                        'id'      => $employee_id
+                    ]);
+
+                    return;
+                }
+
+                // Language field is hidden; new/updated employees use system language.
+                $employee_data = [
+                    'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                    'password'      => password_hash($plain_password, PASSWORD_DEFAULT),
+                    'hash_version'  => 2,
+                    'language_code' => '',
+                    'language'      => ''
+                ];
+            } else { // Password not changed
+                $employee_data = [
+                    'username'      => $this->request->getPost('username', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+                    'language_code' => '',
+                    'language'      => ''
+                ];
+            }
+
+            if ($this->employee->save_employee($person_data, $employee_data, $grants_array, $employee_id)) {
+                $saved_id = (int)($employee_data['person_id'] ?? $employee_id);
+                if ($saved_id > 0 && $role_id > 0) {
+                    try {
+                        rbac_set_user_role($saved_id, $role_id);
+                    } catch (Throwable $e) {
+                        log_message('error', 'rbac_set_user_role failed: ' . $e->getMessage());
+                    }
+                }
+                // New employee
+                if ($employee_id == NEW_ENTRY) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => lang('Employees.successful_adding') . ' ' . format_person_name($first_name, $last_name),
+                        'id'      => $employee_data['person_id']
+                    ]);
+                } else { // Existing employee
+                    echo json_encode([
+                        'success' => true,
+                        'message' => lang('Employees.successful_updating') . ' ' . format_person_name($first_name, $last_name),
+                        'id'      => $employee_id
+                    ]);
+                }
+            } else { // Failure
                 echo json_encode([
-                    'success' => true,
-                    'message' => lang('Employees.successful_adding') . ' ' . format_person_name($first_name, $last_name),
-                    'id'      => $employee_data['person_id']
-                ]);
-            } else { // Existing employee
-                echo json_encode([
-                    'success' => true,
-                    'message' => lang('Employees.successful_updating') . ' ' . format_person_name($first_name, $last_name),
-                    'id'      => $employee_id
+                    'success' => false,
+                    'message' => lang('Employees.error_adding_updating') . ' ' . format_person_name($first_name, $last_name),
+                    'id'      => NEW_ENTRY
                 ]);
             }
-        } else { // Failure
+        } catch (Throwable $e) {
+            log_message('error', 'Employees::postSave failed: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'message' => lang('Employees.error_adding_updating') . ' ' . format_person_name($first_name, $last_name),
-                'id'      => NEW_ENTRY
+                'message' => 'Could not save employee. ' . (ENVIRONMENT === 'production' ? 'Please try again.' : $e->getMessage()),
+                'id'      => $employee_id
             ]);
         }
     }

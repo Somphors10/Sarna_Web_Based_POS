@@ -14,15 +14,22 @@
         return function(dlog_ref) {
             const form = $('form', dlog_ref.$modalBody).first();
             const validator = form.data('validator');
-            const submitted = validator && validator.formSubmitted;
 
             btn_id = button_id;
             dialog_ref = dlog_ref;
 
-            if (button_id == 'submit' && (!submitted && btn_id != "btnNew")) {
+            if (button_id == 'submit' && btn_id != "btnNew") {
+                // Allow retry after a failed validation / AJAX attempt.
+                // Old formSubmitted lock left the modal open with Submit doing nothing.
+                if (validator) {
+                    validator.formSubmitted = false;
+                }
+                $('#submit').prop('disabled', false).css('opacity', 1);
                 // Native form.submit() bypasses jQuery Validate + ajaxSubmit (full page POST shows raw JSON).
                 $(form).trigger('submit');
-                validator && validator.valid() && $('#submit').prop('disabled', true).css('opacity', 0.5);
+                if (validator && validator.valid()) {
+                    $('#submit').prop('disabled', true).css('opacity', 0.5);
+                }
             }
             return false;
         }

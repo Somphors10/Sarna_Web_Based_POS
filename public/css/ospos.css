@@ -343,8 +343,45 @@ h3.text-center {
     font-weight: 500;
 }
 
-a.rollover img {
-    padding: 3px;
+/* Item list avatars — uniform square tiles */
+a.item-avatar-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+a.item-avatar-link .item-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+a.item-avatar-link .item-avatar img,
+a.rollover img,
+a.js-item-image-lightbox img {
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    max-width: 40px;
+    max-height: 40px;
+    object-fit: cover;
+    object-position: center;
+    vertical-align: middle;
+    display: block;
+}
+
+a.item-avatar-link:hover .item-avatar {
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18);
 }
 
 #filters.btn-group {

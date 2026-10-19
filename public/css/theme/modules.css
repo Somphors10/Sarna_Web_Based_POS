@@ -160,6 +160,14 @@
     box-sizing: border-box;
 }
 
+.neo-table-holder .bootstrap-table .table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+.neo-table-holder .item-avatar-link {
+    margin: 0 auto;
+}
+
 /* Same connected card style as Super Admin feature lists */
 .neo-module-page > .neo-list-tabs + .neo-table-toolbar {
     margin: 0;
@@ -1627,25 +1635,29 @@
 .neo-image-lightbox__dialog {
     position: relative;
     z-index: 1;
-    max-width: min(920px, 96vw);
-    max-height: 90vh;
+    /* Same preview frame for every item (tall can or wide snack). */
+    width: min(520px, 92vw);
+    height: min(520px, 78vh);
     background: #ffffff;
     border-radius: 14px;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
-    padding: 12px;
+    padding: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
 }
 
 .neo-image-lightbox__img {
     display: block;
+    width: 100%;
+    height: 100%;
     max-width: 100%;
-    max-height: calc(90vh - 48px);
-    width: auto;
-    height: auto;
+    max-height: 100%;
     border-radius: 8px;
     object-fit: contain;
+    object-position: center;
+    background: #f8fafc;
 }
 
 .neo-image-lightbox__close {

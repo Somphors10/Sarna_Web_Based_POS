@@ -21,6 +21,7 @@ use Config\OSPOS;
 use Config\Services;
 use Exception;
 use ReflectionException;
+use Throwable;
 
 require_once('Secure_Controller.php');
 
@@ -144,11 +145,23 @@ class Items extends Secure_Controller
      */
     public function getPicThumb(string $pic_filename): void
     {
-        $pic_filename = basename($pic_filename);
-        $pics_dir = FCPATH . 'uploads/item_pics/';
-        $image_path = $pics_dir . $pic_filename;
+        $pic_filename = basename(rawurldecode($pic_filename));
+        $dirs = [
+            FCPATH . 'uploads/item_pics/',
+            WRITEPATH . 'uploads/item_pics/',
+        ];
 
-        if (!is_file($image_path)) {
+        $image_path = null;
+        $pics_dir = $dirs[0];
+        foreach ($dirs as $dir) {
+            if (is_file($dir . $pic_filename)) {
+                $image_path = $dir . $pic_filename;
+                $pics_dir = $dir;
+                break;
+            }
+        }
+
+        if ($image_path === null) {
             $this->response->setStatusCode(404)->send();
 
             return;
@@ -161,7 +174,7 @@ class Items extends Secure_Controller
             try {
                 Services::image('gd2')
                     ->withFile($image_path)
-                    ->resize(52, 32, true, 'height')
+                    ->fit(80, 80, 'center')
                     ->save($thumb_path);
             } catch (Throwable $e) {
                 log_message('error', 'Item PicThumb: unable to create thumbnail. ' . $e->getMessage());
@@ -373,21 +386,9 @@ class Items extends Secure_Controller
             $data['tax_category'] = '';
         }
 
-        $data['logo_exists'] = $item_info->pic_filename !== null;
-        if ($item_info->pic_filename != null) {
-            $pics_dir = FCPATH . 'uploads/item_pics/';
-            $file_extension = pathinfo($item_info->pic_filename, PATHINFO_EXTENSION);
-            if (empty($file_extension)) {
-                $images = glob($pics_dir . $item_info->pic_filename . '.*') ?: [];
-            } else {
-                $images = is_file($pics_dir . $item_info->pic_filename)
-                    ? [$pics_dir . $item_info->pic_filename]
-                    : [];
-            }
-            $data['image_path']    = sizeof($images) > 0 ? base_url('uploads/item_pics/' . rawurlencode(pathinfo($images[0], PATHINFO_BASENAME))) : '';
-        } else {
-            $data['image_path']    = '';
-        }
+        $resolved_image = $this->resolve_item_image_file((string)($item_info->pic_filename ?? ''));
+        $data['logo_exists'] = $resolved_image !== null;
+        $data['image_path'] = $resolved_image['url'] ?? '';
 
         $stock_locations = $this->stock_location->get_undeleted_all()->getResultArray();
 
@@ -636,7 +637,12 @@ class Items extends Secure_Controller
      */
     public function postSave(int $item_id = NEW_ENTRY): void
     {
-        $upload_data = $this->upload_image();
+        $old_pic_filename = null;
+        if ($item_id !== NEW_ENTRY) {
+            $old_pic_filename = $this->item->get_info($item_id)->pic_filename ?? null;
+        }
+
+        $upload_data = $this->upload_image($item_id);
         $upload_success = empty($upload_data['error']);
 
         $raw_receiving_quantity = $this->request->getPost('receiving_quantity');
@@ -704,6 +710,15 @@ class Items extends Secure_Controller
             if ($item_id === NEW_ENTRY) {
                 $item_id = $item_data['item_id'];
                 $new_item = true;
+            }
+
+            // Drop previous image/thumb only when no other item still uses that file.
+            if (
+                !empty($item_data['pic_filename'])
+                && !empty($old_pic_filename)
+                && $old_pic_filename !== $item_data['pic_filename']
+            ) {
+                $this->delete_item_pic_files((string)$old_pic_filename, (int)$item_id);
             }
 
             $use_destination_based_tax = (bool)$this->config['use_destination_based_tax'];
@@ -781,56 +796,220 @@ class Items extends Secure_Controller
      * Let files be uploaded with their original name
      * @return array
      */
-    private function upload_image(): array
+    private function upload_image(int $item_id = NEW_ENTRY): array
     {
         $file = $this->request->getFile('items_image');
-        if (!$file) {
+
+        // No new file selected — keep existing pic_filename (browser preview alone is not a save).
+        if ($file === null || $file->getError() === UPLOAD_ERR_NO_FILE || $file->getName() === '') {
             return [];
         }
 
+        // Important: do NOT treat failed uploads as "no file" — that made Submit look OK while image was never saved.
+        if (!$file->isValid()) {
+            $err = $file->getError();
+            $hint = $file->getErrorString() ?: 'Upload failed.';
+            if (in_array($err, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+                $hint = 'Image is too large for the server upload limit. Try a smaller JPG/PNG (under 2–4 MB).';
+            } elseif ($err === UPLOAD_ERR_PARTIAL) {
+                $hint = 'Image upload was incomplete. Please try again.';
+            }
+
+            return ['error' => $hint];
+        }
+
         helper(['form']);
+        $max_size = (int)($this->config['image_max_size'] ?? 8192);
+        if ($max_size < 2048) {
+            $max_size = 8192; // Old installs used tiny limits — too small for phone photos.
+        }
+
+        $allowed = (string)($this->config['image_allowed_types'] ?? 'gif,jpg,jpeg,png,webp');
+        $allowed = str_replace('|', ',', $allowed);
+        if (stripos($allowed, 'jpeg') === false) {
+            $allowed .= ',jpeg';
+        }
+        if (stripos($allowed, 'webp') === false) {
+            $allowed .= ',webp';
+        }
+
         $validation_rule = [
             'items_image' => [
                 'label' => 'Item Image',
                 'rules' => [
                     'uploaded[items_image]',
                     'is_image[items_image]',
-                    'max_size[items_image,' . $this->config['image_max_size'] . ']',
-                    'mime_in[items_image,image/png,image/jpg,image/jpeg,image/gif]',
-                    'ext_in[items_image,' . $this->config['image_allowed_types'] . ']',
-                    'max_dims[items_image,' . $this->config['image_max_width'] . ',' . $this->config['image_max_height'] . ']'
+                    'max_size[items_image,' . $max_size . ']',
+                    'mime_in[items_image,image/png,image/jpg,image/jpeg,image/gif,image/webp]',
+                    'ext_in[items_image,' . $allowed . ']',
                 ]
             ]
         ];
 
         if (!$this->validate($validation_rule)) {
-            return (['error' => $this->validator->getError('items_image')]);
+            return ['error' => $this->validator->getError('items_image') ?: 'Invalid image file.'];
         }
 
         $filename = $file->getClientName();
         $info = pathinfo($filename);
 
+        // Unique disk name so list thumbs never reuse another item's (or old) cached URL.
+        $id_part = ($item_id !== NEW_ENTRY && $item_id > 0) ? (string)$item_id : 'new';
+        $raw_name = 'item_' . $id_part . '_' . date('YmdHis') . '_' . bin2hex(random_bytes(3));
+
+        $file_ext = strtolower((string)($file->guessExtension() ?: $file->getExtension() ?: ($info['extension'] ?? 'jpg')));
+        $file_ext = ltrim($file_ext, '.');
+        if ($file_ext === 'jpeg') {
+            $file_ext = 'jpg';
+        }
+        if (!in_array($file_ext, ['gif', 'jpg', 'jpeg', 'png', 'webp'], true)) {
+            $file_ext = 'jpg';
+        }
+
         $file_info = [
             'orig_name' => $filename,
-            'raw_name'  => $info['filename'],
-            'file_ext'  => $file->guessExtension()
+            'raw_name'  => $raw_name,
+            'file_ext'  => $file_ext,
         ];
 
         $pics_dir = FCPATH . 'uploads/item_pics/';
-        if (!is_dir($pics_dir) && !mkdir($pics_dir, 0750, true) && !is_dir($pics_dir)) {
+        if (!is_dir($pics_dir) && !mkdir($pics_dir, 0755, true) && !is_dir($pics_dir)) {
             return ['error' => 'Upload folder is missing and could not be created (public/uploads/item_pics/).'];
         }
 
         if (!is_writable($pics_dir)) {
-            return ['error' => 'Upload folder is not writable (public/uploads/item_pics/).'];
+            return ['error' => 'Upload folder is not writable (public/uploads/item_pics/). Ask hosting to chmod 755/775 that folder.'];
         }
 
         $target_name = $file_info['raw_name'] . '.' . $file_info['file_ext'];
-        if (!$file->move($pics_dir, $target_name, true)) {
-            return ['error' => 'Could not save the uploaded image file.'];
+        if (!$file->move($pics_dir, $target_name, true) || !is_file($pics_dir . $target_name)) {
+            return ['error' => 'Could not save the uploaded image file to public/uploads/item_pics/.'];
         }
 
-        return ($file_info);
+        // Create list thumbnail so Avatar column matches the full image.
+        $thumb_path = $pics_dir . $file_info['raw_name'] . '_thumb.' . $file_info['file_ext'];
+        if (is_file($thumb_path)) {
+            @unlink($thumb_path);
+        }
+        try {
+            Services::image('gd2')
+                ->withFile($pics_dir . $target_name)
+                ->fit(80, 80, 'center')
+                ->save($thumb_path);
+        } catch (Throwable $e) {
+            log_message('error', 'Item image thumb failed: ' . $e->getMessage());
+        }
+
+        return $file_info;
+    }
+
+    /**
+     * Find an item image on disk and build a browser URL (with cache buster).
+     *
+     * @return array{path: string, url: string}|null
+     */
+    private function resolve_item_image_file(string $pic_filename): ?array
+    {
+        $pic_filename = basename(trim($pic_filename));
+        if ($pic_filename === '' || $pic_filename === '.' || $pic_filename === '..') {
+            return null;
+        }
+
+        $dirs = [
+            FCPATH . 'uploads/item_pics/',
+            WRITEPATH . 'uploads/item_pics/',
+        ];
+
+        $full_path = null;
+        foreach ($dirs as $pics_dir) {
+            $ext = pathinfo($pic_filename, PATHINFO_EXTENSION);
+            if ($ext === '') {
+                $matches = array_values(array_filter(
+                    glob($pics_dir . $pic_filename . '.*') ?: [],
+                    static fn(string $path): bool => !str_contains(pathinfo($path, PATHINFO_FILENAME), '_thumb')
+                ));
+                if ($matches !== []) {
+                    $full_path = $matches[0];
+                    break;
+                }
+            } elseif (is_file($pics_dir . $pic_filename)) {
+                $full_path = $pics_dir . $pic_filename;
+                break;
+            } else {
+                $base = pathinfo($pic_filename, PATHINFO_FILENAME);
+                $matches = array_values(array_filter(
+                    glob($pics_dir . $base . '.*') ?: [],
+                    static fn(string $path): bool => !str_contains(pathinfo($path, PATHINFO_FILENAME), '_thumb')
+                ));
+                if ($matches !== []) {
+                    $full_path = $matches[0];
+                    break;
+                }
+            }
+        }
+
+        if ($full_path === null || !is_file($full_path)) {
+            return null;
+        }
+
+        $basename = pathinfo($full_path, PATHINFO_BASENAME);
+        $cache_buster = (string)(@filemtime($full_path) ?: time());
+
+        // Prefer public/uploads URL; fall back to PicThumb route when file is only under writable/.
+        if (str_starts_with($full_path, FCPATH . 'uploads/item_pics/')) {
+            $url = base_url('uploads/item_pics/' . $basename) . '?v=' . $cache_buster;
+        } else {
+            $url = site_url('items/picThumb/' . rawurlencode($basename)) . '?v=' . $cache_buster;
+        }
+
+        return ['path' => $full_path, 'url' => $url];
+    }
+
+    /**
+     * Remove an item image and its list thumbnail from disk (if unused by other items).
+     */
+    private function delete_item_pic_files(string $pic_filename, ?int $except_item_id = null): void
+    {
+        $pic_filename = basename($pic_filename);
+        if ($pic_filename === '' || $pic_filename === '.' || $pic_filename === '..') {
+            return;
+        }
+
+        $builder = $this->db->table('items')->where('pic_filename', $pic_filename);
+        if ($except_item_id !== null) {
+            $builder->where('item_id !=', $except_item_id);
+        }
+        if ($builder->countAllResults() > 0) {
+            return;
+        }
+
+        $dirs = [
+            FCPATH . 'uploads/item_pics/',
+            WRITEPATH . 'uploads/item_pics/',
+        ];
+        $base = pathinfo($pic_filename, PATHINFO_FILENAME);
+        $ext = pathinfo($pic_filename, PATHINFO_EXTENSION);
+
+        $candidates = [];
+        foreach ($dirs as $pics_dir) {
+            if ($ext !== '') {
+                $candidates[] = $pics_dir . $pic_filename;
+                $candidates[] = $pics_dir . $base . '_thumb.' . $ext;
+            } else {
+                foreach (glob($pics_dir . $pic_filename . '.*') ?: [] as $path) {
+                    $candidates[] = $path;
+                }
+                foreach (glob($pics_dir . $pic_filename . '_thumb.*') ?: [] as $path) {
+                    $candidates[] = $path;
+                }
+            }
+        }
+
+        foreach (array_unique($candidates) as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
     }
 
 
@@ -869,8 +1048,12 @@ class Items extends Secure_Controller
      */
     public function getRemoveLogo($item_id): void
     {
+        $old_pic = $this->item->get_info((int)$item_id)->pic_filename ?? null;
         $item_data = ['pic_filename' => null];
         $result = $this->item->save_value($item_data, $item_id);
+        if ($result && !empty($old_pic)) {
+            $this->delete_item_pic_files((string)$old_pic, (int)$item_id);
+        }
 
         echo json_encode(['success' => $result]);
     }

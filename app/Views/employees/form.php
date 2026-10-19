@@ -233,8 +233,38 @@ $rbac_role_codes = $rbac_role_codes ?? [];
             submitHandler: function(form) {
                 $(form).ajaxSubmit({
                     success: function(response) {
+                        if (!response || typeof response !== 'object') {
+                            $('#error_message_box').html('<li>Save failed. Please try again.</li>').show();
+                            $('#submit').prop('disabled', false).css('opacity', 1);
+                            return;
+                        }
+                        if (!response.success) {
+                            $('#error_message_box').html('<li>' + (response.message || 'Save failed.') + '</li>').show();
+                            $('#submit').prop('disabled', false).css('opacity', 1);
+                            return;
+                        }
                         dialog_support.hide();
                         table_support.handle_submit("<?= esc($controller_name) ?>", response);
+                    },
+                    error: function(xhr) {
+                        var msg = 'Save failed. Please try again.';
+                        // Expired shop (view-only) returns HTTP 403 + JSON message.
+                        try {
+                            var body = xhr && xhr.responseJSON;
+                            if (!body && xhr && xhr.responseText) {
+                                body = JSON.parse(xhr.responseText);
+                            }
+                            if (body && body.message) {
+                                msg = body.message;
+                            } else if (xhr && xhr.status === 403) {
+                                msg = 'Save blocked. Shop may be expired (view only), or your session expired — refresh and try again.';
+                            } else if (xhr && xhr.status === 500) {
+                                msg = 'Server error while saving. Ask admin to check PHP error log.';
+                            }
+                        } catch (e) { /* keep default */ }
+                        $('#error_message_box').html('<li></li>').show()
+                            .find('li').text(msg);
+                        $('#submit').prop('disabled', false).css('opacity', 1);
                     },
                     dataType: 'json'
                 });
@@ -252,6 +282,8 @@ $rbac_role_codes = $rbac_role_codes ?? [];
                 if ($pane.length && !$pane.hasClass('active')) {
                     $('.employee-form-tabs a[href="#' + $pane.attr('id') + '"]').tab('show');
                 }
+                $('#error_message_box').show();
+                $('#submit').prop('disabled', false).css('opacity', 1);
             },
 
             rules: {
@@ -266,14 +298,25 @@ $rbac_role_codes = $rbac_role_codes ?? [];
                     <?php if ($person_info->person_id == '') { ?>
                         required: true,
                     <?php } ?>
-                    minlength: 8,
-                    strongPassword: true
+                    minlength: {
+                        depends: function() { return $.trim($('#password').val() || '').length > 0; },
+                        param: 8
+                    },
+                    strongPassword: {
+                        depends: function() { return $.trim($('#password').val() || '').length > 0; }
+                    }
                 },
                 repeat_password: {
-                    equalTo: '#password'
+                    equalTo: {
+                        depends: function() { return $.trim($('#password').val() || '').length > 0; },
+                        param: '#password'
+                    }
                 },
                 email: {
                     email: true
+                },
+                role_id: {
+                    required: true
                 },
                 permission_check: {
                     hasModuleGrant: true
@@ -299,7 +342,8 @@ $rbac_role_codes = $rbac_role_codes ?? [];
                     equalTo: "<?= lang('Employees.password_must_match') ?>"
                 },
                 email: "<?= lang('Common.email_invalid_format') ?>",
-                permission_check: "<?= lang('Employees.subpermission_required') ?>"
+                role_id: "<?= lang('Roles.role_required') ?>",
+                permission_check: "<?= lang('Roles.role_required') ?>"
             }
         }, form_support.error));
     });

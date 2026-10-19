@@ -207,59 +207,95 @@ class Employee extends Person
         $employee_data['tenant_id'] = $tenant_id;
         $this->ensureUsernameUniquePerTenant();
 
-        // Run these queries as a transaction, we want to make sure we do all or nothing
-        $this->db->transStart();
-
-        if (ENVIRONMENT != 'testing' && parent::save_value($person_data, $employee_id)) {
-            $builder = $this->db->table('employees');
-            if ($employee_id == NEW_ENTRY || !$this->exists($employee_id)) {
-                $employee_data['person_id'] = $employee_id = $person_data['person_id'];
-                $success = $builder->insert($employee_data);
-            } else {
-                $builder->where('person_id', $employee_id);
-                $this->scopeTenant($builder, 'employees.tenant_id');
-                $success = $builder->update($employee_data);
+        // Only grant codes that exist in permissions (avoids FK 500 when role lists a missing module).
+        $valid_permissions = [];
+        if ($this->db->tableExists('permissions')) {
+            foreach ($this->db->table('permissions')->select('permission_id')->get()->getResultArray() as $row) {
+                $valid_permissions[(string)$row['permission_id']] = true;
             }
+        }
+        $safe_grants = [];
+        foreach ($grants_data as $grant) {
+            $permission_id = (string)($grant['permission_id'] ?? '');
+            if ($permission_id === '') {
+                continue;
+            }
+            if ($valid_permissions !== [] && !isset($valid_permissions[$permission_id])) {
+                continue;
+            }
+            $safe_grants[] = [
+                'permission_id' => $permission_id,
+                'menu_group'    => (string)($grant['menu_group'] ?? 'home'),
+            ];
+        }
 
-            // We have either inserted or updated a new employee, now lets set permissions.
-            if ($success) {
-                // First lets clear out any grants the employee currently has.
-                $builder = $this->db->table('grants');
-                $success = $builder->delete(['person_id' => $employee_id]);
+        try {
+            // Run these queries as a transaction, we want to make sure we do all or nothing
+            $this->db->transStart();
 
-                // Now insert the new grants
+            if (ENVIRONMENT != 'testing' && parent::save_value($person_data, $employee_id)) {
+                $builder = $this->db->table('employees');
+                if ($employee_id == NEW_ENTRY || !$this->exists($employee_id)) {
+                    $employee_data['person_id'] = $employee_id = $person_data['person_id'];
+                    $success = (bool)$builder->insert($employee_data);
+                } else {
+                    $builder->where('person_id', $employee_id);
+                    $this->scopeTenant($builder, 'employees.tenant_id');
+                    $success = (bool)$builder->update($employee_data);
+                }
+
+                // We have either inserted or updated a new employee, now lets set permissions.
                 if ($success) {
-                    foreach ($grants_data as $grant) {
+                    $builder = $this->db->table('grants');
+                    $builder->where('person_id', $employee_id)->delete();
+                    $success = true;
+
+                    foreach ($safe_grants as $grant) {
                         $data = [
                             'permission_id' => $grant['permission_id'],
                             'person_id'     => $employee_id,
-                            'menu_group'    => $grant['menu_group']
                         ];
+                        if ($this->db->fieldExists('menu_group', 'grants')) {
+                            $data['menu_group'] = $grant['menu_group'];
+                        }
 
-                        $builder = $this->db->table('grants');
-                        $success = $builder->insert($data);
+                        if (!$this->db->table('grants')->insert($data)) {
+                            $success = false;
+                            break;
+                        }
                     }
                 }
             }
+
+            $this->db->transComplete();
+            $success = $success && $this->db->transStatus();
+        } catch (Throwable $e) {
+            log_message('error', 'save_employee failed: ' . $e->getMessage());
+            try {
+                $this->db->transRollback();
+            } catch (Throwable $ignored) {
+            }
+
+            return false;
         }
 
-        $this->db->transComplete();
-
-        $success &= $this->db->transStatus();
-
         if ($success) {
-            $username = (string)($employee_data['username'] ?? '');
-            $display = format_person_name($person_data['first_name'] ?? '', $person_data['last_name'] ?? '');
-            $arch = new \App\Libraries\PlatformArchitecture();
-            $arch->upsertTenantLogin(
-                $tenant_id,
-                (int)$employee_id,
-                $username,
-                $display,
-                false,
-                true
-            );
-            $arch->syncTenantEmployeeLogins($tenant_id, $this->db);
+            try {
+                $username = (string)($employee_data['username'] ?? '');
+                $display = format_person_name($person_data['first_name'] ?? '', $person_data['last_name'] ?? '');
+                $arch = new \App\Libraries\PlatformArchitecture();
+                $arch->upsertTenantLogin(
+                    $tenant_id,
+                    (int)$employee_id,
+                    $username,
+                    $display,
+                    false,
+                    true
+                );
+                $arch->syncTenantEmployeeLogins($tenant_id, $this->db);
+            } catch (Throwable $e) {
+                log_message('error', 'save_employee login sync failed: ' . $e->getMessage());
+            }
         }
 
         return $success;

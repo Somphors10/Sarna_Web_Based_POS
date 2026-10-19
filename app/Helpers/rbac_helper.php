@@ -929,24 +929,31 @@ function rbac_set_user_role(int $person_id, int $role_id): bool
     if ($person_id <= 0 || $role_id <= 0) {
         return false;
     }
-    rbac_ensure();
-    $db = db_connect();
-    if (rbac_role_row($role_id) === null) {
+
+    try {
+        rbac_ensure();
+        $db = db_connect();
+        if (rbac_role_row($role_id) === null) {
+            return false;
+        }
+
+        $db->table('rbac_user_roles')->where('person_id', $person_id)->delete();
+        $assign = [
+            'person_id' => $person_id,
+            'role_id'   => $role_id,
+        ];
+        if ($db->fieldExists('tenant_id', 'rbac_user_roles')) {
+            $assign['tenant_id'] = rbac_current_tenant_id();
+        }
+        $db->table('rbac_user_roles')->insert($assign);
+        rbac_write_person_grants($person_id, rbac_grants_from_role($role_id));
+
+        return true;
+    } catch (Throwable $e) {
+        log_message('error', 'rbac_set_user_role failed: ' . $e->getMessage());
+
         return false;
     }
-
-    $db->table('rbac_user_roles')->where('person_id', $person_id)->delete();
-    $assign = [
-        'person_id' => $person_id,
-        'role_id'   => $role_id,
-    ];
-    if ($db->fieldExists('tenant_id', 'rbac_user_roles')) {
-        $assign['tenant_id'] = rbac_current_tenant_id();
-    }
-    $db->table('rbac_user_roles')->insert($assign);
-    rbac_write_person_grants($person_id, rbac_grants_from_role($role_id));
-
-    return true;
 }
 
 function rbac_grants_from_role(int $role_id): array
