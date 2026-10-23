@@ -72,15 +72,19 @@
             <button onclick="javascript:printdoc()" class="btn btn-info btn-sm">
                 <span class="glyphicon glyphicon-print">&nbsp;</span><?= lang('Common.print') ?>
             </button>
+            <?php if (can_crud('create') || can_crud('read')): ?>
             <?= anchor("sales", '<span class="glyphicon glyphicon-shopping-cart">&nbsp;</span>' . lang('Sales.register'), ['class' => 'btn btn-primary btn-sm', 'id' => 'show_sales_button']) ?>
+            <?php endif; ?>
         </div>
     </header>
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
+            <?php if (can_crud('delete')): ?>
             <button id="delete" class="btn btn-default btn-sm print_hide">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
             </button>
+            <?php endif; ?>
 
             <?= form_input(['name' => 'daterangepicker', 'class' => 'form-control input-sm', 'id' => 'daterangepicker']) ?>
             <?= form_multiselect('filters[]', $filters, $selected_filters, [

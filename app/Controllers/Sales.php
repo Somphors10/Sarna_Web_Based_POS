@@ -1323,10 +1323,16 @@ class Sales extends Secure_Controller
     public function postDelete(int $sale_id = NEW_ENTRY, bool $update_inventory = true): void
     {
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-        $has_grant = $this->employee->has_grant('sales_delete', $employee_id);
+        $has_grant = $this->employee->has_grant('sales_delete', $employee_id)
+            || (function_exists('rbac_user_can_action') && rbac_user_can_action((int)$employee_id, 'sales', 'delete'));
 
         if (!$has_grant) {
-            echo json_encode(['success' => false, 'message' => lang('Sales.not_authorized')]);
+            echo json_encode([
+                'success' => false,
+                'message' => function_exists('rbac_denied_message')
+                    ? rbac_denied_message('sales', 'delete')
+                    : lang('Sales.not_authorized'),
+            ]);
         } else {
             $sale_ids = $sale_id == NEW_ENTRY ? normalize_post_ids($this->request->getPost('ids')) : [$sale_id];
 
@@ -1355,10 +1361,16 @@ class Sales extends Secure_Controller
     public function postRestore(int $sale_id = NEW_ENTRY, bool $update_inventory = true): void
     {
         $employee_id = $this->employee->get_logged_in_employee_info()->person_id;
-        $has_grant = $this->employee->has_grant('sales_delete', $employee_id);
+        $has_grant = $this->employee->has_grant('sales_delete', $employee_id)
+            || (function_exists('rbac_user_can_action') && rbac_user_can_action((int)$employee_id, 'sales', 'delete'));
 
         if (!$has_grant) {
-            echo json_encode(['success' => false, 'message' => lang('Sales.not_authorized')]);
+            echo json_encode([
+                'success' => false,
+                'message' => function_exists('rbac_denied_message')
+                    ? rbac_denied_message('sales', 'delete')
+                    : lang('Sales.not_authorized'),
+            ]);
         } else {
             $sale_ids = $sale_id == NEW_ENTRY ? normalize_post_ids($this->request->getPost('ids')) : [$sale_id];
 

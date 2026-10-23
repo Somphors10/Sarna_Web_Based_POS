@@ -69,8 +69,14 @@ function rbac_ensure(): void
 
     rbac_ensure_tenant_schema($db);
     rbac_register_module($db);
-    rbac_seed_defaults($db);
+    // Mark ready before seeding so nested helpers do not re-enter rbac_ensure() (stack overflow / Whoops).
     $ready = true;
+    try {
+        rbac_seed_defaults($db);
+        rbac_seed_crud_permissions($db);
+    } catch (Throwable $e) {
+        log_message('error', 'RBAC seed failed: ' . $e->getMessage());
+    }
 }
 
 function rbac_current_tenant_id(): int
@@ -536,6 +542,7 @@ function rbac_seed_defaults($db, ?int $for_tenant_id = null): void
     }
 
     rbac_ensure_admin_has_system_codes($db, $tenant_id);
+    rbac_seed_crud_permissions($db, $tenant_id);
 }
 
 /**
@@ -618,6 +625,566 @@ function rbac_system_codes(): array
         'attributes'          => 'Attributes',
         'taxes'               => 'Taxes',
     ];
+}
+
+/**
+ * CRUD actions teachers expect: Create / Read / Update / Delete.
+ */
+function rbac_crud_actions(): array
+{
+    return [
+        'create' => 'Create',
+        'read'   => 'Read',
+        'update' => 'Update',
+        'delete' => 'Delete',
+    ];
+}
+
+function rbac_modules_with_crud(): array
+{
+    $modules = rbac_system_codes();
+    unset($modules['home']);
+
+    return $modules;
+}
+
+function rbac_is_crud_code(string $code): bool
+{
+    return (bool)preg_match('/^[a-z0-9_]+\.(create|read|update|delete)$/', $code);
+}
+
+function rbac_parse_crud_code(string $code): ?array
+{
+    if (!preg_match('/^([a-z0-9_]+)\.(create|read|update|delete)$/', $code, $m)) {
+        return null;
+    }
+
+    return ['module' => $m[1], 'action' => $m[2]];
+}
+
+function rbac_crud_code(string $module, string $action): string
+{
+    return rbac_normalize_code($module) . '.' . rbac_normalize_code($action);
+}
+
+/**
+ * Clear name + description for each module.action (what the permission allows).
+ *
+ * @return array{name: string, description: string}
+ */
+function rbac_crud_permission_labels(string $module, string $action): array
+{
+    $module = rbac_normalize_code($module);
+    $action = rbac_normalize_code($action);
+
+    $module_titles = rbac_modules_with_crud();
+    $title = $module_titles[$module] ?? ucwords(str_replace('_', ' ', $module));
+
+    $verbs = [
+        'create' => 'Add new',
+        'read'   => 'View / list',
+        'update' => 'Edit',
+        'delete' => 'Delete',
+    ];
+    $verb = $verbs[$action] ?? ucfirst($action);
+
+    // What each action means inside that POS module.
+    $details = [
+        'sales' => [
+            'create' => 'Start a new sale / add items to the cart and complete checkout',
+            'read'   => 'Open Sales screen and view sale history / receipts',
+            'update' => 'Change an open sale (qty, price, discount) before finishing',
+            'delete' => 'Cancel / void a sale or remove sale lines',
+        ],
+        'customers' => [
+            'create' => 'Add a new customer profile',
+            'read'   => 'Search and view customer list / details',
+            'update' => 'Edit customer name, phone, address, and other info',
+            'delete' => 'Delete or deactivate a customer',
+        ],
+        'items' => [
+            'create' => 'Add a new product / item',
+            'read'   => 'Browse item list and view item details',
+            'update' => 'Edit item name, price, stock, image, and other fields',
+            'delete' => 'Delete or mark an item as deleted',
+        ],
+        'item_kits' => [
+            'create' => 'Create a new item kit / bundle',
+            'read'   => 'View item kits list and kit details',
+            'update' => 'Edit kit contents, name, and prices',
+            'delete' => 'Delete an item kit',
+        ],
+        'suppliers' => [
+            'create' => 'Add a new supplier',
+            'read'   => 'View suppliers list and supplier details',
+            'update' => 'Edit supplier company and contact info',
+            'delete' => 'Delete or deactivate a supplier',
+        ],
+        'receivings' => [
+            'create' => 'Create a new stock receiving (goods in)',
+            'read'   => 'View receiving list and receiving details',
+            'update' => 'Edit an open receiving before finishing',
+            'delete' => 'Cancel / remove a receiving',
+        ],
+        'employees' => [
+            'create' => 'Add a new employee / login account',
+            'read'   => 'View employees list and employee details',
+            'update' => 'Edit employee info, password, and assigned role',
+            'delete' => 'Delete or deactivate an employee',
+        ],
+        'roles' => [
+            'create' => 'Create a new role or permission',
+            'read'   => 'Open Roles & Permissions and view role settings',
+            'update' => 'Edit role name and which permissions the role has',
+            'delete' => 'Delete a custom role or custom permission',
+        ],
+        'giftcards' => [
+            'create' => 'Issue / add a new gift card',
+            'read'   => 'View gift cards list and balances',
+            'update' => 'Edit gift card value or details',
+            'delete' => 'Delete a gift card',
+        ],
+        'expenses' => [
+            'create' => 'Record a new expense',
+            'read'   => 'View expenses list and expense details',
+            'update' => 'Edit an expense amount, category, or note',
+            'delete' => 'Delete an expense record',
+        ],
+        'expenses_categories' => [
+            'create' => 'Add a new expense category',
+            'read'   => 'View expense categories',
+            'update' => 'Edit an expense category name',
+            'delete' => 'Delete an expense category',
+        ],
+        'cashups' => [
+            'create' => 'Start / save a new cash-up (end of day cash count)',
+            'read'   => 'View cash-up history and details',
+            'update' => 'Edit a cash-up entry',
+            'delete' => 'Delete a cash-up entry',
+        ],
+        'reports' => [
+            'create' => 'Generate / export a new report run',
+            'read'   => 'Open Reports and view report results',
+            'update' => 'Change report filters and refresh results',
+            'delete' => 'Clear / remove saved report selections (if used)',
+        ],
+        'config' => [
+            'create' => 'Add new shop settings values where allowed',
+            'read'   => 'Open Configuration and view shop settings',
+            'update' => 'Change shop settings (name, tax, receipt, etc.)',
+            'delete' => 'Remove optional config values (logo, etc.)',
+        ],
+        'attributes' => [
+            'create' => 'Add a new item attribute / definition',
+            'read'   => 'View attributes list',
+            'update' => 'Edit an attribute name or values',
+            'delete' => 'Delete an attribute',
+        ],
+        'taxes' => [
+            'create' => 'Add a new tax rate / tax category',
+            'read'   => 'View tax settings and tax list',
+            'update' => 'Edit tax rates or tax categories',
+            'delete' => 'Delete a tax rate or tax category',
+        ],
+    ];
+
+    $detail = $details[$module][$action]
+        ?? ($verb . ' records in ' . $title);
+
+    return [
+        'name'        => $title . ' — ' . $verb,
+        'description' => $detail,
+    ];
+}
+
+/**
+ * Seed module.create / .read / .update / .delete and expand existing roles.
+ */
+function rbac_seed_crud_permissions($db, ?int $for_tenant_id = null): void
+{
+    if (!$db->tableExists('rbac_permissions')) {
+        return;
+    }
+
+    $has_perm_tenant = $db->fieldExists('tenant_id', 'rbac_permissions');
+    $tenant_id = $for_tenant_id !== null ? (int)$for_tenant_id : rbac_current_tenant_id();
+
+    foreach (rbac_modules_with_crud() as $module => $module_name) {
+        foreach (rbac_crud_actions() as $action => $action_name) {
+            $code = rbac_crud_code($module, $action);
+            $labels = rbac_crud_permission_labels($module, $action);
+            try {
+                $perm_q = $db->table('rbac_permissions')->where('permission_code', $code)->where('is_system', 1);
+                if ($has_perm_tenant) {
+                    $perm_q->groupStart()->where('tenant_id', 0)->orWhere('tenant_id', $tenant_id)->groupEnd();
+                }
+                $existing = $perm_q->get(1)->getRowArray();
+                if ($existing === null) {
+                    $perm_data = [
+                        'permission_code' => $code,
+                        'permission_name' => $labels['name'],
+                        'description'     => $labels['description'],
+                        'is_system'       => 1,
+                    ];
+                    if ($has_perm_tenant) {
+                        $perm_data['tenant_id'] = 0;
+                    }
+                    $db->table('rbac_permissions')->insert($perm_data);
+                } else {
+                    // Refresh labels so Name/Description explain what the action does.
+                    $db->table('rbac_permissions')
+                        ->where('permission_id', (int)$existing['permission_id'])
+                        ->update([
+                            'permission_name' => $labels['name'],
+                            'description'     => $labels['description'],
+                        ]);
+                }
+
+                // Classic OSPOS permissions table (required so grants can store action codes).
+                if ($db->tableExists('permissions')
+                    && $db->table('permissions')->where('permission_id', $code)->countAllResults() === 0
+                ) {
+                    // Skip if parent module row is missing (FK).
+                    if ($db->tableExists('modules')
+                        && $db->table('modules')->where('module_id', $module)->countAllResults() === 0
+                    ) {
+                        continue;
+                    }
+                    $db->table('permissions')->insert([
+                        'permission_id' => $code,
+                        'module_id'     => $module,
+                        'location_id'   => null,
+                    ]);
+                }
+            } catch (Throwable $e) {
+                log_message('error', 'RBAC CRUD seed skipped ' . $code . ': ' . $e->getMessage());
+            }
+        }
+    }
+
+    if ($tenant_id > 0) {
+        try {
+            rbac_expand_role_crud_links($db, $tenant_id);
+        } catch (Throwable $e) {
+            log_message('error', 'RBAC CRUD expand failed: ' . $e->getMessage());
+        }
+    }
+}
+
+/**
+ * If a role still has only module access (e.g. items), give it all 4 CRUD actions.
+ * Roles that already use CRUD stay as configured.
+ */
+function rbac_expand_role_crud_links($db, int $tenant_id): void
+{
+    if (!$db->tableExists('rbac_roles') || !$db->tableExists('rbac_role_permissions')) {
+        return;
+    }
+
+    $perm_map = [];
+    $perm_q = $db->table('rbac_permissions')->where('is_system', 1);
+    if ($db->fieldExists('tenant_id', 'rbac_permissions')) {
+        $perm_q->groupStart()->where('tenant_id', 0)->orWhere('tenant_id', $tenant_id)->groupEnd();
+    }
+    foreach ($perm_q->get()->getResultArray() as $perm) {
+        $perm_map[(string)$perm['permission_code']] = (int)$perm['permission_id'];
+    }
+
+    $role_q = $db->table('rbac_roles');
+    if ($db->fieldExists('tenant_id', 'rbac_roles')) {
+        $role_q->where('tenant_id', $tenant_id);
+    }
+
+    foreach ($role_q->get()->getResultArray() as $role) {
+        $role_id = (int)$role['role_id'];
+        // Do not call rbac_role_permission_codes() here — it calls rbac_ensure() and can recurse.
+        $code_rows = $db->table('rbac_role_permissions AS rp')
+            ->select('p.permission_code')
+            ->join('rbac_permissions AS p', 'p.permission_id = rp.permission_id')
+            ->where('rp.role_id', $role_id)
+            ->get()
+            ->getResultArray();
+        $codes = array_values(array_filter(array_map(
+            static fn(array $row): string => (string)$row['permission_code'],
+            $code_rows
+        )));
+        $code_set = array_fill_keys($codes, true);
+        $has_any_crud = false;
+        foreach ($codes as $code) {
+            if (rbac_is_crud_code($code)) {
+                $has_any_crud = true;
+                break;
+            }
+        }
+
+        // System role defaults: always ensure CRUD matches module list.
+        // Custom roles: only expand if they have no CRUD yet (legacy).
+        $is_system = (int)($role['is_system'] ?? 0) === 1;
+        if (!$is_system && $has_any_crud) {
+            continue;
+        }
+
+        foreach (array_keys(rbac_modules_with_crud()) as $module) {
+            if (!isset($code_set[$module]) && !$is_system) {
+                continue;
+            }
+            if (!isset($code_set[$module]) && $is_system) {
+                // Admin gets every module; others only modules they already have.
+                $key = (string)($role['role_key'] ?? '');
+                if ($key !== 'admin') {
+                    continue;
+                }
+            }
+
+            foreach (array_keys(rbac_crud_actions()) as $action) {
+                $crud = rbac_crud_code($module, $action);
+                if (isset($code_set[$crud]) || !isset($perm_map[$crud])) {
+                    continue;
+                }
+                // Cashier: no delete on customers/giftcards by default (demo-friendly).
+                if ((string)($role['role_key'] ?? '') === 'cashier'
+                    && $action === 'delete'
+                    && in_array($module, ['customers', 'giftcards'], true)
+                ) {
+                    continue;
+                }
+                // Staff / cashier: skip modules they should not have.
+                if ((string)($role['role_key'] ?? '') === 'cashier'
+                    && !in_array($module, ['sales', 'customers', 'giftcards'], true)
+                ) {
+                    continue;
+                }
+                if ((string)($role['role_key'] ?? '') === 'staff'
+                    && !in_array($module, ['items', 'item_kits', 'receivings', 'suppliers'], true)
+                ) {
+                    continue;
+                }
+                if (!isset($code_set[$module]) && (string)($role['role_key'] ?? '') !== 'admin') {
+                    continue;
+                }
+
+                $link = [
+                    'role_id'       => $role_id,
+                    'permission_id' => $perm_map[$crud],
+                ];
+                if ($db->fieldExists('tenant_id', 'rbac_role_permissions')) {
+                    $link['tenant_id'] = $tenant_id;
+                }
+                try {
+                    $db->table('rbac_role_permissions')->insert($link);
+                    $code_set[$crud] = true;
+                } catch (Throwable $e) {
+                    // Duplicate link is fine.
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Group permissions for the Roles UI: one row per module with Create/Read/Update/Delete.
+ *
+ * @return list<array{module:string,name:string,actions:array<string,array{id:int,code:string,name:string}>}>
+ */
+function rbac_permission_matrix(): array
+{
+    rbac_ensure();
+    $by_module = [];
+    foreach (rbac_modules_with_crud() as $module => $name) {
+        $by_module[$module] = [
+            'module'  => $module,
+            'name'    => $name,
+            'actions' => [],
+        ];
+    }
+
+    foreach (rbac_permissions() as $permission) {
+        $parsed = rbac_parse_crud_code((string)$permission['permission_code']);
+        if ($parsed === null || !isset($by_module[$parsed['module']])) {
+            continue;
+        }
+        $by_module[$parsed['module']]['actions'][$parsed['action']] = [
+            'id'   => (int)$permission['permission_id'],
+            'code' => (string)$permission['permission_code'],
+            'name' => (string)$permission['permission_name'],
+        ];
+    }
+
+    return array_values(array_filter(
+        $by_module,
+        static fn(array $row): bool => $row['actions'] !== []
+    ));
+}
+
+/**
+ * Can this person perform create|read|update|delete on a module?
+ */
+function rbac_user_can_action(int $person_id, string $module, string $action): bool
+{
+    if ($person_id <= 0) {
+        return false;
+    }
+    $module = rbac_normalize_code($module);
+    $action = rbac_normalize_code($action);
+    if ($module === '' || $module === 'home') {
+        return true;
+    }
+    if (!isset(rbac_crud_actions()[$action])) {
+        return false;
+    }
+
+    $db = db_connect();
+    if (!$db->tableExists('grants')) {
+        return rbac_user_has_code($person_id, rbac_crud_code($module, $action))
+            || rbac_user_has_code($person_id, $module);
+    }
+
+    $rows = $db->table('grants')
+        ->select('permission_id')
+        ->where('person_id', $person_id)
+        ->groupStart()
+            ->where('permission_id', $module)
+            ->orLike('permission_id', $module . '.', 'after')
+        ->groupEnd()
+        ->get()
+        ->getResultArray();
+
+    $has_module = false;
+    $actions = [];
+    foreach ($rows as $row) {
+        $code = (string)$row['permission_id'];
+        if ($code === $module) {
+            $has_module = true;
+            continue;
+        }
+        $parsed = rbac_parse_crud_code($code);
+        if ($parsed !== null && $parsed['module'] === $module) {
+            $actions[$parsed['action']] = true;
+        }
+    }
+
+    if ($actions !== []) {
+        return isset($actions[$action]);
+    }
+
+    if ($has_module) {
+        return true; // Legacy: whole-module grant = all CRUD
+    }
+
+    return rbac_user_has_code($person_id, rbac_crud_code($module, $action))
+        || rbac_user_has_code($person_id, $module);
+}
+
+/**
+ * UI helper: can the logged-in user perform this CRUD action on a module?
+ * Modules without a CRUD matrix default to allowed (legacy grants only).
+ */
+function rbac_ui_can(string $action, ?string $module = null): bool
+{
+    $person_id = (int)(session()->get('person_id') ?? 0);
+    if ($person_id <= 0) {
+        return false;
+    }
+
+    $module = rbac_normalize_code($module ?? (function_exists('get_controller') ? get_controller() : ''));
+    if ($module === '' || $module === 'home') {
+        return true;
+    }
+
+    if (!function_exists('rbac_modules_with_crud') || !isset(rbac_modules_with_crud()[$module])) {
+        return true;
+    }
+
+    return rbac_user_can_action($person_id, $module, $action);
+}
+
+/**
+ * @return array{create: bool, read: bool, update: bool, delete: bool}
+ */
+function rbac_ui_flags(?string $module = null): array
+{
+    return [
+        'create' => rbac_ui_can('create', $module),
+        'read'   => rbac_ui_can('read', $module),
+        'update' => rbac_ui_can('update', $module),
+        'delete' => rbac_ui_can('delete', $module),
+    ];
+}
+
+function rbac_denied_message(string $module = '', string $action = ''): string
+{
+    $action = rbac_normalize_code($action);
+    $module = rbac_normalize_code($module);
+
+    $by_action = [
+        'create' => 'Error.no_permission_create',
+        'read'   => 'Error.no_permission_read',
+        'update' => 'Error.no_permission_update',
+        'delete' => 'Error.no_permission_delete',
+    ];
+
+    if (isset($by_action[$action])) {
+        $msg = lang($by_action[$action]);
+        if (is_string($msg) && $msg !== '' && $msg !== $by_action[$action]) {
+            return $msg;
+        }
+    }
+
+    $fallback = lang('Error.no_permission_action');
+    if (is_string($fallback) && $fallback !== '' && $fallback !== 'Error.no_permission_action') {
+        return $fallback;
+    }
+
+    return 'You do not have permission to do this action.';
+}
+
+/**
+ * Guess CRUD action from the current HTTP request (for Secure_Controller).
+ */
+function rbac_guess_request_action($request = null): string
+{
+    $request ??= service('request');
+    $method = strtolower((string)$request->getMethod());
+    $uri = trim($request->getUri()->getPath(), '/');
+    $parts = $uri !== '' ? explode('/', $uri) : [];
+
+    // Drop index.php / public prefix noise.
+    $parts = array_values(array_filter($parts, static fn(string $p): bool => $p !== '' && $p !== 'index.php' && $p !== 'public'));
+
+    $action_seg = strtolower((string)($parts[1] ?? 'index'));
+    $id_seg = $parts[2] ?? null;
+
+    // Eye "View details" uses ?readonly=1 → Read permission (not Update).
+    if ($request->getGet('readonly') || $request->getGet('view_only')) {
+        return 'read';
+    }
+
+    if (in_array($action_seg, ['delete', 'deleteall', 'removed', 'removeLogo', 'removelogo', 'restore'], true)
+        || str_starts_with($action_seg, 'delete')
+        || str_starts_with($action_seg, 'restore')
+    ) {
+        return 'delete';
+    }
+
+    if (in_array($action_seg, ['save', 'saveemployee', 'savesupplier', 'savecustomer', 'saveitem'], true)
+        || ($method === 'post' && str_contains($action_seg, 'save'))
+    ) {
+        if ($id_seg === null || $id_seg === '' || $id_seg === '-1' || (int)$id_seg <= 0) {
+            return 'create';
+        }
+
+        return 'update';
+    }
+
+    if (in_array($action_seg, ['view', 'edit'], true)) {
+        if ($id_seg === null || $id_seg === '' || $id_seg === '-1' || (int)$id_seg <= 0) {
+            return 'create';
+        }
+
+        return 'update'; // pencil Edit form needs update
+    }
+
+    return 'read';
 }
 
 function rbac_ensure_admin_has_system_codes($db, ?int $for_tenant_id = null): void
@@ -715,6 +1282,15 @@ function rbac_save_permission(string $code, string $name, string $description = 
         return ['ok' => false, 'message' => 'Code must be at least 3 characters.'];
     }
 
+    // Teacher RBAC style: module.action  (example: sales.create, items.delete)
+    $parsed = rbac_parse_crud_code($code);
+    if ($parsed === null && $permission_id === 0) {
+        return [
+            'ok'      => false,
+            'message' => 'Code must be module.action — example: sales.create, items.read, customers.update, giftcards.delete',
+        ];
+    }
+
     $existing_q = $db->table('rbac_permissions')->where('permission_code', $code);
     if ($tenant_id > 0 && $db->fieldExists('tenant_id', 'rbac_permissions')) {
         $existing_q->groupStart()
@@ -748,10 +1324,17 @@ function rbac_save_permission(string $code, string $name, string $description = 
             $data['tenant_id'] = $tenant_id;
         }
         $db->table('rbac_permissions')->insert($data);
+
+        $parent_module = $parsed['module'] ?? 'roles';
         if ($db->tableExists('permissions') && $db->table('permissions')->where('permission_id', $code)->countAllResults() === 0) {
+            if ($db->tableExists('modules')
+                && $db->table('modules')->where('module_id', $parent_module)->countAllResults() === 0
+            ) {
+                $parent_module = 'roles';
+            }
             $db->table('permissions')->insert([
                 'permission_id' => $code,
-                'module_id'     => 'roles',
+                'module_id'     => $parent_module,
                 'location_id'   => null,
             ]);
         }
@@ -859,7 +1442,7 @@ function rbac_save_role(string $name, string $description, array $permission_ids
 
     rbac_resync_role_users($role_id);
 
-    return ['ok' => true, 'message' => 'Role saved.', 'role_id' => $role_id];
+    return ['ok' => true, 'message' => lang('Roles.saved_ok'), 'role_id' => $role_id];
 }
 
 function rbac_delete_role(int $role_id): array
@@ -966,9 +1549,22 @@ function rbac_grants_from_role(int $role_id): array
             continue;
         }
         $seen[$code] = true;
+        $menu_code = $code;
+        $parsed = rbac_parse_crud_code($code);
+        if ($parsed !== null) {
+            // Menu still keys off the parent module (items), not items.create.
+            $menu_code = $parsed['module'];
+            if (!isset($seen[$menu_code])) {
+                $seen[$menu_code] = true;
+                $grants[] = [
+                    'permission_id' => $menu_code,
+                    'menu_group'    => rbac_menu_group_for($menu_code),
+                ];
+            }
+        }
         $grants[] = [
             'permission_id' => $code,
-            'menu_group'    => rbac_menu_group_for($code),
+            'menu_group'    => rbac_menu_group_for($menu_code),
         ];
     }
 
@@ -1012,6 +1608,10 @@ function rbac_office_display_ids(): array
 
 function rbac_menu_group_for(string $code): string
 {
+    $parsed = rbac_parse_crud_code($code);
+    if ($parsed !== null) {
+        $code = $parsed['module'];
+    }
     if ($code === 'office') {
         return 'home';
     }
@@ -1081,6 +1681,16 @@ function rbac_user_has_code(int $person_id, string $permission_id): bool
     }
     if (in_array($permission_id, rbac_implied_permission_ids($codes), true)) {
         return true;
+    }
+
+    // Module menu access if the role has any CRUD action for that module.
+    if (!rbac_is_crud_code($permission_id)) {
+        foreach ($codes as $code) {
+            $parsed = rbac_parse_crud_code($code);
+            if ($parsed !== null && $parsed['module'] === $permission_id) {
+                return true;
+            }
+        }
     }
 
     return false;

@@ -147,6 +147,22 @@ $is_sa_pos_shell = is_platform_super_admin();
     <?= view('partial/header_js') ?>
     <script src="js/password_toggle.js?v=4"></script>
     <script src="js/pos_select.js?v=5"></script>
+    <?php
+        $crud_can = $crud_can ?? ['create' => true, 'read' => true, 'update' => true, 'delete' => true];
+        $crud_messages = [
+            'create' => lang('Error.no_permission_create'),
+            'read'   => lang('Error.no_permission_read'),
+            'update' => lang('Error.no_permission_update'),
+            'delete' => lang('Error.no_permission_delete'),
+        ];
+    ?>
+    <script>
+        window.osposCrud = <?= json_encode($crud_can) ?>;
+        window.osposCrudMessages = <?= json_encode($crud_messages) ?>;
+        window.osposCrudDenyMessage = <?= json_encode(lang('Error.no_permission_action')) ?>;
+    </script>
+    <script src="js/rbac_ui.js?v=1"></script>
+    <script src="js/manage_tables.js?v=2"></script>
     <?= view('partial/lang_lines') ?>
 
     <link rel="stylesheet" href="css/theme/pos-notify.css?v=6">

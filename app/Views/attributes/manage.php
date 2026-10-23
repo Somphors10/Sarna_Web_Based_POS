@@ -27,17 +27,21 @@
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
+            <?php if (can_crud('create')): ?>
             <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= esc("$controller_name/view") ?>" title="<?= lang(ucfirst($controller_name) . ".new") ?>">
                 <span class="glyphicon glyphicon-star">&nbsp;</span><?= lang(ucfirst($controller_name) . ".new") ?>
             </button>
+            <?php endif; ?>
         </div>
     </header>
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
+            <?php if (can_crud('delete')): ?>
             <button id="delete" class="btn btn-default btn-sm print_hide">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
             </button>
+            <?php endif; ?>
         </div>
     </div>
 

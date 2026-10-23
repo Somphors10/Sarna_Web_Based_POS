@@ -13,8 +13,9 @@ $hide_when_deleted = $hide_when_deleted ?? '';
             recordListView = view === 'deleted' ? 'deleted' : 'active';
             $('.neo-list-tab').removeClass('is-active').attr('aria-selected', 'false');
             $('.neo-list-tab[data-list="' + recordListView + '"]').addClass('is-active').attr('aria-selected', 'true');
-            $('#delete').toggleClass('hidden', recordListView === 'deleted');
-            $('#restore').toggleClass('hidden', recordListView !== 'deleted');
+            var canDelete = !(window.osposCrud && window.osposCrud.delete === false);
+            $('#delete').toggleClass('hidden', recordListView === 'deleted' || !canDelete);
+            $('#restore').toggleClass('hidden', recordListView !== 'deleted' || !canDelete);
             if (hideWhenDeleted) {
                 $(hideWhenDeleted).toggleClass('hidden', recordListView === 'deleted');
             }

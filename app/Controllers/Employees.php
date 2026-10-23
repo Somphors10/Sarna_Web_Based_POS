@@ -94,63 +94,84 @@ class Employees extends Persons
      */
     public function getView(int $employee_id = NEW_ENTRY): void
     {
-        $person_info = $this->employee->get_info($employee_id);
-        foreach (get_object_vars($person_info) as $property => $value) {
-            $person_info->$property = $value;
-        }
-        $data['person_info'] = $person_info;
-        $data['employee_id'] = $employee_id;
-        $data['rbac_roles'] = [];
-        $data['selected_role_id'] = 0;
-        $data['rbac_role_codes'] = [];
         try {
-            helper('rbac');
-            rbac_ensure();
-            $view_person_id = (int)($person_info->person_id ?? 0);
-            $tenant_id = (int)(session()->get('tenant_id') ?? 0);
-            // Website signup owner used to have grants but no Role — auto-fill Admin.
-            if ($view_person_id > 0 && $tenant_id > 0
-                && function_exists('rbac_user_role') && rbac_user_role($view_person_id) === null
-                && function_exists('rbac_person_is_tenant_owner') && rbac_person_is_tenant_owner($view_person_id)
-                && function_exists('rbac_assign_owner_admin_role')
-            ) {
-                rbac_assign_owner_admin_role($view_person_id, $tenant_id);
+            $person_info = $this->employee->get_info($employee_id);
+            foreach (get_object_vars($person_info) as $property => $value) {
+                $person_info->$property = $value;
             }
-            $data['rbac_roles'] = rbac_roles();
-            $assigned = rbac_user_role($view_person_id);
-            $data['selected_role_id'] = (int)($assigned['role_id'] ?? 0);
-            foreach ($data['rbac_roles'] as $role) {
-                $data['rbac_role_codes'][(int)$role['role_id']] = rbac_role_permission_codes((int)$role['role_id']);
+            $grant_person_id = (int)($person_info->person_id ?? 0);
+            if ($grant_person_id < 0) {
+                $grant_person_id = 0;
             }
-        } catch (\Throwable $e) {
-            log_message('error', 'Employee role list failed: ' . $e->getMessage());
+
+            $data['person_info'] = $person_info;
+            $data['employee_id'] = $employee_id;
+            $data['controller_name'] = 'employees';
+            $data['rbac_roles'] = [];
+            $data['selected_role_id'] = 0;
+            $data['rbac_role_codes'] = [];
+            try {
+                helper('rbac');
+                rbac_ensure();
+                $view_person_id = $grant_person_id;
+                $tenant_id = (int)(session()->get('tenant_id') ?? 0);
+                // Website signup owner used to have grants but no Role — auto-fill Admin.
+                if ($view_person_id > 0 && $tenant_id > 0
+                    && function_exists('rbac_user_role') && rbac_user_role($view_person_id) === null
+                    && function_exists('rbac_person_is_tenant_owner') && rbac_person_is_tenant_owner($view_person_id)
+                    && function_exists('rbac_assign_owner_admin_role')
+                ) {
+                    rbac_assign_owner_admin_role($view_person_id, $tenant_id);
+                }
+                $data['rbac_roles'] = rbac_roles();
+                $assigned = $view_person_id > 0 ? rbac_user_role($view_person_id) : null;
+                $data['selected_role_id'] = (int)($assigned['role_id'] ?? 0);
+                foreach ($data['rbac_roles'] as $role) {
+                    $data['rbac_role_codes'][(int)$role['role_id']] = rbac_role_permission_codes((int)$role['role_id']);
+                }
+            } catch (Throwable $e) {
+                log_message('error', 'Employee role list failed: ' . $e->getMessage());
+            }
+
+            $modules = [];
+            foreach ($this->module->get_all_modules()->getResult() as $module) {
+                if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
+                    continue;
+                }
+                $module->grant = $grant_person_id > 0
+                    ? $this->employee->has_grant($module->module_id, $grant_person_id)
+                    : false;
+                $module->menu_group = $grant_person_id > 0
+                    ? $this->employee->get_menu_group($module->module_id, $grant_person_id)
+                    : 'home';
+
+                $modules[] = $module;
+            }
+            $data['all_modules'] = $modules;
+
+            $permissions = [];
+            foreach ($this->module->get_all_subpermissions()->getResult() as $permission) {
+                if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
+                    continue;
+                }
+                $permission->permission_id = str_replace(' ', '_', $permission->permission_id);
+                $permission->grant = $grant_person_id > 0
+                    ? $this->employee->has_grant($permission->permission_id, $grant_person_id)
+                    : false;
+
+                $permissions[] = $permission;
+            }
+            $data['all_subpermissions'] = $permissions;
+            // View / Edit / New all use the same 3-tab form (view disables fields in the modal).
+            $data['form_readonly'] = (bool)($this->request->getGet('readonly') || $this->request->getGet('view_only'));
+
+            echo view('employees/form', $data);
+        } catch (Throwable $e) {
+            log_message('error', 'Employee getView failed: ' . $e->getMessage());
+            echo '<div class="alert alert-danger" style="margin:12px;">Could not load employee form: '
+                . esc($e->getMessage())
+                . '</div>';
         }
-
-        $modules = [];
-        foreach ($this->module->get_all_modules()->getResult() as $module) {
-            if (in_array($module->module_id, hidden_ui_module_ids(), true)) {
-                continue;
-            }
-            $module->grant = $this->employee->has_grant($module->module_id, $person_info->person_id);
-            $module->menu_group = $this->employee->get_menu_group($module->module_id, $person_info->person_id);
-
-            $modules[] = $module;
-        }
-        $data['all_modules'] = $modules;
-
-        $permissions = [];
-        foreach ($this->module->get_all_subpermissions()->getResult() as $permission) {    // TODO: subpermissions does not follow naming standards.
-            if (in_array($permission->module_id, hidden_ui_module_ids(), true)) {
-                continue;
-            }
-            $permission->permission_id = str_replace(' ', '_', $permission->permission_id);
-            $permission->grant = $this->employee->has_grant($permission->permission_id, $person_info->person_id);
-
-            $permissions[] = $permission;
-        }
-        $data['all_subpermissions'] = $permissions;
-
-        echo view('employees/form', $data);
     }
 
     /**

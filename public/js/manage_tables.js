@@ -94,6 +94,40 @@
                         var node = $('<div></div>');
                         $.get($link.attr('href') || $link.data('href'), function(data) {
                             node.html(data);
+
+                            // Same 3 tabs as before (Information / Login / Role) — Bootstrap tabs inside modal.
+                            node.find('.tab-pane').removeClass('fade in');
+                            node.find('.nav-tabs a[data-toggle="tab"]').off('click.osposModalTab').on('click.osposModalTab', function(e) {
+                                e.preventDefault();
+                                var $a = $(this);
+                                var href = $a.attr('href') || '';
+                                var paneId = href.indexOf('#') >= 0 ? href.substring(href.indexOf('#')) : href;
+                                $a.tab('show');
+                                // Ensure target pane is visible even if Bootstrap selector misses nested modal IDs.
+                                var $pane = node.find(paneId);
+                                if ($pane.length) {
+                                    node.find('.tab-pane').removeClass('active').hide();
+                                    $pane.addClass('active').show();
+                                    $a.closest('.nav-tabs').find('li').removeClass('active');
+                                    $a.parent().addClass('active');
+                                }
+                            });
+                            node.find('.tab-pane').hide();
+                            node.find('.tab-pane.active').show();
+                            if (!node.find('.tab-pane.active').length) {
+                                node.find('.tab-pane').first().addClass('active').show();
+                            }
+
+                            // Re-run form scripts (validate / role preview). jQuery .html() skips them.
+                            node.find('script').each(function() {
+                                var src = this.getAttribute('src');
+                                if (src) {
+                                    $.getScript(src);
+                                } else if (this.text) {
+                                    $.globalEval(this.text);
+                                }
+                            });
+
                             if ($link.hasClass('ospos-view-only')) {
                                 node.find('input, select, textarea, button[type="submit"]').prop('disabled', true);
                                 node.find('form').on('submit', function(event) {
@@ -101,6 +135,24 @@
                                     return false;
                                 });
                             }
+                        }).fail(function(xhr) {
+                            var msg = window.osposCrudDenyMessage || 'Could not load form. Please refresh and try again.';
+                            try {
+                                var data = JSON.parse(xhr.responseText || '');
+                                if (data && data.message) {
+                                    msg = data.message;
+                                }
+                            } catch (e) {
+                                if (xhr && xhr.responseText && xhr.responseText.length < 400 && xhr.responseText.indexOf('<') < 0) {
+                                    msg = xhr.responseText;
+                                } else if (!xhr || !xhr.responseText) {
+                                    msg = 'Could not load form. Please refresh and try again.';
+                                }
+                            }
+                            if ($.notify) {
+                                $.notify(msg, { type: 'danger' });
+                            }
+                            node.html('<div class="alert alert-danger" style="margin:12px;">' + $('<div/>').text(msg).html() + '</div>');
                         });
                         return node;
                     })
@@ -211,6 +263,16 @@
 
     var do_action = function(action) {
         return function (url, ids) {
+            var crud = window.osposCrud || {};
+            if ((action === 'delete' || action === 'restore') && crud.delete === false) {
+                if (typeof window.osposNotifyDenied === 'function') {
+                    window.osposNotifyDenied('delete');
+                } else if ($.notify) {
+                    $.notify(window.osposCrudDenyMessage || 'You do not have permission to delete.', { type: 'danger' });
+                }
+                return false;
+            }
+
             var message = $.fn.bootstrapTable.defaults.formatConfirmAction(action);
             var proceed = function() {
                 $.post((url || options.resource) + '/' + action, {'ids[]': ids || selected_ids()}, function (response) {
@@ -233,9 +295,18 @@
                         });
                         $.notify(response.message, {type: 'success'});
                     } else {
-                        $.notify(response.message, {type: 'danger'});
+                        $.notify(response.message || (window.osposCrudDenyMessage || 'Action failed.'), {type: 'danger'});
                     }
-                }, "json");
+                }, "json").fail(function(xhr) {
+                    var msg = window.osposCrudDenyMessage || 'You do not have permission to do this action.';
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data && data.message) {
+                            msg = data.message;
+                        }
+                    } catch (e) { /* HTML no_access page or empty body */ }
+                    $.notify(msg, { type: 'danger' });
+                });
             };
 
             if (typeof window.osposConfirm === 'function') {

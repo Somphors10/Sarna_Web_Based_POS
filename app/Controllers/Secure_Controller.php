@@ -154,8 +154,22 @@ class Secure_Controller extends BaseController
             !$this->employee->has_module_grant($module_id, (int)$logged_in_employee_info->person_id)
             || (isset($submodule_id) && !$this->employee->has_module_grant($submodule_id, (int)$logged_in_employee_info->person_id))
         ) {
-            header("Location:" . base_url("no_access/$module_id/$submodule_id"));
-            exit();
+            $this->denyAccess($module_id, $submodule_id ?? '', 'read');
+        }
+
+        // Teacher-style CRUD: Create / Read / Update / Delete on the current request.
+        if (
+            $module_id !== ''
+            && $module_id !== 'home'
+            && function_exists('rbac_user_can_action')
+            && function_exists('rbac_guess_request_action')
+            && function_exists('rbac_modules_with_crud')
+            && isset(rbac_modules_with_crud()[$module_id])
+        ) {
+            $crud_action = rbac_guess_request_action($this->request);
+            if (!rbac_user_can_action((int)$logged_in_employee_info->person_id, $module_id, $crud_action)) {
+                $this->denyAccess($module_id, $submodule_id ?? '', $crud_action);
+            }
         }
 
         if (
@@ -163,8 +177,7 @@ class Secure_Controller extends BaseController
             && function_exists('tenant_feature_enabled')
             && !tenant_feature_enabled($module_id)
         ) {
-            header("Location:" . base_url("no_access/$module_id/$submodule_id"));
-            exit();
+            $this->denyAccess($module_id, $submodule_id ?? '', 'read');
         }
 
         // Load up global global_view_data visible to all the loaded views
@@ -275,14 +288,72 @@ class Secure_Controller extends BaseController
             }
         }
 
+        $controller_name = $module_id !== '' ? $module_id : (function_exists('get_controller') ? get_controller() : '');
+        $crud_can = function_exists('rbac_ui_flags')
+            ? rbac_ui_flags($controller_name)
+            : ['create' => true, 'read' => true, 'update' => true, 'delete' => true];
+
         $this->global_view_data += [
             'user_info'               => $logged_in_employee_info,
-            'controller_name'         => $module_id !== '' ? $module_id : (function_exists('get_controller') ? get_controller() : ''),
+            'controller_name'         => $controller_name,
             'config'                  => $config,
             'subscription_view_only'  => (bool)$this->session->get('subscription_view_only'),
             'show_office_nav'         => !$is_super_admin && $this->userCanOpenOffice((int)$logged_in_employee_info->person_id),
+            'crud_can'                => $crud_can,
+            'crud_deny_message'       => function_exists('rbac_denied_message')
+                ? rbac_denied_message($controller_name, 'delete')
+                : lang('Error.no_permission_action'),
         ];
         view('viewData', $this->global_view_data);
+    }
+
+    /**
+     * Block access: JSON message for AJAX (so Delete/Save shows a notify), else redirect.
+     */
+    private function denyAccess(string $module_id, string $submodule_id = '', string $action = 'read'): void
+    {
+        $message = function_exists('rbac_denied_message')
+            ? rbac_denied_message($module_id, $action)
+            : lang('Error.no_permission_action');
+
+        $request = Services::request();
+        $wants_json = $request->isAJAX()
+            || str_contains((string)$request->getHeaderLine('Accept'), 'application/json')
+            || strtolower((string)$request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
+
+        // Manage-table delete/restore/save posts expect JSON even if isAJAX() is false.
+        $method = strtoupper((string)$request->getMethod(true));
+        $segments = array_values(array_map('strtolower', $request->getUri()->getSegments()));
+        if (($segments[0] ?? '') === 'index.php') {
+            array_shift($segments);
+        }
+        $action_seg = (string)($segments[1] ?? '');
+        if (
+            !$wants_json
+            && $method === 'POST'
+            && (
+                str_starts_with($action_seg, 'delete')
+                || str_starts_with($action_seg, 'restore')
+                || str_contains($action_seg, 'save')
+            )
+        ) {
+            $wants_json = true;
+        }
+
+        if ($wants_json) {
+            $response = Services::response();
+            $response->setStatusCode(403);
+            $response->setHeader('Content-Type', 'application/json; charset=UTF-8');
+            $response->setBody(json_encode([
+                'success' => false,
+                'message' => $message,
+            ]));
+            $response->send();
+            exit();
+        }
+
+        header('Location:' . base_url('no_access/' . $module_id . '/' . $submodule_id));
+        exit();
     }
 
     private function userCanOpenOffice(int $person_id): bool

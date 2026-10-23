@@ -106,9 +106,11 @@ use App\Models\Employee;
             <h3 class="neo-module-title"><?= ucfirst($controller_name) ?></h3>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions print_hide">
+            <?php if (can_crud('create')): ?>
             <button class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-tag">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </button>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -116,15 +118,19 @@ use App\Models\Employee;
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="form-inline" role="toolbar">
+            <?php if (can_crud('delete')): ?>
             <button id="delete" class="btn btn-default btn-sm print_hide">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
             </button>
             <button id="restore" class="btn btn-default btn-sm print_hide hidden">
                 <span class="glyphicon glyphicon-repeat">&nbsp;</span><?= lang('Common.restore') ?>
             </button>
+            <?php endif; ?>
+            <?php if (can_crud('update')): ?>
             <button id="bulk_edit" class="btn btn-default btn-sm modal-dlg print_hide" data-btn-submit="<?= lang('Common.submit') ?>" data-href="<?= "items/bulkEdit" ?>" title="<?= lang('Items.edit_multiple_items') ?>">
                 <span class="glyphicon glyphicon-edit">&nbsp;</span><?= lang('Items.bulk_edit') ?>
             </button>
+            <?php endif; ?>
             <button id="generate_barcodes" class="btn btn-default btn-sm print_hide" data-href="<?= "$controller_name/generateBarcodes" ?>" title="<?= lang('Items.generate_barcodes') ?>">
                 <span class="glyphicon glyphicon-barcode">&nbsp;</span><?= lang('Items.generate_barcodes') ?>
             </button>

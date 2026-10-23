@@ -76,12 +76,14 @@ $show_email_button = !in_array($controller_name, ['customers', 'employees', 'sup
 <section class="neo-module-page">
     <header class="neo-module-header">
         <div>
-            <h3 class="neo-module-title"><?= esc(lang('Module.' . $controller_name)) ?></h3>
+            <h3 class="neo-module-title"><?= esc(lang('Module.' . $controller_name)) ?></h3>
         </div>
         <div id="title_bar" class="btn-toolbar neo-module-actions">
+            <?php if (can_crud('create')): ?>
             <a id="new_customer_btn" class="btn btn-primary btn-sm modal-dlg" data-btn-submit="<?= lang('Common.submit') ?>" href="<?= "$controller_name/view" ?>" data-href="<?= "$controller_name/view" ?>" title="<?= lang(ucfirst($controller_name) . '.new') ?>">
                 <span class="glyphicon glyphicon-user">&nbsp;</span><?= lang(ucfirst($controller_name) . '.new') ?>
             </a>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -89,12 +91,14 @@ $show_email_button = !in_array($controller_name, ['customers', 'employees', 'sup
 
     <div id="toolbar" class="neo-table-toolbar">
         <div class="btn-toolbar">
+            <?php if (can_crud('delete')): ?>
             <button id="delete" class="btn btn-default btn-sm">
                 <span class="glyphicon glyphicon-trash">&nbsp;</span><?= lang('Common.delete') ?>
             </button>
             <button id="restore" class="btn btn-default btn-sm hidden">
                 <span class="glyphicon glyphicon-repeat">&nbsp;</span><?= lang('Common.restore') ?>
             </button>
+            <?php endif; ?>
             <?php if ($show_email_button): ?>
             <button id="email" class="btn btn-default btn-sm">
                 <span class="glyphicon glyphicon-envelope">&nbsp;</span><?= lang('Common.email') ?>

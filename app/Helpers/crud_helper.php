@@ -1,6 +1,31 @@
 <?php
 
 /**
+ * Does the logged-in user have this CRUD action on the current (or given) module?
+ * Rule: permission checked in Role → feature allowed; not checked → not allowed.
+ */
+function can_crud(string $action, ?string $module = null): bool
+{
+    if (function_exists('rbac_ui_can')) {
+        return rbac_ui_can($action, $module);
+    }
+
+    return true;
+}
+
+/**
+ * @return array{create: bool, read: bool, update: bool, delete: bool}
+ */
+function crud_flags(?string $module = null): array
+{
+    if (function_exists('rbac_ui_flags')) {
+        return rbac_ui_flags($module);
+    }
+
+    return ['create' => true, 'read' => true, 'update' => true, 'delete' => true];
+}
+
+/**
  * Normalize ids[] posted from bootstrap-table bulk actions.
  *
  * @param mixed $ids

@@ -133,7 +133,10 @@ function transform_headers(array $headers, bool $readonly = false, bool $editabl
         if ($include_view) {
             $headers[] = ['view' => '', 'sortable' => false, 'escape' => false];
         }
-        $headers[] = ['edit' => ''];
+        // Pencil only when role has Update permission.
+        if (!function_exists('can_crud') || can_crud('update')) {
+            $headers[] = ['edit' => ''];
+        }
     }
 
     foreach ($headers as $element) {    // TODO: This might be clearer to refactor this to `foreach($headers as $header)`
@@ -179,8 +182,10 @@ function tenant_receiving_label(int $receiving_id): string
  */
 function view_record_anchor(string $url, ?string $title = null): string
 {
+    $sep = str_contains($url, '?') ? '&' : '?';
+
     return anchor(
-        $url,
+        $url . $sep . 'readonly=1',
         '<span class="glyphicon glyphicon-eye-open"></span>',
         [
             'class' => 'modal-dlg ospos-view-only',

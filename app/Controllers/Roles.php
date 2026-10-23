@@ -29,6 +29,7 @@ class Roles extends Secure_Controller
         echo view('roles/manage', [
             'controller_name'      => 'roles',
             'permissions'          => rbac_permissions(),
+            'permission_matrix'    => rbac_permission_matrix(),
             'roles'                => rbac_roles(),
             'role_perm_map'        => $this->rolePermissionMap(),
             'edit_permission'      => $edit_permission,

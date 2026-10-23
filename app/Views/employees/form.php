@@ -12,9 +12,10 @@
 $rbac_roles = $rbac_roles ?? [];
 $selected_role_id = (int)($selected_role_id ?? 0);
 $rbac_role_codes = $rbac_role_codes ?? [];
+$form_readonly = !empty($form_readonly);
 ?>
 
-<div class="pos-form-shell">
+<div class="pos-form-shell" data-employee-form="1">
 <div id="required_fields_message" class="pos-form-required"><?= lang('Common.fields_required_message') ?></div>
 <ul id="error_message_box" class="error_message_box"></ul>
 
@@ -34,7 +35,7 @@ $rbac_role_codes = $rbac_role_codes ?? [];
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane fade in active" id="employee_basic_info">
+        <div class="tab-pane active" id="employee_basic_info">
             <fieldset>
                 <?= view('people/form_basic_info') ?>
             </fieldset>
@@ -101,7 +102,7 @@ $rbac_role_codes = $rbac_role_codes ?? [];
                 <div class="form-group form-group-sm">
                     <?= form_label(lang('Roles.choose_role'), 'role_id', ['class' => 'required control-label col-xs-3']) ?>
                     <div class="col-xs-8">
-                        <select name="role_id" id="role_id" class="form-control input-sm" required>
+                        <select name="role_id" id="role_id" class="form-control input-sm" <?= $form_readonly ? 'disabled' : 'required' ?>>
                             <option value=""><?= esc(lang('Roles.no_role')) ?></option>
                             <?php foreach ($rbac_roles as $role): ?>
                                 <option
